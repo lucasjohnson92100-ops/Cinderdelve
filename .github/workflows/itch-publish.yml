@@ -1,0 +1,36 @@
+name: Publish to itch.io
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  # Définis ces deux variables dans Settings > Secrets and variables > Actions > Variables
+  ITCH_USER: ${{ vars.ITCH_USER }}   # ton nom d'utilisateur itch.io
+  ITCH_GAME: ${{ vars.ITCH_GAME }}   # le slug du jeu (la fin de l'URL de la page)
+  CHANNEL: html5                     # canal butler : html5, windows, linux, osx, assets...
+  BUILD_DIR: build                   # dossier à envoyer (doit contenir index.html pour un jeu web)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Remplace cette étape par la vraie commande de build de ton projet
+      # (elle doit produire le dossier $BUILD_DIR).
+      - name: Check build directory
+        run: |
+          test -d "$BUILD_DIR" || { echo "Dossier $BUILD_DIR introuvable : ajoute ta commande de build"; exit 1; }
+
+      - name: Push to itch.io with butler
+        uses: manleydev/butler-publish-itchio-action@v1.0.3
+        env:
+          # Secret à créer dans Settings > Secrets and variables > Actions > Secrets
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: ${{ env.CHANNEL }}
+          ITCH_GAME: ${{ env.ITCH_GAME }}
+          ITCH_USER: ${{ env.ITCH_USER }}
+          PACKAGE: ${{ env.BUILD_DIR }}
