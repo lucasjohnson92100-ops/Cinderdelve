@@ -6273,7 +6273,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   function pulseEl(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 
   /* ================= RÈGLES ================= */
-  function need() { if (state.survival) return 15 + 6 * state.lvl + Math.floor(state.lvl * state.lvl * 0.75); return 5 + 2 * state.lvl + Math.floor(state.lvl * state.lvl / 4); }
+  function need() { if (state.survival) return 15 + 6 * state.lvl + Math.floor(state.lvl * state.lvl * BAL.xpQuad); return 5 + 2 * state.lvl + Math.floor(state.lvl * state.lvl / 4); }
   function score() { return state.floor * 100 + state.earned * 10 + state.kills * 5; }
   function bump() {
     var s = score();
@@ -8878,8 +8878,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var WAVE_THEMES = {
     rapide: { name: "Horde rapide", pool: ["bat", "wolf", "lycan", "harpy", "goblin", "spider"], hp: 0.75, spd: 1.25, n: 1.2 },
     tireurs: { name: "Pluie de flèches", pool: ["archer", "cultist", "centaur", "skeleton", "slime", "goblin", "wolf"], hp: 1, spd: 1, n: 0.9 },
-    colosses: { name: "Colosses", pool: ["golem", "minotaur", "werewolf", "mushroom", "skeleton"], hp: 1.6, spd: 0.85, n: 0.6 }
+    colosses: { name: "Colosses", pool: ["golem", "minotaur", "werewolf", "mushroom", "skeleton"], hp: 1.6, spd: 0.85, n: 0.6 },
+    nuee: { name: "Nuée", pool: ["bat", "slime", "spider", "goblin", "harpy", "mushroom"], hp: 0.55, spd: 1.1, n: 1.8 },
+    garde: { name: "Garde d'élite", pool: ["golem", "minotaur", "werewolf", "cultist", "medusa", "centaur", "lycan"], hp: 1.3, spd: 1, n: 0.55, elite: 0.3 },
+    etau: { name: "Étau", pool: ["skeleton", "wolf", "goblin", "ghost", "cultist", "archer", "spider"], hp: 1, spd: 1, n: 0.8, ring: true }
   };
+  var WAVE_THEME_IDS = ["rapide", "tireurs", "colosses", "nuee", "garde", "etau", "normal"];
   function survApplyCurse(e) {
     if (state.survCurseHp) e.hp = e.maxHp = Math.round(e.hp * (1 + state.survCurseHp));
     if (state.survCurseAtk) e.atk = Math.round(e.atk * (1 + state.survCurseAtk));
@@ -8889,7 +8893,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var pool = survMapDef().mini;
     var type = pool[rnd(pool.length)], a = Math.random() * 6.283, fp = survFreeNear(p.x + Math.cos(a) * 9, p.y + Math.sin(a) * 9);
     var e = mk(type, fp[0], fp[1]), cyc = state.survCycle || 0; e.aggro = true; var tnt2 = survTintFor(type); if (tnt2) e.mt = tnt2;
-    e.hp = e.maxHp = Math.round(e.hp * (6 + cyc * 3.2) * (1 + cyc * 0.15)); e.atk = Math.round(e.atk * 1.5 * survAtkMul()); e.spd *= survSpdMul();
+    e.hp = e.maxHp = Math.round(e.hp * (6 + cyc * 3.2) * (1 + cyc * BAL.miniCyc)); e.atk = Math.round(e.atk * 1.5 * survAtkMul()); e.spd *= survSpdMul();
     e.elite = true; e.vr = 3; e.scale = (e.scale || 1) * 1.6; e.r += 0.1; e.miniBoss = true; e.spd = Math.min(e.spd, SPEED * 0.7);
     survApplyCurse(e); enemies.push(e); burst(fp[0], fp[1], "#ffb02e", 14, 60);
     banner("Un champion approche !", "#ffb02e", 1800, 28); sfx("warn");
@@ -9260,17 +9264,30 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var tnt3 = survTintFor(type); if (tnt3) e.mt = tnt3;
     survApplyCurse(e); enemies.push(e); burst(x, y, "#8a78c8", 5, 36); return e;
   }
+  function survEliteify(e) { e.elite = true; e.vr = 3; e.hp = e.maxHp = Math.round(e.hp * 1.6); e.atk = Math.round(e.atk * 1.2); e.xp = e.xp * 2 + 2; e.gold = e.gold * 2 + 1; e.scale = (e.scale || 1) * 1.2; e.r += 0.05; }
   function survivalEvent() {
     if (enemies.length > 40) return;
-    if (Math.random() < 0.5) {
+    var r = Math.random(), MD = survMapDef(), a = Math.random() * 6.283, ox = Math.cos(a), oy = Math.sin(a), i, e;
+    if (r < 0.25) {
       banner("Essaim !", "#c48bff", 1500, 30); sfx("warn");
-      var a = Math.random() * 6.283, ox = Math.cos(a), oy = Math.sin(a);
-      var swT = survMapDef().swarm || "bat";
-      for (var i = -5; i <= 5; i++) survSpawnScaled(swT, p.vx + ox * 7 - oy * i, p.vy + oy * 7 + ox * i);
-    } else {
+      var swT = MD.swarm || "bat";
+      for (i = -5; i <= 5; i++) survSpawnScaled(swT, p.vx + ox * 7 - oy * i, p.vy + oy * 7 + ox * i);
+    } else if (r < 0.45) {
       banner("Encerclement !", "#ff5a4f", 1500, 30); sfx("warn");
-      var pool = survMapDef().ring;
+      var pool = MD.ring;
       for (var k = 0; k < 14; k++) { var an = k / 14 * 6.283; survSpawnScaled(pool[rnd(pool.length)], p.vx + Math.cos(an) * 5, p.vy + Math.sin(an) * 5); }
+    } else if (r < 0.62) {
+      banner("Colonne en marche !", "#ff9a3c", 1500, 28); sfx("warn");
+      var cp = MD.b.concat(MD.c);
+      for (i = 0; i < 12; i++) survSpawnScaled(cp[rnd(cp.length)], p.vx + ox * (10 + i * 1.2), p.vy + oy * (10 + i * 1.2));
+    } else if (r < 0.80) {
+      banner("Embuscade d'élites !", "#ffb02e", 1600, 28); sfx("warn");
+      var ep = MD.c;
+      for (i = 0; i < 4; i++) { e = survSpawnScaled(ep[rnd(ep.length)], p.vx + Math.cos(i * 1.5708 + a) * 6, p.vy + Math.sin(i * 1.5708 + a) * 6); survEliteify(e); }
+    } else {
+      banner("Pluie de kamikazes !", "#ff3b3b", 1500, 28); sfx("warn");
+      var kp = MD.a.concat(MD.b);
+      for (i = 0; i < 9; i++) { var ka = a + i / 9 * 6.283; e = survSpawnScaled(kp[rnd(kp.length)], p.vx + Math.cos(ka) * 9, p.vy + Math.sin(ka) * 9); e.kami = true; e.spd *= 1.3; e.atk = Math.round(e.atk * 1.4); }
     }
   }
   function genSurvivalArena() {
@@ -10076,16 +10093,28 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     8: { slime: [185, 0.95, 1.15], spider: [8, 1.0, 1.05], goblin: [30, 0.55, 1.1], skeleton: [40, 0.4, 1.1], harpy: [200, 0.1, 1.4], archer: [35, 0.7, 1.0], cultist: [190, 0.7, 0.95], wolf: [30, 0.5, 1.0] },
     9: { skeleton: GOLDT, lycan: [48, 0.4, 1.3], harpy: [45, 0.5, 1.3], werewolf: [45, 0.3, 1.2] }
   };
+  /* ---- équilibrage du Mode Survie : tous les réglages de difficulté au même endroit ---- */
+  var BAL = {
+    hpLin: 0.95, hpQuad: 0.15,          /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
+    atkLin: 0.62, atkQuad: 0.07,        /* attaque des monstres */
+    spawnCyc: 0.7,                      /* nombre de monstres par lot : + 70 % par vague passée */
+    capBase: 30, capCyc: 9,             /* nombre maximal de monstres à l'écran */
+    firstWaveN: 0.8,                    /* vague 1 : proportion du lot normal (débutants) */
+    ivStart: 2.3, ivSlope: 1.9, ivMin: 0.4, ivCyc: 0.3,   /* cadence des lots : intervalle en secondes */
+    eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.025,    /* chance d'élite */
+    bossCyc: 0.3, superBoss: 3.4, miniCyc: 0.2,           /* vie des boss */
+    xpQuad: 0.95                        /* coût du niveau suivant : plus haut = on monte moins vite */
+  };
   function survCyc() { return (state && state.survival) ? (state.survCycle || 0) * 1.0 + survMapIdx() * 0.6 : 0; }
-  function survHpMul() { var c = survCyc(); return 1 + c * 0.75 + c * c * 0.08; }
-  function survAtkMul() { var c = survCyc(); return 1 + c * 0.55 + c * c * 0.05; }
+  function survHpMul() { var c = survCyc(); return 1 + c * BAL.hpLin + c * c * BAL.hpQuad; }
+  function survAtkMul() { var c = survCyc(); return 1 + c * BAL.atkLin + c * c * BAL.atkQuad; }
   function survSpdMul() { return Math.min(1.0, 0.78 + survCyc() * 0.03); }
   function survShootMul() { return Math.max(1.7, 3.0 - survCyc() * 0.15); }
   function survMapDef() { return SURV_MAP[state.survMapTheme != null ? state.survMapTheme : 0] || SURV_MAP[0]; }
   function survTintFor(type) { var m = MAPTINT[state.survMapTheme]; return (m && m[type]) || null; }
   var SURV_POOL1 = ["slime", "bat", "skeleton", "goblin", "spider"], SURV_POOL2 = ["wolf", "mushroom", "archer", "lycan", "harpy"], SURV_POOL3 = ["ghost", "cultist", "centaur", "werewolf", "minotaur", "medusa"];
   var SURV_BOSSES = ["ogre", "spiderqueen", "toadking", "dragon", "lich", "pharaoh", "cyclops"];
-  function survCap() { return Math.min(100, 30 + (state.survCycle || 0) * 7); }
+  function survCap() { return Math.min(100, BAL.capBase + (state.survCycle || 0) * BAL.capCyc); }
   function spawnWaveBatch(frac, forceN, ringMode) {
     var cycW = state.survCycle || 0, capW = survCap() + (forceN ? 12 : 0);
     if (enemies.length >= capW) return;
@@ -10097,11 +10126,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var WT = WAVE_THEMES[state.survThemeW];
     if (WT) { var full = MD.a.concat(MD.b, MD.c), fl2 = full.filter(function (t) { return WT.pool.indexOf(t) >= 0; }); pool = fl2.length >= 2 ? fl2 : full; }
     var rad = Math.min(Math.floor(W / 2), Math.floor(H / 2)) - 2;
-    var nBase = (frac < 0.15 ? 2 : 2 + Math.floor((frac - 0.15) * 11 + Math.random() * 3)) * (1 + cycW * 0.55);
+    var nBase = (frac < 0.15 ? 2 : 2 + Math.floor((frac - 0.15) * 11 + Math.random() * 3)) * (1 + cycW * BAL.spawnCyc);
     var n = Math.min(capW - enemies.length, Math.round(nBase)), placed = 0, tries = 0;
     if (WT) n = Math.max(1, Math.round(n * WT.n));
-    if (cycW === 0) n = Math.max(1, Math.round(n * 0.7));
+    if (cycW === 0) n = Math.max(1, Math.round(n * BAL.firstWaveN));
     if (forceN) n = Math.min(capW - enemies.length, forceN);
+    if (WT && WT.ring) ringMode = true;
     var a0 = Math.random() * 6.283;
     while (placed < n && tries < 90) {
       tries++;
@@ -10115,7 +10145,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (!e.elite && frac > 0.15 && Math.random() < 0.08) { e.kami = true; e.spd *= 1.35; e.atk = Math.round(e.atk * 1.5); }
       else if ((type === "skeleton" || type === "goblin") && Math.random() < 0.15) e.shieldHp = 3;
       else if ((type === "wolf" || type === "minotaur" || type === "werewolf" || type === "lycan") && Math.random() < 0.3) { e.charger = true; e.chCd = 2 + Math.random() * 2; }
-      if (!e.elite && Math.random() < 0.03 + frac * 0.06 + Math.min(0.14, cyc0 * 0.02)) {
+      if (!e.elite && Math.random() < BAL.eliteBase + frac * BAL.eliteFrac + Math.min(0.16, cyc0 * BAL.eliteCyc) + ((WT && WT.elite) || 0)) {
         e.elite = true; e.vr = 3; e.hp = e.maxHp = Math.round(e.hp * 1.6); e.atk = Math.round(e.atk * 1.2); e.xp = e.xp * 2 + 2; e.gold = e.gold * 2 + 1; e.scale = (e.scale || 1) * 1.2; e.r += 0.05;
       }
       var spc = SPEED * (e.kami ? 0.9 : 0.72); if (e.spd > spc * 0.8) e.spd = Math.min(spc, spc * 0.8 + (e.spd - spc * 0.8) * 0.35);
@@ -10129,10 +10159,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!inb(ex, ey) || g[ey][ex] !== 0) { var fb2 = survFreeNear(p.x, p.y - 3); ex = fb2[0]; ey = fb2[1]; }
     var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true;
     var cyc = survCyc();
-    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * 0.2) * ((state.survCycle || 0) === 0 ? 0.7 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
+    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? 0.75 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
-      e.superBoss = true; e.hp = e.maxHp = Math.round(e.hp * 2.6); e.atk = Math.round(e.atk * 1.3); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
+      e.superBoss = true; e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss); e.atk = Math.round(e.atk * 1.3); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
       var lti = LT.info(state.survMapTheme || 0);
       if (lti) { e.skin = "lt_" + lti.id; e.title = lti.name; if (lti.big) { e.hp = e.maxHp = Math.round(e.hp * 1.3); e.scale *= 1.15; } }
       shake(6, 600);
@@ -10167,7 +10197,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     });
     projs = projs.filter(function (pr) { return pr.own === "player"; });
     state.survT = 0; state.survBossUp = false; state.survSpawnT = 1.2; state.survTierSeen = {}; state.survMiniDone = false; state.survRing = null;
-    state.survThemeW = ["rapide", "tireurs", "colosses", "normal"][rnd(4)];
+    state.survThemeW = (function () { var pl = WAVE_THEME_IDS.filter(function (id) { return id !== state.survThemeW; }); return pl[rnd(pl.length)]; })();
     state.survDur = Math.round(state.survDur * 1.03);
     state.survOpenRush = true; state.survSurgeT = 20 - Math.min(9, state.survCycle * 1.5);
     setTrack(wantedTrack(false));
@@ -10239,7 +10269,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!state.survBossUp && !state.survMiniDone && state.survT > state.survDur * 0.5) { state.survMiniDone = true; spawnMiniBoss(); }
     if (!state.survBossUp) {
       state.survEvT = (state.survEvT == null ? 45 : state.survEvT) - dt;
-      if (state.survEvT <= 0) { state.survEvT = 38 + Math.random() * 20; survivalEvent(); }
+      if (state.survEvT <= 0) { state.survEvT = 32 + Math.random() * 18; survivalEvent(); }
     }
     if (state.survPetLv) {
       state.survPetT = (state.survPetT || 0) - dt;
@@ -10284,7 +10314,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (remain <= 0) { spawnSurvivalBoss(); state.survBossUp = true; }
       else {
         state.survSpawnT -= dt;
-        if (state.survSpawnT <= 0) { var frac = state.survT / state.survDur; state.survSpawnT = Math.max(0.18, Math.max(0.45, 2.6 - frac * 2.05) / (1 + (state.survCycle || 0) * 0.25)); spawnWaveBatch(frac); }
+        if (state.survSpawnT <= 0) { var frac = state.survT / state.survDur; state.survSpawnT = Math.max(0.16, Math.max(BAL.ivMin, BAL.ivStart - frac * BAL.ivSlope) / (1 + (state.survCycle || 0) * BAL.ivCyc)); spawnWaveBatch(frac); }
       }
     } else if (!enemies.some(function (e) { return e.survivalBoss; })) survivalWin(null);
   }
