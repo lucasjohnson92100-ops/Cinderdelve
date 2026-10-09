@@ -23,12 +23,18 @@ jobs:
       - name: Check build directory
         run: test -f "$BUILD_DIR/index.html" || { echo "$BUILD_DIR/index.html introuvable"; exit 1; }
 
-      - name: Push to itch.io with butler
-        uses: manleydev/butler-publish-itchio-action@v1.0.3
+      - name: Install butler
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler-bin
+          chmod +x butler-bin/butler
+          butler-bin/butler -V
+
+      - name: Push to itch.io
         env:
           # Secret à créer dans Settings > Secrets and variables > Actions > Secrets
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
-          CHANNEL: ${{ env.CHANNEL }}
-          ITCH_GAME: ${{ env.ITCH_GAME }}
-          ITCH_USER: ${{ env.ITCH_USER }}
-          PACKAGE: ${{ env.BUILD_DIR }}
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          test -n "$ITCH_USER" && test -n "$ITCH_GAME" || { echo "Variables ITCH_USER / ITCH_GAME manquantes"; exit 1; }
+          test -n "$BUTLER_API_KEY" || { echo "Secret BUTLER_API_KEY manquant"; exit 1; }
+          butler-bin/butler push "$BUILD_DIR" "$ITCH_USER/$ITCH_GAME:$CHANNEL" --userversion "${GITHUB_REF_NAME}-${GITHUB_SHA::7}"
