@@ -224,6 +224,9 @@ body.dark-ui .main-btn { background-image: var(--grain-leather), linear-gradient
   box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.35), inset 0 -10px 16px rgba(0,0,0,0.25), 0 3px 0 #2a0404, 0 6px 14px rgba(0, 0, 0, 0.6); }
 body.dark-ui .main-btn.alt { background-image: var(--grain-leather), linear-gradient(#3b2d22, #1d1510); background-blend-mode: soft-light; background-size: 120px 120px, 100% 100%; color: #dcc898; border-color: #7a5a24; box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), inset 0 -8px 14px rgba(0,0,0,0.3), 0 3px 0 #050302, 0 6px 14px rgba(0, 0, 0, 0.6); }
 body.dark-ui .main-btn:disabled { opacity: 0.45; }
+.row.legend, #lvlup .row.legend, body.dark-ui #lvlup .row.legend { border: 2px solid #ffb02e !important; background: linear-gradient(rgba(255,176,46,0.22), rgba(120,40,0,0.18)) !important; box-shadow: inset 0 0 0 1px #ffd23c, 0 0 18px rgba(255,176,46,0.7) !important; animation: lgpulse 1.5s ease-in-out infinite; }
+.row.legend .txt b { color: #ffd23c; }
+@keyframes lgpulse { 50% { box-shadow: inset 0 0 0 1px #fff3b0, 0 0 30px rgba(255,200,70,1) !important; } }
 body.dark-ui .row { background-image: var(--grain-stone), linear-gradient(rgba(255, 240, 200, 0.04), rgba(255, 240, 200, 0.04)); background-blend-mode: overlay; background-size: 120px 120px, 100% 100%; border: 1px solid #3d2a16; border-radius: 4px; color: var(--ink); }
 body.dark-ui .row.evo { border-color: #b98a34; box-shadow: 0 0 10px rgba(200, 140, 40, 0.3); }
 body.dark-ui .row small { color: var(--muted); }
@@ -4714,6 +4717,13 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       c.globalCompositeOperation = "lighter"; c.strokeStyle = rg("180,215,255", 0.6 * a); c.lineWidth = 2; c.beginPath(); c.arc(x, y, R + 4 + 6 * ((t / 600) % 1), 0, T2); c.stroke();
     };
 
+    /* ---- trou noir : anneaux qui se resserrent ---- */
+    DR.implode = function (c, f, k, t) {
+      var R = f.R * TILE, x = f.x, y = f.y, a = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8, P = f.pal; c.globalCompositeOperation = "lighter";
+      for (var i = 0; i < 4; i++) { var kk = (k * 1.6 + i * 0.22) % 1, r = Math.max(2, R * (1 - kk)); c.strokeStyle = rg(i % 2 ? P[1] : P[0], 0.8 * a * kk); c.lineWidth = 2 + 4 * kk; c.beginPath(); c.arc(x, y, r, 0, T2); c.stroke(); }
+      for (var j = 0; j < 14; j++) { var an = f.seed + j / 14 * T2 + k * 6, rr = R * (1 - (k * 1.3 + j * 0.07) % 1); c.fillStyle = rg(P[1], 0.8 * a); c.beginPath(); c.arc(x + Math.cos(an) * rr, y + Math.sin(an) * rr, 2.2, 0, T2); c.fill(); }
+      c.globalCompositeOperation = "source-over"; var g = c.createRadialGradient(x, y, 0, x, y, 20 + 8 * k); g.addColorStop(0, rg("10,0,30", 0.85 * a)); g.addColorStop(1, rg("10,0,30", 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, 28, 0, T2); c.fill();
+    };
     /* ---- sorts : ce qui se passe à l'écran pour chaque animal ---- */
     function snap(id) {
       var s = { d: fmAimDir(), near: [], chain: [] }, n = pEvo() ? 12 : 3 + pL();
@@ -4804,6 +4814,10 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         case "coq": add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
       }
     }
+    function chain(pts, id) { var P = PAL[id] || PAL.cavia; add("bolt", pts[0][0], pts[0][1], 520, { pts: pts.map(function (q) { return [px(q[0]), px(q[1])]; }), pal: P }); }
+    function hole() { add("implode", p.vx, p.vy, 900, { R: 7, pal: ["170,110,255", "235,220,255", "60,30,140"] }); }
+    function nova() { add("sun", p.vx, p.vy, 1000, { R: 4.6, pal: PAL.dinde }); add("shock", p.vx, p.vy, 800, { R: 4.4, pal: PAL.coq }); }
+    function legend() { add("sun", p.vx, p.vy, 900, { R: 3.2, pal: PAL.coq }); add("feather", p.vx, p.vy, 1000, { n: 12, R: 3.4, spin: 2, pal: PAL.coq }); add("shock", p.vx, p.vy, 600, { R: 2.6, pal: PAL.coq }); }
     function egg(x, y, evo) {
       var id = state && state.variant, P = PAL[id] || PAL.cocotte;
       add("splat", x, y, 560, { R: (evo ? 3.2 : 2.5) * pS(), pal: P });
@@ -4818,6 +4832,10 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         c.globalCompositeOperation = "lighter";
         for (i = 0; i < 9; i++) { an = i / 9 * T2 + t / 600; var fy = ((t / 380 + i * 0.37) % 1), fx = x + Math.cos(an) * 14, fh = 10 * (1 - fy);
           disc(c, fx, y + 4 - fy * 18 + Math.sin(an) * 5, 6 * (1 - fy * 0.5) + 2, i % 2 ? "255,110,50" : "255,214,80", 0.8 * (1 - fy)); }
+      }
+      if (state.survival && state.leg) {
+        if (state.leg.berserk && state.hp < state.maxHp * 0.4) { c.globalCompositeOperation = "lighter"; disc(c, x, y, 2.4 * TILE, "255,40,40", 0.3 + 0.18 * Math.sin(t / 90)); c.globalCompositeOperation = "source-over"; }
+        if (state.legFeather) { c.strokeStyle = rg("235,245,255", 0.55 + 0.25 * Math.sin(t / 150)); c.lineWidth = 1.6; c.beginPath(); c.ellipse(x, y + 1, 11, 12.5, 0, 0, T2); c.stroke(); }
       }
       var A = state.farmAct; if (!A) return;
       var id = A.id.replace(/^u_/, ""), ult = /^u_/.test(A.id), P = PAL[id]; if (!P) return;
@@ -4903,7 +4921,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       auras(c, t);
       c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
     }
-    return { snap: snap, power: power, ult: ult, egg: egg, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
+    return { snap: snap, power: power, ult: ult, egg: egg, chain: chain, hole: hole, nova: nova, legend: legend, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
   })();
   /* ================= EFFETS : niveau, ramassage, auras ================= */
   var FX2 = (function () {
@@ -6341,6 +6359,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   }
 
   function earn(n, tx, ty) {
+    if (state && state.survival && legHas("harvest")) n = Math.round(n * 1.8);
     var gb = n * (fx().gold + (state.cls === "rogue" ? 0.35 : 0));
     n += Math.floor(gb) + (Math.random() < gb - Math.floor(gb) ? 1 : 0);
     state.gold += n; state.earned += n;
@@ -6384,6 +6403,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (healed > 0) { addFloat(p.vx, p.vy - 0.6, "+" + healed, "#ff6b81"); burst(p.vx, p.vy, "#ff6b81", 5, 40); }
     }
     state.kills++;
+    legOnKill(e);
     sfx(e.boss ? "bossdeath" : "kill");
     killFx(e);
     if (GFX === "dark") bloodPool(e);
@@ -6461,6 +6481,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       moveBody(e, kdx / kd * 0.7, kdy / kd * 0.7, e.r, e.ghost); tileOfBody(e);
     }
     mult *= 1 + 0.08 * tr("mastery");
+    if (legBerserk()) mult *= 1.5;
     if (e.hp < e.maxHp * 0.4) mult *= 1 + 0.2 * tr("execute");
     if (state.buffT > 0 && state.cls === "warrior") mult *= 1.3;
     d = Math.max(1, Math.round(d * mult));
@@ -6477,6 +6498,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       floatBoost = crit ? 1.7 : (mult > 1.35 ? 1.3 : 1);
       if (crit) hitStop(45);
       dmgEnemy(e, d, crit ? "Tu écrases" : "Tu frappes");
+      legOnHit(e, d);
       doSweep(e, d);
     }
   }
@@ -6535,6 +6557,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (p.dash || (p.roll && now() - p.roll.t0 < 500)) { addFloat(p.vx, p.vy, "Esquive", "#6fd6ff"); }
       return;
     }
+    if (legAbsorb()) return;
     if (guarded && kind !== "zone" && gtime - p.guardT <= parryWin()) { parry(e, kind, pr); return; }
     if (Math.random() < Math.min(state.survival ? 0.3 : 0.6, (state.cls === "rogue" ? 0.2 : 0) + fx().dodge + ((atype() && atype().dodge) || 0))) {
       e.lunge = { dx: p.vx - e.vx, dy: p.vy - e.vy, t0: now() };
@@ -9528,7 +9551,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     setTimeout(function () { survTip("start", "Déplace-toi avec le stick : ton héros attaque tout seul. Ramasse les gemmes pour gagner de l'expérience."); }, 1200);
     updateVis();
   }
-  function survAtkCooldown() { return Math.max(0.9, 2.8 - (state.lvl - 1) * 0.09); }
+  function survAtkCooldown() { var cd = Math.max(0.9, 2.8 - (state.lvl - 1) * 0.09); return legBerserk() ? cd * 0.5 : cd; }
   function tryFullscreen() {
     try {
       if (document.fullscreenElement || document.webkitFullscreenElement) return;
@@ -9955,6 +9978,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var afxS = AFX.snap(state.variant);
     if (pw.run() === false) return;
     AFX.power(state.variant, afxS);
+    if (legHas("echo")) legDefer(0.8, function () { var m0 = state.farmPwMul; state.farmPwMul = (m0 || 1) * 0.6; try { var s2 = AFX.snap(state.variant); pw.run(); AFX.power(state.variant, s2); } catch (err) {} state.farmPwMul = m0; });
     if (typeof VOX !== "undefined") VOX.power(state.variant);
     castFx(false, " ");
     if (Math.random() < 0.3) LORE.shoutFor(state.variant);
@@ -10138,6 +10162,129 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     8: { slime: [185, 0.95, 1.15], spider: [8, 1.0, 1.05], goblin: [30, 0.55, 1.1], skeleton: [40, 0.4, 1.1], harpy: [200, 0.1, 1.4], archer: [35, 0.7, 1.0], cultist: [190, 0.7, 0.95], wolf: [30, 0.5, 1.0] },
     9: { skeleton: GOLDT, lycan: [48, 0.4, 1.3], harpy: [45, 0.5, 1.3], werewolf: [45, 0.3, 1.2] }
   };
+  /* ================= DONS LÉGENDAIRES : améliorations rares qui transforment la partie, avec des synergies à découvrir ================= */
+  var LEGENDS = {
+    vengeance: { name: "Éclats vengeurs", tag: "Feu", icon: "fire", desc: "20 % des monstres explosent à leur mort et blessent ceux qui les entourent." },
+    chain: { name: "Foudre en chaîne", tag: "Foudre", icon: "chain", desc: "Tous les 4 coups, un éclair saute sur 4 monstres." },
+    blackhole: { name: "Trou noir", tag: "Vide", icon: "vortex", desc: "Toutes les 14 s, aspire les monstres proches et les étourdit." },
+    meteors: { name: "Pluie d'étoiles", tag: "Astre", icon: "meteor", desc: "Toutes les 2,5 s, une étoile s'écrase sur un monstre." },
+    berserk: { name: "Fureur du sang", tag: "Sang", icon: "cry", desc: "Sous 40 % de PV : tu frappes deux fois plus vite et 50 % plus fort." },
+    vampire: { name: "Soif de vie", tag: "Sang", icon: "heart", desc: "Chaque monstre vaincu te rend 1 PV." },
+    feather: { name: "Plume protectrice", tag: "Vent", icon: "sp_feather", desc: "Toutes les 10 s, une plume annule le prochain coup reçu." },
+    echo: { name: "Écho", tag: "Vent", icon: "orb", desc: "Ton pouvoir se déclenche une seconde fois, à 60 % de puissance." },
+    harvest: { name: "Moisson d'or", tag: "Or", icon: "coin", desc: "+80 % d'œufs d'or, et des pièces jaillissent parfois des monstres." }
+  };
+  var LEG_SYN = [
+    { a: "vengeance", b: "chain", name: "Tempête d'éclats", desc: "Chaque explosion déclenche aussi des éclairs." },
+    { a: "meteors", b: "blackhole", name: "Supernova", desc: "Le trou noir se termine par une énorme explosion." },
+    { a: "berserk", b: "vampire", name: "Soif de sang", desc: "Sous 40 % de PV, chaque victoire te rend 3 PV." },
+    { a: "feather", b: "echo", name: "Aile gardienne", desc: "Quand la plume te protège, elle libère une salve de plumes." }
+  ];
+  var LEGX = { pull: null, defer: [], depth: 0, healT: 0 };
+  function legHas(id) { return !!(state && state.survival && state.leg && state.leg[id]); }
+  function legSynOn(a, b) { return legHas(a) && legHas(b); }
+  function legDefer(sec, fn) { LEGX.defer.push({ t: sec, fn: fn }); }
+  function legBerserk() { return legHas("berserk") && state.hp < state.maxHp * 0.4; }
+  function legDmg(mul) { return Math.max(3, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * mul)); }
+  function legExplode(x, y, r, mul, verb, quiet) {
+    if (LEGX.depth >= 2) return;
+    LEGX.depth++;
+    try {
+      var d = legDmg(mul), prev = dmgSrc; dmgSrc = "Don légendaire";
+      enemies.slice().forEach(function (e) { if (e.hp > 0 && Math.hypot(e.vx - x, e.vy - y) <= r) dmgEnemy(e, e.survivalBoss ? Math.round(d * 0.5) : d, verb || "L'explosion frappe"); });
+      dmgSrc = prev;
+      if (!quiet) { SPV.add("boom", x, y, r * 0.9, 700); SPV.add("scorch", x, y, r * 0.8, 1600); shake(2.2, 180); }
+    } finally { LEGX.depth--; }
+  }
+  function legArcs(from, n, mul) {
+    var pts = [[from.vx, from.vy]], used = [from], cur = from, d = legDmg(mul), prev = dmgSrc; dmgSrc = "Don légendaire";
+    for (var i = 0; i < n; i++) {
+      var best = null, bd = 5.5;
+      enemies.forEach(function (e) { if (e.hp <= 0 || used.indexOf(e) >= 0) return; var dd = Math.hypot(e.vx - cur.vx, e.vy - cur.vy); if (dd < bd) { bd = dd; best = e; } });
+      if (!best) break;
+      used.push(best); pts.push([best.vx, best.vy]); cur = best;
+    }
+    if (pts.length > 1) { AFX.chain(pts, "cavia"); for (var k = 1; k < used.length; k++) dmgEnemy(used[k], d, "La foudre frappe"); sfx("energy"); }
+    dmgSrc = prev;
+  }
+  function legOnHit(e, d) {
+    if (!legHas("chain")) return;
+    state.legHits = (state.legHits || 0) + 1;
+    if (state.legHits % 4 === 0) legArcs(e, 4, 0.7);
+  }
+  function legOnKill(e) {
+    if (!state || !state.survival || !state.leg) return;
+    if (legHas("vengeance") && Math.random() < 0.2) {
+      legExplode(e.vx, e.vy, 2.3, 1.5, "L'éclat vengeur frappe");
+      if (legSynOn("vengeance", "chain")) { var near = enemies.filter(function (o) { return o.hp > 0 && Math.hypot(o.vx - e.vx, o.vy - e.vy) < 6; })[0]; if (near) legArcs({ vx: e.vx, vy: e.vy }, 3, 0.8); }
+    }
+    if (legHas("vampire")) {
+      var low = legSynOn("berserk", "vampire") && state.hp < state.maxHp * 0.4, nowT = now();
+      if (nowT - LEGX.healT > 150) { LEGX.healT = nowT; var h = healHp(low ? 3 : 1); if (h > 0) { addFloat(p.vx, p.vy - 0.6, "+" + h, "#ff6b81"); burst(p.vx, p.vy, "#ff6b81", 4, 40); } }
+    }
+    if (legHas("harvest") && Math.random() < 0.08) earn(3 + rnd(4), e.vx, e.vy);
+  }
+  function legTick(dt) {
+    if (!state.leg) return;
+    var T = state.legT = state.legT || {}, i;
+    for (i = LEGX.defer.length - 1; i >= 0; i--) { LEGX.defer[i].t -= dt; if (LEGX.defer[i].t <= 0) { var f = LEGX.defer.splice(i, 1)[0].fn; try { f(); } catch (err) {} } }
+    if (legHas("meteors")) {
+      T.met = (T.met == null ? 1 : T.met) - dt;
+      if (T.met <= 0) {
+        T.met = 2.5;
+        var ve = visibleEnemies();
+        if (ve.length) { var tg = ve[rnd(ve.length)], mx = tg.vx, my = tg.vy; SPV.add("meteorfall", mx, my, 1.8, 850); legDefer(0.82, function () { legExplode(mx, my, 1.9, 2.2, "L'étoile écrase"); }); }
+      }
+    }
+    if (legHas("blackhole")) {
+      T.bh = (T.bh == null ? 8 : T.bh) - dt;
+      if (T.bh <= 0 && enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7; })) {
+        T.bh = 14; LEGX.pull = { t: 0.8 }; SPV.add("vortex", p.vx, p.vy, 3.2, 1000); AFX.hole(); sfx("rage"); banner("Trou noir !", "#a56bff", 1000, 26);
+        enemies.forEach(function (e) { if (e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7) { e.stunT = Math.max(e.stunT || 0, 2); e.wind = 0; } });
+      }
+    }
+    if (LEGX.pull) {
+      LEGX.pull.t -= dt;
+      enemies.forEach(function (e) {
+        if (e.hp <= 0 || e.survivalBoss) return; var dx = p.vx - e.vx, dy = p.vy - e.vy, dd = Math.hypot(dx, dy);
+        if (dd < 7 && dd > 1.1) { var st = Math.min(dd - 1, 11 * dt); moveBody(e, dx / dd * st, dy / dd * st, e.r, e.ghost); tileOfBody(e); }
+      });
+      if (LEGX.pull.t <= 0) {
+        LEGX.pull = null;
+        if (legSynOn("meteors", "blackhole")) { legExplode(p.vx, p.vy, 4.2, 4, "La supernova frappe"); screenFlash("255,230,170", 500); banner("SUPERNOVA !", "#ffb02e", 1200, 34); AFX.nova(); }
+      }
+    }
+    if (legHas("feather")) { T.fe = (T.fe == null ? 4 : T.fe) - dt; if (T.fe <= 0 && !state.legFeather) { state.legFeather = true; T.fe = 10; addFloat(p.vx, p.vy - 0.8, "Plume prête", "#e8f4ff"); } }
+  }
+  /* la plume absorbe le prochain coup : renvoie vrai si le coup est annulé */
+  function legAbsorb() {
+    if (!state || !state.survival || !state.legFeather) return false;
+    state.legFeather = false; (state.legT = state.legT || {}).fe = 10;
+    addFloat(p.vx, p.vy - 0.8, "Plume !", "#e8f4ff"); burst(p.vx, p.vy, "#e8f4ff", 12, 70); rings.push({ x: p.vx, y: p.vy, t0: now(), dur: 420, c: "#e8f4ff", R: 40 }); sfx("block");
+    p.invuln = Math.max(p.invuln || 0, gtime + 450);
+    if (legSynOn("feather", "echo")) { AFX.power("oie", { d: [1, 0], near: [] }); legExplode(p.vx, p.vy, 3.2, 2, "Les plumes fusent", true); }
+    return true;
+  }
+  function survLegendOpt() {
+    if (!state.survival || state.lvl < 4) return null;
+    state.leg = state.leg || {};
+    var owned = Object.keys(state.leg).length, avail = Object.keys(LEGENDS).filter(function (id) { return !state.leg[id]; });
+    if (!avail.length) return null;
+    var since = state.lvl - (state.legLvl || 0), chance = (since >= 3 ? 0.16 : 0.03) + (owned === 0 && state.lvl >= 8 ? 0.4 : 0);
+    if (Math.random() > chance) return null;
+    var syn = avail.filter(function (id) { return LEG_SYN.some(function (sy) { return (sy.a === id && state.leg[sy.b]) || (sy.b === id && state.leg[sy.a]); }); });
+    var id = (syn.length && Math.random() < 0.6) ? syn[rnd(syn.length)] : avail[rnd(avail.length)], L = LEGENDS[id];
+    return { id: "leg_" + id, legend: true, tagTxt: L.tag, name: L.name, icon: L.icon, desc: L.desc + (syn.indexOf(id) >= 0 ? " ⚡ Synergie !" : ""), apply: function () { legGain(id); } };
+  }
+  function legGain(id) {
+    state.leg = state.leg || {}; state.leg[id] = true; state.legLvl = state.lvl;
+    var L = LEGENDS[id];
+    banner("✦ " + L.name + " !", "#ffb02e", 2200, 34); screenFlash("255,190,90", 450); sfx("levelup"); shake(3, 300);
+    AFX.legend();
+    LEG_SYN.forEach(function (sy) {
+      if ((sy.a === id && state.leg[sy.b]) || (sy.b === id && state.leg[sy.a])) setTimeout(function () { if (state && state.survival) { banner("⚡ Synergie : " + sy.name, "#7fe8ff", 2600, 30); say("Synergie découverte : " + sy.name + ". " + sy.desc); sfx("levelup"); } }, 900);
+    });
+  }
   /* ---- équilibrage du Mode Survie : tous les réglages de difficulté au même endroit ---- */
   var BAL = {
     hpLin: 1.25, hpQuad: 0.3,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
@@ -10278,6 +10425,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     survWeaponsTick(dt); if (mode !== "play") return;
     survBehaviorsTick(dt); if (mode !== "play") return;
     survAlliesTick(dt); if (mode !== "play") return;
+    legTick(dt); if (mode !== "play") return;
     if (state.survWinT > 0) {
       state.survWinT -= dt; state.survWinFxT -= dt;
       var wp = state.survWinPos || { x: p.vx, y: p.vy };
@@ -10474,6 +10622,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     picked.push(stats.shift());
     rest = shuffle(evos.concat(stats));
     while (picked.length < 3 && rest.length) picked.push(rest.shift());
+    var lgo = survLegendOpt(); if (lgo) picked[rnd(picked.length)] = lgo;
     return shuffle(picked);
   }
   function fillLevelList() {
@@ -10483,7 +10632,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     curLvlOpts.forEach(function (o) {
       var b = document.createElement("button");
       var ctg0 = comboTag(o);
-      b.className = "row" + (o.evo ? " evo" : "") + ((ctg0 || o.evo) && state.survival ? " combo" : ""); b.type = "button";
+      b.className = "row" + (o.evo ? " evo" : "") + ((ctg0 || o.evo) && state.survival ? " combo" : "") + (o.legend ? " legend" : ""); b.type = "button";
+      if (o.legend) { var lgb = document.createElement("span"); lgb.className = "sh-combo"; lgb.textContent = "✦ Don légendaire · " + o.tagTxt; b.appendChild(lgb); }
       if (state.survival && (ctg0 || o.evo)) { var rb0 = document.createElement("span"); rb0.className = "sh-combo"; rb0.textContent = o.evo ? "★ Évolution !" : "⚡ " + ctg0; b.appendChild(rb0); }
       var ic = mkCanvas(1, 1);
       paintIcon(ic, o.icon);
@@ -14080,6 +14230,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     mode = "paused"; haltInput(); saveGame(); AU.duck = true; if (AU.musG) AU.musG.gain.setTargetAtTime(musGain(), AU.ctx.currentTime, 0.15);
     var box = document.getElementById("pause-btns"); box.innerHTML = "";
     function btn(label, alt, fn) { var b = document.createElement("button"); b.type = "button"; b.className = "main-btn" + (alt ? " alt" : ""); b.textContent = label; b.addEventListener("click", fn); box.appendChild(b); }
+    if (state && state.survival && state.leg && Object.keys(state.leg).length) { var lgl = document.createElement("p"); lgl.style.cssText = "margin:0 0 6px;font-size:.88rem;color:#ffd23c;line-height:1.35"; lgl.innerHTML = "✦ " + Object.keys(state.leg).map(function (k) { return LEGENDS[k] ? LEGENDS[k].name : k; }).join(" · ") + (LEG_SYN.filter(function (sy) { return legSynOn(sy.a, sy.b); }).map(function (sy) { return "<br>⚡ " + sy.name; }).join("")); box.appendChild(lgl); }
     btn("Reprendre", false, closePause);
     btn("Carnet de guerre", true, function () { LORE.openCodex(); });
     btn("Comment jouer", true, openHelp);
