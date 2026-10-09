@@ -10095,16 +10095,17 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   };
   /* ---- équilibrage du Mode Survie : tous les réglages de difficulté au même endroit ---- */
   var BAL = {
-    hpLin: 0.95, hpQuad: 0.15,          /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
-    atkLin: 0.62, atkQuad: 0.07,        /* attaque des monstres */
-    spawnCyc: 0.7,                      /* nombre de monstres par lot : + 70 % par vague passée */
-    capBase: 30, capCyc: 9,             /* nombre maximal de monstres à l'écran */
-    firstWaveN: 0.8,                    /* vague 1 : proportion du lot normal (débutants) */
+    hpLin: 1.25, hpQuad: 0.3,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
+    atkLin: 0.8, atkQuad: 0.1,          /* attaque des monstres */
+    spawnCyc: 0.8,                      /* nombre de monstres par lot : + 80 % par vague passée */
+    capBase: 30, capCyc: 11,            /* nombre maximal de monstres à l'écran */
+    firstWaveN: 0.9,                    /* vague 1 : proportion du lot normal (débutants) */
     ivStart: 2.3, ivSlope: 1.9, ivMin: 0.4, ivCyc: 0.3,   /* cadence des lots : intervalle en secondes */
-    eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.025,    /* chance d'élite */
-    bossCyc: 0.3, superBoss: 3.4, miniCyc: 0.2,           /* vie des boss */
-    xpQuad: 0.95                        /* coût du niveau suivant : plus haut = on monte moins vite */
+    eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
+    boss1: 1.1, bossCyc: 0.6, superBoss: 4.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
+    xpQuad: 1.1                         /* coût du niveau suivant : plus haut = on monte moins vite */
   };
+
   function survCyc() { return (state && state.survival) ? (state.survCycle || 0) * 1.0 + survMapIdx() * 0.6 : 0; }
   function survHpMul() { var c = survCyc(); return 1 + c * BAL.hpLin + c * c * BAL.hpQuad; }
   function survAtkMul() { var c = survCyc(); return 1 + c * BAL.atkLin + c * c * BAL.atkQuad; }
@@ -10159,7 +10160,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!inb(ex, ey) || g[ey][ex] !== 0) { var fb2 = survFreeNear(p.x, p.y - 3); ex = fb2[0]; ey = fb2[1]; }
     var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true;
     var cyc = survCyc();
-    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? 0.75 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
+    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
       e.superBoss = true; e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss); e.atk = Math.round(e.atk * 1.3); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
