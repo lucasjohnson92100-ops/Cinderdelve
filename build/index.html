@@ -8052,7 +8052,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     mode = "dead";
     sfx("death"); setTrack("none");
-    clearSave();
+    clearSave(); clearSurvSave();
     bump();
     if (state.survival) {
       survDeathFx();
@@ -10010,7 +10010,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     loadBest();
     var oldRun = loadSave();
     if (oldRun && oldRun.state) addSouls(soulsFor(oldRun.state), oldRun.state);
-    clearSave();
+    clearSave(); clearSurvSave();
     hudPrev = {}; banners = []; orbs = []; corpses = []; lvlBeam = null; levelPopupAt = 0; freezeUntil = 0; slowUntil = 0;
     var vinfo = variant && SURV_VARIANTS[variant];
     var baseCls = vinfo ? vinfo.base : cls;
@@ -11351,7 +11351,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function saveGame() {
     try {
       if (!state || !g) return;
-      if (state.survival) return;
+      if (state.survival) { saveSurvival(); return; }
       var sm = mode === "gear" ? (gearCtx && gearCtx.c.source === "shop" ? "shop" : "play") : mode;
       if (sm !== "play" && sm !== "shop" && sm !== "levelup") return;
       localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -11371,6 +11371,75 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (s && s.v === 2 && s.state && s.g && s.g.length === H && s.g[0].length === W && s.enemies && DIFFS[s.diffKey]) return s;
     } catch (err) {}
     return null;
+  }
+  /* ---- sauvegarde du Mode Survie : la partie en cours est reprise là où elle s'est arrêtée (hors combat de boss) ---- */
+  var SSAVE_KEY = "donjon-save-surv";
+  function saveSurvival() {
+    try {
+      if (!state || !state.survival || !g || !p || state.survBossUp || state.survWin || state.survWinT > 0 || !(state.hp > 0)) return;
+      if (mode !== "play" && mode !== "paused" && mode !== "shop" && mode !== "levelup") return;
+      localStorage.setItem(SSAVE_KEY, JSON.stringify({
+        v: 1, t: Date.now(), mode: mode === "paused" ? "play" : mode, diffKey: diffKey, state: state, g: g, hz: hz, bprop: bprop, decor: decor,
+        p: { x: p.x, y: p.y, vx: p.vx, vy: p.vy }, gems: gems
+      }));
+    } catch (err) {}
+  }
+  function clearSurvSave() { try { localStorage.removeItem(SSAVE_KEY); } catch (err) {} }
+  function loadSurvSave() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SSAVE_KEY));
+      if (s && s.v === 1 && s.state && s.state.survival && s.g && s.g.length === 64 && s.g[0].length === 64 && s.hz && s.bprop && s.decor && s.p && DIFFS[s.diffKey]) return s;
+    } catch (err) {}
+    return null;
+  }
+  function survSaveInfo(s) {
+    var st = s.state, vi = st.variant && SURV_VARIANTS[st.variant], mp = SURV_MAPS.filter(function (m) { return m.id === st.survMapTheme; })[0];
+    return (vi ? vi.name : "Héros") + " · " + (mp ? mp.name : "Lieu") + " · vague " + ((st.survCycle || 0) + 1) + "/5 · niv. " + (st.lvl || 1);
+  }
+  function resumeSurvival(s) {
+    KC.n = 0; KC.t = 0; KC.tier = 0; if (KC.el) KC.el.style.opacity = "0";
+    window.__hsUntil = 0;
+    if (MUSIC_MP3.boss) mp3Load("boss");
+    tryFullscreen();
+    diffKey = s.diffKey;
+    try { localStorage.setItem("donjon-diff", diffKey); } catch (e) {}
+    loadBest();
+    hudPrev = {}; banners = []; orbs = []; corpses = []; lvlBeam = null; levelPopupAt = 0; freezeUntil = 0; slowUntil = 0;
+    state = s.state;
+    var vinfo = state.variant && SURV_VARIANTS[state.variant], baseCls = vinfo ? vinfo.base : (state.cls || "warrior");
+    if (HERO.setVariant) HERO.setVariant(baseCls, null);
+    if (HERO.setAnimal) HERO.setAnimal(baseCls, vinfo && FARM.frames(state.variant) ? FARM.frames(state.variant) : null);
+    ensureSkills(state);
+    mode = "play"; parts = []; floats = []; projs = []; rings = [];
+    setMapSize(64, 64);
+    document.body.classList.add("surv");
+    resize();
+    genSurvivalArena();
+    g = s.g; hz = s.hz; bprop = s.bprop; decor = s.decor; gems = s.gems || [];
+    computeTorchLight();
+    p = { x: s.p.x, y: s.p.y, vx: s.p.vx != null ? s.p.vx : s.p.x, vy: s.p.vy != null ? s.p.vy : s.p.y, flash: 0, lunge: null, atkCd: 0.3, invuln: 0, mv: 0, dash: null, roll: null };
+    input.x = 0; input.y = 0; pdist = null;
+    stairs = { x: Math.round(p.x), y: Math.round(p.y) };
+    state.survSpawnT = Math.max(state.survSpawnT || 0, 3); state.farmAct = null;
+    hideHome(); ["ov", "kit", "shop", "lvlup", "gear", "bag"].forEach(function (id) { document.getElementById(id).classList.remove("show"); });
+    gearCtx = null; camSnap = true; rollArmed = false; trail = [];
+    msgs = ["Partie reprise. Les monstres reviennent dans un instant."];
+    setTrack(wantedTrack(false));
+    updateVis(); ui();
+    banner("Partie reprise", "#ffd23c", 1600, 30);
+    if (s.mode === "shop") reopenSurvShop(); else if (state.pending > 0) { try { openLevelUp(); } catch (err) {} }
+  }
+  function reopenSurvShop() {
+    mode = "shop";
+    Object.keys(SURV_SHOP).forEach(function (k) { SHOP[k] = SURV_SHOP[k]; });
+    state.offers = (state.offers || []).filter(function (id) { return SHOP[id]; });
+    document.getElementById("shop").classList.add("surv");
+    try { if (survTipEl) survTipEl.style.display = "none"; } catch (e) {}
+    renderShop();
+    document.querySelector("#shop .box").scrollTop = 0;
+    document.getElementById("shop").classList.add("show");
+    document.getElementById("shop-go").textContent = "Continuer";
+    document.getElementById("shop-sub").textContent = state.offers.some(function (id) { return SHOP[id] && SHOP[id].combo; }) ? "⚡ Les cartes dorées font avancer un combo avec ton équipement actuel." : "";
   }
   function reopenShop() {
     mode = "shop";
@@ -11429,6 +11498,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     else mode = "play";
   }
 
+  document.addEventListener("visibilitychange", function () { if (document.hidden) saveSurvival(); });
+  window.addEventListener("pagehide", saveSurvival);
   function showIntro() { showHome(); }
   var SURV_MAPS = [
     { id: 0, name: "Crypte", unlock: 0 },
@@ -13816,6 +13887,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var first = btn("Mode Survie", false, function () { pendingMode = "survival"; hideHome(); showClassPick(); });
     first.classList.add("surv-main");
     first.innerHTML = "<span class=\"sm-t\">Mode Survie</span><small>" + (survTxt ? "Record : vague " + survTxt.split("|")[0] + " · " : "") + "Animaux libérés : " + survFreed().length + "/" + FARM_ORDER.length + "</small>";
+    var ss = loadSurvSave();
+    if (ss) { var rb = btn("Reprendre la survie", false, function () { hideHome(); resumeSurvival(ss); }); rb.classList.add("wide"); rb.innerHTML = "Reprendre la partie<small>" + survSaveInfo(ss) + "</small>"; }
     if (sv) btn("Continuer le donjon", true, function () { hideHome(); resumeGame(sv); }).innerHTML = "Continuer le donjon<small>étage " + sv.state.floor + "</small>";
     var classicOn = false; try { classicOn = localStorage.getItem("donjon-classic-on") === "1"; } catch (e) {}
     if (classicOn) btn("Donjon classique", true, function () { pendingMode = "normal"; hideHome(); showClassPick(); });
@@ -13826,7 +13899,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     btn("Réglages", true, openSettings);
     var shareB = btn("Partager le jeu", true, function () { doShare(inviteText()); });
     first.classList.add("wide");
-    if ((box.children.length - 1) % 2) shareB.classList.add("wide");
+    if ((box.children.length - (ss ? 2 : 1)) % 2) shareB.classList.add("wide");
     try {
       var hn = document.getElementById("home-next"), fr0 = survFreed(), nxt = FARM_ORDER.filter(function (id) { return fr0.indexOf(id) < 0; }).sort(function (a, b) { return SURV_VARIANTS[a].need - SURV_VARIANTS[b].need; })[0];
       if (hn && nxt) {
