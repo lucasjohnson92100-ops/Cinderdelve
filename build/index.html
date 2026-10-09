@@ -4449,6 +4449,462 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       } catch (err) {}
     });
   })();
+  /* ================= SORTS D'ANIMAUX : gros effets visuels (pouvoirs et ultimes) ================= */
+  var AFX = (function () {
+    var L = [], TR = [], T2 = 6.2832, DR = {}, tm = { slash: 0 };
+    /* palettes : [principal, clair, sombre] */
+    var PAL = {
+      cocotte: ["255,176,46", "255,243,192", "200,70,20"], cochon: ["255,140,170", "255,230,235", "170,40,80"], meuh: ["255,255,255", "255,190,186", "120,80,80"],
+      canard: ["110,215,255", "235,252,255", "30,110,200"], lapin: ["255,150,50", "255,226,150", "190,70,10"], mouton: ["250,246,236", "255,255,255", "170,160,190"],
+      cheval: ["255,206,70", "255,246,190", "170,100,20"], oie: ["255,255,255", "190,225,255", "90,130,200"], bouc: ["255,170,50", "255,240,200", "150,60,10"],
+      chien: ["120,195,255", "235,248,255", "40,90,190"], dinde: ["255,110,50", "255,214,80", "150,30,10"], ane: ["216,208,192", "255,255,255", "110,90,70"],
+      chat: ["100,255,150", "230,255,236", "20,120,60"], paon: ["130,100,255", "70,240,215", "255,210,60"], lama: ["190,255,110", "240,255,200", "70,140,20"],
+      cavia: ["170,120,255", "235,225,255", "90,60,200"], pintade: ["255,255,255", "160,215,255", "90,120,220"], coq: ["255,150,40", "255,236,160", "200,40,20"],
+      taureau: ["255,80,70", "255,210,90", "120,10,10"]
+    };
+    function low() { return typeof perf !== "undefined" && perf && perf.low; }
+    function rg(c, a) { return "rgba(" + c + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")"; }
+    function px(v) { return v * TILE + 8; }
+    function add(k, x, y, dur, ex) {
+      var f = { k: k, x: px(x), y: px(y), t0: now() + ((ex && ex.delay) || 0), dur: dur, seed: Math.random() * T2 };
+      if (ex) for (var q in ex) f[q] = ex[q];
+      L.push(f); if (L.length > 80) L.shift(); return f;
+    }
+    function disc(c, x, y, r, col, a) { var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(col, a)); g.addColorStop(1, rg(col, 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill(); }
+
+    /* ---- onde de choc : disque lumineux, anneaux, rayons ---- */
+    DR.shock = function (c, f, k) {
+      var R = f.R * TILE, e = 1 - Math.pow(1 - k, 3), a = 1 - k, r = Math.max(1, R * e), P = f.pal, x = f.x, y = f.y, n = f.rays || 16;
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(P[0], 0)); g.addColorStop(0.65, rg(P[0], 0.16 * a)); g.addColorStop(1, rg(P[0], 0.5 * a));
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill();
+      c.strokeStyle = rg(P[1], a); c.lineWidth = 2 + 7 * (1 - k); c.beginPath(); c.arc(x, y, r, 0, T2); c.stroke();
+      c.strokeStyle = rg(P[0], 0.7 * a); c.lineWidth = 1.5 + 4 * (1 - k); c.beginPath(); c.arc(x, y, r * 0.78, 0, T2); c.stroke();
+      c.lineCap = "round";
+      for (var i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2, r0 = r * 0.55, r1 = r * (1.02 + 0.12 * ((i * 7) % 3));
+        c.strokeStyle = rg(i % 2 ? P[0] : P[1], 0.8 * a); c.lineWidth = 2.5 * (1 - k) + 0.8;
+        c.beginPath(); c.moveTo(x + Math.cos(an) * r0, y + Math.sin(an) * r0); c.lineTo(x + Math.cos(an) * r1, y + Math.sin(an) * r1); c.stroke();
+      }
+      if (k < 0.18) disc(c, x, y, R * 0.45, "255,255,255", 0.6 * (1 - k / 0.18));
+    };
+    /* ---- cône de cornes / coup de boule ---- */
+    DR.cone = function (c, f, k) {
+      var R = f.R * TILE, e = 1 - Math.pow(1 - k, 2.5), a = 1 - k, P = f.pal, x = f.x, y = f.y, A0 = f.a - f.sp, A1 = f.a + f.sp, r = Math.max(1, R * e);
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, r * 0.2, x, y, r); g.addColorStop(0, rg(P[0], 0)); g.addColorStop(0.7, rg(P[0], 0.35 * a)); g.addColorStop(1, rg(P[1], 0.85 * a));
+      c.fillStyle = g; c.beginPath(); c.moveTo(x, y); c.arc(x, y, r, A0, A1); c.closePath(); c.fill();
+      c.strokeStyle = rg("255,255,255", a); c.lineWidth = 3 * (1 - k) + 1; c.beginPath(); c.arc(x, y, r, A0, A1); c.stroke(); c.lineCap = "round";
+      for (var i = 0; i < 7; i++) {
+        var an = A0 + (A1 - A0) * (i + 0.5) / 7, r0 = r * 0.35, r1 = r * (0.8 + 0.25 * ((i * 5) % 3) / 3);
+        c.strokeStyle = rg(P[1], 0.7 * a); c.lineWidth = 2 * (1 - k) + 0.8; c.beginPath(); c.moveTo(x + Math.cos(an) * r0, y + Math.sin(an) * r0); c.lineTo(x + Math.cos(an) * r1, y + Math.sin(an) * r1); c.stroke();
+      }
+    };
+    /* ---- jet / rayon (crachat, etc.) ---- */
+    DR.beam = function (c, f, k, t) {
+      var Ln = f.R * TILE, W = (f.w || 1.2) * TILE, a = 1 - k * k, P = f.pal, x = f.x, y = f.y, ca = Math.cos(f.a), sa = Math.sin(f.a), len = Ln * Math.min(1, k * 4), nx = -sa, ny = ca;
+      c.globalCompositeOperation = "lighter";
+      var g = c.createLinearGradient(x, y, x + ca * len, y + sa * len); g.addColorStop(0, rg(P[1], 0.9 * a)); g.addColorStop(0.7, rg(P[0], 0.7 * a)); g.addColorStop(1, rg(P[0], 0));
+      c.fillStyle = g; c.beginPath(); c.moveTo(x + nx * W * 0.25, y + ny * W * 0.25);
+      c.lineTo(x + ca * len + nx * W * 0.5, y + sa * len + ny * W * 0.5); c.lineTo(x + ca * len - nx * W * 0.5, y + sa * len - ny * W * 0.5); c.lineTo(x - nx * W * 0.25, y - ny * W * 0.25); c.closePath(); c.fill();
+      c.lineCap = "round"; c.strokeStyle = rg("255,255,255", 0.8 * a); c.lineWidth = 3 * (1 - k) + 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + ca * len, y + sa * len); c.stroke();
+      var n = low() ? 6 : 12;
+      for (var i = 0; i < n; i++) {
+        var u = ((i / n) + t / 700 + f.seed) % 1, d = u * len, w = Math.sin(u * 9 + t / 60 + f.seed) * W * 0.28, r = (4 + 5 * (1 - u)) * (1 - k * 0.6);
+        c.fillStyle = rg(i % 2 ? P[0] : P[1], 0.8 * a); c.beginPath(); c.arc(x + ca * d + nx * w, y + sa * d + ny * w, r, 0, T2); c.fill();
+      }
+    };
+    /* ---- traînée de charge : lignes de vitesse + poussière ---- */
+    DR.streak = function (c, f, k) {
+      var Ln = f.R * TILE, a = 1 - k, P = f.pal, x = f.x, y = f.y, ca = Math.cos(f.a), sa = Math.sin(f.a), nx = -sa, ny = ca, ext = Math.min(1, k * 5);
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (var i = -3; i <= 3; i++) {
+        var off = i * (f.w || 3.5), l0 = Ln * ext * (0.7 + 0.3 * ((i * i) % 3) / 2), sx = x + nx * off, sy = y + ny * off;
+        var g = c.createLinearGradient(sx, sy, sx + ca * l0, sy + sa * l0); g.addColorStop(0, rg(P[1], 0.85 * a)); g.addColorStop(1, rg(P[0], 0));
+        c.strokeStyle = g; c.lineWidth = (i === 0 ? 4 : 2) * (1 - k * 0.7); c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + ca * l0, sy + sa * l0); c.stroke();
+      }
+      c.globalCompositeOperation = "source-over";
+      for (var j = 0; j < 7; j++) {
+        var u = (j + 1) / 8, d = Ln * u * ext, r = (3 + 5 * u) * (1 - k * 0.5), ox = Math.sin(f.seed + j * 2.3) * 6;
+        c.fillStyle = rg(f.dust || "200,180,150", 0.45 * a); c.beginPath(); c.arc(x + ca * d + nx * ox, y + sa * d + ny * ox, r, 0, T2); c.fill();
+      }
+    };
+    /* ---- griffures ---- */
+    DR.slash = function (c, f, k) {
+      var S = (f.R || 1) * TILE, a = 1 - k, P = f.pal, x = f.x, y = f.y, g = Math.min(1, k * 4), fl = f.flip ? -1 : 1;
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (var i = -1; i <= 1; i++) {
+        var ox = i * S * 0.32, x0 = x + ox - fl * S * 0.6, y0 = y - S * 0.6 + i * S * 0.1, x1 = x + ox + fl * S * 0.6 * g, y1 = y + S * 0.6 * g + i * S * 0.1;
+        var ng = c.createLinearGradient(x0, y0, x1, y1); ng.addColorStop(0, rg(P[0], 0)); ng.addColorStop(0.5, rg("255,255,255", 0.95 * a)); ng.addColorStop(1, rg(P[0], 0.4 * a));
+        c.strokeStyle = ng; c.lineWidth = 3.2 * (1 - k * 0.6); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+        c.strokeStyle = rg(P[0], 0.5 * a); c.lineWidth = 7 * (1 - k); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+      }
+      if (k < 0.3) disc(c, x, y, S * 0.8, "255,255,255", 0.6 * (1 - k / 0.3));
+    };
+    /* ---- éclair en zigzag ---- */
+    DR.bolt = function (c, f, k, t) {
+      var a = 1 - k, P = f.pal, pts = f.pts, fl = Math.floor(t / 45);
+      c.globalCompositeOperation = "lighter"; c.lineJoin = "round"; c.lineCap = "round";
+      for (var pass = 0; pass < 3; pass++) {
+        c.strokeStyle = pass === 0 ? rg(P[0], 0.35 * a) : pass === 1 ? rg(P[1], 0.8 * a) : rg("255,255,255", a);
+        c.lineWidth = pass === 0 ? 9 : pass === 1 ? 4 : 1.6; c.beginPath();
+        for (var i = 0; i < pts.length; i++) {
+          var q = pts[i];
+          if (i === 0) { c.moveTo(q[0], q[1]); continue; }
+          var pr = pts[i - 1], dx = q[0] - pr[0], dy = q[1] - pr[1], dl = Math.hypot(dx, dy) || 1, nx = -dy / dl, ny = dx / dl, seg = Math.max(2, Math.round(dl / 9));
+          for (var s = 1; s <= seg; s++) {
+            var u = s / seg, j = s === seg ? 0 : (((Math.sin((fl + i * 7 + s * 3.1 + f.seed * 10) * 12.9898) * 43758.5453) % 1 + 1) % 1 - 0.5) * 16;
+            c.lineTo(pr[0] + dx * u + nx * j, pr[1] + dy * u + ny * j);
+          }
+        }
+        c.stroke();
+      }
+      for (var m = 0; m < pts.length; m++) disc(c, pts[m][0], pts[m][1], (10 + 6 * (m % 2)) * a + 1, "255,255,255", 0.9 * a);
+    };
+    /* ---- plumes qui s'envolent ---- */
+    DR.feather = function (c, f, k) {
+      var P = f.pal, a = k < 0.7 ? 1 : (1 - k) / 0.3, n = f.n, R = f.R * TILE, x = f.x, y = f.y, e = 1 - Math.pow(1 - k, 2);
+      for (var i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2 + (f.spin || 0) * k, d = R * e * (0.55 + 0.45 * ((i * 7) % 5) / 4), fx = x + Math.cos(an) * d, fy = y + Math.sin(an) * d, rot = an + k * (i % 2 ? 4 : -4), s = 5 + (i % 3) * 1.5;
+        c.globalCompositeOperation = "lighter"; c.strokeStyle = rg(P[0], 0.35 * a); c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(x + Math.cos(an) * d * 0.4, y + Math.sin(an) * d * 0.4); c.lineTo(fx, fy); c.stroke();
+        c.globalCompositeOperation = "source-over"; c.save(); c.translate(fx, fy); c.rotate(rot); c.globalAlpha = a;
+        c.fillStyle = "rgb(" + P[1] + ")"; c.strokeStyle = "rgba(" + P[2] + ",0.9)"; c.lineWidth = 0.8;
+        c.beginPath(); c.moveTo(-s * 1.6, 0); c.quadraticCurveTo(-s * 0.4, -s * 0.9, s * 1.7, 0); c.quadraticCurveTo(-s * 0.4, s * 0.9, -s * 1.6, 0); c.fill(); c.stroke();
+        c.strokeStyle = "rgb(" + P[0] + ")"; c.beginPath(); c.moveTo(-s * 1.9, 0); c.lineTo(s * 1.4, 0); c.stroke(); c.restore();
+      }
+      c.globalAlpha = 1;
+    };
+    /* ---- éventail du paon : spirales hypnotiques et yeux ---- */
+    DR.fan = function (c, f, k, t) {
+      var R = f.R * TILE, a = 1 - k, e = 1 - Math.pow(1 - k, 2.2), x = f.x, y = f.y, cols = ["130,100,255", "40,220,200", "255,210,60", "255,90,200"], rr0 = Math.max(1, R * e);
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, 0, x, y, rr0); g.addColorStop(0, rg("120,90,255", 0)); g.addColorStop(0.8, rg("120,90,255", 0.25 * a)); g.addColorStop(1, rg("40,230,210", 0.5 * a));
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, rr0, 0, T2); c.fill();
+      for (var r = 0; r < 4; r++) {
+        c.strokeStyle = rg(cols[r], 0.85 * a); c.lineWidth = 3 * (1 - k) + 1; c.beginPath();
+        for (var s = 0; s <= 40; s++) { var an = s / 40 * T2, rr = R * e * (0.35 + r * 0.19) * (1 + 0.05 * Math.sin(an * 6 + t / 120 + r)); s ? c.lineTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr) : c.moveTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr); }
+        c.stroke();
+      }
+      c.globalCompositeOperation = "source-over";
+      for (var i = 0; i < 14; i++) {
+        var an2 = f.seed + i / 14 * T2 + k * 1.5, d = R * e * 0.8, w = 9 * (1 - k * 0.5);
+        c.save(); c.translate(x + Math.cos(an2) * d, y + Math.sin(an2) * d); c.rotate(an2);
+        c.fillStyle = rg("30,200,190", 0.85 * a); c.beginPath(); c.ellipse(0, 0, w * 1.5, w * 0.8, 0, 0, T2); c.fill();
+        c.fillStyle = rg("255,215,70", 0.95 * a); c.beginPath(); c.ellipse(0, 0, w * 0.85, w * 0.5, 0, 0, T2); c.fill();
+        c.fillStyle = rg("60,30,180", a); c.beginPath(); c.arc(0, 0, w * 0.32, 0, T2); c.fill(); c.restore();
+      }
+    };
+    /* ---- soleil : rayons qui tournent ---- */
+    DR.sun = function (c, f, k) {
+      var R = f.R * TILE, a = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8, P = f.pal, x = f.x, y = f.y, e = Math.min(1, k * 3), r = Math.max(1, R * e);
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg("255,255,230", 0.6 * a)); g.addColorStop(0.3, rg(P[1], 0.45 * a)); g.addColorStop(0.7, rg(P[0], 0.25 * a)); g.addColorStop(1, rg(P[2], 0));
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill();
+      c.fillStyle = rg(P[1], 0.55 * a);
+      for (var i = 0; i < 18; i++) {
+        var an = f.seed + i / 18 * T2 + k * 1.2, l = r * (i % 2 ? 1.0 : 0.72), w = 0.09;
+        c.beginPath(); c.moveTo(x + Math.cos(an - w) * R * 0.1, y + Math.sin(an - w) * R * 0.1); c.lineTo(x + Math.cos(an) * l, y + Math.sin(an) * l); c.lineTo(x + Math.cos(an + w) * R * 0.1, y + Math.sin(an + w) * R * 0.1); c.closePath(); c.fill();
+      }
+      c.strokeStyle = rg("255,255,255", 0.8 * a); c.lineWidth = 3; c.beginPath(); c.arc(x, y, r * 0.98, 0, T2); c.stroke();
+    };
+    /* ---- vague glacée ---- */
+    DR.wave = function (c, f, k, t) {
+      var R = f.R * TILE, a = 1 - k, e = 1 - Math.pow(1 - k, 2.6), r = Math.max(1, R * e), x = f.x, y = f.y, P = f.pal;
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, r * 0.2, x, y, r); g.addColorStop(0, rg(P[0], 0)); g.addColorStop(0.75, rg(P[0], 0.28 * a)); g.addColorStop(1, rg(P[1], 0.7 * a));
+      c.fillStyle = g; c.beginPath();
+      for (var s = 0; s <= 48; s++) { var an = s / 48 * T2, rr = r * (1 + 0.06 * Math.sin(an * 9 + t / 90)); s ? c.lineTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr) : c.moveTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr); }
+      c.closePath(); c.fill(); c.strokeStyle = rg("255,255,255", 0.9 * a); c.lineWidth = 4 * (1 - k) + 1.2; c.stroke();
+      c.globalCompositeOperation = "source-over";
+      for (var i = 0; i < 12; i++) {
+        var an2 = f.seed + i / 12 * T2, sx = x + Math.cos(an2) * r * 0.98, sy = y + Math.sin(an2) * r * 0.98, h = 10 * (1 - k) + 2, px2 = -Math.sin(an2) * 3, py2 = Math.cos(an2) * 3;
+        c.fillStyle = rg("210,245,255", 0.9 * a); c.beginPath(); c.moveTo(sx + px2, sy + py2); c.lineTo(sx + Math.cos(an2) * h, sy + Math.sin(an2) * h); c.lineTo(sx - px2, sy - py2); c.closePath(); c.fill();
+      }
+    };
+    /* ---- gouttes / éclats balistiques ---- */
+    DR.drops = function (c, f, k) {
+      var a = 1 - k, n = f.n, R = f.R * TILE, x = f.x, y = f.y, col = f.col || f.pal[1];
+      c.globalCompositeOperation = "source-over";
+      for (var i = 0; i < n; i++) {
+        var an = f.seed + i * 2.399, sp = R * (0.5 + 0.5 * ((i * 7) % 5) / 4), dx = Math.cos(an) * sp * k, dy = Math.sin(an) * sp * k * 0.7 - 26 * Math.sin(k * 3.1416) * (0.6 + ((i * 3) % 4) / 4), r = (2.4 + (i % 3)) * (1 - k * 0.6);
+        c.fillStyle = rg(col, 0.9 * a); c.beginPath(); c.arc(x + dx, y + dy, r, 0, T2); c.fill();
+        c.fillStyle = rg("255,255,255", 0.6 * a); c.beginPath(); c.arc(x + dx - r * 0.3, y + dy - r * 0.3, r * 0.4, 0, T2); c.fill();
+      }
+    };
+    /* ---- carottes qui jaillissent ---- */
+    DR.carrot = function (c, f, k) {
+      var R = f.R * TILE, a = k < 0.75 ? 1 : (1 - k) / 0.25, x = f.x, y = f.y, n = f.n || 8, e = 1 - Math.pow(1 - k, 2);
+      c.globalCompositeOperation = "source-over";
+      for (var i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2, d = R * e * (0.6 + 0.4 * ((i * 5) % 3) / 2);
+        c.save(); c.translate(x + Math.cos(an) * d, y + Math.sin(an) * d); c.rotate(an + k * 6); c.globalAlpha = a;
+        c.fillStyle = "#ff8a1e"; c.strokeStyle = "#7a2d00"; c.lineWidth = 0.9; c.beginPath(); c.moveTo(-6, 0); c.lineTo(4, -3); c.quadraticCurveTo(7, 0, 4, 3); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = "#4fc84a"; c.beginPath(); c.moveTo(4, -2); c.lineTo(9, -4); c.lineTo(7, 0); c.lineTo(9, 4); c.lineTo(4, 2); c.closePath(); c.fill(); c.restore();
+      }
+      c.globalAlpha = 1;
+    };
+    /* ---- cri strident : anneaux pointillés qui se propagent ---- */
+    DR.sonic = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y; c.globalCompositeOperation = "lighter";
+      for (var i = 0; i < 4; i++) {
+        var kk = k * 1.5 - i * 0.14; if (kk <= 0 || kk >= 1) continue;
+        c.setLineDash([10, 7]); c.lineDashOffset = -kk * 90 * (i % 2 ? 1 : -1); c.strokeStyle = rg(i % 2 ? f.pal[1] : "255,255,255", 0.9 * (1 - kk)); c.lineWidth = 4 * (1 - kk) + 1.2;
+        c.beginPath(); c.arc(x, y, Math.max(1, R * (1 - Math.pow(1 - kk, 2))), 0, T2); c.stroke();
+      }
+      c.setLineDash([]);
+    };
+    function puff(c, x, y, r, a) {
+      c.fillStyle = "rgba(170,160,195," + (0.8 * a).toFixed(3) + ")"; c.beginPath(); c.arc(x + r * 0.15, y + r * 0.2, r, 0, T2); c.fill();
+      c.fillStyle = "rgba(255,252,246," + a.toFixed(3) + ")";
+      c.beginPath(); c.arc(x - r * 0.55, y, r * 0.7, 0, T2); c.fill(); c.beginPath(); c.arc(x + r * 0.55, y, r * 0.7, 0, T2); c.fill(); c.beginPath(); c.arc(x, y - r * 0.4, r * 0.8, 0, T2); c.fill();
+    }
+    /* ---- couronne de laine ---- */
+    DR.wool = function (c, f, k, t) {
+      var R = f.R * TILE, a = k < 0.8 ? 1 : (1 - k) / 0.2, n = f.n || 10, d = R * Math.min(1, k * 4); c.globalCompositeOperation = "source-over";
+      for (var i = 0; i < n; i++) { var an = f.seed + i / n * T2 + t / 300; puff(c, f.x + Math.cos(an) * d, f.y + Math.sin(an) * d * 0.9, 5 + (i % 3), a); }
+    };
+    /* ---- œuf / carotte qui explose : jaune d'œuf, éclats de coquille ---- */
+    DR.splat = function (c, f, k) {
+      var R = f.R * TILE, a = 1 - k, e = 1 - Math.pow(1 - k, 3), x = f.x, y = f.y, P = f.pal, rr = R * (0.5 + 0.6 * e);
+      c.globalCompositeOperation = "lighter";
+      var g = c.createRadialGradient(x, y, 0, x, y, rr); g.addColorStop(0, rg("255,255,230", 0.95 * a)); g.addColorStop(0.4, rg(P[1], 0.7 * a)); g.addColorStop(1, rg(P[0], 0));
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, rr, 0, T2); c.fill();
+      c.strokeStyle = rg(P[1], a); c.lineWidth = 3 * (1 - k) + 1; c.beginPath(); c.arc(x, y, R * e, 0, T2); c.stroke();
+      c.globalCompositeOperation = "source-over";
+      for (var j = 0; j < 9; j++) {
+        var an = f.seed + j / 9 * T2, d = R * 0.95 * e * (0.6 + ((j * 5) % 4) / 8), sx = x + Math.cos(an) * d, sy = y + Math.sin(an) * d - 8 * Math.sin(k * 3.14), s = 3.6 * (1 - k * 0.7);
+        c.fillStyle = rg(j % 3 ? "255,252,240" : P[0], 0.95 * a); c.beginPath(); c.moveTo(sx, sy - s); c.lineTo(sx + s, sy + s); c.lineTo(sx - s, sy + s); c.closePath(); c.fill();
+      }
+    };
+    /* ---- cible au sol + projectile qui tombe (œufs, carottes) ---- */
+    DR.reticle = function (c, f, k, t) {
+      var R = f.R * TILE, x = f.x, y = f.y, r = R * (0.5 + 0.7 * (1 - k));
+      c.globalCompositeOperation = "lighter"; c.lineWidth = 2; c.strokeStyle = rg(f.pal[0], 0.35 + 0.5 * k); c.setLineDash([5, 4]); c.lineDashOffset = -t / 40;
+      c.beginPath(); c.arc(x, y, R, 0, T2); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = rg("255,255,255", 0.4 + 0.5 * k); c.lineWidth = 2.2; c.beginPath(); c.arc(x, y, r, 0, T2); c.stroke();
+      c.fillStyle = rg(f.pal[0], 0.1 + 0.22 * k); c.beginPath(); c.arc(x, y, R, 0, T2); c.fill();
+      c.globalCompositeOperation = "source-over";
+      var h = 90 * Math.pow(1 - k, 1.6), gy = y - h;
+      if (f.glyph === "carrot") {
+        c.save(); c.translate(x, gy); c.rotate(1.57 + Math.sin(t / 90) * 0.2); c.fillStyle = "#ff8a1e"; c.strokeStyle = "#7a2d00"; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(-7, 0); c.lineTo(5, -3.4); c.quadraticCurveTo(8, 0, 5, 3.4); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = "#4fc84a"; c.beginPath(); c.moveTo(5, -2); c.lineTo(11, -5); c.lineTo(8, 0); c.lineTo(11, 5); c.lineTo(5, 2); c.closePath(); c.fill(); c.restore();
+      } else {
+        c.fillStyle = "#fffaf0"; c.strokeStyle = "#8a6a3a"; c.lineWidth = 1.2; c.beginPath(); c.ellipse(x, gy, 5, 6.5, Math.sin(t / 110) * 0.3, 0, T2); c.fill(); c.stroke();
+        c.fillStyle = "rgba(255,200,80,0.6)"; c.beginPath(); c.ellipse(x - 1.5, gy - 1.5, 1.8, 2.4, 0, 0, T2); c.fill();
+      }
+      c.globalCompositeOperation = "lighter"; c.strokeStyle = rg("255,230,160", 0.5 * (1 - k)); c.lineWidth = 2; c.beginPath(); c.moveTo(x, gy - 4); c.lineTo(x, gy - 22 * (1 - k) - 6); c.stroke();
+    };
+    /* ---- pluie qui couvre l'écran (déluge) ---- */
+    DR.rain = function (c, f, k, t) {
+      var a = k < 0.15 ? k / 0.15 : k > 0.8 ? (1 - k) / 0.2 : 1, P = f.pal, n = low() ? 36 : 72, W = 340, H = 240, cx = px(p.vx), cy = px(p.vy);
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (var i = 0; i < n; i++) {
+        var u = (i * 0.6180339 + t / (500 + (i % 5) * 90)) % 1, rx = cx + (((i * 97) % 211) / 211 - 0.5) * W, ry = cy - H / 2 + u * H;
+        c.strokeStyle = rg(i % 3 ? P[0] : "255,255,255", 0.55 * a); c.lineWidth = 1.4; c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx - 2, ry + 9); c.stroke();
+      }
+    };
+    /* ---- pleine lune du loup ---- */
+    DR.moon = function (c, f, k, t) {
+      var a = k < 0.15 ? k / 0.15 : k > 0.75 ? (1 - k) / 0.25 : 1, x = px(p.vx), y = px(p.vy) - 50 - 8 * Math.sin(k * 3.14), R = 22;
+      c.globalCompositeOperation = "lighter"; disc(c, x, y, R * 3, "150,190,255", 0.5 * a);
+      c.globalCompositeOperation = "source-over"; c.fillStyle = rg("238,246,255", 0.95 * a); c.beginPath(); c.arc(x, y, R, 0, T2); c.fill();
+      c.fillStyle = rg("185,205,235", 0.85 * a); [[-7, -5, 5], [8, 6, 4], [3, -10, 3], [-9, 8, 3]].forEach(function (q) { c.beginPath(); c.arc(x + q[0], y + q[1], q[2], 0, T2); c.fill(); });
+      c.globalCompositeOperation = "lighter"; c.strokeStyle = rg("180,215,255", 0.6 * a); c.lineWidth = 2; c.beginPath(); c.arc(x, y, R + 4 + 6 * ((t / 600) % 1), 0, T2); c.stroke();
+    };
+
+    /* ---- sorts : ce qui se passe à l'écran pour chaque animal ---- */
+    function snap(id) {
+      var s = { d: fmAimDir(), near: [], chain: [] }, n = pEvo() ? 12 : 3 + pL();
+      fmNear(9).forEach(function (e) { s.near.push([e.vx, e.vy]); });
+      if (id === "cavia") {
+        var cx = p.vx, cy = p.vy, used = [];
+        for (var i = 0; i < n; i++) {
+          var best = null, bd = 99;
+          enemies.forEach(function (e) { if (e.hp <= 0 || used.indexOf(e) >= 0) return; var d = Math.hypot(e.vx - cx, e.vy - cy); if (d < bd && d < 9) { bd = d; best = e; } });
+          if (!best) break; used.push(best); s.chain.push([best.vx, best.vy]); cx = best.vx; cy = best.vy;
+        }
+      }
+      return s;
+    }
+    function boltTo(P, list, delay) {
+      var pts = [[px(p.vx), px(p.vy)]]; list.forEach(function (q) { pts.push([px(q[0]), px(q[1])]); });
+      if (pts.length < 2) { var a = Math.random() * T2; pts.push([pts[0][0] + Math.cos(a) * 60, pts[0][1] + Math.sin(a) * 60]); }
+      add("bolt", p.vx, p.vy, 520, { pts: pts, pal: P, delay: delay || 0 });
+    }
+    function slashAt(P, q, i) { add("slash", q[0], q[1], 360, { R: 1.3, pal: P, flip: i % 2, delay: i * 55 }); }
+    function power(id, s) {
+      if (!p || !PAL[id]) return;
+      var P = PAL[id], E = pEvo(), S = pS(), x = p.vx, y = p.vy, ld = lastDir, ang = Math.atan2(ld[1], ld[0]), aim = Math.atan2(s.d[1], s.d[0]), R, i, len;
+      switch (id) {
+        case "cocotte": add("feather", x, y, 900, { n: 10, R: 2.8, pal: P }); add("shock", x, y, 520, { R: 1.8, pal: P }); break;
+        case "cochon": len = 6.5 * S * (E ? 1.6 : 1);
+          add("streak", x, y, 560, { a: ang, R: len, pal: P, dust: "230,170,190", w: 4 }); add("shock", x, y, 420, { R: 2.2, pal: P });
+          add("shock", x + ld[0] * len, y + ld[1] * len, 520, { R: 2.6, pal: P, delay: 260 }); add("drops", x, y, 600, { n: 10, R: 2.5, pal: P, col: "230,170,190" }); break;
+        case "meuh": R = 5.6 * S * (E ? 1.4 : 1);
+          add("shock", x, y, 650, { R: R, pal: P }); add("shock", x, y, 650, { R: R * 0.6, pal: PAL.cochon, delay: 120 }); add("drops", x, y, 900, { n: 20, R: R * 0.9, pal: P, col: "255,255,255" });
+          SPV.add("quake", x, y, R * 0.55, 800); break;
+        case "canard": R = 7 * S * (E ? 1.3 : 1);
+          add("wave", x, y, 780, { R: R, pal: P }); SPV.add("frost", x, y, R * 0.85, 900); add("drops", x, y, 900, { n: 18, R: R * 0.9, pal: P, col: "170,230,255" }); break;
+        case "lapin": add("carrot", x, y, 700, { n: 8, R: 3.4, pal: P }); add("shock", x, y, 480, { R: 2.6, pal: P });
+          add("streak", x, y, 520, { a: ang, R: 5, pal: P, dust: "230,190,120", w: 3 }); break;
+        case "mouton": add("wool", x, y, 800, { R: 2.6, n: 10, pal: P }); add("shock", x, y, 520, { R: 2.4, pal: P }); break;
+        case "cheval": add("shock", x, y, 560, { R: 3.4, pal: P }); if (E) add("shock", x, y, 700, { R: 5.5, pal: P, delay: 120 });
+          add("streak", x, y, 520, { a: ang, R: 4, pal: P, dust: "216,176,112", w: 4 }); break;
+        case "oie": add("feather", x, y, 1000, { n: E ? 18 : 6 + 2 * pL(), R: 7, spin: 2.5, pal: P }); add("shock", x, y, 480, { R: 2.2, pal: P }); break;
+        case "bouc": R = 5.2 * S; add("cone", x, y, 520, { a: aim, sp: E ? 1.3 : 1.1, R: R, pal: P });
+          add("shock", x + s.d[0] * R * 0.7, y + s.d[1] * R * 0.7, 480, { R: 2.4, pal: P, delay: 90 }); SPV.add("quake", x + s.d[0] * 2, y + s.d[1] * 2, 2.4, 700, { delay: 90 }); break;
+        case "chien": add("shock", x, y, 600, { R: 3.2, pal: P }); add("shock", x, y, 600, { R: 2, pal: PAL.coq, delay: 100 });
+          s.near.slice(0, 4).forEach(function (q, j) { slashAt(P, q, j); }); break;
+        case "dinde": add("sun", x, y, 800, { R: 3.8 * S, pal: P }); add("shock", x, y, 560, { R: 3.4 * S, pal: P, delay: 80 }); add("drops", x, y, 900, { n: 14, R: 3, pal: P, col: "255,170,60" }); break;
+        case "ane": R = 3.4 * S * (E ? 1.2 : 1);
+          add("shock", x, y, 520, { R: R, pal: P }); SPV.add("quake", x, y, R, 800); add("drops", x, y, 800, { n: 14, R: R, pal: P, col: "130,110,90" });
+          if (E) { add("shock", x, y, 520, { R: R * 1.2, pal: P, delay: 350 }); SPV.add("quake", x, y, R * 1.2, 800, { delay: 350 }); } break;
+        case "chat": add("shock", x, y, 460, { R: 2.4, pal: P }); s.near.slice(0, 6).forEach(function (q, j) { slashAt(P, q, j); }); break;
+        case "paon": add("fan", x, y, 1000, { R: 7 * S * (E ? 1.3 : 1), pal: P }); break;
+        case "lama": len = 9 * S * (E ? 1.4 : 1);
+          add("beam", x, y, 700, { a: aim, R: len, w: E ? 2.2 : 1.5, pal: P }); add("shock", x, y, 420, { R: 1.8, pal: P }); break;
+        case "cavia": boltTo(P, s.chain); add("shock", x, y, 460, { R: 2, pal: P });
+          s.chain.forEach(function (q) { add("shock", q[0], q[1], 420, { R: 1.4, pal: P, rays: 8 }); }); break;
+        case "pintade": add("sonic", x, y, 800, { R: 5 * S * (E ? 1.3 : 1), pal: P }); add("feather", x, y, 800, { n: 8, R: 4, pal: P }); break;
+        case "coq": add("sun", x, y, 800, { R: 4, pal: P }); add("shock", x, y, 650, { R: 6 * S * (E ? 1.4 : 1), pal: P }); add("feather", x, y, 900, { n: 8, R: 5, pal: P }); break;
+        case "taureau": add("shock", x, y, 460, { R: 2.4, pal: P }); add("streak", x, y, 480, { a: aim, R: 4, pal: P, dust: "200,150,120", w: 4 }); break;
+      }
+    }
+    function ult(id, s) {
+      if (!p || !PAL[id]) return;
+      var P = PAL[id], x = p.vx, y = p.vy, i;
+      switch (id) {
+        case "cocotte": add("sun", x, y, 1100, { R: 6, pal: P }); add("feather", x, y, 1300, { n: 24, R: 9, spin: 3, pal: P }); add("shock", x, y, 800, { R: 9, pal: P }); break;
+        case "cochon": SPV.add("boom", x, y, 7.5, 900); add("shock", x, y, 800, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 5, pal: PAL.cochon, delay: 150 });
+          add("drops", x, y, 1100, { n: 34, R: 8, pal: P, col: "255,150,180" }); SPV.add("quake", x, y, 6, 900); break;
+        case "meuh": add("shock", x, y, 900, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 7, pal: PAL.cochon, delay: 140 }); add("shock", x, y, 900, { R: 4.5, pal: P, delay: 280 });
+          add("drops", x, y, 1200, { n: 36, R: 9, pal: P, col: "255,255,255" }); add("drops", x, y, 1200, { n: 16, R: 8, pal: P, col: "40,30,40" }); SPV.add("quake", x, y, 7.5, 1000); break;
+        case "canard": add("wave", x, y, 1000, { R: 10, pal: P }); add("wave", x, y, 1000, { R: 7, pal: P, delay: 200 }); SPV.add("frost", x, y, 9, 1100);
+          add("drops", x, y, 1200, { n: 36, R: 9, pal: P, col: "170,230,255" }); add("rain", x, y, 2400, { pal: P }); break;
+        case "lapin": add("carrot", x, y, 900, { n: 14, R: 6, pal: P }); add("shock", x, y, 700, { R: 6, pal: P }); break;
+        case "mouton": add("wool", x, y, 1000, { R: 3.4, n: 14, pal: P }); add("shock", x, y, 800, { R: 4.5, pal: P }); break;
+        case "cheval": add("shock", x, y, 800, { R: 6.5, pal: P }); add("shock", x, y, 800, { R: 3.5, pal: PAL.dinde, delay: 150 }); add("sun", x, y, 900, { R: 4, pal: P }); break;
+        case "oie": add("feather", x, y, 1400, { n: 30, R: 9, spin: 3.2, pal: P }); add("shock", x, y, 700, { R: 5.5, pal: P }); add("sun", x, y, 800, { R: 4, pal: P }); break;
+        case "bouc": add("shock", x, y, 800, { R: 8, pal: P }); for (i = 0; i < 4; i++) add("cone", x, y, 600, { a: i * 1.5708 + 0.785, sp: 0.5, R: 8, pal: P, delay: i * 70 });
+          SPV.add("quake", x, y, 7, 1000); break;
+        case "chien": add("moon", x, y, 2200, { pal: P }); add("shock", x, y, 900, { R: 8, pal: P }); add("shock", x, y, 900, { R: 5, pal: PAL.canard, delay: 160 });
+          s.near.slice(0, 8).forEach(function (q, j) { slashAt(P, q, j); }); break;
+        case "dinde": add("sun", x, y, 1100, { R: 7, pal: P }); add("shock", x, y, 800, { R: 5.5, pal: P }); add("drops", x, y, 1200, { n: 30, R: 7, pal: P, col: "255,150,40" }); SPV.add("boom", x, y, 4, 800); break;
+        case "ane": for (i = 0; i < 3; i++) { add("shock", x, y, 700, { R: 6, pal: P, delay: i * 400 }); SPV.add("quake", x, y, 6, 900, { delay: i * 400 }); add("drops", x, y, 900, { n: 16, R: 6, pal: P, col: "130,110,90", delay: i * 400 }); } break;
+        case "chat": add("shock", x, y, 800, { R: 9, pal: P }); add("shock", x, y, 800, { R: 5, pal: PAL.paon, delay: 120 }); s.near.slice(0, 10).forEach(function (q, j) { slashAt(P, q, j); }); break;
+        case "paon": add("fan", x, y, 1300, { R: 10.5, pal: P }); add("fan", x, y, 1300, { R: 7, pal: P, delay: 220 }); break;
+        case "taureau": add("shock", x, y, 700, { R: 5, pal: P }); add("sun", x, y, 800, { R: 3.5, pal: P }); break;
+        case "lama": add("drops", x, y, 1100, { n: 30, R: 8.5, pal: P, col: "190,255,110" }); add("shock", x, y, 800, { R: 9, pal: P });
+          for (i = 0; i < 8; i++) add("beam", x, y, 700, { a: i * 0.785, R: 6, w: 0.9, pal: P, delay: i * 40 }); break;
+        case "cavia": SPV.add("boom", x, y, 7, 900); add("shock", x, y, 900, { R: 9, pal: P });
+          s.near.slice(0, 7).forEach(function (q, j) { boltTo(P, [q], j * 60); }); add("drops", x, y, 1000, { n: 20, R: 7, pal: P, col: "190,140,255" }); break;
+        case "pintade": add("sonic", x, y, 1100, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 6, pal: P }); add("feather", x, y, 1000, { n: 16, R: 7, pal: P }); break;
+        case "coq": add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
+      }
+    }
+    function egg(x, y, evo) {
+      var id = state && state.variant, P = PAL[id] || PAL.cocotte;
+      add("splat", x, y, 560, { R: (evo ? 3.2 : 2.5) * pS(), pal: P });
+      add("drops", x, y, 700, { n: 8, R: 2.2, pal: P, col: id === "lapin" ? "255,150,50" : "255,210,70" });
+    }
+
+    /* ---- effets qui durent : auras, flammes, traînée de mouvement ---- */
+    function auras(c, t) {
+      if (!state || !p) return;
+      var x = px(p.vx), y = px(p.vy), i, an;
+      if (state.variant === "dinde" && state.farmAtkT > 0) {
+        c.globalCompositeOperation = "lighter";
+        for (i = 0; i < 9; i++) { an = i / 9 * T2 + t / 600; var fy = ((t / 380 + i * 0.37) % 1), fx = x + Math.cos(an) * 14, fh = 10 * (1 - fy);
+          disc(c, fx, y + 4 - fy * 18 + Math.sin(an) * 5, 6 * (1 - fy * 0.5) + 2, i % 2 ? "255,110,50" : "255,214,80", 0.8 * (1 - fy)); }
+      }
+      var A = state.farmAct; if (!A) return;
+      var id = A.id.replace(/^u_/, ""), ult = /^u_/.test(A.id), P = PAL[id]; if (!P) return;
+      var fade = Math.min(1, Math.max(0, A.t * 3)), big = ult ? 1.45 : 1;
+      c.save(); c.globalAlpha = fade;
+      if (id === "mouton") {
+        var Rm = (ult ? 3.4 : 2.2) * TILE * 0.85, nm = ult ? 12 : 7;
+        c.globalCompositeOperation = "lighter"; disc(c, x, y, Rm * 1.25, "245,240,255", 0.3);
+        c.strokeStyle = rg("255,255,255", 0.5); c.lineWidth = 2; c.setLineDash([8, 6]); c.lineDashOffset = -t / 30; c.beginPath(); c.arc(x, y, Rm, 0, T2); c.stroke(); c.setLineDash([]);
+        c.globalCompositeOperation = "source-over";
+        for (i = 0; i < nm; i++) { an = i / nm * T2 + t / (ult ? 230 : 420);
+          var sx = x + Math.cos(an) * Rm, sy = y + Math.sin(an) * Rm * 0.9;
+          c.fillStyle = "rgba(210,205,225,0.95)"; c.beginPath(); c.moveTo(sx + Math.cos(an - 0.35) * 6, sy + Math.sin(an - 0.35) * 6); c.lineTo(x + Math.cos(an) * (Rm + 9), y + Math.sin(an) * (Rm + 9) * 0.9); c.lineTo(sx + Math.cos(an + 0.35) * 6, sy + Math.sin(an + 0.35) * 6); c.closePath(); c.fill();
+          puff(c, sx, sy, ult ? 6.5 : 5, 1); }
+      } else if (id === "cheval" || id === "taureau") {
+        c.globalCompositeOperation = "lighter"; disc(c, x, y, 2.6 * TILE * big * 0.8, P[0], 0.28 + 0.1 * Math.sin(t / 70));
+        var ca = Math.atan2(lastDir[1], lastDir[0]) + Math.PI;
+        for (i = 0; i < 6; i++) { var off = (i - 2.5) * 5, l0 = 26 + ((i * 17 + Math.floor(t / 60)) % 4) * 12, bx = x + Math.cos(ca + 1.57) * off, by = y + Math.sin(ca + 1.57) * off;
+          var g = c.createLinearGradient(bx, by, bx + Math.cos(ca) * l0, by + Math.sin(ca) * l0); g.addColorStop(0, rg(P[1], 0.8)); g.addColorStop(1, rg(P[0], 0));
+          c.strokeStyle = g; c.lineWidth = 2; c.lineCap = "round"; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + Math.cos(ca) * l0, by + Math.sin(ca) * l0); c.stroke(); }
+      } else if (id === "chien") {
+        var nw = ult ? 6 : 3, Rw = 2.7 * TILE;
+        c.globalCompositeOperation = "lighter";
+        for (i = 0; i < nw; i++) {
+          for (var tl = 0; tl < 7; tl++) { var a2 = i / nw * T2 + t / 260 - tl * 0.13; disc(c, x + Math.cos(a2) * Rw, y + Math.sin(a2) * Rw * 0.85, 7 - tl * 0.8, P[0], 0.7 * (1 - tl / 7)); }
+          an = i / nw * T2 + t / 260; disc(c, x + Math.cos(an) * Rw, y + Math.sin(an) * Rw * 0.85, 9, "255,255,255", 0.9);
+        }
+      } else if (id === "chat") {
+        c.globalCompositeOperation = "lighter"; c.lineWidth = 2.5;
+        for (i = 0; i < 2; i++) { c.strokeStyle = rg(i ? "255,255,255" : P[0], 0.7); c.setLineDash([9, 7]); c.lineDashOffset = (i ? 1 : -1) * t / 22; c.beginPath(); c.arc(x, y, (i ? 1.8 : 2.5) * TILE * big * 0.8, 0, T2); c.stroke(); }
+        c.setLineDash([]); disc(c, x, y, 2.2 * TILE, P[0], 0.18);
+        for (i = 0; i < 6; i++) { an = i / 6 * T2 - t / 200; var qx = x + Math.cos(an) * 2.1 * TILE, qy = y + Math.sin(an) * 2.1 * TILE; c.strokeStyle = rg("255,255,255", 0.9); c.lineWidth = 1.4; c.beginPath(); c.moveTo(qx - 4, qy); c.lineTo(qx + 4, qy); c.moveTo(qx, qy - 4); c.lineTo(qx, qy + 4); c.stroke(); }
+      } else if (id === "coq") {
+        var Rs = (ult ? 3 : 2.4) * pS() * (pEvo() ? 1.3 : 1) * TILE * 0.8;
+        c.globalCompositeOperation = "lighter"; disc(c, x, y, Rs * 1.3, P[0], 0.22);
+        c.globalCompositeOperation = "source-over";
+        for (i = 0; i < 8; i++) { an = i / 8 * T2 + t / 350; var ex = x + Math.cos(an) * Rs, ey = y + Math.sin(an) * Rs * 0.9;
+          c.fillStyle = "#ffd23c"; c.strokeStyle = "#7a3a00"; c.lineWidth = 1; c.beginPath(); c.moveTo(ex + Math.cos(an + 1.57) * 4, ey + Math.sin(an + 1.57) * 4); c.lineTo(ex + Math.cos(an) * 12, ey + Math.sin(an) * 12); c.lineTo(ex + Math.cos(an - 1.57) * 4, ey + Math.sin(an - 1.57) * 4); c.closePath(); c.fill(); c.stroke(); }
+      }
+      c.restore();
+    }
+    function trailTick(t) {
+      if (!p) return; var x = px(p.vx), y = px(p.vy), l = TR[TR.length - 1];
+      if (!l || Math.hypot(x - l.x, y - l.y) > 1.5) TR.push({ x: x, y: y, t: t });
+      while (TR.length && t - TR[0].t > 360) TR.shift();
+      if (TR.length > 40) TR.shift();
+    }
+    function trailDraw(c, t) {
+      var id = state && state.variant, P = PAL[id], A = state && state.farmAct;
+      if (!P || TR.length < 2 || !(p.dash || (A && /(cheval|taureau|chat|chien|lapin|cochon)$/.test(A.id)))) return;
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round"; c.lineJoin = "round";
+      for (var i = 1; i < TR.length; i++) {
+        var u = 1 - (t - TR[i].t) / 360; if (u <= 0) continue;
+        c.strokeStyle = rg(P[0], 0.5 * u); c.lineWidth = 3 + 12 * u; c.beginPath(); c.moveTo(TR[i - 1].x, TR[i - 1].y); c.lineTo(TR[i].x, TR[i].y); c.stroke();
+        c.strokeStyle = rg(P[1], 0.8 * u); c.lineWidth = 1 + 4 * u; c.stroke();
+      }
+    }
+    function periodic(t) {
+      var A = state && state.farmAct; if (!A) return;
+      var id = A.id.replace(/^u_/, ""), ult = /^u_/.test(A.id);
+      if ((id === "chat" || id === "chien") && t - tm.slash > (ult ? 130 : 170)) {
+        tm.slash = t; var list = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < (ult ? 9 : 4.5); });
+        if (list.length) { var e = list[rnd(list.length)]; add("slash", e.vx, e.vy, 340, { R: 1.2, pal: PAL[id], flip: rnd(2) }); }
+      }
+    }
+    function eggs() {
+      var eg = state && state.farmEggs; if (!eg) return;
+      for (var i = 0; i < eg.length; i++) {
+        var q = eg[i]; if (q.rf) continue; q.rf = 1;
+        add("reticle", q.x, q.y, Math.max(200, q.t * 1000), { R: (q.evo ? 3.2 : 2.5) * pS(), pal: PAL[state.variant] || PAL.cocotte, glyph: state.variant === "lapin" ? "carrot" : "egg" });
+      }
+    }
+    function draw(c, t) {
+      if (!state || !p) return;
+      eggs(); periodic(t); trailTick(t);
+      c.save(); trailDraw(c, t);
+      for (var i = L.length - 1; i >= 0; i--) {
+        var f = L[i], k = (t - f.t0) / f.dur;
+        if (k >= 1) { L.splice(i, 1); continue; }
+        if (k < 0) continue;
+        c.save(); DR[f.k](c, f, k, t); c.restore();
+      }
+      auras(c, t);
+      c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
+    }
+    return { snap: snap, power: power, ult: ult, egg: egg, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
+  })();
   /* ================= EFFETS : niveau, ramassage, auras ================= */
   var FX2 = (function () {
     var OC = "#150f26", PICK = [];
@@ -7090,7 +7546,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     state.floor++;
     healHp(2); gainMp(2);
     bump();
-    parts = []; floats = []; projs = []; rings = []; zones = [];
+    parts = []; floats = []; projs = []; rings = []; zones = []; AFX.clear();
     msgs = ["Étage " + state.floor + "."];
     if (state.floor % 5 === 0) say(NAMES[bossFor(state.floor)][1] + " rôde par ici…");
     genFloor();
@@ -7778,7 +8234,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!state || !state.survival || mode !== "play" || (state.survUlt || 0) < 100) return;
     state.survUlt = 0; dmgSrc = "Ultime";
     var ue = state.variant && ULTS[state.variant];
-    if (ue) { var hadPanel = ultPanel(state.variant, ue.name); castFx(true, hadPanel ? "" : ue.name); dmgSrc = ue.name; ue.run(); if (!hadPanel) banner(ue.name + " !", "#ff9a3c", 1900, 36); animalCry(state.variant); if (!hadPanel) LORE.shoutFor(state.variant, true); return; }
+    if (ue) { var hadPanel = ultPanel(state.variant, ue.name); castFx(true, hadPanel ? "" : ue.name); dmgSrc = ue.name; var afxS = AFX.snap(state.variant); ue.run(); AFX.ult(state.variant, afxS); if (!hadPanel) banner(ue.name + " !", "#ff9a3c", 1900, 36); animalCry(state.variant); if (!hadPanel) LORE.shoutFor(state.variant, true); return; }
     var dmg = Math.round(state.atk * 5 + 6 + 3 * (state.survCycle || 0));
     enemies.slice().forEach(function (e) {
       if (e.hp <= 0 || enemies.indexOf(e) < 0) return;
@@ -9216,7 +9672,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           var q = eg.splice(i, 1)[0];
           dmgSrc = q.src || "Ponte explosive";
           fmNear((q.evo ? 3.2 : 2.5) * pS(), q.x, q.y).forEach(function (e) { fmHit(e, q.ud || fmDmg(q.evo ? 1.0 : 1.1), "L'œuf explose", 0.7, 0.4); });
-          fmRing(q.x, q.y, "#ffb02e", q.evo ? 90 : 70); burst(q.x, q.y, "#fff3c0", 16, 90); shake(2, 160); sfx("boom");
+          fmRing(q.x, q.y, "#ffb02e", q.evo ? 90 : 70); burst(q.x, q.y, "#fff3c0", 16, 90); AFX.egg(q.x, q.y, q.evo); shake(2, 160); sfx("boom");
           if (q.evo) eg.push({ x: q.x, y: q.y, t: 0.45, evo: false, src: q.src });
         }
       }
@@ -9285,7 +9741,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var pw = FARM_POWERS[state.variant]; if (!pw) return;
     if (state.farmCd > 0) { sfx("nomana"); return; }
     dmgSrc = pw.name;
+    var afxS = AFX.snap(state.variant);
     if (pw.run() === false) return;
+    AFX.power(state.variant, afxS);
     if (typeof VOX !== "undefined") VOX.power(state.variant);
     castFx(false, " ");
     if (Math.random() < 0.3) LORE.shoutFor(state.variant);
@@ -12104,6 +12562,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     ctx.globalAlpha = 1;
     SPV.draw(ctx, t, TILE);
+    AFX.draw(ctx, t);
     FX2.over(ctx, t);
     LORE.drawBubbles(ctx, t);
     drawCastFx(ctx, t);
