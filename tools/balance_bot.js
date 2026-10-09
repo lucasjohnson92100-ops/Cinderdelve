@@ -15,9 +15,9 @@ const out = process.argv[6];
     await p.getByText('Cocotte').first().click(); await p.waitForTimeout(600);
     await p.click('#hp-go'); await p.waitForTimeout(1200);
     await p.getByText('Chef : Maître Hachoir').first().click(); await p.waitForTimeout(2500);
-    await p.evaluate(([map, GOD, LEG]) => {
-      window.__GOD = GOD; window.__LEG = LEG; const t0 = performance.now(); window.__T = t0; performance.now = () => window.__T; window.requestAnimationFrame = () => 0;
-      const d = window.__d; if (map !== 0) d.gen(map); if (window.__LEG) Object.keys(d.LEGENDS).forEach(id => d.legGain(id));
+    await p.evaluate(([map, GOD, LEG, HERO]) => {
+      window.__GOD = GOD; window.__LEG = LEG; window.__HERO = HERO; const t0 = performance.now(); window.__T = t0; performance.now = () => window.__T; window.requestAnimationFrame = () => 0;
+      const d = window.__d; if (map !== 0) d.gen(map); if (window.__LEG) Object.keys(d.LEGENDS).forEach(id => d.legGain(id)); if (window.__HERO) d.setHero(window.__HERO);
       window.__log = []; window.__sec = 0; window.__bot = { tick: 0 }; window.__W = {}; window.__lastHp = d.state.hp;
       const B = window.__bot;
       B.pick = function () { const r = document.querySelector('.overlay.show .row:not([disabled])') || document.querySelector('.overlay.show .main-btn'); if (r) r.click(); };
@@ -49,7 +49,7 @@ const out = process.argv[6];
         if ((s.farmCd || 0) <= 0 && near.length >= 3) try { d.farmUse(); } catch (e) {}
         if ((s.survUlt || 0) >= 100 && near.length >= 5) try { d.useUlt(); } catch (e) {}
       };
-    }, [map, +(process.env.GOD || 0), +(process.env.LEG || 0)]);
+    }, [map, +(process.env.GOD || 0), +(process.env.LEG || 0), process.env.HERO || '']);
     let res = null, simSec = 0, lastCycle = 0;
     const wavesT = {};
     while (simSec < LIMIT) {

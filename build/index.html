@@ -1126,6 +1126,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         <div id="hp-tag"></div>
         <div class="hp-line" id="hp-pw"></div>
         <div class="hp-line" id="hp-ult"></div>
+        <div class="hp-line" id="hp-trait"></div>
         <div class="hp-btns"><button class="main-btn alt" id="hp-ret" type="button">Retour</button><button class="main-btn" id="hp-go" type="button">Choisir</button></div>
       </div>
     </div>
@@ -4717,6 +4718,17 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       c.globalCompositeOperation = "lighter"; c.strokeStyle = rg("180,215,255", 0.6 * a); c.lineWidth = 2; c.beginPath(); c.arc(x, y, R + 4 + 6 * ((t / 600) % 1), 0, T2); c.stroke();
     };
 
+    /* ---- pointes qui jaillissent du sol ---- */
+    DR.spike = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, up = k < 0.4 ? k / 0.4 : 1, a = k < 0.7 ? 1 : (1 - k) / 0.3;
+      c.fillStyle = rg("30,20,10", 0.4 * a); c.beginPath(); c.ellipse(x, y + 3, R, R * 0.45, 0, 0, T2); c.fill();
+      c.globalAlpha = a; c.fillStyle = "#d4dbe8"; c.strokeStyle = "#150f26"; c.lineWidth = 1;
+      for (var i = 0; i < 8; i++) {
+        var an = f.seed + i / 8 * T2, rr = R * (0.15 + 0.75 * ((i * 5) % 4) / 4), bx = x + Math.cos(an) * rr, by = y + Math.sin(an) * rr * 0.7 + 3, h = (9 + 6 * ((i * 3) % 3)) * up;
+        c.beginPath(); c.moveTo(bx - 3.2, by); c.lineTo(bx, by - h); c.lineTo(bx + 3.2, by); c.closePath(); c.fill(); c.stroke();
+      }
+      c.globalAlpha = 1;
+    };
     /* ---- trou noir : anneaux qui se resserrent ---- */
     DR.implode = function (c, f, k, t) {
       var R = f.R * TILE, x = f.x, y = f.y, a = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8, P = f.pal; c.globalCompositeOperation = "lighter";
@@ -4814,6 +4826,8 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         case "coq": add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
       }
     }
+    function plumes() { add("feather", p.vx, p.vy, 650, { n: 7, R: 4.2, pal: PAL.oie }); }
+    function spikes(x, y, r) { add("spike", x, y, 700, { R: r, pal: PAL.oie }); }
     function chain(pts, id) { var P = PAL[id] || PAL.cavia; add("bolt", pts[0][0], pts[0][1], 520, { pts: pts.map(function (q) { return [px(q[0]), px(q[1])]; }), pal: P }); }
     function hole() { add("implode", p.vx, p.vy, 900, { R: 7, pal: ["170,110,255", "235,220,255", "60,30,140"] }); }
     function nova() { add("sun", p.vx, p.vy, 1000, { R: 4.6, pal: PAL.dinde }); add("shock", p.vx, p.vy, 800, { R: 4.4, pal: PAL.coq }); }
@@ -4921,7 +4935,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       auras(c, t);
       c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
     }
-    return { snap: snap, power: power, ult: ult, egg: egg, chain: chain, hole: hole, nova: nova, legend: legend, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
+    return { snap: snap, power: power, ult: ult, egg: egg, plumes: plumes, spikes: spikes, chain: chain, hole: hole, nova: nova, legend: legend, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
   })();
   /* ================= EFFETS : niveau, ramassage, auras ================= */
   var FX2 = (function () {
@@ -6360,7 +6374,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
 
   function earn(n, tx, ty) {
     if (state && state.survival && legHas("harvest")) n = Math.round(n * 1.8);
-    var gb = n * (fx().gold + (state.cls === "rogue" ? 0.35 : 0));
+    var gb = n * (fx().gold + ((ht() && ht().gold) || 0) + (state.cls === "rogue" ? 0.35 : 0));
     n += Math.floor(gb) + (Math.random() < gb - Math.floor(gb) ? 1 : 0);
     state.gold += n; state.earned += n;
     addFloat(tx, ty, "+" + n, "#ffd23c");
@@ -6368,6 +6382,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   }
 
   function gainXp(v) {
+    if (ht() && ht().xp) v = Math.round(v * (1 + ht().xp));
     state.xp += v;
     while (state.xp >= need()) {
       state.xp -= need();
@@ -6403,7 +6418,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (healed > 0) { addFloat(p.vx, p.vy - 0.6, "+" + healed, "#ff6b81"); burst(p.vx, p.vy, "#ff6b81", 5, 40); }
     }
     state.kills++;
-    legOnKill(e);
+    legOnKill(e); traitOnKill(e);
     sfx(e.boss ? "bossdeath" : "kill");
     killFx(e);
     if (GFX === "dark") bloodPool(e);
@@ -6467,7 +6482,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     p.lunge = { dx: e.vx - p.vx, dy: e.vy - p.vy, t0: now() };
     slashes.push({ x: (p.vx + e.vx) / 2 + 0.5, y: (p.vy + e.vy) / 2 + 0.5, a: Math.atan2(e.vy - p.vy, e.vx - p.vx), t0: now(), crit: false });
     var w0 = wtype();
-    var d = state.atk * (w0 ? w0.dmg : 1), crit = Math.random() < Math.min(0.75, (state.cls === "warrior" ? 0.2 : 0) + fx().crit + ((w0 && w0.crit) || 0) + 0.05 * tr("instinct")), mult = 1, tag = null;
+    var d = state.atk * (w0 ? w0.dmg : 1), crit = Math.random() < Math.min(0.75, (state.cls === "warrior" ? 0.2 : 0) + fx().crit + ((ht() && ht().crit) || 0) + ((w0 && w0.crit) || 0) + 0.05 * tr("instinct")), mult = 1, tag = null;
     if (crit) { d *= 2; say("Coup critique !"); shake(2.2, 160); slashes[slashes.length - 1].crit = true; }
     if (e.wind > 0) { mult *= 1.6; tag = "Interrompu !"; e.wind = 0; e.stunT = Math.max(e.stunT || 0, 0.6); }
     else if (e.exposed > gtime) { mult *= 1.4; tag = "Punition !"; }
@@ -6482,6 +6497,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     }
     mult *= 1 + 0.08 * tr("mastery");
     if (legBerserk()) mult *= 1.5;
+    { var HT = ht(); if (HT) { if (HT.opener && e.hp >= e.maxHp * 0.9) { mult *= 2; addFloat(e.vx, e.vy - 0.9, "Panache !", "#ffd23c"); } if (HT.crowd) { var cn = enemies.filter(function (o) { return o.hp > 0 && Math.hypot(o.vx - p.vx, o.vy - p.vy) < 3; }).length; mult *= 1 + Math.min(0.32, HT.crowd * cn); } } }
     if (e.hp < e.maxHp * 0.4) mult *= 1 + 0.2 * tr("execute");
     if (state.buffT > 0 && state.cls === "warrior") mult *= 1.3;
     d = Math.max(1, Math.round(d * mult));
@@ -6498,7 +6514,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       floatBoost = crit ? 1.7 : (mult > 1.35 ? 1.3 : 1);
       if (crit) hitStop(45);
       dmgEnemy(e, d, crit ? "Tu écrases" : "Tu frappes");
-      legOnHit(e, d);
+      legOnHit(e, d); traitOnHit(e);
       doSweep(e, d);
     }
   }
@@ -6559,16 +6575,18 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     }
     if (legAbsorb()) return;
     if (guarded && kind !== "zone" && gtime - p.guardT <= parryWin()) { parry(e, kind, pr); return; }
-    if (Math.random() < Math.min(state.survival ? 0.3 : 0.6, (state.cls === "rogue" ? 0.2 : 0) + fx().dodge + ((atype() && atype().dodge) || 0))) {
+    if (Math.random() < Math.min(state.survival ? 0.3 : 0.6, (state.cls === "rogue" ? 0.2 : 0) + fx().dodge + ((ht() && ht().dodge) || 0) + ((atype() && atype().dodge) || 0))) {
       e.lunge = { dx: p.vx - e.vx, dy: p.vy - e.vy, t0: now() };
       addFloat(p.vx, p.vy, "Esquive", "#c9d1e8");
       say(NAMES[e.type][1] + " te manque : esquive !");
       return;
     }
+    if (ht() && ht().ignore && Math.random() < ht().ignore) { addFloat(p.vx, p.vy, "Têtu !", "#d8d0c0"); p.invuln = gtime + 250; return; }
     var d = Math.max(1, Math.ceil(e.atk * 0.35), e.atk + (bonus || 0) - state.def), t = now();
     if (state.survival) { var sfl = Math.min(0.95, 0.45 + survCyc() * 0.1); d = Math.max(d, Math.ceil(e.atk * sfl)); }
     var at = atype();
     d = Math.max(1, Math.round(d * ((at && at.taken) || 1) * (kind === "proj" && at && at.proj ? at.proj : 1) * (1 - 0.06 * tr("stone"))));
+    if (ht() && ht().armor) d = Math.max(1, d - ht().armor);
     if (guarded) {
       var blocked = Math.max(1, Math.round(d * (kind === "zone" ? 0.4 : ((at && at.block) || 0.6))));
       d = Math.max(0, d - blocked);
@@ -6600,9 +6618,10 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       var stl = Math.min(state.gold, 3 + Math.floor(state.floor / 2)); state.gold -= stl; e.stolen = (e.stolen || 0) + stl; e.fleeT = 4.5;
       say("Le gobelin te vole " + stl + " œufs d'or !"); addFloat(p.vx, p.vy, "-" + stl + " œufs d'or", "#ffd23c");
     }
-    if (!verb && fx().thorns > 0 && e.hp > 0) {
-      e.hp -= fx().thorns; e.flash = t + 130;
-      addFloat(e.x, e.y, "-" + fx().thorns, "#ffffff");
+    var thN = fx().thorns + ((ht() && ht().thorns) || 0);
+    if (!verb && thN > 0 && e.hp > 0) {
+      e.hp -= thN; e.flash = t + 130;
+      addFloat(e.x, e.y, "-" + thN, "#ffffff");
       if (e.hp <= 0) { kill(e); }
     }
     if (state.hp <= 0) { state.hp = 0; gameOver(); }
@@ -8422,7 +8441,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     orbit: { req: "ice", name: "Fourches de givre", desc: "Lames glacées : double dégâts et ralentissent" },
     boom: { req: "chain", name: "Boomerang électrifié", desc: "Un boomerang de plus, double dégâts" },
     summon: { req: "heal", name: "Roi des épouvantails", desc: "Deux squelettes de plus, deux fois plus forts et résistants" },
-    wolves: { req: "shock", name: "Meute de l'orage", desc: "Un loup de plus, dégâts doublés" }
+    wolves: { req: "shock", name: "Meute de l'orage", desc: "Un loup de plus, dégâts doublés" },
+    plumes: { req: "ice", name: "Blizzard de plumes", desc: "Trois plumes de plus, dégâts doublés" },
+    spikes: { req: "fire", name: "Pointes de magma", desc: "Plus de cibles, rayon agrandi, dégâts doublés" },
+    storm: { req: "heal", name: "Tempête divine", desc: "Deux éclairs de plus, dégâts doublés" }
   };
   var allies = [];
   function survAllySpawn(kind) {
@@ -8840,7 +8862,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     orbit: { name: "Lames tournoyantes", icon: "sword", learn: "Des lames tournent autour de toi", up: "+10 % de dégâts (une lame de plus aux niveaux pairs)" },
     boom: { name: "Boomerang", icon: "axe", learn: "Part vers un ennemi et revient", up: "+10 % de dégâts (un de plus aux niveaux 3 et 6)" },
     summon: { name: "Épouvantails vivants", icon: "skeleton", learn: "Invoque un squelette allié qui combat pour toi", up: "+10 % de dégâts (un squelette de plus aux niveaux pairs)" },
-    wolves: { name: "Meute spectrale", icon: "wolf", learn: "Invoque un loup spectral rapide qui chasse pour toi", up: "+10 % de dégâts (un loup de plus aux niveaux 3 et 6)" }
+    wolves: { name: "Meute spectrale", icon: "wolf", learn: "Invoque un loup spectral rapide qui chasse pour toi", up: "+10 % de dégâts (un loup de plus aux niveaux 3 et 6)" },
+    plumes: { name: "Salve de plumes", icon: "sp_feather", learn: "Des plumes tranchantes partent en éventail vers l'ennemi le plus proche", up: "+10 % de dégâts (une plume de plus aux niveaux pairs)" },
+    spikes: { name: "Pointes du sol", icon: "sp_fork", learn: "Des pointes jaillissent sous les monstres proches", up: "+10 % de dégâts (une cible de plus aux niveaux pairs)" },
+    storm: { name: "Foudre du ciel", icon: "chain", learn: "La foudre frappe un monstre au hasard toutes les secondes", up: "+10 % de dégâts (un éclair de plus aux niveaux 3 et 6)" }
   };
   function survWeaponOpts() {
     if (!state.survival) return [];
@@ -8901,6 +8926,44 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var key3 = bo.id + (bo.back ? "b" : "f");
         enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && e.boomHit !== key3 && Math.hypot(e.vx - bo.x, e.vy - bo.y) < 0.6 + e.r * 0.5) { e.boomHit = key3; dmgSrc = survWName("boom"); dmgEnemy(e, survWDmg(bm), "Le boomerang frappe"); } });
         if (mode !== "play") return;
+      }
+    }
+    if (SW.plumes) {
+      state.survPlT = (state.survPlT || 0) - dt;
+      var pev = state.survWEvo && state.survWEvo.plumes, pm = (1 + 0.1 * (SW.plumes - 1)) * 0.55 * (pev ? 2 : 1);
+      if (state.survPlT <= 0) {
+        var ptg = nearestTarget();
+        if (ptg) {
+          state.survPlT = 1.5; var nf = 3 + Math.floor(SW.plumes / 2) + (pev ? 3 : 0), pa = Math.atan2(ptg.vy - p.vy, ptg.vx - p.vx); dmgSrc = survWName("plumes");
+          for (var pf = 0; pf < nf; pf++) launchProj(null, pa + (pf - (nf - 1) / 2) * 0.22, survWDmg(pm), "energy", 0, 1);
+          AFX.plumes(pa); sfx("energy");
+        } else state.survPlT = 0.3;
+      }
+    }
+    if (SW.spikes) {
+      state.survSpT = (state.survSpT || 0) - dt;
+      var sev = state.survWEvo && state.survWEvo.spikes, sm = (1 + 0.1 * (SW.spikes - 1)) * 0.9 * (sev ? 2 : 1), sr = 1.15 + (sev ? 0.5 : 0);
+      if (state.survSpT <= 0) {
+        var snear = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; }).sort(function (a, b) { return Math.hypot(a.vx - p.vx, a.vy - p.vy) - Math.hypot(b.vx - p.vx, b.vy - p.vy); }).slice(0, 1 + Math.floor(SW.spikes / 2) + (sev ? 1 : 0));
+        if (snear.length) {
+          state.survSpT = 1.25;
+          snear.forEach(function (e) { var sx = e.vx, sy = e.vy; AFX.spikes(sx, sy, sr); legDefer(0.42, function () { dmgSrc = survWName("spikes"); enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - sx, o.vy - sy) <= sr) dmgEnemy(o, survWDmg(sm), "Les pointes transpercent"); }); }); });
+        } else state.survSpT = 0.3;
+      }
+    }
+    if (SW.storm) {
+      state.survStT = (state.survStT || 0) - dt;
+      var tev = state.survWEvo && state.survWEvo.storm, tm = (1 + 0.1 * (SW.storm - 1)) * 0.95 * (tev ? 2 : 1);
+      if (state.survStT <= 0) {
+        var vst = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 9; });
+        if (vst.length) {
+          state.survStT = 1.05;
+          for (var si = 0; si < 1 + Math.floor(SW.storm / 3) + (tev ? 2 : 0); si++) {
+            var tgs = vst[rnd(vst.length)]; AFX.chain([[tgs.vx + 0.3, tgs.vy - 6], [tgs.vx, tgs.vy]], "cavia"); dmgSrc = survWName("storm");
+            enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - tgs.vx, o.vy - tgs.vy) <= 1.2) dmgEnemy(o, survWDmg(tm), "La foudre frappe"); });
+          }
+          sfx("energy");
+        } else state.survStT = 0.3;
       }
     }
   }
@@ -10116,6 +10179,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (variant === "berserker") { state.survKnock += 1; }
     if (variant === "archimage") { state.spells.ice = true; state.slots.push("ice"); state.survSpellHaste = 1; }
     if (vinfo && vinfo.kit) vinfo.kit();
+    heroTraitInit();
     state.gold = (state.gold || 0) + 20 * metaLv("purse"); state.survBanLeft = (state.survBanLeft || 0) + metaLv("exile") + colBonus().ban;
     state.survUlt = Math.min(100, (state.survUlt || 0) + 25 * metaLv("ultstart") + colBonus().ult);
     if (metaLv("fav") && variant && HCOMBO[variant]) { state.survW = state.survW || {}; var fk = HCOMBO[variant][0]; state.survW[fk] = Math.max(state.survW[fk] || 0, 1); }
@@ -10162,6 +10226,53 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     8: { slime: [185, 0.95, 1.15], spider: [8, 1.0, 1.05], goblin: [30, 0.55, 1.1], skeleton: [40, 0.4, 1.1], harpy: [200, 0.1, 1.4], archer: [35, 0.7, 1.0], cultist: [190, 0.7, 0.95], wolf: [30, 0.5, 1.0] },
     9: { skeleton: GOLDT, lycan: [48, 0.4, 1.3], harpy: [45, 0.5, 1.3], werewolf: [45, 0.3, 1.2] }
   };
+  /* ================= HÉROS : chacun a une arme de départ et un trait de jeu qui lui sont propres ================= */
+  var HERO_TRAITS = {
+    cocotte: { w: "boom", name: "Ponte-minute", desc: "Tous les 7 monstres vaincus, un œuf explosif tombe sur le dernier.", eggs: 7 },
+    cochon: { w: "spikes", name: "Lard blindé", desc: "1 dégât en moins à chaque coup reçu, et 2 épines : ceux qui te touchent se blessent.", armor: 1, thorns: 2 },
+    meuh: { w: "aura", name: "Lait maternel", desc: "Récupère 1 PV toutes les 6 secondes.", regen: 6 },
+    canard: { w: "orbit", name: "Givre marin", desc: "Les monstres à moins de 3 cases sont ralentis de 35 %.", chill: 3 },
+    lapin: { w: "boom", name: "Foulée vive", desc: "+12 % d'esquive et +6 % de coups critiques.", dodge: 0.12, crit: 0.06 },
+    mouton: { w: "orbit", name: "Laine d'acier", desc: "Un bouclier de 3 PV se recrée toutes les 25 secondes.", wool: 25 },
+    cheval: { w: "orbit", name: "Sabots d'or", desc: "+25 % d'œufs d'or gagnés.", gold: 0.25 },
+    oie: { w: "plumes", name: "Honk de terreur", desc: "12 % de chance d'effrayer un monstre touché (étourdi 1 s).", stun: [0.12, 1] },
+    bouc: { w: "spikes", name: "Tête dure", desc: "20 % de chance d'étourdir 1,2 s les monstres touchés.", stun: [0.2, 1.2] },
+    chien: { w: "wolves", name: "Flair de chasseur", desc: "+25 % d'expérience gagnée.", xp: 0.25 },
+    dinde: { w: "aura", name: "Panache", desc: "Le premier coup sur un monstre en pleine forme fait le double de dégâts.", opener: true },
+    ane: { w: "summon", name: "Têtu comme un âne", desc: "15 % de chance d'ignorer complètement un coup.", ignore: 0.15 },
+    chat: { w: "wolves", name: "Neuf vies", desc: "+15 % d'esquive et +8 % de coups critiques.", dodge: 0.15, crit: 0.08 },
+    paon: { w: "plumes", name: "Regard hypnotique", desc: "10 % de chance d'hypnotiser un monstre touché (2 s).", stun: [0.1, 2] },
+    taureau: { w: "aura", name: "Rage de la foule", desc: "+4 % de dégâts par monstre à moins de 3 cases (max +32 %).", crowd: 0.04 },
+    coq: { w: "boom", name: "Cocorico !", desc: "Toutes les 20 s, un cri étourdit les monstres proches pendant 1 s.", cry: 20 },
+    pintade: { w: "plumes", name: "Œil de lynx", desc: "+0,5 de portée et +10 % de coups critiques.", range: 0.5, crit: 0.1 },
+    lama: { w: "summon", name: "Crachat poisseux", desc: "25 % de chance de ralentir un monstre touché (2,5 s).", slow: 0.25 },
+    cavia: { w: "storm", name: "Surtension", desc: "10 % des monstres vaincus déclenchent un éclair en chaîne.", arcKill: 0.1 }
+  };
+  function ht() { return (state && state.survival && state.variant && HERO_TRAITS[state.variant]) || null; }
+  function heroTraitInit() {
+    var T = ht(); if (!T) return;
+    state.survW = {}; state.survW[T.w] = 1;
+    if (T.range) state.survRangeBonus = (state.survRangeBonus || 0) + T.range;
+  }
+  function traitOnHit(e) {
+    var T = ht(); if (!T || e.hp <= 0) return;
+    if (T.stun && Math.random() < T.stun[0]) { e.stunT = Math.max(e.stunT || 0, e.survivalBoss ? T.stun[1] * 0.4 : T.stun[1]); e.wind = 0; addFloat(e.vx, e.vy - 0.6, "Étourdi", "#ffd23c"); }
+    if (T.slow && Math.random() < T.slow) { e.slowT = 2.5; e.slowF = 0.45; addFloat(e.vx, e.vy - 0.6, "Ralenti", "#c8ff7a"); }
+  }
+  function traitOnKill(e) {
+    var T = ht(); if (!T) return;
+    if (T.eggs) { state.trCount = (state.trCount || 0) + 1; if (state.trCount % T.eggs === 0) { (state.farmEggs = state.farmEggs || []).push({ x: e.vx, y: e.vy, t: 0.5, evo: false, src: "Ponte-minute" }); addFloat(e.vx, e.vy - 0.4, "🥚", "#ffffff", 1.2); } }
+    if (T.arcKill && Math.random() < T.arcKill) legArcs({ vx: e.vx, vy: e.vy }, 3, 0.8);
+  }
+  function traitTick(dt) {
+    var T = ht(); if (!T) return;
+    var TT = state.trT = state.trT || {};
+    if (T.regen) { TT.rg = (TT.rg == null ? T.regen : TT.rg) - dt; if (TT.rg <= 0) { TT.rg = T.regen; var h = healHp(1); if (h > 0) addFloat(p.vx, p.vy - 0.5, "+1", "#7fe08a"); } }
+    if (T.wool) { TT.wl = (TT.wl == null ? T.wool : TT.wl) - dt; if (TT.wl <= 0) { TT.wl = T.wool; if (!(state.shieldAmt > 0)) { state.shieldAmt = 3; addFloat(p.vx, p.vy - 0.8, "Laine !", "#f6f2ea"); } } }
+    if (T.cry) { TT.cr = (TT.cr == null ? 8 : TT.cr) - dt; if (TT.cr <= 0) { TT.cr = T.cry; var any = false; enemies.forEach(function (e) { if (e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 4.5) { e.stunT = Math.max(e.stunT || 0, e.survivalBoss ? 0.4 : 1); e.wind = 0; any = true; } }); if (any) { AFX.power("coq", { d: [1, 0], near: [] }); banner("Cocorico !", "#ffb02e", 900, 26); sfx("rage"); } }
+    }
+    if (T.chill) enemies.forEach(function (e) { if (e.hp > 0 && !e.survivalBoss && Math.hypot(e.vx - p.vx, e.vy - p.vy) < T.chill) { e.slowT = Math.max(e.slowT || 0, 0.35); e.slowF = Math.min(e.slowF || 1, 0.65); } });
+  }
   /* ================= DONS LÉGENDAIRES : améliorations rares qui transforment la partie, avec des synergies à découvrir ================= */
   var LEGENDS = {
     vengeance: { name: "Éclats vengeurs", tag: "Feu", icon: "fire", desc: "20 % des monstres explosent à leur mort et blessent ceux qui les entourent." },
@@ -10426,6 +10537,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     survBehaviorsTick(dt); if (mode !== "play") return;
     survAlliesTick(dt); if (mode !== "play") return;
     legTick(dt); if (mode !== "play") return;
+    traitTick(dt); if (mode !== "play") return;
     if (state.survWinT > 0) {
       state.survWinT -= dt; state.survWinFxT -= dt;
       var wp = state.survWinPos || { x: p.vx, y: p.vy };
@@ -11801,6 +11913,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     rk.innerHTML = "<b>Rang : " + RANKS[rr].n + " " + rankStars(rr) + "</b><div style='height:6px;background:rgba(255,255,255,.12);border-radius:4px;margin:4px 0'><div style='height:100%;width:" + pct + "%;background:#ffc83a;border-radius:4px'></div></div>" + (nx2 ? "Prochain : " + nx2.n + " (" + xx + "/" + nx2.xp + " XP) → " + RANK_BONUS[rr + 1] : "Rang maximum atteint !");
     document.getElementById("hp-pw").innerHTML = surv ? "<b>Pouvoir · " + v.pw.name + "</b><br>" + v.pw.desc : "<b>Style</b><br>" + CLASSES[v.base].name + " : " + v.desc;
     document.getElementById("hp-ult").innerHTML = surv ? "<b>Ultime ⚡ · " + u.name + "</b><br>" + u.desc : "<b>Bonus en Mode Survie</b><br>Pouvoir et ultime uniques";
+    var htr = document.getElementById("hp-trait"), HTd = HERO_TRAITS[id]; htr.style.display = surv && HTd ? "" : "none"; if (surv && HTd) htr.innerHTML = "<b>Trait · " + HTd.name + "</b><br>" + HTd.desc + "<br><small>Arme de départ : " + SURV_WEAPONS[HTd.w].name + "</small>";
     if (hpAnim) { clearInterval(hpAnim); hpAnim = null; }
     if (FARM.portrait) hpPortrait(big, id, false);
     else { var fr2 = FARM.frames(id), k = 0, x = big.getContext("2d"); var frame = function () { x.clearRect(0, 0, 192, 192); x.drawImage(fr2[[0, 1, 0, 2][k++ % 4]], 0, 0, 192, 192); }; frame(); hpAnim = setInterval(frame, 180); }
