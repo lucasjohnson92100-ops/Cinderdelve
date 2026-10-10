@@ -1,4 +1,5 @@
 // Enregistre des scènes du jeu image par image (horloge simulée, rendu déterministe) pour la page itch.io.
+// NB : le jeu est maintenant bilingue ; ajoute ?lang=fr à l'URL du build de test pour forcer le français (sinon : langue du navigateur).
 // Usage : node record_trailer.js <url-du-build-de-debug> <dossier-de-sortie> [scene,scene,...]
 // Le build de debug se fabrique avec tools/balance_debug_build.py. Les images sont des JPEG nommés <scene>/NNNN.jpg.
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
