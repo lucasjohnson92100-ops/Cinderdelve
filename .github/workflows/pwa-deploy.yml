@@ -1,0 +1,48 @@
+name: Publish PWA (GitHub Pages)
+
+# Lancement manuel uniquement : Actions > « Publish PWA » > Run workflow.
+# Prérequis (une seule fois) : Settings > Pages > Source = « GitHub Actions ».
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check build directory
+        run: test -f build/index.html && test -f build/manifest.webmanifest && test -f build/sw.js
+
+      # Le service worker reçoit : la version du jeu (change à chaque déploiement => mise à jour proposée aux joueurs),
+      # l'empreinte des images/musiques (inchangée => pas de re-téléchargement) et la liste des fichiers à garder hors ligne.
+      - name: Stamp service worker
+        run: |
+          ASSETS=$(find build/img build/music -type f | sort | xargs sha1sum | sha1sum | cut -c1-12)
+          FILES=$(cd build && find img music -type f | sort | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
+          python3 - "$GITHUB_SHA" "$ASSETS" "$FILES" <<'PY'
+          import sys
+          p = 'build/sw.js'; s = open(p, encoding='utf-8').read()
+          s = s.replace('__BUILD__', sys.argv[1][:10]).replace('__ASSETS__', sys.argv[2]).replace('__FILES__', sys.argv[3])
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+          head -5 build/sw.js | cut -c1-200
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+      - id: deployment
+        uses: actions/deploy-pages@v4

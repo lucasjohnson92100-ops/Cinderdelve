@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cinderdelve</title>
 <meta name="description" content="Cinderdelve : un roguelike d'action en temps réel. Esquive, pare, lance des sorts et crée ton build.">
-<meta name="theme-color" content="#14102a">
+<meta name="theme-color" content="#14070a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Cinderdelve">
@@ -13473,13 +13475,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       return c.toDataURL("image/png");
     }
     try {
-      var i192 = icon(192), i512 = icon(512), i180 = icon(180);
+      var i192 = icon(192);
       var l1 = document.createElement("link"); l1.rel = "icon"; l1.type = "image/png"; l1.href = i192; document.head.appendChild(l1);
-      var l2 = document.createElement("link"); l2.rel = "apple-touch-icon"; l2.href = i180; document.head.appendChild(l2);
-      var manifest = { name: GAME_NAME, short_name: GAME_NAME, start_url: ".", display: "fullscreen", orientation: "any", background_color: "#14102a", theme_color: "#14102a",
-        icons: [{ src: i192, sizes: "192x192", type: "image/png" }, { src: i512, sizes: "512x512", type: "image/png" }] };
-      var l3 = document.createElement("link"); l3.rel = "manifest";
-      l3.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" })); document.head.appendChild(l3);
     } catch (err) {}
   })();
   window.addEventListener("blur", function () { keyDown = {}; padDir = {}; ptr = null; recomputeInput(); });
@@ -14489,6 +14486,34 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   requestAnimationFrame(loop);
   showIntro();
   /*DBG*/
+})();
+</script>
+<script>
+/* appli installable (PWA) : hors ligne + mises à jour. Désactivé dans un iframe (itch.io, artefact) et hors http(s). */
+(function () {
+  try {
+    if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol) || window.top !== window.self || /\.itch\.zone$/.test(location.hostname)) return;
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").then(function (reg) {
+        function offer(w) {
+          if (!w || document.getElementById("pwa-upd")) return;
+          var b = document.createElement("button"); b.id = "pwa-upd"; b.type = "button";
+          b.textContent = "Nouvelle version disponible — toucher pour mettre à jour";
+          b.style.cssText = "position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483000;background:#ffd23c;color:#2a0a08;border:3px solid #14070a;border-radius:10px;padding:10px 14px;font:700 14px Georgia,serif;box-shadow:0 4px 14px rgba(0,0,0,.5)";
+          b.onclick = function () { b.textContent = "Mise à jour…"; w.postMessage("skip"); };
+          document.body.appendChild(b);
+        }
+        if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+        reg.addEventListener("updatefound", function () {
+          var w = reg.installing; if (!w) return;
+          w.addEventListener("statechange", function () { if (w.state === "installed" && navigator.serviceWorker.controller) offer(w); });
+        });
+        setInterval(function () { reg.update().catch(function () {}); }, 30 * 60 * 1000);
+      }).catch(function () {});
+      var rl = false; navigator.serviceWorker.addEventListener("controllerchange", function () { if (rl || !window.__swHad) return; rl = true; location.reload(); });
+      window.__swHad = !!navigator.serviceWorker.controller;
+    });
+  } catch (err) {}
 })();
 </script>
 </body>
