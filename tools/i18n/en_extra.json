@@ -196,5 +196,6 @@
 "Tous tes emplacements sont pleins. Quel sort veux-tu remplacer ?": "All your slots are full. Which spell do you want to replace?",
 "Attaque · emplacement": "Attack · slot",
 "Passif · emplacement": "Passive · slot",
-" Attaque · emplacement": " Attack · slot"
+" Attaque · emplacement": " Attack · slot",
+"Tous tes sorts se lancent seuls.<br>": "All your spells cast themselves.<br>"
 }
