@@ -663,6 +663,26 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #tap-start .ts-t { font-family: 'Cinzel', Georgia, serif; font-weight: 700; font-size: clamp(1.3rem, 5.2vw, 2.4rem); letter-spacing: 3px; text-shadow: 0 2px 0 #2a0604, 0 0 22px rgba(255,170,60,0.55); animation: tspulse 1.6s ease-in-out infinite; }
 #tap-start .ts-s { font-family: system-ui, sans-serif; font-size: clamp(0.7rem, 2.6vw, 0.95rem); opacity: 0.6; letter-spacing: 1px; }
 @keyframes tspulse { 0%, 100% { opacity: 0.55; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.03); } }
+/* ---- écran d'ouverture : vidéo puis image finale avec le titre ---- */
+#ts-end, #ts-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; background: #0a0306; }
+@media (orientation: landscape) { #ts-end, #ts-vid { object-position: 50% 50%; } }
+#ts-shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; background: linear-gradient(180deg, rgba(8,2,5,0) 36%, rgba(8,2,5,0.6) 64%, rgba(8,2,5,0.92) 100%); }
+#tap-start.fin #ts-shade { opacity: 1; }
+#tap-start #ts-logo { top: auto; bottom: max(14vh, 92px); transform: translateX(-50%); opacity: 0; transition: opacity 1.1s ease 0.15s; }
+#tap-start.fin #ts-logo { opacity: 1; }
+#tap-start #ts-logo .ts-name, #tap-start #ts-logo .ts-name.land { font-size: clamp(2rem, 11vw, 4.2rem); }
+#tap-start #ts-logo .ts-sub { font-size: clamp(0.8rem, 3.8vw, 1.3rem); letter-spacing: 0.3em; }
+@media (orientation: landscape) {
+  #tap-start #ts-logo { bottom: max(13vh, 80px); }
+  #tap-start #ts-logo .ts-name, #tap-start #ts-logo .ts-name.land { font-size: clamp(2.6rem, 9.5vw, 7.2rem); }
+  #tap-start #ts-logo .ts-sub { font-size: clamp(0.9rem, 2.1vw, 1.7rem); }
+  #tap-start #ts-logo .ts-orn { width: min(46vw, 560px); }
+}
+#tap-start .ts-t { opacity: 0; transition: opacity 0.6s; }
+#tap-start.rdy .ts-t { opacity: 1; animation: tspulse 1.6s ease-in-out infinite; }
+#tap-start .ts-skip { position: absolute; z-index: 2; bottom: max(3.2vh, env(safe-area-inset-bottom, 0px)); left: 0; right: 0; font: 600 0.75rem system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; text-shadow: 0 1px 4px #000; transition: opacity 0.4s; }
+#tap-start.fin .ts-skip { opacity: 0; }
+
 @media (prefers-reduced-motion: reduce) { #tap-start .ts-t { animation: none; } }
 
 /* ---- titre de l'accueil : exactement le style de l'écran titre ---- */
@@ -1042,8 +1062,26 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   </div>
 </main>
 
-<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><canvas id="ts-cv" aria-hidden="true"></canvas><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plumes et sang</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-s">&#9835; son activé</div></div>
-<script>(function () { var t = document.getElementById("tap-start"), done = false; function go() { if (done) return; done = true; t.classList.add("out"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 450); document.removeEventListener("keydown", go, true); } t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true); })();</script>
+<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><img id="ts-end" src="video/intro-last.jpg" alt="" aria-hidden="true"><video id="ts-vid" src="video/intro.mp4" poster="video/intro-poster.jpg" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
+<script>(function () {
+  var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), done = false, ended = false;
+  window.__tsEnded = false; /* faux tant que la vidéo d'ouverture joue */
+  function fin() { if (ended) return; ended = true; window.__tsEnded = true; t.classList.add("fin"); setTimeout(function () { t.classList.add("rdy"); }, 900); try { v.pause(); } catch (e) {} }
+  function go(e) {
+    if (done) return;
+    if (!ended) { if (e && e.type === "keydown" && ["Escape", "Tab", "Shift", "Control", "Alt", "Meta"].indexOf(e.key) >= 0) return; fin(); return; } /* 1er toucher : passe la vidéo, on voit l'image finale */
+    done = true; t.classList.add("out"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 450); document.removeEventListener("keydown", go, true);
+  }
+  t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true);
+  try {
+    var rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!v || rm) { fin(); return; }
+    v.addEventListener("ended", fin); v.addEventListener("error", fin);
+    v.addEventListener("timeupdate", function () { if (v.duration && v.currentTime > v.duration - 1.3) t.classList.add("fin"); });
+    var p = v.play(); if (p && p.catch) p.catch(function () { fin(); }); /* lecture automatique refusée : on montre directement l'image finale */
+    setTimeout(function () { if (!ended && v.currentTime < 0.2) fin(); }, 4000); /* vidéo qui ne démarre pas (réseau lent, fichier absent) */
+  } catch (err) { fin(); }
+})();</script>
 <div class="home" id="home" role="dialog" aria-modal="true" aria-labelledby="home-title">
   <canvas id="home-cv" aria-hidden="true"></canvas>
   <div class="home-ui">
@@ -14274,7 +14312,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var ts = document.getElementById("tap-start"); if (!ts) return;
     var seen = false; try { seen = localStorage.getItem("donjon-intro-seen") === "1"; } catch (e) {}
     if (seen) return;
-    function go() { ts.removeEventListener("click", go); ts.removeEventListener("touchend", go); setTimeout(function () { LORE.openIntro(); }, 500); }
+    function go() { if (window.__tsEnded === false) return; ts.removeEventListener("click", go); ts.removeEventListener("touchend", go); setTimeout(function () { LORE.openIntro(); }, 500); }
     ts.addEventListener("click", go); ts.addEventListener("touchend", go);
   })();
   ARTX.onReady(function (k) { if (k === "p_cocotte") gameIconRefresh(); });

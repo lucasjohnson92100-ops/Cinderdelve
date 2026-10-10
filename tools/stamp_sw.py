@@ -10,7 +10,7 @@ ver = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get('GITHUB_SHA') or os.
 if not ver:
     try: ver = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
     except Exception: ver = time.strftime('%Y%m%d%H%M%S')
-files = sorted(os.path.relpath(os.path.join(r, f), d).replace(os.sep, '/') for sub in ('img', 'music') for r, _, fs in os.walk(os.path.join(d, sub)) for f in fs)
+files = sorted(os.path.relpath(os.path.join(r, f), d).replace(os.sep, '/') for sub in ('img', 'music', 'video') for r, _, fs in os.walk(os.path.join(d, sub)) for f in fs)
 h = hashlib.sha1()
 for f in files:
     h.update(f.encode()); h.update(open(os.path.join(d, f), 'rb').read())

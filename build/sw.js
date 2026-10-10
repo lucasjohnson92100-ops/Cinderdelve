@@ -32,7 +32,7 @@ function ranged(req, res) { /* les navigateurs demandent la musique par morceaux
 self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== location.origin) return;
-  const isAsset = /\/(img|music)\//.test(url.pathname);
+  const isAsset = /\/(img|music|video)\//.test(url.pathname);
   if (isAsset) {
     e.respondWith((async () => {
       const a = await caches.open(ASSET); let r = await a.match(req.url);
