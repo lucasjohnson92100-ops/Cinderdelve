@@ -4843,8 +4843,8 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     function plumes() { add("feather", p.vx, p.vy, 650, { n: 7, R: 4.2, pal: PAL.oie }); }
     function spikes(x, y, r) { add("spike", x, y, 700, { R: r, pal: PAL.oie }); }
     function chain(pts, id) { var P = PAL[id] || PAL.cavia; add("bolt", pts[0][0], pts[0][1], 520, { pts: pts.map(function (q) { return [px(q[0]), px(q[1])]; }), pal: P }); }
-    function hole() { add("implode", p.vx, p.vy, 900, { R: 7, pal: ["170,110,255", "235,220,255", "60,30,140"] }); }
-    function nova() { add("sun", p.vx, p.vy, 1000, { R: 4.6, pal: PAL.dinde }); add("shock", p.vx, p.vy, 800, { R: 4.4, pal: PAL.coq }); }
+    function hole(x, y) { add("implode", x == null ? p.vx : x, y == null ? p.vy : y, 1100, { R: 6, pal: ["170,110,255", "235,220,255", "60,30,140"] }); }
+    function nova(x, y) { x = x == null ? p.vx : x; y = y == null ? p.vy : y; add("sun", x, y, 1000, { R: 4.6, pal: PAL.dinde }); add("shock", x, y, 800, { R: 4.4, pal: PAL.coq }); }
     function legend() { add("sun", p.vx, p.vy, 900, { R: 3.2, pal: PAL.coq }); add("feather", p.vx, p.vy, 1000, { n: 12, R: 3.4, spin: 2, pal: PAL.coq }); add("shock", p.vx, p.vy, 600, { R: 2.6, pal: PAL.coq }); }
     function egg(x, y, evo) {
       var id = state && state.variant, P = PAL[id] || PAL.cocotte;
@@ -6285,7 +6285,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     }
   }
   function burst(tx, ty, color, n, speed) {
-    var t = now();
+    var t = now(); if (smallScr()) { n = Math.ceil(n * 0.45); if (parts.length > 70) return; }
     for (var i = 0; i < n; i++) {
       var a = Math.random() * 6.283, s = (0.4 + Math.random()) * speed;
       parts.push({ x: tx * TILE + 8, y: ty * TILE + 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 8, t0: t, life: 350 + rnd(250), c: color });
@@ -6293,14 +6293,20 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   }
   var trails = [], sparks = [], puffs = [], stars = [], banners = [], orbs = [], corpses = [], freezeUntil = 0, slowUntil = 0, slowK = 1, flashCol = "255,255,255", flashT0 = -9999, flashDur = 1;
   var lvlBeam = null, levelPopupAt = 0, floatBoost = 1, orbChain = 0, orbChainT = 0, lowHpT = 0, hudPrev = {};
+  /* petit écran : on allège l'action (moins de textes, d'étincelles et d'effets) pour qu'on voie toujours son héros et les dangers */
+  function smallScr() { return state && state.survival && Math.min(window.innerWidth, window.innerHeight) < 620; }
   function addFloat(tx, ty, text, color, size) {
+    if (smallScr() && color !== "#ff5a4f" && !(size > 1.2)) {
+      var nf = floats.length, isNum = /^[-+]?\d+$/.test(text);
+      if (nf >= 9 || (nf >= 4 && !isNum) || (!isNum && text.length > 14)) return;
+    }
     floats.push({ x: tx * TILE + 8, y: ty * TILE + 2, text: text, color: color, t0: now(), s: size || 1 });
   }
   var WCOL = { sword: "200,228,255", dagger: "170,255,205", axe: "255,176,96", staff: "140,232,255" };
   function sparkFx(tx, ty, col, big) { sparks.push({ x: tx * TILE + 8, y: ty * TILE + 8, t0: now(), col: col, big: big, rot: Math.random() * 6.28 }); }
   function puffFx(px, py, big) { puffs.push({ x: px, y: py, t0: now(), big: big, dx: (Math.random() - 0.5) * 4 }); }
   function starFx(tx, ty, big) { stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
-  function banner(text, col, ms, size) { banners.push({ text: text, col: col, t0: now(), dur: ms || 1400, size: size || 34 }); }
+  function banner(text, col, ms, size) { if (smallScr()) { size = Math.min(size || 34, 22); ms = Math.min(ms || 1400, 1000); if (banners.length >= 1) banners.shift(); } banners.push({ text: text, col: col, t0: now(), dur: ms || 1400, size: size || 34 }); }
   function screenFlash(col, ms) { flashCol = col; flashT0 = now(); flashDur = ms || 300; }
   function hitStop(ms) { freezeUntil = Math.max(freezeUntil, now() + ms); }
   function slowmo(ms, k) { slowUntil = Math.max(slowUntil, now() + ms); slowK = k; }
@@ -10330,7 +10336,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var LEGENDS = {
     vengeance: { name: "Éclats vengeurs", tag: "Feu", icon: "fire", desc: "20 % des monstres explosent à leur mort et blessent ceux qui les entourent." },
     chain: { name: "Foudre en chaîne", tag: "Foudre", icon: "chain", desc: "Tous les 4 coups, un éclair saute sur 4 monstres." },
-    blackhole: { name: "Trou noir", tag: "Vide", icon: "vortex", desc: "Toutes les 14 s, aspire les monstres proches et les étourdit." },
+    blackhole: { name: "Trou noir", tag: "Vide", icon: "vortex", desc: "Toutes les 14 s, ouvre un trou noir loin de toi : il rassemble les monstres et les étourdit." },
     meteors: { name: "Pluie d'étoiles", tag: "Astre", icon: "meteor", desc: "Toutes les 2,5 s, une étoile s'écrase sur un monstre." },
     berserk: { name: "Fureur du sang", tag: "Sang", icon: "cry", desc: "Sous 40 % de PV : tu frappes deux fois plus vite et 50 % plus fort." },
     vampire: { name: "Soif de vie", tag: "Sang", icon: "heart", desc: "Chaque monstre vaincu te rend 1 PV." },
@@ -10340,7 +10346,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   };
   var LEG_SYN = [
     { a: "vengeance", b: "chain", name: "Tempête d'éclats", desc: "Chaque explosion déclenche aussi des éclairs." },
-    { a: "meteors", b: "blackhole", name: "Supernova", desc: "Le trou noir se termine par une énorme explosion." },
+    { a: "meteors", b: "blackhole", name: "Supernova", desc: "Le trou noir se termine par une énorme explosion, loin de toi." },
     { a: "berserk", b: "vampire", name: "Soif de sang", desc: "Sous 40 % de PV, chaque victoire te rend 3 PV." },
     { a: "feather", b: "echo", name: "Aile gardienne", desc: "Quand la plume te protège, elle libère une salve de plumes." }
   ];
@@ -10350,6 +10356,22 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function legDefer(sec, fn) { LEGX.defer.push({ t: sec, fn: fn }); }
   function legBerserk() { return legHas("berserk") && state.hp < state.maxHp * 0.4; }
   function legDmg(mul) { return Math.max(3, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * mul)); }
+  /* le trou noir s'ouvre loin du héros, toujours à l'écran, là où les monstres sont les plus nombreux : il les concentre et les éloigne de toi */
+  function legHoleSpot() {
+    var mxx = Math.max(2.5, view.cols / 2 - 1.6), myy = Math.max(2.5, view.rows / 2 - 1.6), best = null, bs = -1;
+    enemies.forEach(function (e) {
+      if (e.hp <= 0 || e.survivalBoss || Math.abs(e.vx - p.vx) > mxx + 1 || Math.abs(e.vy - p.vy) > myy + 1) return;
+      var n = 0; enemies.forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - e.vx, o.vy - e.vy) < 3.2) n++; });
+      var dd = Math.hypot(e.vx - p.vx, e.vy - p.vy), sc = n * 10 + Math.min(dd, 5) - (dd < 2.5 ? 8 : 0);
+      if (sc > bs) { bs = sc; best = e; }
+    });
+    var dx = best ? best.vx - p.vx : (lastDir[0] || 1), dy = best ? best.vy - p.vy : (lastDir[1] || 0), dd = Math.hypot(dx, dy) || 1;
+    if (dd < 4) { dx = dx / dd * 4; dy = dy / dd * 4; dd = 4; }
+    var f = Math.min(1, mxx / Math.max(0.01, Math.abs(dx)), myy / Math.max(0.01, Math.abs(dy)));
+    var tx = p.vx + dx * f, ty = p.vy + dy * f, k = Math.hypot(tx - p.vx, ty - p.vy);
+    if (k < 3.2) { var a = Math.atan2(dy, dx); tx = p.vx + Math.cos(a) * 3.2; ty = p.vy + Math.sin(a) * 3.2; }
+    return [tx, ty];
+  }
   function legExplode(x, y, r, mul, verb, quiet) {
     if (LEGX.depth >= 2) return;
     LEGX.depth++;
@@ -10403,19 +10425,20 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (legHas("blackhole")) {
       T.bh = (T.bh == null ? 8 : T.bh) - dt;
       if (T.bh <= 0 && enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7; })) {
-        T.bh = 14; LEGX.pull = { t: 0.8 }; SPV.add("vortex", p.vx, p.vy, 3.2, 1000); AFX.hole(); sfx("rage"); banner("Trou noir !", "#a56bff", 1000, 26);
-        enemies.forEach(function (e) { if (e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7) { e.stunT = Math.max(e.stunT || 0, 2); e.wind = 0; } });
+        var bt = legHoleSpot();
+        T.bh = 14; LEGX.pull = { t: 1.1, x: bt[0], y: bt[1] }; SPV.add("vortex", bt[0], bt[1], 3.4, 1200); AFX.hole(bt[0], bt[1]); sfx("rage"); banner("Trou noir !", "#a56bff", 1000, 26);
+        enemies.forEach(function (e) { if (e.hp > 0 && Math.hypot(e.vx - bt[0], e.vy - bt[1]) < 6.5) { e.stunT = Math.max(e.stunT || 0, 2); e.wind = 0; } });
       }
     }
     if (LEGX.pull) {
-      LEGX.pull.t -= dt;
+      var PL = LEGX.pull; PL.t -= dt;
       enemies.forEach(function (e) {
-        if (e.hp <= 0 || e.survivalBoss) return; var dx = p.vx - e.vx, dy = p.vy - e.vy, dd = Math.hypot(dx, dy);
-        if (dd < 7 && dd > 1.1) { var st = Math.min(dd - 1, 11 * dt); moveBody(e, dx / dd * st, dy / dd * st, e.r, e.ghost); tileOfBody(e); }
+        if (e.hp <= 0 || e.survivalBoss) return; var dx = PL.x - e.vx, dy = PL.y - e.vy, dd = Math.hypot(dx, dy);
+        if (dd < 6.5 && dd > 0.7) { var st = Math.min(dd - 0.5, 10 * dt); moveBody(e, dx / dd * st, dy / dd * st, e.r, e.ghost); tileOfBody(e); }
       });
-      if (LEGX.pull.t <= 0) {
+      if (PL.t <= 0) {
         LEGX.pull = null;
-        if (legSynOn("meteors", "blackhole")) { legExplode(p.vx, p.vy, 4.2, 4, "La supernova frappe"); screenFlash("255,230,170", 500); banner("SUPERNOVA !", "#ffb02e", 1200, 34); AFX.nova(); }
+        if (legSynOn("meteors", "blackhole")) { legExplode(PL.x, PL.y, 4.4, 4, "La supernova frappe"); screenFlash("255,230,170", 500); banner("SUPERNOVA !", "#ffb02e", 1200, 34); AFX.nova(PL.x, PL.y); }
       }
     }
     if (legHas("feather")) { T.fe = (T.fe == null ? 4 : T.fe) - dt; if (T.fe <= 0 && !state.legFeather) { state.legFeather = true; T.fe = 10; addFloat(p.vx, p.vy - 0.8, "Plume prête", "#e8f4ff"); } }
@@ -13200,8 +13223,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.beginPath(); ctx.arc(rg.x * TILE + 8, rg.y * TILE + 8, 6 + rk * (rg.R || 22), 0, Math.PI * 2); ctx.stroke();
     }
     ctx.globalAlpha = 1;
+    var sm = smallScr(); if (sm) ctx.globalAlpha = 0.55;
     SPV.draw(ctx, t, TILE);
     AFX.draw(ctx, t);
+    ctx.globalAlpha = 1;
+    if (sm) {
+      var hx = p.vx * TILE + 8, hy = p.vy * TILE + 8, pu = 0.5 + 0.5 * Math.sin(t / 220);
+      ctx.save(); ctx.strokeStyle = "rgba(255,255,255," + (0.55 + 0.3 * pu).toFixed(2) + ")"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(hx, hy + 6, 9 + pu, 4.5 + pu * 0.5, 0, 0, 6.2832); ctx.stroke();
+      ctx.fillStyle = "#ffd23c"; ctx.strokeStyle = "#14102a"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx - 3.5, hy - 17 - pu * 1.5); ctx.lineTo(hx + 3.5, hy - 17 - pu * 1.5); ctx.lineTo(hx, hy - 11 - pu * 1.5); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
+    }
     FX2.over(ctx, t);
     LORE.drawBubbles(ctx, t);
     drawCastFx(ctx, t);
