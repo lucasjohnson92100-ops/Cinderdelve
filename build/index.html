@@ -666,6 +666,13 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 /* ---- écran d'ouverture : vidéo puis image finale avec le titre ---- */
 #ts-end, #ts-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; background: #0a0306; }
 @media (orientation: landscape) { #ts-end, #ts-vid { object-position: 50% 50%; } }
+#ts-bg { display: none; }
+/* téléphone en portrait : la vidéo occupe le haut de l'écran sans trop zoomer (on voit tout le coq), le reste est un fond flou, le titre est en bas */
+@media (orientation: portrait) {
+  #ts-bg { display: block; position: absolute; inset: -6%; background: #0a0306 url(video/intro-last.jpg) 50% 30% / cover; filter: blur(22px) brightness(0.5) saturate(1.1); }
+  #ts-end, #ts-vid { bottom: auto; height: 62vh; -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 100%); mask-image: linear-gradient(180deg, #000 80%, transparent 100%); }
+}
+
 #ts-shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; background: linear-gradient(180deg, rgba(8,2,5,0) 36%, rgba(8,2,5,0.6) 64%, rgba(8,2,5,0.92) 100%); }
 #tap-start.fin #ts-shade { opacity: 1; }
 #tap-start #ts-logo { top: auto; bottom: max(14vh, 92px); transform: translateX(-50%); opacity: 0; transition: opacity 1.1s ease 0.15s; }
@@ -1062,7 +1069,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   </div>
 </main>
 
-<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><img id="ts-end" src="video/intro-last.jpg" alt="" aria-hidden="true"><video id="ts-vid" src="video/intro.mp4" poster="video/intro-poster.jpg" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
+<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><div id="ts-bg" aria-hidden="true"></div><img id="ts-end" src="video/intro-last.jpg" alt="" aria-hidden="true"><video id="ts-vid" src="video/intro.mp4" poster="video/intro-poster.jpg" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
 <script>(function () {
   var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), done = false, ended = false;
   window.__tsEnded = false; /* faux tant que la vidéo d'ouverture joue */
