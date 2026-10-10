@@ -1071,12 +1071,20 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
 
 <div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><div id="ts-bg" aria-hidden="true"></div><img id="ts-end" src="video/intro-last.jpg" alt="" aria-hidden="true"><video id="ts-vid" src="video/intro.mp4" poster="video/intro-poster.jpg" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
 <script>(function () {
-  var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), done = false, ended = false;
-  window.__tsEnded = false; /* faux tant que la vidéo d'ouverture joue */
-  function fin() { if (ended) return; ended = true; window.__tsEnded = true; t.classList.add("fin"); setTimeout(function () { t.classList.add("rdy"); }, 900); try { v.pause(); } catch (e) {} }
+  var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), skip = t.querySelector(".ts-skip"), done = false, ended = false, waiting = false;
+  window.__tsEnded = false; /* faux tant que la vidéo d'ouverture n'est pas terminée */
+  function fin() { if (ended) return; ended = true; waiting = false; window.__tsEnded = true; t.classList.add("fin"); setTimeout(function () { t.classList.add("rdy"); }, 900); try { v.pause(); } catch (e) {} }
+  function wait() { /* le téléphone refuse la lecture automatique : on montre la 1re image et on lance la vidéo au premier toucher */
+    if (ended || waiting) return; waiting = true; t.classList.add("wait"); if (skip) skip.textContent = "Touche pour lancer l'intro";
+  }
+  function start() { waiting = false; t.classList.remove("wait"); if (skip) skip.textContent = "Touche pour passer"; var p = v.play(); if (p && p.catch) p.catch(function () { fin(); }); }
   function go(e) {
     if (done) return;
-    if (!ended) { if (e && e.type === "keydown" && ["Escape", "Tab", "Shift", "Control", "Alt", "Meta"].indexOf(e.key) >= 0) return; fin(); return; } /* 1er toucher : passe la vidéo, on voit l'image finale */
+    if (!ended) {
+      if (e && e.type === "keydown" && ["Escape", "Tab", "Shift", "Control", "Alt", "Meta"].indexOf(e.key) >= 0) return;
+      if (waiting) { start(); return; } /* 1er toucher après blocage : on lance la vidéo */
+      fin(); return; /* toucher pendant la vidéo : on saute à l'image finale */
+    }
     done = true; t.classList.add("out"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 450); document.removeEventListener("keydown", go, true);
   }
   t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true);
@@ -1085,8 +1093,8 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     if (!v || rm) { fin(); return; }
     v.addEventListener("ended", fin); v.addEventListener("error", fin);
     v.addEventListener("timeupdate", function () { if (v.duration && v.currentTime > v.duration - 1.3) t.classList.add("fin"); });
-    var p = v.play(); if (p && p.catch) p.catch(function () { fin(); }); /* lecture automatique refusée : on montre directement l'image finale */
-    setTimeout(function () { if (!ended && v.currentTime < 0.2) fin(); }, 4000); /* vidéo qui ne démarre pas (réseau lent, fichier absent) */
+    var p = v.play(); if (p && p.catch) p.catch(function () { wait(); });
+    setTimeout(function () { if (!ended && !waiting && v.currentTime < 0.2) wait(); }, 6000); /* la vidéo ne démarre pas */
   } catch (err) { fin(); }
 })();</script>
 <div class="home" id="home" role="dialog" aria-modal="true" aria-labelledby="home-title">

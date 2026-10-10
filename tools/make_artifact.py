@@ -28,12 +28,15 @@ def small_image(path):
     return buf.getvalue()
 
 def small_video(path):
-    return subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-an", "-vf", "scale=640:-2", "-c:v", "libx264", "-crf", "34", "-preset", "slow",
-                           "-pix_fmt", "yuv420p", "-movflags", "frag_keyframe+empty_moov", "-f", "mp4", "-"], check=True, stdout=subprocess.PIPE).stdout
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False); tmp.close()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-an", "-vf", "scale=720:-2", "-c:v", "libx264", "-crf", "31", "-preset", "slow",
+                    "-pix_fmt", "yuv420p", "-movflags", "+faststart", tmp.name], check=True)
+    data = open(tmp.name, "rb").read(); os.unlink(tmp.name); return data
 
 def small_jpeg(path):
-    im = Image.open(path).convert("RGB"); im = im.resize((640, round(640 * im.height / im.width)), Image.LANCZOS)
-    buf = io.BytesIO(); im.save(buf, "JPEG", quality=70); return buf.getvalue()
+    im = Image.open(path).convert("RGB"); im = im.resize((960, round(960 * im.height / im.width)), Image.LANCZOS)
+    buf = io.BytesIO(); im.save(buf, "JPEG", quality=74); return buf.getvalue()
 
 def small_audio(path):
     return subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-b:a", "%dk" % AUDIO_KBPS, "-f", "mp3", "-"],
