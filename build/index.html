@@ -9031,15 +9031,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var SURV_SHOP = {
     sv_heal: { name: "Soin complet", desc: "Rends tous tes PV", icon: "heart", get base() { return 12 + 4 * (state.survCycle || 0); }, step: 0,
       block: function () { return state.hp >= state.maxHp ? "PV pleins" : null; }, apply: function () { state.hp = state.maxHp; } },
-    sv_wlvl: { name: "Forge d'arme", desc: "Une de tes armes gagne un niveau", icon: "axe", get base() { return 25 + 8 * (state.survCycle || 0); }, step: 5,
-      block: function () { var w = state.survW || {}; return Object.keys(w).some(function (k) { return w[k] > 0 && w[k] < 6; }) ? null : "Aucune arme"; },
-      apply: function () { var w = state.survW, ks = Object.keys(w).filter(function (k) { return w[k] > 0 && w[k] < 6; }), k = ks[rnd(ks.length)]; w[k]++; say(survWName(k) + " passe au niveau " + w[k] + " !"); } },
     sv_wnew: { name: "Nouvelle arme", desc: "Débloque une arme au hasard", icon: "sword", base: 30, step: 10,
       block: function () { var w = state.survW || {}; if (survActFull()) return "Emplacements pleins"; return Object.keys(SURV_WEAPONS).some(function (k) { return !w[k]; }) ? null : "Toutes acquises"; },
       apply: function () { state.survW = state.survW || {}; var ks = Object.keys(SURV_WEAPONS).filter(function (k) { return !state.survW[k]; }), k = ks[rnd(ks.length)]; state.survW[k] = 1; say("Nouvelle arme : " + SURV_WEAPONS[k].name + " !"); } },
-    sv_slvl: { name: "Grimoire", desc: "Un de tes sorts gagne un niveau", icon: "scroll", get base() { return 20 + 6 * (state.survCycle || 0); }, step: 5,
-      block: function () { return state.slots.some(function (id) { return id && spL(id) < SURV_SP_MAX; }) ? null : "Aucun sort"; },
-      apply: function () { var ks = state.slots.filter(function (id) { return id && spL(id) < SURV_SP_MAX; }), k = ks[rnd(ks.length)]; state.spellLv[k] = spL(k) + 1; say(SPELLS[k].name + " passe au niveau " + state.spellLv[k] + " !"); } },
     sv_hp: { name: "Cœur de géant", desc: "+3 PV max", icon: "heart", get base() { return 18 + 5 * (state.survCycle || 0); }, step: 4,
       block: function () { return null; }, apply: function () { state.maxHp += 3; state.hp += 3; } },
     sv_atk: { name: "Pierre de force", desc: "+1 attaque", icon: "sword", get base() { return 30 + 10 * (state.survCycle || 0); }, step: 10,
@@ -9681,8 +9675,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var L = [];
     Object.keys(SURV_EVOS).forEach(function (id) {
       var ev = SURV_EVOS[id];
-      if (!state.spells[id] || state.survEvo[id] || spL(id) < 5 || !(state[ev.req] > 0)) return;
-      L.push({ id: "evo_" + id, name: "Évolution : " + ev.name, desc: SPELLS[id].name + " niveau 5 + " + ev.bonus, icon: SPELLS[id].icon,
+      if (!state.spells[id] || state.survEvo[id] || !(state[ev.req] > 0)) return;
+      L.push({ id: "evo_" + id, name: "Évolution : " + ev.name, desc: SPELLS[id].name + " + " + ev.bonus, icon: SPELLS[id].icon,
         apply: function () { state.survEvo[id] = true; banner(ev.name + " !", "#ffb02e", 2000, 32); screenFlash("255,190,90", 400); say(SPELLS[id].name + " évolue en " + ev.name + " !"); } });
     });
     return L;
@@ -9735,9 +9729,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var R = [
       { w: 35, ic: "🥚", l: (35 + 15 * cyc) + " œufs d'or", f: function () { earn(35 + 15 * cyc, p.vx, p.vy); } },
       { w: 20, ic: "🍎", l: "Soin + 3 PV max", f: function () { state.maxHp += 3; state.hp = state.maxHp; } },
-      { w: wk.length ? 20 : 0, ic: "⚔️", l: "Arme +1 niveau", f: function () { var k = wk[rnd(wk.length)]; state.survW[k]++; say(survWName(k) + " passe au niveau " + state.survW[k] + " !"); } },
-      { w: sk.length ? 15 : 0, ic: "📜", l: "Sort +1 niveau", f: function () { var k = sk[rnd(sk.length)]; state.spellLv[k] = spL(k) + 1; say(SPELLS[k].name + " passe au niveau " + state.spellLv[k] + " !"); } },
-      { w: 8, ic: "⚡", l: "Ultime rechargé", f: function () { state.survUlt = 100; } },
+                  { w: 8, ic: "⚡", l: "Ultime rechargé", f: function () { state.survUlt = 100; } },
       { w: 2, ic: "💰", l: "JACKPOT !", jp: true, f: function () { earn(150 + 50 * cyc, p.vx, p.vy); state.survUlt = 100; state.hp = state.maxHp; } }
     ].filter(function (r) { return r.w > 0; });
     var tot = R.reduce(function (a, r) { return a + r.w; }, 0), x = Math.random() * tot, win = R[0];
@@ -10404,10 +10396,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!state.survival || !state.variant || !FARM_POWERS[state.variant]) return [];
     var pw = FARM_POWERS[state.variant], L = pL(), ic = "an_" + state.variant;
     if (L >= 4) return [];
-    if (L === 3) return [{ id: "farmevo", name: "Évolution : " + pw.evoName, desc: pw.name + " niv. 3 : " + pw.evoDesc, icon: ic,
+    return [{ id: "farmevo", name: "Évolution : " + pw.evoName, desc: pw.name + " : " + pw.evoDesc, icon: ic,
       apply: function () { state.farmPwLv = 4; banner(pw.evoName + " !", "#ffb02e", 2200, 34); screenFlash("255,190,90", 420); sfx("levelup"); } }];
-    return [{ id: "farmlv" + (L + 1), name: "Pouvoir : " + pw.name + " " + (L + 1), desc: "+25 % de dégâts, zone plus grande, recharge plus courte", icon: ic,
-      apply: function () { state.farmPwLv = L + 1; banner(pw.name + " niv. " + (L + 1), "#ffd23c", 1500, 28); sfx("levelup"); } }];
   }
   function farmTick(dt) {
     if (!state || !state.survival) return;
@@ -11171,7 +11161,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function evolutions() {
     var L = [];
     SPELL_IDS.forEach(function (id) {
-      if (!state.spells[id] || state.slots.indexOf(id) < 0 || spL(id) >= (state.survival ? SURV_SP_MAX : 5)) return;
+      if (state.survival || !state.spells[id] || state.slots.indexOf(id) < 0 || spL(id) >= 5) return;
       (function (sid, lv) {
         L.push({ id: "sp_" + sid, name: SPELLS[sid].name + " " + (lv + 1), desc: state.survival ? SPELLS[sid].desc + " · " + survSpDesc(lv + 1) : SPELLS[sid].lv[lv], icon: SPELLS[sid].icon, apply: function () { state.spellLv[sid] = lv + 1; } });
       })(id, spL(id));
@@ -11831,7 +11821,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ids.push(id);
     });
     (state.slots || []).forEach(function (k) {
-      if (!k || !SPELLS[k] || spL(k) >= SURV_SP_MAX) return;
+      if (true || !k || !SPELLS[k] || spL(k) >= SURV_SP_MAX) return; /* plus de « +1 niveau » de sort : on évolue d'un coup */
       var id = "sv_s_" + k, lv = spL(k), tag = "";
       for (var ww in SURV_WEVOS) if (SURV_WEVOS[ww].req === k && w[ww] && !(state.survWEvo && state.survWEvo[ww])) tag = "Évolution : " + SURV_WEVOS[ww].name + ((w[ww] || 0) >= 4 ? " (prête !)" : "");
       if (!tag && SURV_EVOS[k] && !(state.survEvo && state.survEvo[k]) && lv + 1 >= 5) tag = "Évolution : " + SURV_EVOS[k].name + " (avec " + SURV_EVOS[k].bonus + ")";
