@@ -26,19 +26,9 @@ jobs:
       - name: Check build directory
         run: test -f build/index.html && test -f build/manifest.webmanifest && test -f build/sw.js
 
-      # Le service worker reçoit : la version du jeu (change à chaque déploiement => mise à jour proposée aux joueurs),
-      # l'empreinte des images/musiques (inchangée => pas de re-téléchargement) et la liste des fichiers à garder hors ligne.
+      # Le service worker reçoit la version du jeu, l'empreinte des images/musiques et la liste hors ligne.
       - name: Stamp service worker
-        run: |
-          ASSETS=$(find build/img build/music -type f | sort | xargs sha1sum | sha1sum | cut -c1-12)
-          FILES=$(cd build && find img music -type f | sort | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
-          python3 - "$GITHUB_SHA" "$ASSETS" "$FILES" <<'PY'
-          import sys
-          p = 'build/sw.js'; s = open(p, encoding='utf-8').read()
-          s = s.replace('__BUILD__', sys.argv[1][:10]).replace('__ASSETS__', sys.argv[2]).replace('__FILES__', sys.argv[3])
-          open(p, 'w', encoding='utf-8').write(s)
-          PY
-          head -5 build/sw.js | cut -c1-200
+        run: python3 tools/stamp_sw.py build "$GITHUB_SHA"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
