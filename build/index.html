@@ -670,6 +670,8 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 /* téléphone en portrait : la vidéo occupe le haut de l'écran sans trop zoomer (on voit tout le coq), le reste est un fond flou, le titre est en bas */
 @media (orientation: portrait) {
   #ts-bg { display: block; position: absolute; inset: -6%; background: #0a0306 url(video/intro-last.jpg) 50% 30% / cover; filter: blur(22px) brightness(0.5) saturate(1.1); }
+  #ts-end { opacity: 0; transition: opacity 0.5s; }
+  #tap-start.fin #ts-end { opacity: 1; }
   #ts-end, #ts-vid { bottom: auto; height: 76vh; -webkit-mask-image: linear-gradient(180deg, #000 66%, transparent 100%); mask-image: linear-gradient(180deg, #000 66%, transparent 100%); }
   #tap-start #ts-logo { bottom: max(17vh, 120px); }
   #tap-start .ts-t { bottom: max(7vh, 52px); }
