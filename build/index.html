@@ -4826,6 +4826,8 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         case "coq": add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
       }
     }
+    function bossPhase(e) { add("shock", e.vx, e.vy, 1000, { R: 10, pal: PAL.taureau, rays: 24 }); add("sun", e.vx, e.vy, 1100, { R: 5, pal: PAL.dinde }); add("shock", e.vx, e.vy, 900, { R: 6, pal: PAL.coq, delay: 200 }); }
+    function bossNova(e) { add("implode", e.vx, e.vy, 1500, { R: 4.3, pal: ["255,90,60", "255,220,160", "90,10,10"] }); }
     function plumes() { add("feather", p.vx, p.vy, 650, { n: 7, R: 4.2, pal: PAL.oie }); }
     function spikes(x, y, r) { add("spike", x, y, 700, { R: r, pal: PAL.oie }); }
     function chain(pts, id) { var P = PAL[id] || PAL.cavia; add("bolt", pts[0][0], pts[0][1], 520, { pts: pts.map(function (q) { return [px(q[0]), px(q[1])]; }), pal: P }); }
@@ -4935,7 +4937,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       auras(c, t);
       c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
     }
-    return { snap: snap, power: power, ult: ult, egg: egg, plumes: plumes, spikes: spikes, chain: chain, hole: hole, nova: nova, legend: legend, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
+    return { snap: snap, power: power, ult: ult, egg: egg, bossPhase: bossPhase, bossNova: bossNova, plumes: plumes, spikes: spikes, chain: chain, hole: hole, nova: nova, legend: legend, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
   })();
   /* ================= EFFETS : niveau, ramassage, auras ================= */
   var FX2 = (function () {
@@ -6459,6 +6461,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   }
 
   function dmgEnemy(e, d, verb) {
+    if (e.invulT && e.invulT > now()) return false;
     if (castMul !== 1) d = survRoundMul(d, castMul);
     if (e.shieldHp > 0) { e.shieldHp--; addFloat(e.vx, e.vy - 0.4, "Bloqué", "#7fb8ff"); burst(e.vx, e.vy, "#7fb8ff", 5, 40); return false; }
     if (state.survival) { var ds = dmgSrc || "Autre"; state.survDmg = state.survDmg || {}; state.survDmg[ds] = (state.survDmg[ds] || 0) + Math.min(d, Math.max(0, e.hp)); }
@@ -6602,7 +6605,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (d <= 0) { p.invuln = gtime + 250; return; }
     }
     d = survClampHit(d);
-    state.hp -= d; if (state.survival && d > 0) { if (!(state.hitBoostT > 0)) addFloat(p.vx, p.vy - 0.9, "Élan !", "#7fe8ff"); state.hitBoostT = 2; }
+    state.hp -= d; state.survTaken = (state.survTaken || 0) + d; if (state.survival && d > 0) { if (!(state.hitBoostT > 0)) addFloat(p.vx, p.vy - 0.9, "Élan !", "#7fe8ff"); state.hitBoostT = 2; }
     sfx("hurt", d);
     p.invuln = gtime + (state.survival ? Math.max(200, 420 - survCyc() * 28) : 420);
     p.flash = t + 160;
@@ -7306,10 +7309,45 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     burst(e.vx, e.vy, "#c9b090", 10, 60); e.x = tx; e.y = ty; e.vx = tx; e.vy = ty; burst(tx, ty, "#c9b090", 12, 70);
     rings.push({ x: tx, y: ty, t0: now(), dur: 380, c: "#c9b090", R: 30 }); shake(2.2, 200);
   }
+  /* ================= SUPER BOSS : trois phases, qui s'adaptent au niveau du joueur ================= */
+  /* niveau du joueur d'après les dégâts reçus par minute : 0 = débutant, 1 = normal, 2 = confirmé */
+  function survSkillTier() {
+    var mins = Math.max(0.5, (state.survTotalT || 0) / 60), dpm = (state.survTaken || 0) / mins / Math.max(1, state.maxHp);
+    return dpm < 0.45 ? 2 : dpm > 1.4 ? 0 : 1;
+  }
+  function bossPhaseTick(e, dt, pcx, pcy) {
+    if (e.tier == null) e.tier = survSkillTier();
+    var ph = e.hp > e.maxHp * 0.66 ? 1 : e.hp > e.maxHp * 0.33 ? 2 : 3;
+    if (!e.bph) e.bph = 1;
+    if (ph > e.bph) {
+      e.bph = ph; e.invulT = now() + 2000; e.stunT = 2; e.wind = 0; e.bs = "idle"; e.bcd = 2.4; e.pT = 4;
+      zones = zones.filter(function (z) { return z.e !== e; });
+      projs = projs.filter(function (pr) { return pr.own === "player"; });
+      banner("PHASE " + ph + " !", "#ff3a2a", 1900, 44); screenFlash("255,80,60", 500); shake(6, 600); sfx("rage"); AFX.bossPhase(e);
+      say((e.title || NAMES[e.type][1]) + " passe en phase " + ph + " !");
+      var MD = survMapDef(), pool = ph === 2 ? MD.b : MD.c, n = [4, 6, 9][e.tier], i, a0 = Math.random() * 6.283;
+      for (i = 0; i < n; i++) survSpawnScaled(pool[rnd(pool.length)], p.vx + Math.cos(a0 + i / n * 6.283) * 8, p.vy + Math.sin(a0 + i / n * 6.283) * 8);
+      var hearts = [3, 2, 1][e.tier];
+      for (i = 0; i < hearts; i++) { var hp2 = survFreeNear(p.vx + rnd(7) - 3, p.vy + rnd(7) - 3); gems.push({ x: hp2[0], y: hp2[1], k: "heart" }); }
+      if (ph === 3) { e.enraged = true; e.spd = Math.min(e.spd * 1.15, SPEED * 0.66); }
+      return true;
+    }
+    if (e.bph >= 2 && e.bs === "idle" && !(e.stunT > 0)) {
+      e.pT = (e.pT == null ? 4 : e.pT) - dt;
+      if (e.pT <= 0) {
+        var mul = [1.3, 1, 0.85][e.tier], ecx = e.vx + 0.5, ecy = e.vy + 0.5, ang = Math.atan2(pcy - ecy, pcx - ecx);
+        e.pT = [11, 9, 7.5][e.tier];
+        if (e.bph === 2) rainZones(e, pcx, pcy, 5 + e.tier * 2, 1.25, 1.15 * mul, 1, "fait pleuvoir la mort");
+        else { zoneCircle(e, ecx, ecy, 4.3, 1.7 * mul, 2, "déclenche une nova"); fanShots(e, ang, 9 + e.tier * 2); AFX.bossNova(e); }
+        e.bs = "wind"; e.bt = 1.5; sfx("warn");
+      }
+    }
+    return false;
+  }
   function bossAttack(e, d, pcx, pcy) {
     var ecx = e.vx + 0.5, ecy = e.vy + 0.5, ang = Math.atan2(pcy - ecy, pcx - ecx);
     if (!e.enraged && e.hp < e.maxHp * 0.5) { e.enraged = true; say(NAMES[e.type][1] + " entre en rage !"); sfx("rage"); shake(3, 320); burst(e.vx, e.vy, "#ff4d4d", 18, 80); }
-    var rage = e.enraged ? 0.78 : 1;
+    var rage = (e.enraged ? 0.78 : 1) * (e.superBoss ? [1.25, 1, 0.88][e.tier == null ? 1 : e.tier] : 1);
     if (e.type === "ogre") {
       if (d < 2.8 || Math.random() < 0.35) { zoneCircle(e, ecx, ecy, 1.95, 0.9 * rage, 2, "écrase le sol"); e.bs = "wind"; e.bt = 1.2 * rage; }
       else {
@@ -7351,6 +7389,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function bossThink(e, dt, t, d, pcx, pcy, sees) {
     e.bcd -= dt;
+    if (e.superBoss && bossPhaseTick(e, dt, pcx, pcy)) return true;
     if (e.bs === "wind") {
       e.bt -= dt; e.mv = 0;
       if (e.bt <= 0) {
@@ -10466,7 +10505,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
-      e.superBoss = true; e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss); e.atk = Math.round(e.atk * 1.3); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
+      e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.3 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
       var lti = LT.info(state.survMapTheme || 0);
       if (lti) { e.skin = "lt_" + lti.id; e.title = lti.name; if (lti.big) { e.hp = e.maxHp = Math.round(e.hp * 1.3); e.scale *= 1.15; } }
       shake(6, 600);
@@ -10585,7 +10624,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (pt) { dmgSrc = "Familier"; dmgEnemy(pt, Math.round((state.atk * 0.55 + 2) * state.survPetLv), "Ton familier frappe"); burst(pt.vx, pt.vy, "#7ff0ff", 8, 55); }
       }
     }
-    state.survT += dt;
+    state.survT += dt; state.survTotalT = (state.survTotalT || 0) + dt;
     if (!p.dash && p.atkCd <= 0) {
       var atkM = state.atk; if (state.survMeleeMul) state.atk = Math.max(1, Math.round(state.atk * state.survMeleeMul));
       var arng = atkRange() + 1.8 + (state.survRangeBonus || 0), hitAny = false; dmgSrc = "Attaque";
@@ -12087,6 +12126,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.fillStyle = "#14102a"; ctx.fillRect(px + 1, top - 2, 14, 3);
       ctx.fillStyle = "#ff4d79"; ctx.fillRect(px + 2, top - 1, Math.max(1, Math.round(12 * o.hp / o.maxHp)), 1);
     }
+    if (!isPlayer && o.invulT && o.invulT > t) {
+      ctx.strokeStyle = "rgba(150,215,255," + (0.5 + 0.35 * Math.sin(t / 60)).toFixed(2) + ")"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(px + 8, py + 7, 9 * sc, 10.5 * sc, 0, 0, 6.283); ctx.stroke();
+    }
     if (!isPlayer && o.charger && !o.chPhase) {
       var cs0 = (o.chCd != null && o.chCd < 1) ? 0.55 + 0.45 * Math.sin(t / 60) : 0.85;
       ctx.fillStyle = "rgba(255,150,40," + cs0.toFixed(2) + ")"; for (var ci = 0; ci < 2; ci++) { var cxx = px + 11 + ci * 3; ctx.beginPath(); ctx.moveTo(cxx, top - 6); ctx.lineTo(cxx + 2.4, top - 4); ctx.lineTo(cxx, top - 2); ctx.lineTo(cxx + 0.8, top - 4); ctx.closePath(); ctx.fill(); }
@@ -12398,9 +12440,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (bossE) {
       var bw = vw * 0.7, bx0 = (vw - bw) / 2, byy = vh - 13;
       ctx.fillStyle = "rgba(10,8,24,0.75)"; ctx.fillRect(bx0 - 1, byy - 1, bw + 2, 8);
-      ctx.fillStyle = bossE.enraged ? "#ff9a3c" : "#ff4d4d"; ctx.fillRect(bx0, byy, bw * Math.max(0, bossE.hp / bossE.maxHp), 6);
+      ctx.fillStyle = (bossE.invulT && bossE.invulT > now()) ? "#7fc8ff" : bossE.enraged ? "#ff9a3c" : "#ff4d4d"; ctx.fillRect(bx0, byy, bw * Math.max(0, bossE.hp / bossE.maxHp), 6);
+      if (bossE.superBoss) { ctx.fillStyle = "rgba(255,236,180,0.95)"; ctx.fillRect(bx0 + bw * 0.66 - 0.5, byy - 1, 1, 8); ctx.fillRect(bx0 + bw * 0.33 - 0.5, byy - 1, 1, 8); }
       ctx.font = "bold 6px 'Fredoka', 'Trebuchet MS', sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 2; ctx.strokeStyle = "#14102a";
-      var bnm = bossE.title || NAMES[bossE.type][1]; ctx.strokeText(bnm, vw / 2, byy - 3); ctx.fillStyle = "#ffffff"; ctx.fillText(bnm, vw / 2, byy - 3);
+      var bnm = (bossE.title || NAMES[bossE.type][1]) + (bossE.superBoss ? " · Phase " + (bossE.bph || 1) + "/3" : ""); ctx.strokeText(bnm, vw / 2, byy - 3); ctx.fillStyle = "#ffffff"; ctx.fillText(bnm, vw / 2, byy - 3);
     }
 
     if (isLand()) {
