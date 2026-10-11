@@ -295,5 +295,11 @@
 "Duelliste": "Duelist",
 "+12 % de dégâts quand 2 monstres ou moins sont près de toi": "+12% damage when 2 or fewer monsters are near you",
 "Pansement": "Bandage",
-"+1 PV après un moment sans être touché (14 s − 2 s par niveau)": "+1 HP after a while without being hit (14 s − 2 s per level)"
+"+1 PV après un moment sans être touché (14 s − 2 s par niveau)": "+1 HP after a while without being hit (14 s − 2 s per level)",
+" découverts": " discovered",
+" (pas encore trouvé)": " (not found yet)",
+" · Niveau 6 max : ": " · Max level 6: ",
+" max": " max",
+" · Niveau ": " · Level ",
+"Passifs": "Passives"
 }
