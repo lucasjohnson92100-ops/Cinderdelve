@@ -59,4 +59,4 @@ Tu quittes en pleine partie ? Pas de panique : la progression est sauvegardée a
   6. 06-runes.png — une rune, le compteur de cases et de runes
   7. 07-choix-et-cases.png — choix d'amélioration avec les emplacements
 
-Image de couverture : `cover-630x500.png`.
+Image de couverture : `cover-630x500.png` (format conseillé par itch.io) ; `cover-1260x1000.png` est la même image en haute définition.
