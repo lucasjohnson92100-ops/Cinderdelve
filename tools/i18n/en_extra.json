@@ -301,5 +301,15 @@
 " · Niveau 6 max : ": " · Max level 6: ",
 " max": " max",
 " · Niveau ": " · Level ",
-"Passifs": "Passives"
+"Passifs": "Passives",
+"Une rune : en réunir 3 ouvre un nouvel emplacement de sort. Des gardiens veillent dessus, à toi de voir si le risque en vaut la peine.": "A rune: collecting 3 opens a new spell slot. Guardians watch over it, so you decide if the risk is worth it.",
+"Les gardiens de la rune s'éveillent !": "The rune's guardians awaken!",
+"Rune ramassée (": "Rune collected (",
+"Runes ": "Runes ",
+"Trois runes réunies !": "Three runes gathered!",
+"Un emplacement s'ouvre. Que choisis-tu ?": "A slot opens. What do you choose?",
+"Une attaque de plus en même temps": "One more attack at a time",
+"Un passif de plus en même temps": "One more passive at a time",
+"Nouvel emplacement d'attaque !": "New attack slot!",
+"Nouvel emplacement passif !": "New passive slot!"
 }
