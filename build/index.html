@@ -341,15 +341,21 @@ body.toon canvas.board, body.toon canvas.ic, body.toon .row canvas, body.toon .g
 @media (orientation: landscape) {
   #home-vid { left: 50%; top: 0; width: min(100vw, 177.78vh); height: min(100vh, 56.25vw); transform: translateX(-50%); object-fit: contain; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%); }
   #home-shade { background: linear-gradient(90deg, rgba(8,2,5,0) 54%, rgba(8,2,5,0.74) 74%, rgba(8,2,5,0.88) 100%), linear-gradient(180deg, rgba(8,2,5,0.5) 0%, rgba(8,2,5,0) 24%, rgba(8,2,5,0) 78%, rgba(8,2,5,0.6) 100%); }
-  .home .home-ui { padding-left: 54vw; box-sizing: border-box; }
+  .home .home-ui { padding-left: 60vw; box-sizing: border-box; }
 }
 /* menu allégé : Survie en grand, La Grange et Partager en plus petit, les autres écrans en icônes */
 #home .home-btns { display: flex; flex-direction: column; gap: 8px; width: min(340px, calc(100vw - 30px)); margin: 0 auto 4px; }
 #home .home-btns .main-btn.surv-main { font-size: 1.2rem !important; padding: 12px 10px !important; }
 #home .home-btns .home-row { display: flex; gap: 8px; }
+#home .home-btns .home-main .main-btn.surv-main { flex: 1.5 1 0; min-width: 0; }
+#home .home-btns .home-main .main-btn.resume { flex: 1 1 0; min-width: 0; width: auto; font-size: 0.95rem; padding: 8px 6px; border-width: 2px; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; }
+#home .home-btns .home-main .main-btn.resume small { display: block; margin: 2px 0 0; font-size: 0.64rem; opacity: 0.85; }
+#home .home-btns .home-main .main-btn.surv-main small { font-size: 0.66rem !important; }
+#home .home-btns .home-main .main-btn.surv-main { font-size: 1.1rem !important; }
 #home .home-btns .home-row .main-btn { flex: 1 1 0; min-width: 0; width: auto; font-size: 0.86rem; padding: 7px 8px; letter-spacing: 0.02em; border-width: 2px; border-radius: 14px; }
 #home .home-btns .home-row .main-btn small { display: inline; margin: 0 0 0 4px; font-size: 0.66rem; opacity: 0.85; white-space: nowrap; }
-#home .home-btns .home-icons { display: flex; justify-content: center; gap: 16px; margin-top: 2px; }
+#home .home-btns .home-icons { display: flex; justify-content: center; gap: 12px; margin-top: 2px; }
+@media (orientation: portrait) { #home-foot { display: none; } #home-vid { top: -7vh; } }
 #home .home-btns .home-ic { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #8a6a2a; background: linear-gradient(#2a1610, #120a06); color: #ffe6b0; font-size: 1.35rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,0.5); padding: 0; }
 #home .home-btns .home-ic:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.5); }
 #home .home-btns .home-ic:focus-visible { outline: 3px solid #ffcc55; outline-offset: 2px; }
@@ -15226,24 +15232,22 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var first = btn("Mode Survie", false, function () { pendingMode = "survival"; hideHome(); showClassPick(); });
     first.classList.add("surv-main");
     first.innerHTML = "<span class=\"sm-t\">Mode Survie</span><small>" + (survTxt ? "Record : vague " + survTxt.split("|")[0] + " · " : "") + "Animaux libérés : " + survFreed().length + "/" + FARM_ORDER.length + "</small>";
-    var ss = loadSurvSave();
-    if (ss) { var rb = btn("Reprendre la survie", false, function () { hideHome(); resumeSurvival(ss); }); rb.classList.add("wide"); rb.innerHTML = "Reprendre la partie<small>" + survSaveInfo(ss) + "</small>"; }
+    var ss = loadSurvSave(), rb = null;
+    if (ss) { rb = btn("Reprendre la survie", false, function () { hideHome(); resumeSurvival(ss); }); rb.classList.add("resume"); rb.innerHTML = "Reprendre<small>vague " + ((ss.state.survCycle || 0) + 1) + " · niv. " + (ss.state.lvl || 1) + "</small>"; rb.title = survSaveInfo(ss); }
+    var mr = document.createElement("div"); mr.className = "home-row home-main"; box.insertBefore(mr, first); mr.appendChild(first); if (rb) mr.appendChild(rb);
     var classicOn = false; try { classicOn = localStorage.getItem("donjon-classic-on") === "1"; } catch (e) {}
-    function row() { var r = document.createElement("div"); r.className = "home-row"; box.appendChild(r); return r; }
-    function rbtn(r, label, alt, fn) { var b2 = btn(label, alt, fn); r.appendChild(b2); return b2; }
     if (sv || classicOn) {
-      var rc = row();
-      if (sv) rbtn(rc, "Continuer le donjon", true, function () { hideHome(); resumeGame(sv); }).innerHTML = "Donjon<small>étage " + sv.state.floor + "</small>";
-      if (classicOn) { rbtn(rc, "Donjon classique", true, function () { pendingMode = "normal"; hideHome(); showClassPick(); }); rbtn(rc, "Sanctuaire", true, openSanct).innerHTML = "Sanctuaire<small>" + meta.souls + "</small>"; }
+      var rc = document.createElement("div"); rc.className = "home-row"; box.appendChild(rc);
+      if (sv) { var cb = btn("Continuer le donjon", true, function () { hideHome(); resumeGame(sv); }); cb.innerHTML = "Donjon<small>étage " + sv.state.floor + "</small>"; rc.appendChild(cb); }
+      if (classicOn) { var kb = btn("Donjon classique", true, function () { pendingMode = "normal"; hideHome(); showClassPick(); }); rc.appendChild(kb); var sb = btn("Sanctuaire", true, openSanct); sb.innerHTML = "Sanctuaire<small>" + meta.souls + "</small>"; rc.appendChild(sb); }
     }
-    var r2 = row();
-    rbtn(r2, "La Grange", true, function () { hideHome(); showForge(); }).innerHTML = "La Grange<small>" + survBank() + " 🥚</small>";
-    rbtn(r2, "Partager", true, function () { doShare(inviteText()); });
     var ic = document.createElement("div"); ic.className = "home-icons"; box.appendChild(ic);
     function icon(sym, label, fn) { var b3 = document.createElement("button"); b3.type = "button"; b3.className = "home-ic"; b3.textContent = sym; b3.setAttribute("aria-label", label); b3.title = label; b3.addEventListener("click", fn); ic.appendChild(b3); return b3; }
+    icon("🌾", "La Grange", function () { hideHome(); showForge(); });
     icon("📖", "Carnet de guerre", function () { LORE.openCodex(); });
     icon("❔", "Comment jouer", openHelp);
     icon("⚙️", "Réglages", openSettings);
+    icon("📤", "Partager le jeu", function () { doShare(inviteText()); });
     first.classList.add("wide");
     try {
       var hn = document.getElementById("home-next"), fr0 = survFreed(), nxt = FARM_ORDER.filter(function (id) { return fr0.indexOf(id) < 0; }).sort(function (a, b) { return SURV_VARIANTS[a].need - SURV_VARIANTS[b].need; })[0];
