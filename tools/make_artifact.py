@@ -13,7 +13,7 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build")
 OUT = sys.argv[1] if len(sys.argv) > 1 else "artifact.html"
-IMG_Q, IMG_MAX, AUDIO_KBPS, LIMIT = 40, 512, 32, 15_800_000
+IMG_Q, IMG_MAX, AUDIO_KBPS, LIMIT = 40, 512, 24, 15_800_000
 
 def b64(mime, data):
     return "data:%s;base64,%s" % (mime, base64.b64encode(data).decode())
@@ -39,7 +39,7 @@ def small_jpeg(path):
     buf = io.BytesIO(); im.save(buf, "JPEG", quality=74); return buf.getvalue()
 
 def small_audio(path):
-    return subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-b:a", "%dk" % AUDIO_KBPS, "-f", "mp3", "-"],
+    return subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-ac", "1", "-ar", "22050", "-b:a", "%dk" % AUDIO_KBPS, "-f", "mp3", "-"],
                           check=True, stdout=subprocess.PIPE).stdout
 
 html = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
