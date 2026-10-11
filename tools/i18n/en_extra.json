@@ -311,5 +311,9 @@
 "Une attaque de plus en même temps": "One more attack at a time",
 "Un passif de plus en même temps": "One more passive at a time",
 "Nouvel emplacement d'attaque !": "New attack slot!",
-"Nouvel emplacement passif !": "New passive slot!"
+"Nouvel emplacement passif !": "New passive slot!",
+"Une rune : en réunir assez (3, puis une de plus à chaque case, 6 au maximum) ouvre un nouvel emplacement de sort. Des gardiens veillent dessus, à toi de voir si le risque en vaut la peine.": "A rune: gathering enough (3, then one more for each slot, 6 maximum) opens a new spell slot. Guardians watch over it, so you decide if the risk is worth it.",
+"Runes réunies !": "Runes gathered!",
+"Cases ": "Slots ",
+"(10 cases au total)": "(10 slots in total)"
 }
