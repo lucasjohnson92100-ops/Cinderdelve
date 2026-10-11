@@ -7416,7 +7416,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function shootAt(e) {
     if (state.survival) {                       /* pas plus de 5 tirs ennemis en vol à la fois : on doit pouvoir tout esquiver */
       var inAir = 0; for (var qi = 0; qi < projs.length; qi++) if (projs[qi].own === "enemy") inAir++;
-      if (inAir >= 5) { e.shootCd = 0.6 + Math.random() * 0.8; return; }
+      if (inAir >= 3) { e.shootCd = 0.8 + Math.random() * 1.0; return; }
+      /* une meute ne tire pas en rafale : un seul tir ennemi toutes les 0,9 s, et un seul tireur à la fois par meute */
+      var tn = gtime / 1000; state.pkShot = state.pkShot || {};
+      if (tn < (state.shotGapT || 0) || (e.pack && tn < (state.pkShot[e.pack] || 0))) { e.shootCd = 0.5 + Math.random() * 0.7; return; }
+      state.shotGapT = tn + 0.9; if (e.pack) state.pkShot[e.pack] = tn + 2.2;
     }
     var ecx = e.vx + 0.5, ecy = e.vy + 0.5, dx = p.vx + 0.5 - ecx, dy = p.vy + 0.5 - ecy, d = Math.hypot(dx, dy) || 1;
     var kind = e.type === "dragon" ? "flame" : (e.type === "lich" || e.type === "cultist" || e.type === "medusa") ? "bolt" : "arrow";
@@ -11144,7 +11148,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survHpMul() { var c = survCyc(); return 1 + c * BAL.hpLin + c * c * BAL.hpQuad; }
   function survAtkMul() { var c = survCyc(); return 1 + c * BAL.atkLin + c * c * BAL.atkQuad; }
   function survSpdMul() { return Math.min(1.0, 0.78 + survCyc() * 0.03); }
-  function survShootMul() { return Math.max(1.7, 3.0 - survCyc() * 0.15); }
+  function survShootMul() { return Math.max(2.6, 4.6 - survCyc() * 0.2); }
   function survMapDef() { return SURV_MAP[state.survMapTheme != null ? state.survMapTheme : 0] || SURV_MAP[0]; }
   function survTintFor(type) { var m = MAPTINT[state.survMapTheme]; return (m && m[type]) || null; }
   var SURV_POOL1 = ["slime", "bat", "skeleton", "goblin", "spider"], SURV_POOL2 = ["wolf", "mushroom", "archer", "lycan", "harpy"], SURV_POOL3 = ["ghost", "cultist", "centaur", "werewolf", "minotaur", "medusa"];
