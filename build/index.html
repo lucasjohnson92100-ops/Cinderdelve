@@ -333,7 +333,16 @@ body:not(.land) .hintcard { top: 38%; }
 @media (max-height: 420px) { .home-btns .main-btn { padding: 8px 18px; font-size: 0.98rem; } .home-btns { gap: 6px; } }
 body.toon canvas.board, body.toon canvas.ic, body.toon .row canvas, body.toon .gcard canvas, body.toon .slot canvas, body.toon .actions .ai { image-rendering: auto; }
 .home { position: fixed; inset: 0; display: none; background: #080614; color: #fff; overflow: hidden; }
-.home canvas#home-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.home canvas#home-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+/* fond du menu : les héros qui marchent en boucle ; Captain Cocotte reste bien visible au-dessus des boutons */
+.home { background: #0a0306; }
+#home-vid { position: absolute; left: 0; top: -45vh; width: 100%; height: 137vh; object-fit: cover; object-position: 50% 50%; background: #0a0306; }
+#home-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(8,2,5,0.85) 0%, rgba(8,2,5,0) 22%, rgba(8,2,5,0) 56%, rgba(8,2,5,0.82) 74%, rgba(8,2,5,0.96) 100%); }
+@media (orientation: landscape) {
+  #home-vid { top: 0; width: 100vw; height: 100vh; object-fit: cover; object-position: 50% 50%; transform-origin: 50% 55%; transform: translateX(-14vw) scale(1.2); }
+  #home-shade { background: linear-gradient(90deg, rgba(8,2,5,0) 52%, rgba(8,2,5,0.78) 76%, rgba(8,2,5,0.9) 100%), linear-gradient(180deg, rgba(8,2,5,0.55) 0%, rgba(8,2,5,0) 28%, rgba(8,2,5,0) 76%, rgba(8,2,5,0.65) 100%); }
+  .home .home-ui { padding-left: 46vw; box-sizing: border-box; }
+}
 .home-ui { position: relative; z-index: 1; width: 100%; height: 100%; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; align-items: start; gap: 6px;
   padding: max(28px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom)); grid-template-areas: "logo" "tag" "btns" "foot"; }
 .home-logo { grid-area: logo; display: flex; align-items: center; gap: 12px; }
@@ -1174,6 +1183,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true);
 })();</script>
 <div class="home" id="home" role="dialog" aria-modal="true" aria-labelledby="home-title">
+  <video id="home-vid" poster="video/heroes-port.jpg" muted loop playsinline webkit-playsinline preload="none" aria-hidden="true"></video><div id="home-shade" aria-hidden="true"></div>
   <canvas id="home-cv" aria-hidden="true"></canvas>
   <div class="home-ui">
     <div class="home-logo"><canvas class="sw sw-l" id="sw-l" width="64" height="64" aria-hidden="true"></canvas><div class="hl-col"><h1 id="home-title"><span class="tb">Cinderdelve</span><span class="tm" aria-hidden="true">Cinderdelve</span><span class="tf">Cinderdelve</span></h1><div class="ts-orn hl-orn"><i></i><b></b><i></i></div></div><canvas class="sw sw-r" id="sw-r" width="64" height="64" aria-hidden="true"></canvas></div>
@@ -15155,6 +15165,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   gameIconRefresh();
   var homeLow = null, homeLowCtx = null, homeEmbLow = [];
   function homeDraw(t) {
+    return; /* le fond est maintenant la vidéo « héros en marche » */
     homeSquad(t, homeCtx, homeCv.width, homeCv.height); return;
     if (GFX === "toon") { homeToon(t, homeCtx, homeCv.width, homeCv.height, homeCls, homeEmb); return; }
     var S = Math.max(2, Math.round(homeCv.height / 230)), lw = Math.ceil(homeCv.width / S), lh = Math.ceil(homeCv.height / S);
@@ -15176,11 +15187,21 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function homeStop() { if (homeRAF) cancelAnimationFrame(homeRAF); homeRAF = 0; }
   window.addEventListener("resize", function () { if (homeRAF) homeSize(); });
-  function hideHome() { document.getElementById("home").style.display = "none"; homeStop(); }
+  function homeVidPick(force) {
+    try {
+      var hv = document.getElementById("home-vid"); if (!hv) return;
+      var port = window.matchMedia && matchMedia("(orientation: portrait)").matches, o = port ? "p" : "l";
+      if (force || hv.dataset.o !== o) { hv.dataset.o = o; hv.poster = port ? "video/heroes-port.jpg" : "video/heroes-land.jpg"; hv.src = port ? "video/heroes-port.mp4" : "video/heroes-land.mp4"; hv.load(); }
+      var hp = hv.play(); if (hp && hp.catch) hp.catch(function () {});
+    } catch (e) {}
+  }
+  window.addEventListener("resize", function () { var h0 = document.getElementById("home"); if (h0 && h0.style.display !== "none") homeVidPick(false); });
+  function hideHome() { document.getElementById("home").style.display = "none"; homeStop(); try { document.getElementById("home-vid").pause(); } catch (e) {} }
   function showHome() {
     mode = "intro"; setTrack("menu"); AU.duck = false; if (AU.musG) AU.musG.gain.setTargetAtTime(musGain(), AU.ctx.currentTime, 0.2);
     ["ov", "kit", "shop", "lvlup", "gear", "bag", "sanct", "settings", "infobox", "pause", "help", "spswap"].forEach(function (id) { document.getElementById(id).classList.remove("show"); });
     var sv = loadSave(), box = document.getElementById("home-btns");
+    homeVidPick(true);
     box.innerHTML = "";
     function btn(label, alt, fn) {
       var b = document.createElement("button"); b.type = "button"; b.className = "main-btn" + (alt ? " alt" : ""); b.textContent = label; b.addEventListener("click", fn); box.appendChild(b); return b;

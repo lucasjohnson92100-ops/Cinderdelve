@@ -30,7 +30,7 @@ def small_image(path):
 def small_video(path):
     import tempfile
     tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False); tmp.close()
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-an", "-vf", "scale='min(960,iw)':-2", "-c:v", "libx264", "-crf", "31", "-preset", "slow",
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", path, "-an", "-vf", "scale='min(640,iw)':-2,fps=24", "-c:v", "libx264", "-crf", "34", "-preset", "slow",
                     "-pix_fmt", "yuv420p", "-movflags", "+faststart", tmp.name], check=True)
     data = open(tmp.name, "rb").read(); os.unlink(tmp.name); return data
 
