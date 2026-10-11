@@ -22,10 +22,13 @@ Le Grand Boucher a capturé toute la basse-cour. Tu commences seul : Captain Coc
 - **Des héros qui se jouent vraiment différemment** : chacun a son arme de départ et un trait de jeu (régénération, bouclier, épines, étourdissement, esquive, bonus d'or ou d'XP…), puis ses évolutions d'armes à découvrir.
 - **Des vagues variées** : essaims, encerclements, colonnes en marche, embuscades d'élites, pluies de kamikazes. Les ennemis ont des animations, des variantes et des réactions aux coups.
 
-### Des builds à inventer
+### Des builds à inventer, une vraie dimension tactique
+- **10 cases pour construire ton équipement** : tu en répartis librement 10 entre **attaques** et **passifs** (3 de chaque au départ, 7 maximum d'un côté). 7 attaques et 3 passifs, 5 et 5, 3 et 7… à toi de choisir ton style.
+- **Plus de 70 armes, sorts et passifs** à découvrir : corbeaux, séisme, fouet en chaîne, météorite, hache du Boucher, sangsue, hérisson, sonar de basse-cour… et des passifs qui changent ta façon de jouer (Tueur de foule, Duelliste, Soif de sang, Rempart de plumes…). Chaque amélioration annonce précisément ce qu'elle apporte.
+- **Les runes, pour gagner des cases** : ramasse des runes sur la carte (3 pour la première case, puis une de plus à chaque case, 6 au maximum). Mais attention : des gardiens veillent dessus. Prendre des risques est récompensé.
+- **Une horde lisible** : les ennemis avancent en meutes, d'un seul bloc, pour que tu puisses trouver la brèche où te glisser. Mais gare au contact : un monstre qui te touche te coûte 1 PV par seconde.
 - **Dons légendaires** : des améliorations très rares qui transforment ta partie : Éclats vengeurs, Foudre en chaîne, Trou noir, Pluie d'étoiles, Berserk, Vampire, Plume gardienne, Écho, Récolte.
-- **Synergies cachées** : combine les bons dons pour déclencher des effets bonus. À toi de les trouver.
-- **Autels et pactes** : un gros bonus contre un malus. Tu peux refuser.
+- **Synergies et évolutions** : combine les bons sorts, armes et passifs pour déclencher des évolutions. À toi de les trouver, le Carnet de guerre garde la trace de tes découvertes.
 
 ### Un super boss qui s'adapte
 Après 5 vagues, le chef du lieu t'attend. Il a **3 phases** avec des attaques différentes et des renforts, et il s'adapte à ton niveau : plus accessible si tu galères, plus exigeant si tu écrases le jeu.
@@ -39,7 +42,7 @@ Tu quittes en pleine partie ? Pas de panique : la progression est sauvegardée a
 
 ### Infos
 - Se joue directement dans le navigateur, rien à installer.
-- Jeu en français.
+- Jeu en **français et en anglais** (bouton sur l'écran-titre ou dans les Réglages).
 
 **Tags suggérés :** roguelike, survival, pixel-art, action, animals, singleplayer, mobile-friendly, horror-comedy, bullet-heaven
 **Genre :** Action — **Classification :** Tout public avec violence cartoon (sang)

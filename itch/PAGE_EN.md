@@ -22,10 +22,13 @@ The Great Butcher has captured the whole barnyard. You start alone as Captain Co
 - **Heroes that really play differently**: each has a starting weapon and a trait (regeneration, shield, thorns, stun, dodge, bonus gold or XP…), then weapon evolutions to discover.
 - **Varied waves**: swarms, encirclements, marching columns, elite ambushes, kamikaze rain. Enemies animate, come in variants and react to hits.
 
-### Build crazy runs
+### Build crazy runs, with real tactics
+- **10 slots to shape your loadout**: split them freely between **attacks** and **passives** (3 of each to start, 7 max on one side). 7 attacks and 3 passives, 5 and 5, 3 and 7… your call.
+- **70+ weapons, spells and passives** to discover: crows, earthquake, chain whip, meteorite, Butcher's cleaver, leech, hedgehog, barnyard sonar… plus passives that change how you play (Crowd Slayer, Duelist, Bloodthirst, Feather Rampart…). Every upgrade tells you exactly what it does.
+- **Runes unlock slots**: pick up runes on the map (3 for the first slot, then one more for each slot, 6 max). But guardians watch over them. Taking risks pays off.
+- **A readable horde**: enemies advance in packs, as one block, so you can spot the gap to slip through. Beware of contact, though: a monster touching you costs 1 HP per second.
 - **Legendary Gifts**: very rare upgrades that transform your run — Vengeful Shards, Chain Lightning, Black Hole, Star Shower, Berserk, Vampire, Guardian Feather, Echo, Harvest.
-- **Hidden synergies**: combine the right gifts to trigger bonus effects. Find them yourself.
-- **Altars and pacts**: a big bonus for a penalty. You can decline.
+- **Synergies and evolutions**: combine the right spells, weapons and passives to trigger evolutions. Find them yourself — the War Journal keeps track of your discoveries.
 
 ### A super boss that adapts
 After 5 waves, the location's boss awaits. It has **3 phases** with different attacks and reinforcements, and it adapts to your level: more forgiving if you struggle, tougher if you're crushing the game.
