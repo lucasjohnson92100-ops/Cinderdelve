@@ -9048,18 +9048,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       block: function () { return null; }, apply: function () { state.maxHp += 3; state.hp += 3; } },
     sv_atk: { name: "Pierre de force", desc: "+1 attaque", icon: "sword", get base() { return 30 + 10 * (state.survCycle || 0); }, step: 10,
       block: function () { return null; }, apply: function () { state.atk++; } },
-    sv_slot_a: { get name() { return "Emplacement d'attaque (" + slotA() + " → " + (slotA() + 1) + ")"; }, desc: "Une attaque de plus en même temps (10 cases au total)", icon: "sword",
-      get combo() { return state.slotTok > 0 && slotCanA() ? "Boss vaincu : emplacement à acheter" : ""; }, get base() { return slotPrice(); }, step: 0,
-      block: function () { if (!slotCanA()) return "Maximum"; return state.slotTok > 0 ? null : "Bats un boss"; },
-      apply: function () { state.slotAct = slotA() + 1; state.slotTok--; state.slotBought = (state.slotBought || 0) + 1; say("Nouvel emplacement d'attaque : " + survActiveIds().length + "/" + slotA() + "."); } },
-    sv_slot_p: { get name() { return "Emplacement passif (" + slotP() + " → " + (slotP() + 1) + ")"; }, desc: "Un passif de plus en même temps (10 cases au total)", icon: "shield",
-      get combo() { return state.slotTok > 0 && slotCanP() ? "Boss vaincu : emplacement à acheter" : ""; }, get base() { return slotPrice(); }, step: 0,
-      block: function () { if (!slotCanP()) return "Maximum"; return state.slotTok > 0 ? null : "Bats un boss"; },
-      apply: function () { state.slotPas = slotP() + 1; state.slotTok--; state.slotBought = (state.slotBought || 0) + 1; say("Nouvel emplacement passif : " + survPasIds().length + "/" + slotP() + "."); } },
     sv_ban: { name: "Parchemin d'exil", desc: "+1 bannissement pour les choix de niveau", icon: "scroll", base: 12, step: 4,
       block: function () { return null; }, apply: function () { state.survBanLeft = (state.survBanLeft || 0) + 1; } }
   };
-  function slotPrice() { return 170 + 150 * (state.slotBought || 0) + 25 * (state.survCycle || 0); }
   var survBooms = [];
   var SURV_CLASS_DESC = {
     warrior: "Robuste (+4 PV) : ses coups repoussent et portent plus loin",
@@ -11226,7 +11217,6 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function survivalWin(boss) {
     state.survCycle = (state.survCycle || 0) + 1;
-    if (boss && (slotCanA() || slotCanP())) { state.slotTok = (state.slotTok || 0) + 1; setTimeout(function () { if (state && state.survival) say("Boss vaincu : un emplacement est en vente à la boutique (cher !)."); }, 1500); }
     var bx = boss ? boss.vx : p.vx, by = boss ? boss.vy : p.vy, tm = now();
     /* --- mise en scène de la mort du boss --- */
     state.survWinPos = { x: bx, y: by }; state.survWinT = 2.0; state.survWinFxT = 0;
@@ -12132,11 +12122,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     mode = "shop";
     if (state.survival) {
       Object.keys(SURV_SHOP).forEach(function (k) { SHOP[k] = SURV_SHOP[k]; });
-      var dyn = survShopDyn(), basics = Object.keys(SURV_SHOP).filter(function (k) { return !/^sv_(wlvl|slvl|wnew|slot_a|slot_p)$/.test(k) && !SURV_SHOP[k].block(); });
-      var slotCards = state.slotTok > 0 ? ["sv_slot_a", "sv_slot_p"].filter(function (k) { return !SURV_SHOP[k].block(); }) : [];
+      var dyn = survShopDyn(), basics = Object.keys(SURV_SHOP).filter(function (k) { return !/^sv_(wlvl|slvl|wnew)$/.test(k) && !SURV_SHOP[k].block(); });
       var combos = shuffle(dyn.filter(function (id) { return SHOP[id].combo; })).slice(0, 3);
       var rest = shuffle(dyn.filter(function (id) { return !SHOP[id].combo; })).slice(0, 2).concat(shuffle(basics).slice(0, 2));
-      state.offers = slotCards.concat(combos, rest).slice(0, 6);
+      state.offers = combos.concat(rest).slice(0, 6);
       document.getElementById("shop").classList.add("surv");
       try { if (survTipEl) survTipEl.style.display = "none"; } catch (e) {}
       var gs2 = shuffle(["weapon", "armor", "trinket"]);
