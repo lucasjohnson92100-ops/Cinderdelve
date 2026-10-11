@@ -7157,6 +7157,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   /* ================= TEMPS RÉEL ================= */
+  var SURV_PACE = 0.7; /* rythme du mode Survie : héros et monstres 30 % plus lents (un seul réglage) */
   var SPEED = 3.4, ROLL_SPEED = 9.5, ROLL_TIME = 0.22, ROLL_CD = 1.3, ATK_CD = 0.7, ATK_RANGE = 1.05;
   var R_P = 0.27, R_E = 0.3;
   var TALENTS = [
@@ -7186,7 +7187,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   };
   function atype() { var a = state && state.equip && state.equip.armor; return a ? (ATRAIT[a.icon] || null) : null; }
   function ttype() { var a = state && state.equip && state.equip.trinket; return a ? (TTRAIT[a.icon] || null) : null; }
-  function spdMul() { var a = atype(); return (state.survival ? (1.16 + (state.survSpeedBonus || 0) * 0.07 + metaLv("agil") * 0.04 + (state.colSpd || 0)) * (state.hitBoostT > 0 ? 1.2 : 1) : 1) * (1 + 0.05 * tr("swift")) * (a && a.speed ? a.speed : 1) * (state.buffT > 0 && state.cls === "warrior" ? 1.1 : 1) * (state.cls === "rogue" ? 1.15 : 1); }
+  function spdMul() { var a = atype(); return (state.survival ? SURV_PACE * (1.16 + (state.survSpeedBonus || 0) * 0.07 + metaLv("agil") * 0.04 + (state.colSpd || 0)) * (state.hitBoostT > 0 ? 1.2 : 1) : 1) * (1 + 0.05 * tr("swift")) * (a && a.speed ? a.speed : 1) * (state.buffT > 0 && state.cls === "warrior" ? 1.1 : 1) * (state.cls === "rogue" ? 1.15 : 1); }
   function parryWin() { var a = atype(); return 280 + 40 * tr("riposte") + (a && a.window ? a.window : 0); }
   var CPOWER = {
     warrior: { name: "Cri de guerre", icon: "cry", cd: 22, desc: "Étourdit les monstres proches, +30 % de dégâts pendant 8 s" },
@@ -7352,7 +7353,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (state.shieldT > 0) { state.shieldT -= dt; if (state.shieldT <= 0) state.shieldAmt = 0; }
     var hit = null;
     if (p.dash) {
-      var sd = (p.dash.spd || ROLL_SPEED) * dt;
+      var sd = (p.dash.spd || ROLL_SPEED) * (state.survival ? 0.85 : 1) * dt;
       hit = moveBody(p, p.dash.dx * sd, p.dash.dy * sd, R_P);
       p.dash.t -= dt;
       if (p.dash.t <= 0) { var stk = p.dash.strike; p.dash = null; if (stk) shadowStrike(stk); }
@@ -7426,7 +7427,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     var ecx = e.vx + 0.5, ecy = e.vy + 0.5, dx = p.vx + 0.5 - ecx, dy = p.vy + 0.5 - ecy, d = Math.hypot(dx, dy) || 1;
     var kind = e.type === "dragon" ? "flame" : (e.type === "lich" || e.type === "cultist" || e.type === "medusa") ? "bolt" : "arrow";
-    var spd = (kind === "arrow" ? 7.5 : kind === "bolt" ? 6.2 : 6.0) * (state.survival ? 0.75 : 1);
+    var spd = (kind === "arrow" ? 7.5 : kind === "bolt" ? 6.2 : 6.0) * (state.survival ? 0.6 : 1);
     projs.push({ own: "enemy", e: e, x: ecx, y: ecy, vx: dx / d * spd, vy: dy / d * spd, kind: kind, life: 2.4,
       verb: kind === "flame" ? "crache du feu" : kind === "bolt" ? "lance un éclair sombre" : "te tire dessus", bonus: kind === "flame" ? 1 : 0 });
     e.shootCd = e.shoot * (0.85 + Math.random() * 0.3) * (state.survival ? survShootMul() : 1);
@@ -7688,7 +7689,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         else { e.mv = 0; continue; }
       } else if (d > 22) { e.aggro = false; e.mv = 0; continue; }
       if (Math.abs(dx) > 0.15) e.face = dx < 0 ? -1 : 1;
-      var ux = d ? dx / d : 0, uy = d ? dy / d : 0, mvx = 0, mvy = 0, spd = e.spd * (e.slowT > 0 ? (e.slowF || 0.45) : 1);
+      var ux = d ? dx / d : 0, uy = d ? dy / d : 0, mvx = 0, mvy = 0, spd = e.spd * (state.survival ? SURV_PACE : 1) * (e.slowT > 0 ? (e.slowF || 0.45) : 1);
       if (e.slamCd > 0) e.slamCd -= dt;
       if (e.fleeT > 0) {
         e.fleeT -= dt; moveBody(e, -ux * spd * 1.5 * dt, -uy * spd * 1.5 * dt, e.r, false); e.mv = 1; tileOfBody(e); e.face = ux < 0 ? 1 : -1;
@@ -8617,7 +8618,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (e.charger) {
         if (e.chPhase === "wind") { e.chT -= dt; e.stunT = Math.max(e.stunT || 0, 0.05); if (e.chT <= 0) { e.chPhase = "go"; e.chT = 0.55; } }
         else if (e.chPhase === "go") {
-          e.chT -= dt; var cs = e.spd * 3.2 * dt; moveBody(e, e.chDx * cs, e.chDy * cs, e.r, e.ghost); tileOfBody(e); e.stunT = Math.max(e.stunT || 0, 0.05);
+          e.chT -= dt; var cs = e.spd * (state.survival ? SURV_PACE : 1) * 3.2 * dt; moveBody(e, e.chDx * cs, e.chDy * cs, e.r, e.ghost); tileOfBody(e); e.stunT = Math.max(e.stunT || 0, 0.05);
           if (d < 0.8 && !e.chHit) { e.chHit = true; hurt(e, "te percute"); }
           if (e.chT <= 0) { e.chPhase = null; e.chCd = 3 + Math.random() * 2; }
         } else {
@@ -10970,7 +10971,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     state.survCurseSpd = curs.enrage ? 0.25 : 0; state.survCurseHp = curs.iron ? 0.4 : 0; state.survCurseAtk = curs.fury ? 0.25 : 0; state.survFamine = !!curs.famine;
     state.survThemeW = "normal"; state.survMiniDone = false; state.survRing = null; state.survBan = {}; state.survBanLeft = 3;
     state.survMapTheme = mapId != null ? mapId : 0;
-    state.survival = true; state.survT = 0; state.survDur = [120, 150, 200][{ easy: 0, normal: 1, hard: 2 }[k]]; state.survSpawnT = 2; state.survBossUp = false; state.survWin = false;
+    state.survival = true; state.survT = 0; state.survDur = [90, 112, 150][{ easy: 0, normal: 1, hard: 2 }[k]]; state.survSpawnT = 2; state.survBossUp = false; state.survWin = false;
     mode = "play"; parts = []; floats = []; projs = []; rings = [];
     msgs = [(vinfo && vinfo.hi ? vinfo.name + " : « " + vinfo.hi + " » " : "") + (vinfo && vinfo.pw ? "Pouvoir " + vinfo.pw.name + " : bouton à droite. " : "") + "Survis " + Math.round(state.survDur / 60) + " min. Tu frappes à mains nues, de plus en plus vite avec les niveaux. Concentre-toi sur l'esquive !"];
     setMapSize(64, 64);
