@@ -743,16 +743,11 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 /* ---- écran d'ouverture : vidéo puis image finale avec le titre ---- */
 #ts-end, #ts-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; background: #0a0306; }
 @media (orientation: landscape) { #ts-end, #ts-vid { object-position: 50% 50%; } }
-#ts-bg { display: none; }
+#ts-bg, #ts-end { display: none; }
 /* téléphone en portrait : la vidéo occupe le haut de l'écran sans trop zoomer (on voit tout le coq), le reste est un fond flou, le titre est en bas */
 @media (orientation: portrait) {
-  #ts-bg { display: block; position: absolute; inset: -6%; background: #0a0306 url(video/intro-last.jpg) 50% 30% / cover; filter: blur(22px) brightness(0.5) saturate(1.1); }
-  #ts-end { opacity: 0; transition: opacity 0.5s; }
-  #tap-start.fin #ts-end { opacity: 1; }
-  #ts-end, #ts-vid { bottom: auto; height: 76vh; -webkit-mask-image: linear-gradient(180deg, #000 66%, transparent 100%); mask-image: linear-gradient(180deg, #000 66%, transparent 100%); }
   #tap-start #ts-logo { bottom: max(17vh, 120px); }
   #tap-start .ts-t { bottom: max(7vh, 52px); }
-  #tap-start .ts-skip { bottom: max(7vh, 52px); }
 }
 
 #ts-shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; background: linear-gradient(180deg, rgba(8,2,5,0) 36%, rgba(8,2,5,0.6) 64%, rgba(8,2,5,0.92) 100%); }
@@ -770,7 +765,7 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #tap-start .ts-t { opacity: 0; transition: opacity 0.6s; }
 #tap-start.rdy .ts-t { opacity: 1; animation: tspulse 1.6s ease-in-out infinite; }
 #tap-start .ts-skip { position: absolute; z-index: 2; bottom: max(3.2vh, env(safe-area-inset-bottom, 0px)); left: 0; right: 0; font: 600 0.75rem system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; text-shadow: 0 1px 4px #000; transition: opacity 0.4s; }
-#tap-start.fin .ts-skip { opacity: 0; }
+#tap-start .ts-skip { display: none; }
 
 @media (prefers-reduced-motion: reduce) { #tap-start .ts-t { animation: none; } }
 
@@ -1151,33 +1146,32 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   </div>
 </main>
 
-<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><div id="ts-bg" aria-hidden="true"></div><img id="ts-end" src="video/intro-last.jpg" alt="" aria-hidden="true"><video id="ts-vid" src="video/intro.mp4" poster="video/intro-poster.jpg" muted playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
+<div id="tap-start" role="button" tabindex="0" aria-label="Cinderdelve – touche l'écran pour entrer"><div id="ts-bg" aria-hidden="true"></div><video id="ts-vid" poster="video/duel-land.jpg" muted loop autoplay playsinline webkit-playsinline preload="auto" aria-hidden="true"></video><div id="ts-shade"></div><div id="ts-logo"><div class="ts-name"><span class="b" aria-hidden="true">Cinderdelve</span><span class="m" aria-hidden="true">Cinderdelve</span><span class="f">Cinderdelve</span></div><div class="ts-orn"><i></i><b></b><i></i></div><div class="ts-sub">Plus jamais au menu !</div></div><div class="ts-t">— Touche l'écran —</div><div class="ts-skip">Touche pour passer</div><div class="ts-s">&#9835; son activé</div></div></div>
 <script>(function () {
-  var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), skip = t.querySelector(".ts-skip"), done = false, ended = false, waiting = false;
-  window.__tsEnded = false; /* faux tant que la vidéo d'ouverture n'est pas terminée */
-  function fin() { if (ended) return; ended = true; waiting = false; window.__tsEnded = true; t.classList.add("fin"); setTimeout(function () { t.classList.add("rdy"); }, 900); try { v.pause(); } catch (e) {} }
-  function wait() { /* le téléphone refuse la lecture automatique : on montre la 1re image et on lance la vidéo au premier toucher */
-    if (ended || waiting) return; waiting = true; t.classList.add("wait"); if (skip) skip.textContent = "Touche pour lancer l'intro";
+  /* écran d'ouverture : le duel Boucher / Captain Cocotte en boucle (version paysage ou portrait), titre par-dessus, un toucher pour entrer */
+  var t = document.getElementById("tap-start"), v = document.getElementById("ts-vid"), done = false, rt = 0;
+  window.__tsEnded = true;
+  function pick() {
+    if (!v) return;
+    var port = window.matchMedia && matchMedia("(orientation: portrait)").matches, o = port ? "p" : "l";
+    if (v.dataset.o === o) return;
+    v.dataset.o = o; v.poster = port ? "video/duel-port.jpg" : "video/duel-land.jpg"; v.src = port ? "video/duel-port.mp4" : "video/duel-land.mp4";
+    try { v.load(); var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
   }
-  function start() { waiting = false; t.classList.remove("wait"); if (skip) skip.textContent = "Touche pour passer"; var p = v.play(); if (p && p.catch) p.catch(function () { fin(); }); }
-  function go(e) {
-    if (done) return;
-    if (!ended) {
-      if (e && e.type === "keydown" && ["Escape", "Tab", "Shift", "Control", "Alt", "Meta"].indexOf(e.key) >= 0) return;
-      if (waiting) { start(); return; } /* 1er toucher après blocage : on lance la vidéo */
-      fin(); return; /* toucher pendant la vidéo : on saute à l'image finale */
-    }
-    done = true; t.classList.add("out"); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 450); document.removeEventListener("keydown", go, true);
-  }
-  t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true);
   try {
     var rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!v || rm) { fin(); return; }
-    v.addEventListener("ended", fin); v.addEventListener("error", fin);
-    v.addEventListener("timeupdate", function () { if (v.duration && v.currentTime > v.duration - 1.3) t.classList.add("fin"); });
-    var p = v.play(); if (p && p.catch) p.catch(function () { wait(); });
-    setTimeout(function () { if (!ended && !waiting && v.currentTime < 0.2) wait(); }, 6000); /* la vidéo ne démarre pas */
-  } catch (err) { fin(); }
+    if (rm && v) v.removeAttribute("autoplay");
+    pick();
+    if (rm && v) { try { v.pause(); } catch (e) {} }
+    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!done) pick(); }, 250); });
+  } catch (err) {}
+  setTimeout(function () { t.classList.add("fin"); setTimeout(function () { t.classList.add("rdy"); }, 900); }, 500);
+  function go(e) {
+    if (done) return;
+    if (e && e.type === "keydown" && ["Escape", "Tab", "Shift", "Control", "Alt", "Meta"].indexOf(e.key) >= 0) return;
+    done = true; t.classList.add("out"); setTimeout(function () { try { if (v) v.pause(); } catch (e2) {} if (t.parentNode) t.parentNode.removeChild(t); }, 450); document.removeEventListener("keydown", go, true);
+  }
+  t.addEventListener("click", go); t.addEventListener("touchend", go); document.addEventListener("keydown", go, true);
 })();</script>
 <div class="home" id="home" role="dialog" aria-modal="true" aria-labelledby="home-title">
   <canvas id="home-cv" aria-hidden="true"></canvas>

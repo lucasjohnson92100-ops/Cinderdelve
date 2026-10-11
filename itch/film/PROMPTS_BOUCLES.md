@@ -9,7 +9,7 @@ Les images de départ sont déjà prêtes dans ce dossier, au style du jeu :
 | Vidéo | 16:9 (paysage) | 9:16 (portable) |
 |---|---|---|
 | Duel Boucher / Cocotte | `start-duel-16x9.jpg` | `start-duel-9x16.jpg` |
-| Marche des héros | `start-marche-16x9.jpg` | à générer (voir plus bas) |
+| Marche des héros | `start-marche-16x9.jpg` | `start-marche-9x16.jpg` |
 
 > Ces images sont des montages à partir des illustrations du jeu. Le générateur les redessinera à sa façon : c'est normal, garde l'image comme référence de style.
 
@@ -61,12 +61,11 @@ Image de départ **et** de fin : `start-marche-16x9.jpg` (la ligne de héros du 
 Animated 2D comic-book illustration, keep the exact art style and character designs of the reference image. A seamless looping shot of a team of animal heroes walking side by side toward the camera in slow motion, determined and unstoppable, like a superhero team entrance. The heroes march in place with a confident, heavy walking cycle: boots stomp, capes and coats flutter in the wind, the rooster pirate captain in the center raises his saber slightly with each step, the bull and the pig swing their weapons at their sides, the rabbit ninja and the horse knight stride with fierce looks, the cow and the goose follow in line. Their eyes glow and their expressions are grim and focused. A giant blood-red moon glows behind them, embers and ash blow across the frame, dark smoke and distant burning fires drift slowly in the background, the ground shakes slightly with each stomp and dust puffs rise. The camera slowly dollies backward at a steady pace while the heroes stay at the same size in the frame, so the motion repeats seamlessly. The final frame matches the first frame exactly for a perfect loop. Epic heroic atmosphere, dramatic backlighting, high contrast red and orange palette.
 ```
 
-### Image portable (9:16) pour cette vidéo
-Il n'existe pas encore d'image verticale : deux options.
-- **Option 1 (simple)** : génère la vidéo en 16:9 ; je m'occupe du cadrage vertical (centré sur Cocotte) et tu auras quand même une version portable correcte.
-- **Option 2 (meilleur rendu)** : dans ton outil d'images, génère une image verticale avec ce prompt, puis lance l'animation avec :
+### Version portable (9:16) pour cette vidéo
+Image de départ **et** de fin : `start-marche-9x16.jpg` (les héros en formation en V, Captain Cocotte au premier plan, sous une lune rouge). Colle le même prompt, avec ce complément à la fin :
+
 ```
-Vertical 9:16 comic-book illustration, same style as the game: five animal heroes marching toward the camera in a tight staggered formation on a burning battlefield at night under a huge blood-red moon: a rooster pirate captain in a blue coat and tricorn hat raising a saber (center, front), a bull in a red military coat with horns, a pig in a green army uniform with a hammer, a ninja rabbit with a headband and two blades, a knight horse with a red plume. Embers and smoke everywhere, determined glowing eyes, dramatic backlighting, bold outlines.
+Vertical composition: the heroes advance in a staggered V formation, Captain Cocotte in the front foreground, the others rising from the smoke behind him, the huge red moon at the top of the frame.
 ```
 
 ---
