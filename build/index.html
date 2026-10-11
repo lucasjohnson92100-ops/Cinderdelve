@@ -9017,7 +9017,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     return true;
   }
   function survVictory() {
-    comboReset();
+    comboReset(); clearSurvSave();
     mode = "dead"; haltInput(); setTrack("menu");
     var key = (state.variant || state.cls) + "|" + (state.survMapTheme || 0), tro = {};
     try { tro = JSON.parse(localStorage.getItem("donjon-surv-trophy") || "{}"); } catch (err) {}
@@ -11311,7 +11311,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     state.survThemeW = (function () { var pl = WAVE_THEME_IDS.filter(function (id) { return id !== state.survThemeW; }); return pl[rnd(pl.length)]; })();
     state.survDur = Math.round(state.survDur * 1.03);
     state.survOpenRush = true; state.survSurgeT = 20 - Math.min(9, state.survCycle * 1.5);
-    state.survMod = null; state.survModDone = false; state.phT = 0; state.phPeak = false; state.packAlerts = [];
+    state.waveSaved = false; state.survMod = null; state.survModDone = false; state.phT = 0; state.phPeak = false; state.packAlerts = [];
     setTrack(wantedTrack(false));
   }
   function survivalWinEnd() {
@@ -11367,6 +11367,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function survTacticalTick(dt) {
     if (!state.survival) return;
+    if (!state.waveSaved && !state.survBossUp && !(state.survWinT > 0)) { state.waveSaved = true; saveSurvival(true); } /* sauvegarde de début de vague */
     /* barils de poudre : mèche puis explosion (le héros aussi peut être touché) */
     for (var fi = survFuses.length - 1; fi >= 0; fi--) {
       var fu = survFuses[fi]; fu.t -= dt;
@@ -12593,8 +12594,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   /* ---- sauvegarde du Mode Survie : la partie en cours est reprise là où elle s'est arrêtée (hors combat de boss) ---- */
   var SSAVE_KEY = "donjon-save-surv";
-  function saveSurvival() {
+  function saveSurvival(force) {
     try {
+      if (!force && mode !== "shop") return; /* une seule sauvegarde par vague (début de vague) ; la boutique entre deux vagues se reprend aussi */
       if (!state || !state.survival || !g || !p || state.survBossUp || state.survWin || state.survWinT > 0 || !(state.hp > 0)) return;
       if (mode !== "play" && mode !== "paused" && mode !== "shop" && mode !== "levelup") return;
       localStorage.setItem(SSAVE_KEY, JSON.stringify({
@@ -12717,8 +12719,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     else mode = "play";
   }
 
-  document.addEventListener("visibilitychange", function () { if (document.hidden) saveSurvival(); });
-  window.addEventListener("pagehide", saveSurvival);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) saveSurvival(false); });
+  window.addEventListener("pagehide", function () { saveSurvival(false); });
   function showIntro() { showHome(); }
   var SURV_MAPS = [
     { id: 0, name: "Crypte", unlock: 0 },
