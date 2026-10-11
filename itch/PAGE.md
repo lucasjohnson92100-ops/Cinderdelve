@@ -49,12 +49,14 @@ Tu quittes en pleine partie ? Pas de panique : la progression est sauvegardée a
 
 ## Médias à ajouter sur la page
 - **Vidéo** : héberge le trailer sur YouTube ou Vimeo et colle le lien dans le champ « Gameplay video or trailer » de l'éditeur itch.io (itch.io n'accepte pas d'upload vidéo direct).
-- **GIFs** (dossier `media/`) : heros.gif (pouvoirs), dons.gif (dons légendaires), boss.gif (boss en 3 phases), lieux.gif (mondes), choix.gif (choix d'amélioration). Chacun pèse moins de 3 Mo.
+- **GIFs** (dossier `media/`) : armes.gif (nouvelles armes et sorts en action), meute.gif (hordes en meute), runes.gif (ramasser des runes, gardiens, nouvelle case), cases.gif (10 cases à répartir), heros.gif (pouvoirs), dons.gif (dons légendaires), boss.gif (boss en 3 phases), lieux.gif (mondes), choix.gif (choix d'amélioration). Chacun pèse moins de 3 Mo.
 - **Captures** (dossier `screenshots/`) :
   1. 01-titre.png — écran-titre
   2. 02-menu.png — menu principal
   3. 03-choix-du-heros.png — fiche du héros
-  4. 04-combat-encerclement.png — combat contre une horde
-  5. 05-combat-degats.png — combat avec chiffres de dégâts
+  4. 04-combat-meute.png — une meute arrive (HUD des cases et des runes)
+  5. 05-combat-armes.png — combat avec 7 attaques et 3 passifs
+  6. 06-runes.png — une rune, le compteur de cases et de runes
+  7. 07-choix-et-cases.png — choix d'amélioration avec les emplacements
 
 Image de couverture : `cover-630x500.png`.
