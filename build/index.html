@@ -8509,6 +8509,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       survTipEl.addEventListener("click", function () { clearTimeout(survTipTimer); nextSurvTip(); });
       document.body.appendChild(survTipEl);
     }
+    if (mode !== "play") { survTipEl.style.display = "none"; clearTimeout(survTipTimer); if (survTipQ.length) survTipTimer = setTimeout(nextSurvTip, 1200); return; } /* pas d'astuce par-dessus un menu */
     var tx = survTipQ.shift();
     if (!tx) { survTipEl.style.display = "none"; return; }
     survTipEl.innerHTML = "<b>Astuce</b><br>" + tx; survTipEl.style.display = "block";
@@ -11494,17 +11495,17 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (state.survival && curLvlOpts.some(function (o) { return /^w?evo_/.test(o.id); })) survTip("evo", "Une évolution est proposée : elle transforme un sort ou une arme en version surpuissante.");
     curLvlOpts.forEach(function (o) {
       var b = document.createElement("button");
-      var ctg0 = comboTag(o);
-      b.className = "row" + (o.evo ? " evo" : "") + ((ctg0 || o.evo) && state.survival ? " combo" : "") + (o.legend ? " legend" : ""); b.type = "button";
+      var ctg0 = comboTag(o), isEvo = o.evo && !(o.tag && state.survival); /* une carte « nouvelle attaque / nouveau passif » porte déjà son bandeau d'emplacement : pas de second bandeau « Évolution » par-dessus */
+      b.className = "row" + (isEvo ? " evo" : "") + ((ctg0 || isEvo) && state.survival ? " combo" : "") + (o.legend ? " legend" : ""); b.type = "button";
       if (o.legend) { var lgb = document.createElement("span"); lgb.className = "sh-combo"; lgb.textContent = "✦ Don légendaire · " + o.tagTxt; b.appendChild(lgb); }
       else if (o.tag && state.survival) { var slb = document.createElement("span"); slb.className = "sh-combo"; slb.textContent = "▣ " + o.tag; b.appendChild(slb); }
-      if (state.survival && (ctg0 || o.evo)) { var rb0 = document.createElement("span"); rb0.className = "sh-combo"; rb0.textContent = o.evo ? "★ Évolution !" : "⚡ " + ctg0; b.appendChild(rb0); }
+      if (state.survival && (ctg0 || isEvo) && !(o.tag || o.legend)) { var rb0 = document.createElement("span"); rb0.className = "sh-combo"; rb0.textContent = isEvo ? "★ Évolution !" : "⚡ " + ctg0; b.appendChild(rb0); }
       var ic = mkCanvas(1, 1);
       paintIcon(ic, o.icon);
       var txt = document.createElement("span");
       txt.className = "txt";
       var ctg = comboTag(o);
-      txt.innerHTML = "<b>" + (o.evo ? "★ " : "") + o.name + (ctg && !state.survival && !/^(hcombo|w?evo_)/.test(o.id) ? ' <em style="font-style:normal;font-size:.68rem;background:#8a1c1c;border-radius:8px;padding:1px 6px;color:#ffe6b0">→ ' + ctg + "</em>" : "") + "</b><small>" + o.desc + "</small>";
+      txt.innerHTML = "<b>" + (isEvo ? "★ " : "") + o.name + (ctg && !state.survival && !/^(hcombo|w?evo_)/.test(o.id) ? ' <em style="font-style:normal;font-size:.68rem;background:#8a1c1c;border-radius:8px;padding:1px 6px;color:#ffe6b0">→ ' + ctg + "</em>" : "") + "</b><small>" + o.desc + "</small>";
       b.appendChild(ic); b.appendChild(txt);
       b.addEventListener("click", function () {
         if (lvlBanMode && state.survival && state.survBanLeft > 0) { state.survBan[o.id] = true; state.survBanLeft--; lvlBanMode = false; say(o.name + " est banni pour cette partie."); curLvlOpts = rollLevelOpts(); fillLevelList(); return; }
@@ -11542,7 +11543,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     fillLevelList(); try { ui(); } catch (err) {} saveGame();
   });
   function openLevelUp() {
-    mode = "levelup";
+    mode = "levelup"; if (survTipEl) survTipEl.style.display = "none";
     if (state.survival && pasLv("pLvHeal")) { var lvh = healHp(2 * pasLv("pLvHeal")); if (lvh) addFloat(p.vx, p.vy - 0.6, "+" + lvh, "#7fe08a"); }
     document.getElementById("lvl-title").textContent = "Niveau " + (state.lvl - state.pending + 1) + " !";
     lvlRerolls = 0; lvlBanMode = false;
