@@ -11,7 +11,7 @@ The Great Butcher has captured the whole barnyard. You start alone as Captain Co
 
 ### Progression that keeps you coming back
 - **19 animals to free**: they wait in cages, and each cage opens when you reach a specific wave. You can see their silhouettes from the start — earn them.
-- **10 worlds to unlock**: Crypt, Caves, Swamp, Olympus, Forest, Volcano, Ice, Castle, Temple, Beach. Finish a world to open the next. Each has its own layout, hazards and boss.
+- **13 worlds to unlock, in story order**: Farm, Town, Forest, Swamp, Caves, Crypt, Castle, Volcano, Ice, Temple, Olympus, Beach, then the Great Butcher's Butcher Shop. Finish a world to open the next. Each has its own layout, hazards and boss.
 - **Ranks for every hero**: the more you play an animal, the higher it ranks, up to Legend.
 - **The Barn**: spend your golden eggs between runs to get stronger (Vitality, Strength, Agility, Second Wind…).
 - **War Journal, titles and collections** to track your progress.

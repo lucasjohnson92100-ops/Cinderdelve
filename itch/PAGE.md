@@ -11,7 +11,7 @@ Le Grand Boucher a capturé toute la basse-cour. Tu commences seul : Captain Coc
 
 ### Une progression qui donne envie de rejouer
 - **19 animaux à libérer** : ils attendent dans des cages, et chaque cage s'ouvre quand tu atteins une vague précise. Tu vois leur silhouette dès le départ, à toi de les mériter.
-- **10 mondes à débloquer** : Crypte, Grottes, Marais, Olympe, Forêt, Volcan, Glace, Château, Temple, Plage. Termine un monde pour ouvrir le suivant. Chacun a sa propre architecture, ses obstacles et son chef.
+- **13 mondes à débloquer, dans l'ordre de l'aventure** : Ferme, Ville, Forêt, Marais, Grottes, Crypte, Château, Volcan, Glace, Temple, Olympe, Plage, puis la Boucherie du Grand Boucher. Termine un monde pour ouvrir le suivant. Chacun a sa propre architecture, ses obstacles et son chef.
 - **Des rangs pour chaque héros** : plus tu joues un animal, plus il monte en grade, jusqu'à devenir une Légende.
 - **La Grange** : dépense tes œufs d'or entre deux parties pour devenir plus fort (Vitalité, Force, Agilité, Second souffle…).
 - **Carnet de guerre, titres et collections** pour suivre ta progression.
