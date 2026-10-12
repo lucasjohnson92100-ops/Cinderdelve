@@ -14464,7 +14464,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       wg.addColorStop(1, "rgba(255,170,80,0)");
       ctx.fillStyle = wg; ctx.fillRect(wx - 36, wy - 36, 72, 72);
     }
-    if (GFX === "dark") drawLightDark(sight, flick, t, vw, vh); else drawLight(sight, flick);
+    if (!state.survival) { if (GFX === "dark") drawLightDark(sight, flick, t, vw, vh); else drawLight(sight, flick); }
 
     var gx = p.vx * TILE + 8, gy = p.vy * TILE + 8;
     var rad = sight * TILE * (0.92 + 0.05 * Math.sin(t / 140) + 0.03 * Math.sin(t / 61));
