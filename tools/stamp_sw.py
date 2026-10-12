@@ -6,7 +6,7 @@ Usage : python3 tools/stamp_sw.py [dossier=build] [version=<sha git ou date>]
  - __FILES__  : liste des images/musiques à garder pour le mode hors ligne"""
 import hashlib, json, os, subprocess, sys, time
 d = sys.argv[1] if len(sys.argv) > 1 else 'build'
-ver = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get('GITHUB_SHA') or os.environ.get('COMMIT_REF') or os.environ.get('CF_PAGES_COMMIT_SHA') or '')
+ver = sys.argv[2] if len(sys.argv) > 2 else (os.environ.get('GITHUB_SHA') or os.environ.get('COMMIT_REF') or os.environ.get('CF_PAGES_COMMIT_SHA') or os.environ.get('WORKERS_CI_COMMIT_SHA') or '')
 if not ver:
     try: ver = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
     except Exception: ver = time.strftime('%Y%m%d%H%M%S')
