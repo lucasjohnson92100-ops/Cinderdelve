@@ -476,5 +476,14 @@
  "fait éclater des bulles": "bursts bubbles",
  "tournoie ses hachoirs": "spins its cleavers",
  "lance un couperet géant": "hurls a giant cleaver",
- "fait pleuvoir les couperets": "rains cleavers"
+ "fait pleuvoir les couperets": "rains cleavers",
+ "Lame ardente": "Blazing blade",
+ "Lame de givre": "Frost blade",
+ "Lame foudroyante": "Lightning blade",
+ "Évolution de l'attaque de base": "Basic attack evolution",
+ "Ton attaque de base enflamme les monstres touchés (brûlure 3 s) et frappe 15 % plus fort.": "Your basic attack sets hit monsters ablaze (burn for 3 s) and hits 15% harder.",
+ "Ton attaque de base ralentit les monstres touchés et peut les étourdir ; +15 % de dégâts.": "Your basic attack slows hit monsters and may stun them; +15% damage.",
+ "Un éclair saute du monstre touché vers 2 voisins ; +15 % de dégâts.": "A bolt jumps from the hit monster to 2 neighbors; +15% damage.",
+ "Ton attaque de base devient : ": "Your basic attack becomes: ",
+ "L'éclair rebondit sur": "The bolt bounces onto"
 }
