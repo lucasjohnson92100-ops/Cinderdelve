@@ -7728,6 +7728,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
 
   function steerVec(e, pcx, pcy, d, sees) {
     var ecx = e.vx + 0.5, ecy = e.vy + 0.5;
+    if (state.survival && !(e.bfsT > gtime)) return [pcx - ecx, pcy - ecy];   /* en Survie : ligne droite vers le héros, donc les meutes arrivent de front et non en file indienne */
     if (e.ghost || (sees && d < 9)) return [pcx - ecx, pcy - ecy];
     var cur = pdist[e.y] ? pdist[e.y][e.x] : -1;
     if (cur < 0) return [pcx - ecx, pcy - ecy];
@@ -7827,6 +7828,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (mvx || mvy) moveBody(e, mvx * spd * dt, mvy * spd * dt, e.r, e.ghost);
       e.mv = Math.abs(e.vx - ox) + Math.abs(e.vy - oy) > 0.0005 ? 1 : 0;
       tileOfBody(e);
+      if (state.survival) { if (!e.mv && d > 1.4 && !e.dash) { e.stuckT = (e.stuckT || 0) + dt; if (e.stuckT > 0.5) { e.stuckT = 0; e.bfsT = gtime + 1500; } } else e.stuckT = 0; }
     }
     // les monstres ne se superposent pas
     for (i = 0; i < enemies.length; i++) for (var j = i + 1; j < enemies.length; j++) {
