@@ -11336,10 +11336,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var BAL = {
     hpLin: 1.15, hpQuad: 0.28,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
     atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
-    spawnCyc: 0.65,                      /* nombre de monstres par lot : + 80 % par vague passée */
-    capBase: 22, capCyc: 10,            /* nombre maximal de monstres à l'écran */
-    firstWaveN: 0.6,                    /* vague 1 : proportion du lot normal (débutants) */
-    ivStart: 3.8, ivSlope: 1.6, ivMin: 1.3, ivCyc: 0.18,   /* cadence des lots : intervalle en secondes */
+    spawnCyc: 0.75,                      /* nombre de monstres par lot : + 80 % par vague passée */
+    capBase: 36, capCyc: 10,            /* nombre maximal de monstres à l'écran */
+    firstWaveN: 1.1,                    /* vague 1 : proportion du lot normal (débutants) */
+    ivStart: 2.6, ivSlope: 1.4, ivMin: 1.0, ivCyc: 0.18,   /* cadence des lots : intervalle en secondes */
     eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
     boss1: 1.1, bossCyc: 0.6, superBoss: 3.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
     xpQuad: 1.1                         /* coût du niveau suivant : plus haut = on monte moins vite */
@@ -11373,7 +11373,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var WT = WAVE_THEMES[state.survThemeW];
     if (WT) { var full = MD.a.concat(MD.b, MD.c), fl2 = full.filter(function (t) { return WT.pool.indexOf(t) >= 0; }); pool = fl2.length >= 2 ? fl2 : full; }
     var rad = Math.min(Math.floor(W / 2), Math.floor(H / 2)) - 2;
-    var nBase = (frac < 0.15 ? 2 : 2 + Math.floor((frac - 0.15) * 7 + Math.random() * 2)) * (1 + cycW * BAL.spawnCyc) * survPhaseN() * (survModIs("dense") ? 1.35 : 1);
+    var nBase = (frac < 0.15 ? 3 : 3 + Math.floor((frac - 0.15) * 9 + Math.random() * 3)) * (1 + cycW * BAL.spawnCyc) * survPhaseN() * (survModIs("dense") ? 1.35 : 1);
     var n = Math.min(capW - enemies.length, Math.round(nBase)), placed = 0, tries = 0;
     if (WT) n = Math.max(1, Math.round(n * WT.n));
     if (cycW === 0) n = Math.max(1, Math.round(n * BAL.firstWaveN));
