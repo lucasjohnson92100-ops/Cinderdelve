@@ -920,7 +920,7 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #hsplash .hs-fire { position: absolute; z-index: 1; left: -30%; bottom: -6%; height: 118%; width: 160%; pointer-events: none; }
 
 /* ---- bandeau BD à l'ultime ---- */
-#ultban { position: fixed; z-index: 75; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); width: min(84vw, 980px); height: min(32vh, 260px); transform: translateX(-50%); pointer-events: none; animation: ubDown .32s cubic-bezier(.2,1.4,.4,1) both, ubUp .3s ease-in 2.9s forwards; }
+#ultban { position: fixed; z-index: 75; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 6px); width: min(84vw, 980px); height: min(32vh, 260px); transform: translateX(-50%); pointer-events: none; animation: ubDown .32s cubic-bezier(.2,1.4,.4,1) both, ubUp .3s ease-in 2.9s forwards; }
 #ultban .ub-frame { position: absolute; inset: 0; background: #fff; border: 4px solid #111; box-shadow: 6px 7px 0 #000, 0 0 26px rgba(255,140,40,0.55); transform: rotate(-1.2deg); overflow: hidden; }
 #ultban .ub-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #ultban .ub-bub { position: absolute; z-index: 3; background: #fff; color: #111; border: 3px solid #111; border-radius: 18px; padding: .45em .8em; font-family: Impact, 'Arial Black', 'Trebuchet MS', sans-serif; font-weight: 900; font-style: italic; font-size: clamp(.8rem, min(2.6vw, 4.2vh), 1.5rem); white-space: nowrap; box-shadow: 3px 3px 0 #111; transform-origin: 0% 50%; animation: ubPop .3s cubic-bezier(.2,1.8,.4,1) .25s both; }
@@ -928,8 +928,11 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #ultban .ub-bub::before { content: ""; position: absolute; left: -11px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-right: 10px solid #fff; border-left-width: 1px; z-index: 1; }
 #ultban .ub-name { position: absolute; z-index: 3; right: 3%; bottom: 6%; background: #ffe03a; color: #e8231a; border: 3px solid #111; padding: .1em .55em; font-family: Impact, 'Arial Black', sans-serif; font-weight: 900; font-style: italic; font-size: clamp(.9rem, min(3vw, 5vh), 1.9rem); text-transform: uppercase; -webkit-text-stroke: 1px #111; text-shadow: 2px 2px 0 #111; transform: rotate(-3deg); box-shadow: 4px 4px 0 #111; animation: ubPop2 .3s cubic-bezier(.2,1.8,.4,1) .4s both; }
 @media (orientation: portrait) { #ultban { width: 96vw; height: 22vh; } }
-@keyframes ubDown { from { transform: translateX(-50%) translateY(130%); } to { transform: translateX(-50%) translateY(0); } }
-@keyframes ubUp { to { transform: translateX(-50%) translateY(130%); } }
+@keyframes ubDown { from { transform: translateX(-50%) translateY(-130%); } to { transform: translateX(-50%) translateY(0); } }
+@keyframes ubUp { to { transform: translateX(-50%) translateY(-130%); } }
+#ultban.bot { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 6px); animation-name: ubDownB, ubUpB; }
+@keyframes ubDownB { from { transform: translateX(-50%) translateY(130%); } to { transform: translateX(-50%) translateY(0); } }
+@keyframes ubUpB { to { transform: translateX(-50%) translateY(130%); } }
 @keyframes ubPop { from { transform: scale(0); } to { transform: scale(1); } }
 @keyframes ubPop2 { from { transform: rotate(-3deg) scale(0); } to { transform: rotate(-3deg) scale(1); } }
 
@@ -5468,6 +5471,90 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     return { frames: frames, info: info, DEFS: DEFS, draw: draw };
   })();
 
+  /* icônes propres à chaque amélioration (passifs, bonus) : plus aucune icône générique */
+  (function passiveIcons() {
+    var O = "#150f26";
+    function mk(draw) { var c = mkCanvas(64, 64), x = c.getContext("2d"); x.lineJoin = "round"; x.lineCap = "round"; draw(x); return c; }
+    function glow(x, col) { var g = x.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }
+    function S(x, path, fill, lw) { x.beginPath(); path(x); x.lineWidth = lw || 3.4; x.strokeStyle = O; x.stroke(); x.fillStyle = fill; x.fill(); }
+    function C(x, cx, cy, r, fill) { S(x, function (p) { p.arc(cx, cy, r, 0, 6.2832); }, fill); }
+    function E(x, cx, cy, rx, ry, fill, rot) { S(x, function (p) { p.ellipse(cx, cy, rx, ry, rot || 0, 0, 6.2832); }, fill); }
+    function P(x, pts, fill, lw) { S(x, function (p) { pts.forEach(function (q, i) { i ? p.lineTo(q[0], q[1]) : p.moveTo(q[0], q[1]); }); p.closePath(); }, fill, lw); }
+    function R(x, rx, ry, w, h, fill) { S(x, function (p) { p.rect(rx, ry, w, h); }, fill); }
+    function L(x, x1, y1, x2, y2, w, col) { x.lineCap = "round"; x.strokeStyle = O; x.lineWidth = w + 3.4; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); }
+    function Q(x, path, w, col) { x.strokeStyle = O; x.lineWidth = w + 3.4; x.beginPath(); path(x); x.stroke(); x.strokeStyle = col; x.lineWidth = w; x.beginPath(); path(x); x.stroke(); }
+    function heart(x, cx, cy, k, fill) { S(x, function (p) { p.moveTo(cx, cy + 11 * k); p.bezierCurveTo(cx - 20 * k, cy - 2 * k, cx - 10 * k, cy - 16 * k, cx, cy - 6 * k); p.bezierCurveTo(cx + 10 * k, cy - 16 * k, cx + 20 * k, cy - 2 * k, cx, cy + 11 * k); }, fill); }
+    function star(x, cx, cy, r, fill) { var pts = []; for (var i = 0; i < 10; i++) { var a = -1.5708 + i * 0.6283, rr = i % 2 ? r * 0.45 : r; pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]); } P(x, pts, fill, 3); }
+    function coin(x, cx, cy, r) { C(x, cx, cy, r, "#ffc83a"); x.strokeStyle = "#b8801a"; x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, r * 0.62, 0, 6.2832); x.stroke(); }
+    function sword(x, ang, len, col) { x.save(); x.translate(32, 32); x.rotate(ang); L(x, 0, len / 2, 0, -len / 2 + 2, 6, col || "#d8e0ec"); P(x, [[0, -len / 2 - 3], [3.4, -len / 2 + 4], [-3.4, -len / 2 + 4]], col || "#d8e0ec", 2.4); L(x, -9, len / 2 - 8, 9, len / 2 - 8, 4, "#ffc83a"); L(x, 0, len / 2 - 8, 0, len / 2 + 3, 4, "#8a5a2c"); x.restore(); }
+    function flame(x, cx, cy, k, a, b) { S(x, function (p) { p.moveTo(cx, cy - 18 * k); p.bezierCurveTo(cx + 14 * k, cy - 4 * k, cx + 16 * k, cy + 10 * k, cx, cy + 15 * k); p.bezierCurveTo(cx - 16 * k, cy + 10 * k, cx - 12 * k, cy - 4 * k, cx, cy - 18 * k); }, a); x.fillStyle = b; x.beginPath(); x.moveTo(cx, cy - 4 * k); x.bezierCurveTo(cx + 7 * k, cy + 3 * k, cx + 8 * k, cy + 10 * k, cx, cy + 12 * k); x.bezierCurveTo(cx - 8 * k, cy + 10 * k, cx - 6 * k, cy + 3 * k, cx, cy - 4 * k); x.fill(); }
+    function drop(x, cx, cy, k, fill) { S(x, function (p) { p.moveTo(cx, cy - 15 * k); p.bezierCurveTo(cx + 13 * k, cy + 2 * k, cx + 11 * k, cy + 14 * k, cx, cy + 14 * k); p.bezierCurveTo(cx - 11 * k, cy + 14 * k, cx - 13 * k, cy + 2 * k, cx, cy - 15 * k); }, fill); x.fillStyle = "rgba(255,255,255,0.55)"; x.beginPath(); x.ellipse(cx - 4 * k, cy + 2 * k, 2 * k, 4 * k, 0.3, 0, 6.2832); x.fill(); }
+    function skull(x, cx, cy, k) { E(x, cx, cy - 2 * k, 13 * k, 12 * k, "#f4ecd8"); R(x, cx - 7 * k, cy + 7 * k, 14 * k, 8 * k, "#f4ecd8"); x.fillStyle = O; [-5, 5].forEach(function (d) { x.beginPath(); x.ellipse(cx + d * k, cy - 2 * k, 3.4 * k, 4 * k, 0, 0, 6.2832); x.fill(); }); x.beginPath(); x.moveTo(cx, cy + 3 * k); x.lineTo(cx - 2 * k, cy + 7 * k); x.lineTo(cx + 2 * k, cy + 7 * k); x.fill(); }
+    function boot(x, fill) { S(x, function (p) { p.moveTo(18, 12); p.lineTo(34, 12); p.lineTo(34, 34); p.lineTo(52, 42); p.quadraticCurveTo(56, 52, 46, 52); p.lineTo(14, 52); p.quadraticCurveTo(10, 52, 12, 44); p.closePath(); }, fill); R(x, 18, 12, 16, 7, "#e8d8b0"); }
+    var D = {
+      pi_reach: function (x) { sword(x, -0.6, 52); L(x, 10, 54, 54, 10, 0.1, "rgba(0,0,0,0)"); Q(x, function (p) { p.moveTo(8, 12); p.lineTo(8, 4); p.lineTo(16, 4); }, 3, "#7fe08a"); Q(x, function (p) { p.moveTo(56, 52); p.lineTo(56, 60); p.lineTo(48, 60); }, 3, "#7fe08a"); },
+      pi_sweep: function (x) { glow(x, "rgba(255,230,160,0.35)"); S(x, function (p) { p.moveTo(8, 44); p.quadraticCurveTo(32, -6, 56, 44); p.quadraticCurveTo(32, 14, 8, 44); }, "#f4f0e0", 3.4); L(x, 20, 48, 44, 48, 5, "#d8e0ec"); L(x, 32, 36, 32, 56, 3, "#8a5a2c"); },
+      pi_pepper: function (x) { S(x, function (p) { p.moveTo(24, 18); p.lineTo(40, 18); p.lineTo(44, 54); p.quadraticCurveTo(32, 60, 20, 54); p.closePath(); }, "#c8281a"); R(x, 25, 8, 14, 10, "#f4ecd8"); R(x, 22, 26, 20, 16, "#f4ecd8"); flame(x, 32, 34, 0.42, "#ff8a2a", "#ffd23c"); },
+      pi_lynx: function (x) { glow(x, "rgba(255,210,80,0.4)"); S(x, function (p) { p.moveTo(4, 32); p.quadraticCurveTo(32, 6, 60, 32); p.quadraticCurveTo(32, 58, 4, 32); }, "#f4ecd8"); C(x, 32, 32, 11, "#ffc83a"); E(x, 32, 32, 3.4, 9, O); [[14, 14, 20, 22], [50, 14, 44, 22]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3, "#c8a050"); }); },
+      pi_cleaver: function (x) { S(x, function (p) { p.moveTo(10, 14); p.lineTo(40, 12); p.quadraticCurveTo(52, 14, 50, 36); p.lineTo(10, 36); p.closePath(); }, "#d8e0ec"); C(x, 18, 22, 3, O); L(x, 14, 40, 46, 40, 2.4, "#8a97ab"); L(x, 30, 38, 30, 58, 6, "#8a5a2c"); },
+      pi_hay: function (x) { R(x, 8, 22, 40, 24, "#e0b84a"); [18, 28, 38].forEach(function (d) { L(x, d, 22, d, 46, 1.6, "#a8862a"); }); [[10, 22, 4], [22, 22, 0], [34, 22, 3], [44, 22, 5]].forEach(function (t) { L(x, t[0], t[1], t[0] + t[2] - 2, t[1] - 7, 2.4, "#f0d878"); }); C(x, 48, 16, 10, "#3ab84a"); L(x, 48, 10, 48, 22, 3, "#fff"); L(x, 42, 16, 54, 16, 3, "#fff"); },
+      pi_apron: function (x) { S(x, function (p) { p.moveTo(22, 8); p.lineTo(42, 8); p.lineTo(40, 22); p.lineTo(52, 56); p.lineTo(12, 56); p.lineTo(24, 22); p.closePath(); }, "#f4ecd8"); R(x, 24, 34, 16, 12, "#e0d4b4"); [[30, 46, 3], [38, 40, 2.4]].forEach(function (b) { x.fillStyle = "#b8281a"; x.beginPath(); x.arc(b[0], b[1], b[2], 0, 6.2832); x.fill(); }); },
+      pi_feather: function (x) { S(x, function (p) { p.moveTo(52, 6); p.bezierCurveTo(60, 30, 36, 52, 14, 56); p.bezierCurveTo(8, 32, 28, 10, 52, 6); }, "#8ad8ff"); L(x, 50, 8, 12, 58, 2.4, "#f4ecd8"); [[24, 40, 36, 34], [28, 30, 40, 26], [20, 48, 30, 44]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 1.6, "#d8f0ff"); }); },
+      pi_barbed: function (x) { Q(x, function (p) { p.moveTo(6, 40); p.bezierCurveTo(14, 12, 26, 52, 34, 22); p.bezierCurveTo(40, 6, 52, 44, 58, 16); }, 3.4, "#aab4c4"); [[14, 30], [26, 38], [38, 24], [50, 28]].forEach(function (b) { L(x, b[0] - 5, b[1] - 5, b[0] + 5, b[1] + 5, 2, "#d8e0ec"); L(x, b[0] - 5, b[1] + 5, b[0] + 5, b[1] - 5, 2, "#d8e0ec"); }); },
+      pi_straw: function (x) { C(x, 32, 32, 22, "#e0b84a"); C(x, 32, 32, 14, "#f0d070"); C(x, 32, 32, 5, "#a8862a"); for (var i = 0; i < 8; i++) { var a = i * 0.7854; L(x, 32 + Math.cos(a) * 6, 32 + Math.sin(a) * 6, 32 + Math.cos(a) * 20, 32 + Math.sin(a) * 20, 1.6, "#a8862a"); } },
+      pi_wheat: function (x) { glow(x, "rgba(255,210,80,0.35)"); L(x, 32, 58, 32, 20, 3, "#8aa83a"); for (var i = 0; i < 4; i++) { var y = 12 + i * 9; E(x, 24, y + 4, 4.4, 8, "#f0c030", -0.5); E(x, 40, y + 4, 4.4, 8, "#f0c030", 0.5); } E(x, 32, 8, 4.4, 8, "#f0c030"); },
+      pi_nest: function (x) { Q(x, function (p) { p.moveTo(6, 36); p.quadraticCurveTo(32, 66, 58, 36); }, 8, "#a8743a"); E(x, 32, 34, 22, 8, "#8a5a2c"); E(x, 32, 28, 9, 12, "#ffd23c"); x.fillStyle = "rgba(255,255,255,0.6)"; x.beginPath(); x.ellipse(29, 24, 2.4, 4, 0.3, 0, 6.2832); x.fill(); [[8, 38, 22, 46], [54, 38, 42, 46], [16, 46, 30, 52]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 2.4, "#c8935a"); }); },
+      pi_cuckoo: function (x) { P(x, [[10, 24], [32, 6], [54, 24]], "#8a5a2c"); R(x, 14, 24, 36, 32, "#a8743a"); C(x, 32, 38, 11, "#f4ecd8"); L(x, 32, 38, 32, 31, 2.4, O); L(x, 32, 38, 38, 41, 2.4, O); R(x, 28, 54, 8, 8, "#ffc83a"); L(x, 32, 56, 32, 62, 3, "#ffc83a"); },
+      pi_ladle: function (x) { L(x, 14, 56, 42, 22, 6, "#8a5a2c"); E(x, 46, 18, 12, 9, "#aab4c4", -0.6); E(x, 46, 18, 8, 5.4, "#3a2a1a", -0.6); },
+      pi_giant: function (x) { skull(x, 32, 32, 1.3); P(x, [[10, 18], [4, 4], [20, 12]], "#f4ecd8", 3); P(x, [[54, 18], [60, 4], [44, 12]], "#f4ecd8", 3); Q(x, function (p) { p.arc(32, 32, 26, 0.3, 2.84); }, 2.4, "#ff6a4a"); },
+      pi_fervor: function (x) { drop(x, 28, 34, 1.1, "#d8281a"); flame(x, 42, 22, 0.55, "#ff8a2a", "#ffd23c"); },
+      pi_crosshair: function (x) { Q(x, function (p) { p.arc(32, 32, 20, 0, 6.2832); }, 3.4, "#f4ecd8"); [[32, 4, 32, 22], [32, 42, 32, 60], [4, 32, 22, 32], [42, 32, 60, 32]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3.4, "#ff4a3a"); }); C(x, 32, 32, 3.4, "#ff4a3a"); },
+      pi_first: function (x) { drop(x, 32, 34, 1.5, "#d8281a"); x.fillStyle = "#fff"; x.font = "bold 22px sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.strokeStyle = O; x.lineWidth = 4; x.strokeText("1", 32, 38); x.fillText("1", 32, 38); },
+      pi_keen: function (x) { Q(x, function (p) { p.moveTo(10, 54); p.lineTo(44, 16); }, 7, "#d8e0ec"); L(x, 8, 56, 20, 46, 6, "#8a5a2c"); star(x, 46, 14, 12, "#fff3a0"); },
+      pi_whet: function (x) { E(x, 32, 44, 24, 9, "#9a8a7a"); R(x, 10, 38, 44, 10, "#b8a898"); Q(x, function (p) { p.moveTo(12, 30); p.lineTo(52, 12); }, 6, "#d8e0ec"); [[20, 20, 14], [36, 26, 10], [46, 18, 12]].forEach(function (s2) { star(x, s2[0], s2[1], 5, "#fff3a0"); }); },
+      pi_snow: function (x) { glow(x, "rgba(140,220,255,0.45)"); for (var i = 0; i < 3; i++) { var a = i * 1.0472; L(x, 32 - Math.cos(a) * 24, 32 - Math.sin(a) * 24, 32 + Math.cos(a) * 24, 32 + Math.sin(a) * 24, 4, "#bfeaff"); } [0, 1, 2, 3, 4, 5].forEach(function (i) { var a = i * 1.0472, bx = 32 + Math.cos(a) * 15, by = 32 + Math.sin(a) * 15; L(x, bx, by, bx + Math.cos(a + 0.8) * 7, by + Math.sin(a + 0.8) * 7, 3, "#e8f8ff"); L(x, bx, by, bx + Math.cos(a - 0.8) * 7, by + Math.sin(a - 0.8) * 7, 3, "#e8f8ff"); }); C(x, 32, 32, 4, "#fff"); },
+      pi_ember: function (x) { glow(x, "rgba(255,120,40,0.4)"); E(x, 32, 50, 22, 7, "#3a2a2a"); flame(x, 32, 32, 1.0, "#ff6a2a", "#ffd23c"); [[18, 14], [48, 20], [12, 34]].forEach(function (d) { C(x, d[0], d[1], 2.4, "#ff9a3c"); }); },
+      pi_ricochet: function (x) { Q(x, function (p) { p.moveTo(8, 50); p.lineTo(24, 14); p.lineTo(40, 48); p.lineTo(56, 12); }, 4, "#ffd23c"); P(x, [[56, 12], [46, 14], [54, 22]], "#ffd23c", 2.4); C(x, 8, 50, 5, "#8ad8ff"); C(x, 24, 14, 3.4, "#fff"); C(x, 40, 48, 3.4, "#fff"); },
+      pi_sprout: function (x) { E(x, 32, 54, 22, 6, "#6a4a2a"); L(x, 32, 54, 32, 28, 4, "#5ac84a"); E(x, 20, 26, 12, 7, "#7ae05a", -0.5); E(x, 44, 20, 12, 7, "#7ae05a", 0.5); },
+      pi_featherwall: function (x) { S(x, function (p) { p.moveTo(8, 10); p.lineTo(56, 10); p.lineTo(56, 34); p.quadraticCurveTo(56, 52, 32, 60); p.quadraticCurveTo(8, 52, 8, 34); p.closePath(); }, "#5a7ac8"); [[18, 20], [32, 18], [46, 20]].forEach(function (f) { S(x, function (p) { p.moveTo(f[0], f[1] + 26); p.quadraticCurveTo(f[0] - 9, f[1] + 10, f[0], f[1]); p.quadraticCurveTo(f[0] + 9, f[1] + 10, f[0], f[1] + 26); }, "#f4f0e0", 2.4); }); },
+      pi_vamp: function (x) { drop(x, 32, 40, 1.1, "#d8281a"); P(x, [[16, 8], [26, 8], [22, 26]], "#fff", 3); P(x, [[38, 8], [48, 8], [42, 26]], "#fff", 3); },
+      pi_ironwall: function (x) { R(x, 6, 12, 52, 40, "#8a97ab"); [[6, 25, 58, 25], [6, 38, 58, 38], [24, 12, 24, 25], [42, 25, 42, 38], [24, 38, 24, 52]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 2.4, "#4a5a70"); }); [[12, 18], [48, 18], [12, 46], [48, 46]].forEach(function (d) { C(x, d[0], d[1], 1.6, "#d8e0ec"); }); },
+      pi_breath: function (x) { heart(x, 30, 34, 1.4, "#e84a5a"); Q(x, function (p) { p.moveTo(40, 18); p.bezierCurveTo(54, 12, 58, 26, 48, 26); }, 3, "#bfeaff"); Q(x, function (p) { p.moveTo(42, 28); p.bezierCurveTo(56, 26, 58, 40, 48, 40); }, 3, "#bfeaff"); P(x, [[50, 4], [58, 12], [42, 12]], "#7fe08a", 2.4); },
+      pi_stopwatch: function (x) { C(x, 32, 36, 20, "#f4ecd8"); R(x, 28, 6, 8, 8, "#aab4c4"); L(x, 32, 36, 32, 24, 3.4, "#e84a3a"); L(x, 32, 36, 42, 40, 3, O); L(x, 50, 14, 56, 8, 3, "#aab4c4"); P(x, [[8, 20], [22, 18], [14, 28]], "#ffd23c", 2.4); },
+      pi_trophy: function (x) { skull(x, 32, 30, 1.0); coin(x, 48, 48, 9); L(x, 8, 52, 24, 44, 4, "#aab4c4"); },
+      pi_crowd: function (x) { skull(x, 18, 38, 0.6); skull(x, 46, 38, 0.6); skull(x, 32, 24, 0.8); Q(x, function (p) { p.moveTo(4, 56); p.lineTo(60, 56); }, 3, "#ff4a3a"); },
+      pi_duel: function (x) { sword(x, -0.8, 54); sword(x, 0.8, 54); star(x, 32, 14, 8, "#ffe27a"); },
+      pi_plaster: function (x) { x.save(); x.translate(32, 32); x.rotate(-0.7); R(x, -24, -9, 48, 18, "#f0c8a0"); R(x, -9, -9, 18, 18, "#e8e0d0"); [[-3, -3], [3, -3], [-3, 3], [3, 3]].forEach(function (d) { C(x, d[0], d[1], 1.2, "#b89878"); }); [-17, -13, 13, 17].forEach(function (d) { C(x, d, 0, 1.2, "#b89878"); }); x.restore(); },
+      pi_vit: function (x) { glow(x, "rgba(255,90,110,0.4)"); heart(x, 32, 32, 1.7, "#e8283a"); x.fillStyle = "rgba(255,255,255,0.6)"; x.beginPath(); x.ellipse(21, 24, 3.4, 5, -0.6, 0, 6.2832); x.fill(); },
+      pi_fist: function (x) { S(x, function (p) { p.moveTo(14, 26); p.lineTo(18, 14); p.lineTo(46, 14); p.quadraticCurveTo(54, 14, 54, 24); p.lineTo(54, 40); p.quadraticCurveTo(54, 52, 40, 52); p.lineTo(24, 52); p.quadraticCurveTo(12, 52, 14, 40); p.closePath(); }, "#f0b890"); [24, 33, 42].forEach(function (d) { L(x, d, 16, d, 28, 2, "#b87a50"); }); R(x, 12, 50, 36, 8, "#e8d8b0"); },
+      pi_wingboot: function (x) { boot(x, "#a8743a"); S(x, function (p) { p.moveTo(14, 30); p.quadraticCurveTo(-2, 22, 4, 8); p.quadraticCurveTo(10, 18, 18, 18); p.closePath(); }, "#f4f0e0", 2.4); },
+      pi_magnet: function (x) { Q(x, function (p) { p.moveTo(14, 56); p.lineTo(14, 30); p.arc(32, 30, 18, 3.1416, 0); p.lineTo(50, 56); }, 11, "#d8281a"); R(x, 8, 46, 12, 12, "#d8e0ec"); R(x, 44, 46, 12, 12, "#d8e0ec"); [[4, 20, 10, 24], [4, 8, 12, 14]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 2, "#8ad8ff"); }); },
+      pi_fortune: function (x) { coin(x, 22, 44, 12); coin(x, 40, 40, 12); coin(x, 32, 24, 12); [[44, 10], [14, 14]].forEach(function (d) { C(x, d[0], d[1], 3.4, "#5ac84a"); }); },
+      pi_halo: function (x) { heart(x, 32, 38, 1.3, "#e84a5a"); E(x, 32, 10, 12, 4, "rgba(0,0,0,0)"); Q(x, function (p) { p.ellipse(32, 10, 12, 4, 0, 0, 6.2832); }, 3.4, "#ffe27a"); [[6, 28], [58, 28]].forEach(function (w, i) { S(x, function (p) { p.moveTo(i ? 50 : 14, 30); p.quadraticCurveTo(i ? 62 : 2, 14, i ? 62 : 2, 36); p.quadraticCurveTo(i ? 54 : 10, 34, i ? 50 : 14, 40); }, "#f4f0e0", 2.4); }); },
+      pi_fence: function (x) { [8, 22, 36, 50].forEach(function (d) { P(x, [[d, 54], [d, 16], [d + 3, 10], [d + 6, 16], [d + 6, 54]], "#c89a5a", 2.6); }); L(x, 4, 26, 60, 26, 5, "#a8743a"); L(x, 4, 42, 60, 42, 5, "#a8743a"); P(x, [[32, 2], [40, 8], [24, 8]], "#aab4c4", 2); },
+      pi_jar: function (x) { R(x, 18, 18, 28, 38, "rgba(200,240,255,0.55)"); R(x, 15, 10, 34, 9, "#a8743a"); E(x, 32, 38, 8, 11, "#e8785a"); L(x, 28, 30, 28, 46, 1.6, "#f4a898"); },
+      pi_sock: function (x) { S(x, function (p) { p.moveTo(22, 6); p.lineTo(42, 6); p.lineTo(42, 32); p.lineTo(56, 46); p.quadraticCurveTo(58, 58, 46, 56); p.lineTo(28, 54); p.quadraticCurveTo(18, 52, 22, 40); p.closePath(); }, "#e8c8a0"); R(x, 22, 6, 20, 8, "#c8281a"); coin(x, 34, 28, 6); coin(x, 38, 42, 5); },
+      pi_exile: function (x) { S(x, function (p) { p.moveTo(14, 10); p.lineTo(50, 10); p.lineTo(50, 54); p.lineTo(14, 54); p.closePath(); }, "#f0e0b0"); E(x, 32, 8, 20, 5, "#e0c890"); E(x, 32, 56, 20, 5, "#e0c890"); L(x, 22, 22, 42, 44, 5, "#d8281a"); L(x, 42, 22, 22, 44, 5, "#d8281a"); },
+      pi_horn: function (x) { P(x, [[8, 26], [34, 12], [34, 48], [8, 38]], "#ffc83a", 3); R(x, 4, 26, 8, 12, "#8a5a2c"); Q(x, function (p) { p.arc(38, 30, 10, -1, 1); }, 3, "#fff"); Q(x, function (p) { p.arc(38, 30, 18, -1, 1); }, 3, "#fff"); },
+      pi_shoe: function (x) { Q(x, function (p) { p.moveTo(14, 54); p.lineTo(14, 26); p.arc(32, 26, 18, 3.1416, 0); p.lineTo(50, 54); }, 9, "#aab4c4"); [[14, 34], [14, 46], [50, 34], [50, 46]].forEach(function (d) { C(x, d[0], d[1], 2.2, O); }); star(x, 32, 40, 8, "#ffe27a"); },
+      pi_favaxe: function (x) { L(x, 22, 58, 40, 10, 6, "#8a5a2c"); P(x, [[34, 8], [58, 14], [52, 36], [38, 28]], "#d8e0ec", 3); heart(x, 18, 18, 0.7, "#e84a5a"); star(x, 50, 52, 7, "#ffe27a"); },
+      pi_book: function (x) { glow(x, "rgba(190,140,255,0.35)"); P(x, [[8, 12], [32, 18], [56, 12], [56, 52], [32, 58], [8, 52]], "#7a4ab8", 3); L(x, 32, 18, 32, 58, 3, O); star(x, 20, 34, 6, "#ffe27a"); star(x, 44, 34, 6, "#8ad8ff"); },
+      pi_spirit: function (x) { glow(x, "rgba(120,200,255,0.45)"); S(x, function (p) { p.moveTo(32, 6); p.bezierCurveTo(54, 18, 52, 44, 44, 58); p.lineTo(38, 50); p.lineTo(32, 58); p.lineTo(26, 50); p.lineTo(20, 58); p.bezierCurveTo(12, 44, 10, 18, 32, 6); }, "#cfe8ff"); [[25, 28], [39, 28]].forEach(function (d) { C(x, d[0], d[1], 3.4, O); }); },
+      pi_endure: function (x) { S(x, function (p) { p.moveTo(10, 8); p.lineTo(54, 8); p.lineTo(54, 34); p.quadraticCurveTo(54, 52, 32, 60); p.quadraticCurveTo(10, 52, 10, 34); p.closePath(); }, "#5a7ac8"); P(x, [[32, 16], [46, 26], [46, 34], [32, 52], [18, 34], [18, 26]], "#aac8ff", 2.4); },
+      pi_hoof: function (x) { Q(x, function (p) { p.moveTo(18, 50); p.quadraticCurveTo(10, 24, 28, 14); p.lineTo(40, 14); p.quadraticCurveTo(54, 24, 46, 50); }, 12, "#5a4a3a"); L(x, 10, 56, 54, 56, 5, "#aab4c4"); [[4, 10, 12, 16], [60, 10, 52, 16], [32, 2, 32, 8]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3, "#ffd23c"); }); },
+      pi_pitchfork: function (x) { L(x, 32, 58, 32, 22, 5, "#8a5a2c"); Q(x, function (p) { p.moveTo(14, 8); p.lineTo(14, 24); p.quadraticCurveTo(32, 36, 50, 24); p.lineTo(50, 8); }, 4, "#d8e0ec"); L(x, 32, 14, 32, 30, 4, "#d8e0ec"); },
+      pi_double: function (x) { E(x, 22, 38, 14, 12, "#f4ecd8"); E(x, 42, 30, 14, 12, "#f4ecd8"); E(x, 22, 36, 8, 6, "#e8c030"); E(x, 42, 28, 8, 6, "#e8c030"); },
+      pi_chili: function (x) { S(x, function (p) { p.moveTo(14, 14); p.bezierCurveTo(46, 8, 62, 30, 50, 54); p.bezierCurveTo(44, 36, 28, 30, 14, 26); p.closePath(); }, "#d8281a"); R(x, 8, 12, 10, 14, "#3a9a3a"); x.fillStyle = "rgba(255,255,255,0.5)"; x.beginPath(); x.ellipse(36, 22, 8, 2.4, 0.5, 0, 6.2832); x.fill(); },
+      pi_rabbitfoot: function (x) { E(x, 32, 34, 14, 22, "#f4f0e8"); [[24, 52], [32, 56], [40, 52]].forEach(function (d) { E(x, d[0], d[1], 4, 5, "#e8e0d0"); }); C(x, 32, 8, 3.4, "#ffc83a"); L(x, 32, 10, 32, 18, 2.4, "#ffc83a"); },
+      pi_chick: function (x) { C(x, 32, 38, 20, "#ffd23c"); C(x, 32, 22, 13, "#ffd23c"); P(x, [[28, 24], [36, 24], [32, 30]], "#ff8a2a", 2.4); [[27, 19], [37, 19]].forEach(function (d) { C(x, d[0], d[1], 2, O); }); [[18, 56, 18, 60], [46, 56, 46, 60]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3, "#ff8a2a"); }); },
+      pi_feeder: function (x) { S(x, function (p) { p.moveTo(6, 30); p.lineTo(58, 30); p.lineTo(50, 52); p.lineTo(14, 52); p.closePath(); }, "#a8743a"); [[16, 28], [26, 26], [36, 28], [46, 26]].forEach(function (d) { C(x, d[0], d[1], 3.4, "#f0c030"); }); Q(x, function (p) { p.arc(32, 10, 9, 0, 3.1416); }, 6, "#d8281a"); },
+      pi_soup: function (x) { S(x, function (p) { p.moveTo(8, 32); p.lineTo(56, 32); p.quadraticCurveTo(54, 56, 32, 56); p.quadraticCurveTo(10, 56, 8, 32); }, "#aab4c4"); E(x, 32, 32, 24, 6, "#e8a050"); heart(x, 32, 14, 0.8, "#e84a5a"); },
+      pi_safe: function (x) { R(x, 8, 12, 48, 42, "#7a8498"); R(x, 14, 18, 36, 30, "#9aa4b8"); C(x, 32, 33, 9, "#d8e0ec"); L(x, 32, 33, 38, 28, 3, O); L(x, 14, 54, 14, 60, 4, O); L(x, 50, 54, 50, 60, 4, O); },
+      pi_fistmp: function (x) { E(x, 32, 34, 17, 20, "#7ac8ff"); C(x, 32, 34, 6, "#fff"); }
+    };
+    Object.keys(D).forEach(function (k) { try { var c = mk(D[k]), w = silh(c, "#ffffff"), r = silh(c, "#ff2d3d"); SP[k] = { c: c, ph: c, h: c, hw: w, hr: r, white: w, red: r, native: true }; } catch (e) { if (window.console) console.warn("icône", k, e); } });
+  })();
+
   /* icônes des sorts de la ferme */
   (function farmSpellIcons() {
     var O = "#150f26";
@@ -8601,6 +8688,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     el.querySelector(".ub-bub").textContent = (typeof LORE !== "undefined" && LORE.CRY && LORE.CRY[id]) || "Plus jamais au menu !";
     el.querySelector(".ub-name").textContent = name + " !";
     document.body.appendChild(el);
+    /* en haut de l'écran par défaut ; en bas seulement si le héros est lui-même tout en haut de la carte (la bannière le cacherait) */
+    try { var cr = canvas.getBoundingClientRect(), hy = cr.top + cr.height * ((p.vy * TILE + 8 - camY) / (view.rows * TILE)); if (hy < (el.clientHeight || window.innerHeight * 0.32) + 60) el.classList.add("bot"); } catch (err) {}
     function place() {
       var bw = el.clientWidth, bh = el.clientHeight, iw = img.naturalWidth || 2.36, ih = img.naturalHeight || 1, mo = ULT_MOUTH[id] || [0.22, 0.42];
       var sc = Math.max(bw / iw, bh / ih), dw = iw * sc, dh = ih * sc, px = Math.min(0.5, mo[0]), py = Math.max(0.1, Math.min(0.9, mo[2] != null ? mo[2] : mo[1])), ox = (bw - dw) * px, oy = (bh - dh) * py;
@@ -9441,39 +9530,39 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (SURV_PAS) return SURV_PAS;
     SURV_PAS = SURV_LEVELS.map(function (o) { return { id: o.id, name: o.name, desc: o.desc, icon: o.icon, max: 5, ap: o.apply }; });
     SURV_PAS.push(
-    { id: "reach", name: "Arme allongée", desc: "+20 % de portée pour ton arme de base", icon: "sword", max: 5, ap: function () { state.reach = (state.reach || 0) + 1; } },
-    { id: "sweep", name: "Coup en arc", desc: "Frappe aussi autour de toi (niveau 2 : tourbillon)", icon: "dagger", max: 2, ap: function () { state.sweep = (state.sweep || 0) + 1; } },
-    { id: "pDmg", name: "Sauce piquante", desc: "+8 % de dégâts à toutes tes attaques", icon: "potion", max: 5, ap: function () {} },
-    { id: "pCrit", name: "Œil de lynx", desc: "+7 % de chances de coup critique (dégâts doublés)", icon: "star", max: 5, ap: function () {} },
-    { id: "pExec", name: "Hachoir", desc: "+15 % de dégâts sur les monstres blessés (moins de 35 % de PV)", icon: "axe", max: 5, ap: function () {} },
-    { id: "pRegen", name: "Foin frais", desc: "Tu régénères 1 PV de temps en temps", icon: "apple", max: 5, ap: function () {} },
-    { id: "pArmor", name: "Tablier épais", desc: "−8 % de dégâts subis", icon: "plate", max: 5, ap: function () {} },
-    { id: "pDodge", name: "Plumes lisses", desc: "+4 % de chances d'esquiver un coup", icon: "tunic", max: 5, ap: function () {} },
-    { id: "pThorn", name: "Fil barbelé", desc: "Les monstres qui te frappent se blessent (+2 dégâts renvoyés)", icon: "barrier", max: 5, ap: function () {} },
-    { id: "pShield", name: "Bouclier de paille", desc: "Un bouclier se recrée de temps en temps et absorbe un coup", icon: "helm", max: 5, ap: function () {} },
-    { id: "pXp", name: "Épi doré", desc: "+12 % d'expérience gagnée", icon: "crystal", max: 5, ap: function () {} },
-    { id: "pGold", name: "Nid doré", desc: "+15 % d'œufs d'or gagnés", icon: "coin", max: 5, ap: function () {} },
-    { id: "pCd", name: "Coucou suisse", desc: "Tes attaques se rechargent 10 % plus vite", icon: "roll", max: 5, ap: function () {} },
-    { id: "pArea", name: "Grande louche", desc: "+10 % de zone pour tes attaques", icon: "vortex", max: 5, ap: function () {} },
-    { id: "pBoss", name: "Chasseur de géants", desc: "+12 % de dégâts contre les boss et les élites", icon: "axe", max: 5, ap: function () {} },
-    { id: "pFrenzy", name: "Sang chaud", desc: "+8 % de dégâts quand tu as moins de la moitié de tes PV", icon: "potion", max: 5, ap: function () {} },
-    { id: "pSniper", name: "Tir précis", desc: "+10 % de dégâts sur les monstres à plus de 5 cases", icon: "star", max: 5, ap: function () {} },
-    { id: "pFirst", name: "Premier sang", desc: "+15 % de dégâts sur les monstres en pleine santé", icon: "sword", max: 5, ap: function () {} },
-    { id: "pCritD", name: "Coup tranchant", desc: "Les coups critiques font +25 % de dégâts en plus", icon: "dagger", max: 5, ap: function () {} },
-    { id: "pSharp", name: "Arme affûtée", desc: "+20 % de dégâts pour ton arme de base", icon: "sword", max: 5, ap: function () {} },
-    { id: "pFrost", name: "Givre tenace", desc: "Tes coups ralentissent les monstres (au niveau 4, ils peuvent être gelés un instant)", icon: "ice", max: 5, ap: function () {} },
-    { id: "pBurn", name: "Braise tenace", desc: "Tes coups enflamment : dégâts de brûlure sur 3 s", icon: "fire", max: 5, ap: function () {} },
-    { id: "pChain", name: "Ricochet", desc: "5 % de chances qu'un coup touche aussi un monstre voisin", icon: "chain", max: 5, ap: function () {} },
-    { id: "pGrow", name: "Croissance", desc: "+1 PV max toutes les 50 s (−6 s par niveau)", icon: "apple", max: 5, ap: function () {} },
-    { id: "pRamp", name: "Rempart de plumes", desc: "+0,15 s d'invulnérabilité après avoir été touché", icon: "plate", max: 5, ap: function () {} },
-    { id: "pVamp", name: "Soif de sang", desc: "Tu regagnes 1 PV pour chaque lot de dégâts infligés (de moins en moins de dégâts requis)", icon: "heart", max: 5, ap: function () {} },
-    { id: "pWall", name: "Mur de fer", desc: "−8 % de dégâts subis quand 4 monstres ou plus sont près de toi", icon: "shield", max: 5, ap: function () {} },
-    { id: "pLvHeal", name: "Second souffle", desc: "+2 PV à chaque montée de niveau", icon: "apple", max: 5, ap: function () {} },
-    { id: "pHaste", name: "Chasse rapide", desc: "Chaque monstre tué raccourcit la recharge de ton pouvoir de 0,06 s", icon: "roll", max: 5, ap: function () {} },
-    { id: "pHead", name: "Chasseur de têtes", desc: "Les élites tués donnent +5 œufs d'or", icon: "coin", max: 5, ap: function () {} },
-    { id: "pSwarm", name: "Tueur de foule", desc: "+10 % de dégâts quand 5 monstres ou plus sont près de toi", icon: "bomb", max: 5, ap: function () {} },
-    { id: "pLone", name: "Duelliste", desc: "+12 % de dégâts quand 2 monstres ou moins sont près de toi", icon: "sword", max: 5, ap: function () {} },
-    { id: "pMend", name: "Pansement", desc: "+1 PV après un moment sans être touché (14 s − 2 s par niveau)", icon: "potion", max: 5, ap: function () {} }
+    { id: "reach", name: "Arme allongée", desc: "+20 % de portée pour ton arme de base", icon: "pi_reach", max: 5, ap: function () { state.reach = (state.reach || 0) + 1; } },
+    { id: "sweep", name: "Coup en arc", desc: "Frappe aussi autour de toi (niveau 2 : tourbillon)", icon: "pi_sweep", max: 2, ap: function () { state.sweep = (state.sweep || 0) + 1; } },
+    { id: "pDmg", name: "Sauce piquante", desc: "+8 % de dégâts à toutes tes attaques", icon: "pi_pepper", max: 5, ap: function () {} },
+    { id: "pCrit", name: "Œil de lynx", desc: "+7 % de chances de coup critique (dégâts doublés)", icon: "pi_lynx", max: 5, ap: function () {} },
+    { id: "pExec", name: "Hachoir", desc: "+15 % de dégâts sur les monstres blessés (moins de 35 % de PV)", icon: "pi_cleaver", max: 5, ap: function () {} },
+    { id: "pRegen", name: "Foin frais", desc: "Tu régénères 1 PV de temps en temps", icon: "pi_hay", max: 5, ap: function () {} },
+    { id: "pArmor", name: "Tablier épais", desc: "−8 % de dégâts subis", icon: "pi_apron", max: 5, ap: function () {} },
+    { id: "pDodge", name: "Plumes lisses", desc: "+4 % de chances d'esquiver un coup", icon: "pi_feather", max: 5, ap: function () {} },
+    { id: "pThorn", name: "Fil barbelé", desc: "Les monstres qui te frappent se blessent (+2 dégâts renvoyés)", icon: "pi_barbed", max: 5, ap: function () {} },
+    { id: "pShield", name: "Bouclier de paille", desc: "Un bouclier se recrée de temps en temps et absorbe un coup", icon: "pi_straw", max: 5, ap: function () {} },
+    { id: "pXp", name: "Épi doré", desc: "+12 % d'expérience gagnée", icon: "pi_wheat", max: 5, ap: function () {} },
+    { id: "pGold", name: "Nid doré", desc: "+15 % d'œufs d'or gagnés", icon: "pi_nest", max: 5, ap: function () {} },
+    { id: "pCd", name: "Coucou suisse", desc: "Tes attaques se rechargent 10 % plus vite", icon: "pi_cuckoo", max: 5, ap: function () {} },
+    { id: "pArea", name: "Grande louche", desc: "+10 % de zone pour tes attaques", icon: "pi_ladle", max: 5, ap: function () {} },
+    { id: "pBoss", name: "Chasseur de géants", desc: "+12 % de dégâts contre les boss et les élites", icon: "pi_giant", max: 5, ap: function () {} },
+    { id: "pFrenzy", name: "Sang chaud", desc: "+8 % de dégâts quand tu as moins de la moitié de tes PV", icon: "pi_fervor", max: 5, ap: function () {} },
+    { id: "pSniper", name: "Tir précis", desc: "+10 % de dégâts sur les monstres à plus de 5 cases", icon: "pi_crosshair", max: 5, ap: function () {} },
+    { id: "pFirst", name: "Premier sang", desc: "+15 % de dégâts sur les monstres en pleine santé", icon: "pi_first", max: 5, ap: function () {} },
+    { id: "pCritD", name: "Coup tranchant", desc: "Les coups critiques font +25 % de dégâts en plus", icon: "pi_keen", max: 5, ap: function () {} },
+    { id: "pSharp", name: "Arme affûtée", desc: "+20 % de dégâts pour ton arme de base", icon: "pi_whet", max: 5, ap: function () {} },
+    { id: "pFrost", name: "Givre tenace", desc: "Tes coups ralentissent les monstres (au niveau 4, ils peuvent être gelés un instant)", icon: "pi_snow", max: 5, ap: function () {} },
+    { id: "pBurn", name: "Braise tenace", desc: "Tes coups enflamment : dégâts de brûlure sur 3 s", icon: "pi_ember", max: 5, ap: function () {} },
+    { id: "pChain", name: "Ricochet", desc: "5 % de chances qu'un coup touche aussi un monstre voisin", icon: "pi_ricochet", max: 5, ap: function () {} },
+    { id: "pGrow", name: "Croissance", desc: "+1 PV max toutes les 50 s (−6 s par niveau)", icon: "pi_sprout", max: 5, ap: function () {} },
+    { id: "pRamp", name: "Rempart de plumes", desc: "+0,15 s d'invulnérabilité après avoir été touché", icon: "pi_featherwall", max: 5, ap: function () {} },
+    { id: "pVamp", name: "Soif de sang", desc: "Tu regagnes 1 PV pour chaque lot de dégâts infligés (de moins en moins de dégâts requis)", icon: "pi_vamp", max: 5, ap: function () {} },
+    { id: "pWall", name: "Mur de fer", desc: "−8 % de dégâts subis quand 4 monstres ou plus sont près de toi", icon: "pi_ironwall", max: 5, ap: function () {} },
+    { id: "pLvHeal", name: "Second souffle", desc: "+2 PV à chaque montée de niveau", icon: "pi_breath", max: 5, ap: function () {} },
+    { id: "pHaste", name: "Chasse rapide", desc: "Chaque monstre tué raccourcit la recharge de ton pouvoir de 0,06 s", icon: "pi_stopwatch", max: 5, ap: function () {} },
+    { id: "pHead", name: "Chasseur de têtes", desc: "Les élites tués donnent +5 œufs d'or", icon: "pi_trophy", max: 5, ap: function () {} },
+    { id: "pSwarm", name: "Tueur de foule", desc: "+10 % de dégâts quand 5 monstres ou plus sont près de toi", icon: "pi_crowd", max: 5, ap: function () {} },
+    { id: "pLone", name: "Duelliste", desc: "+12 % de dégâts quand 2 monstres ou moins sont près de toi", icon: "pi_duel", max: 5, ap: function () {} },
+    { id: "pMend", name: "Pansement", desc: "+1 PV après un moment sans être touché (14 s − 2 s par niveau)", icon: "pi_plaster", max: 5, ap: function () {} }
   );
     return SURV_PAS;
   }
@@ -10149,20 +10238,20 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survUps() { try { return JSON.parse(localStorage.getItem("donjon-surv-up") || "{}"); } catch (err) { return {}; } }
   function metaLv(id) { return survUps()[id] || 0; }
   var SURV_UPS = [
-    { id: "vit", name: "Vitalité", desc: "+3 PV de départ", icon: "heart", max: 5, cost: 40 },
-    { id: "force", name: "Force", desc: "+1 attaque de départ", icon: "sword", max: 3, cost: 70 },
-    { id: "agil", name: "Agilité", desc: "+4 % de vitesse", icon: "soul", max: 3, cost: 60 },
-    { id: "magnet", name: "Aimant", desc: "Ramasse l'expérience de plus loin", icon: "ring", max: 3, cost: 50 },
-    { id: "greed", name: "Fortune", desc: "+15 % d'or gagné", icon: "coin", max: 3, cost: 60 },
-    { id: "revive", name: "Second souffle", desc: "Te relève une fois par partie", icon: "crystal", max: 1, cost: 250 },
-    { id: "armor", name: "Clôture renforcée", desc: "+1 défense de départ", icon: "shield", max: 3, cost: 70 },
-    { id: "pantry", name: "Garde-manger", desc: "Les pommes soignent 25 % de plus", icon: "heart", max: 3, cost: 45 },
-    { id: "purse", name: "Bas de laine", desc: "Commence avec 20 œufs d'or", icon: "coin", max: 3, cost: 40 },
-    { id: "exile", name: "Parchemin d'exil", desc: "+1 bannissement par partie", icon: "scroll", max: 3, cost: 55 },
-    { id: "ultstart", name: "Cri de ralliement", desc: "Commence avec l'ultime chargé à 25 %", icon: "star", max: 4, cost: 50 },
-    { id: "lucky", name: "Fer à cheval", desc: "Coffres dorés 50 % plus fréquents", icon: "amulet", max: 2, cost: 90 },
-    { id: "fav", name: "Arme de prédilection", desc: "Commence avec l'arme fétiche de ton héros", icon: "axe", max: 1, cost: 180 },
-    { id: "grimoire", name: "Grimoire de grand-mère", desc: "Tes sorts de départ commencent au niveau 2", icon: "scroll", max: 1, cost: 220 }
+    { id: "vit", name: "Vitalité", desc: "+3 PV de départ", icon: "pi_vit", max: 5, cost: 40 },
+    { id: "force", name: "Force", desc: "+1 attaque de départ", icon: "pi_fist", max: 3, cost: 70 },
+    { id: "agil", name: "Agilité", desc: "+4 % de vitesse", icon: "pi_wingboot", max: 3, cost: 60 },
+    { id: "magnet", name: "Aimant", desc: "Ramasse l'expérience de plus loin", icon: "pi_magnet", max: 3, cost: 50 },
+    { id: "greed", name: "Fortune", desc: "+15 % d'or gagné", icon: "pi_fortune", max: 3, cost: 60 },
+    { id: "revive", name: "Second souffle", desc: "Te relève une fois par partie", icon: "pi_halo", max: 1, cost: 250 },
+    { id: "armor", name: "Clôture renforcée", desc: "+1 défense de départ", icon: "pi_fence", max: 3, cost: 70 },
+    { id: "pantry", name: "Garde-manger", desc: "Les pommes soignent 25 % de plus", icon: "pi_jar", max: 3, cost: 45 },
+    { id: "purse", name: "Bas de laine", desc: "Commence avec 20 œufs d'or", icon: "pi_sock", max: 3, cost: 40 },
+    { id: "exile", name: "Parchemin d'exil", desc: "+1 bannissement par partie", icon: "pi_exile", max: 3, cost: 55 },
+    { id: "ultstart", name: "Cri de ralliement", desc: "Commence avec l'ultime chargé à 25 %", icon: "pi_horn", max: 4, cost: 50 },
+    { id: "lucky", name: "Fer à cheval", desc: "Coffres dorés 50 % plus fréquents", icon: "pi_shoe", max: 2, cost: 90 },
+    { id: "fav", name: "Arme de prédilection", desc: "Commence avec l'arme fétiche de ton héros", icon: "pi_favaxe", max: 1, cost: 180 },
+    { id: "grimoire", name: "Grimoire de grand-mère", desc: "Tes sorts de départ commencent au niveau 2", icon: "pi_book", max: 1, cost: 220 }
   ];
   /* ---- collections de la Grange : des paliers à atteindre, chacun donne un bonus permanent ---- */
   function colStat(k) { try { return parseInt(localStorage.getItem(k) || "0", 10) || 0; } catch (e) { return 0; } }
@@ -10793,8 +10882,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survHeroAtk() { return SURV_WK[state.baseWeapon || (FARM.weaponOf && FARM.weaponOf(state.variant))] || SURV_WK.sabre; }
   function survSyncWeapon() { try { if (FARM.resetWeapons) { FARM.resetWeapons(); if (state && state.variant && state.baseWeapon) FARM.setWeapon(state.variant, state.baseWeapon); } } catch (e) {} }
   function survBaseCd(st) { var lv = Math.max(0, (state.lvl || 1) - 1), cd = (3 + st.cd) * Math.max(0.7, 1 - lv * 0.012) / survCdMul(); return legBerserk() ? cd * 0.5 : cd; }
-  /* portée de l'arme : courte au départ, +20 % par niveau du passif « Arme allongée » */
-  function survReachMul() { return 0.72 * (1 + 0.2 * (state.reach || 0)); }
+  /* portée de l'arme (mêlée et jet) : modérée au départ, +20 % par niveau du passif « Arme allongée » */
+  function survReachMul() { return 0.95 * (1 + 0.2 * (state.reach || 0)); }
   function survBaseAttack() {
     var st = survHeroAtk(), P = AFX.PAL[state.variant] || AFX.PAL.cocotte, pcx = p.vx, pcy = p.vy, rm = survReachMul(), rb = (state.survRangeBonus || 0) * 0.5;
     var aimE = null, bd = 99;
@@ -11988,29 +12077,29 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var LEVELS = [
-    { id: "hp", name: "Vitalité", desc: "+3 PV max", icon: "heart", apply: function () { state.maxHp += 3; state.hp += 3; } },
-    { id: "atk", name: "Force", desc: "+1 attaque", icon: "sword", apply: function () { state.atk++; } },
-    { id: "mp", name: "Esprit", desc: "+2 mana max", icon: "crystal", apply: function () { state.maxMp += 2; state.mp += 2; } },
-    { id: "def", name: "Endurance", desc: "+1 défense", icon: "shield", apply: function () { state.def++; } }
+    { id: "hp", name: "Vitalité", desc: "+3 PV max", icon: "pi_vit", apply: function () { state.maxHp += 3; state.hp += 3; } },
+    { id: "atk", name: "Force", desc: "+1 attaque", icon: "pi_fist", apply: function () { state.atk++; } },
+    { id: "mp", name: "Esprit", desc: "+2 mana max", icon: "pi_spirit", apply: function () { state.maxMp += 2; state.mp += 2; } },
+    { id: "def", name: "Endurance", desc: "+1 défense", icon: "pi_endure", apply: function () { state.def++; } }
   ];
   var SURV_LEVELS = [
-    { id: "survKnock", name: "Coup de sabot", desc: "Tes coups repoussent les ennemis", icon: "shield",
+    { id: "survKnock", name: "Coup de sabot", desc: "Tes coups repoussent les ennemis", icon: "pi_hoof",
       apply: function () { state.survKnock = (state.survKnock || 0) + 1; } },
-    { id: "survRange", name: "Grande fourche", desc: "Portée d'attaque augmentée", icon: "sword",
+    { id: "survRange", name: "Grande fourche", desc: "Portée d'attaque augmentée", icon: "pi_pitchfork",
       apply: function () { state.survRangeBonus = (state.survRangeBonus || 0) + 0.6; } },
-    { id: "survDouble", name: "Double ration", desc: "Chance de frapper deux fois", icon: "star",
+    { id: "survDouble", name: "Double ration", desc: "Chance de frapper deux fois", icon: "pi_double",
       apply: function () { state.survDouble = (state.survDouble || 0) + 0.12; } },
     { id: "survHaste", name: "Cuisson express", desc: "Tes sorts reviennent plus vite", icon: "sp_haste",
       apply: function () { state.survSpellHaste = (state.survSpellHaste || 0) + 1; } },
-    { id: "survPow", name: "Sorts bien relevés", desc: "Tes sorts frappent plus fort", icon: "fire",
+    { id: "survPow", name: "Sorts bien relevés", desc: "Tes sorts frappent plus fort", icon: "pi_chili",
       apply: function () { state.survSpellPow = (state.survSpellPow || 0) + 1; } },
-    { id: "survSpeed", name: "Pattes de lièvre", desc: "Augmente ta vitesse de déplacement", icon: "soul",
+    { id: "survSpeed", name: "Pattes de lièvre", desc: "Augmente ta vitesse de déplacement", icon: "pi_rabbitfoot",
       apply: function () { state.survSpeedBonus = (state.survSpeedBonus || 0) + 1; } },
-    { id: "survPet", name: "Copain de basse-cour", desc: "Un esprit attaque un ennemi proche pour toi", icon: "orb",
+    { id: "survPet", name: "Copain de basse-cour", desc: "Un esprit attaque un ennemi proche pour toi", icon: "pi_chick",
       apply: function () { state.survPetLv = (state.survPetLv || 0) + 1; } },
-    { id: "survMagnet", name: "Mangeoire magnétique", desc: "Attire le maïs de plus loin", icon: "ring",
+    { id: "survMagnet", name: "Mangeoire magnétique", desc: "Attire le maïs de plus loin", icon: "pi_feeder",
       apply: function () { state.survMagnet = (state.survMagnet || 0) + 1; } },
-    { id: "survLifesteal", name: "Rab de soupe", desc: "Chance rare de regagner un peu de vie sur une élimination", icon: "heart",
+    { id: "survLifesteal", name: "Rab de soupe", desc: "Chance rare de regagner un peu de vie sur une élimination", icon: "pi_soup",
       apply: function () { state.survLifesteal = (state.survLifesteal || 0) + 1; } }
   ];
   function survSpellUnlocks() {
@@ -12031,7 +12120,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         L.push({ id: "sp_" + sid, name: SPELLS[sid].name + " " + (lv + 1), desc: state.survival ? SPELLS[sid].desc + " · " + survSpDesc(lv + 1) : SPELLS[sid].lv[lv], icon: SPELLS[sid].icon, apply: function () { state.spellLv[sid] = lv + 1; } });
       })(id, spL(id));
     });
-    if (!state.survival && (state.reach || 0) < 3) L.push({ id: "reach", name: "Arme allongée " + ((state.reach || 0) + 1), desc: "Frappe plus loin", icon: "sword", apply: function () { state.reach = (state.reach || 0) + 1; } });
+    if (!state.survival && (state.reach || 0) < 3) L.push({ id: "reach", name: "Arme allongée " + ((state.reach || 0) + 1), desc: "Frappe plus loin", icon: "pi_reach", apply: function () { state.reach = (state.reach || 0) + 1; } });
     if (!state.survival && (state.sweep || 0) < 2) L.push({ id: "sweep", name: state.sweep ? "Tourbillon" : "Coup en arc", desc: state.sweep ? "Frappe tous les monstres autour de toi" : "Frappe aussi les monstres devant toi", icon: "sword", apply: function () { state.sweep = (state.sweep || 0) + 1; } });
     return L;
   }
@@ -12935,11 +13024,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     { id: "str",    name: "Force",          desc: "+1 attaque",            icon: "sword",   costs: [40, 100] },
     { id: "arm",    name: "Endurance",      desc: "+1 défense",            icon: "shield",  costs: [40, 100] },
     { id: "luck",   name: "Chance",         desc: "Objets plus rares",  icon: "amulet",  costs: [40, 80, 140] },
-    { id: "revive", name: "Second souffle", desc: "Une seconde vie", icon: "soul", costs: [200] },
+    { id: "revive", name: "Second souffle", desc: "Une seconde vie", icon: "pi_halo", costs: [200] },
     { id: "sight",  name: "Clairvoyance",   desc: "Tu vois plus loin dans le noir", icon: "orb", costs: [30, 60] },
     { id: "bombs",  name: "Poudrière",      desc: "+1 bombe au départ", icon: "bomb", costs: [25, 50, 90] },
     { id: "mpots",  name: "Fioles bleues",  desc: "+1 potion de mana", icon: "mpot", costs: [20, 40] },
-    { id: "purse2", name: "Coffre-fort",    desc: "+15 or au départ", icon: "chest", costs: [30, 60, 100] },
+    { id: "purse2", name: "Coffre-fort",    desc: "+15 or au départ", icon: "pi_safe", costs: [30, 60, 100] },
     { id: "vit2",   name: "Cœur vaillant",  desc: "+3 PV max", icon: "heart", costs: [120, 200] }
   ];
   function relicList() {
