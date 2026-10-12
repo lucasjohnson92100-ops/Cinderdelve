@@ -6522,7 +6522,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     }
   }
   function burst(tx, ty, color, n, speed) {
-    var t = now(); if (smallScr()) { n = Math.ceil(n * 0.45); if (parts.length > 70) return; }
+    var t = now(); if (smallScr()) { n = Math.ceil(n * 0.45); if (parts.length > 70) return; } else if (parts.length > 240) return; if (perf.low) { n = Math.ceil(n * 0.5); if (parts.length > 60) return; }
     for (var i = 0; i < n; i++) {
       var a = Math.random() * 6.283, s = (0.4 + Math.random()) * speed;
       parts.push({ x: tx * TILE + 8, y: ty * TILE + 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 8, t0: t, life: 350 + rnd(250), c: color });
@@ -6533,6 +6533,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   /* petit écran : on allège l'action (moins de textes, d'étincelles et d'effets) pour qu'on voie toujours son héros et les dangers */
   function smallScr() { return state && state.survival && Math.min(window.innerWidth, window.innerHeight) < 620; }
   function addFloat(tx, ty, text, color, size) {
+    if (floats.length > 28 && !(size > 1.2)) return;
     if (smallScr() && color !== "#ff5a4f" && !(size > 1.2)) {
       var nf = floats.length, isNum = /^[-+]?\d+$/.test(text);
       if (nf >= 9 || (nf >= 4 && !isNum) || (!isNum && text.length > 14)) return;
@@ -6540,9 +6541,9 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     floats.push({ x: tx * TILE + 8, y: ty * TILE + 2, text: text, color: color, t0: now(), s: size || 1 });
   }
   var WCOL = { sword: "200,228,255", dagger: "170,255,205", axe: "255,176,96", staff: "140,232,255" };
-  function sparkFx(tx, ty, col, big) { sparks.push({ x: tx * TILE + 8, y: ty * TILE + 8, t0: now(), col: col, big: big, rot: Math.random() * 6.28 }); }
+  function sparkFx(tx, ty, col, big) { if (sparks.length > (perf.low ? 8 : 20)) return; sparks.push({ x: tx * TILE + 8, y: ty * TILE + 8, t0: now(), col: col, big: big, rot: Math.random() * 6.28 }); }
   function puffFx(px, py, big) { puffs.push({ x: px, y: py, t0: now(), big: big, dx: (Math.random() - 0.5) * 4 }); }
-  function starFx(tx, ty, big) { stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
+  function starFx(tx, ty, big) { if (stars.length > (perf.low ? 8 : 20)) return; stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
   function banner(text, col, ms, size) { if (smallScr()) { size = Math.min(size || 34, 22); ms = Math.min(ms || 1400, 1000); if (banners.length >= 1) banners.shift(); } banners.push({ text: text, col: col, t0: now(), dur: ms || 1400, size: size || 34 }); }
   function screenFlash(col, ms) { flashCol = col; flashT0 = now(); flashDur = ms || 300; }
   function hitStop(ms) { freezeUntil = Math.max(freezeUntil, now() + ms); }
@@ -10110,6 +10111,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (t - KC.t > kcWin()) { comboEnd(); KC.n = 0; KC.tier = 0; }
     KC.n++; KC.t = t;
     if (KC.n < 5) return;
+    if (t - (KC.domT || 0) < 110) { if (!KC.tmr) KC.tmr = setTimeout(function () { KC.tmr = 0; comboRender(); }, 120); return; }
+    comboRender();
+  }
+  /* l'affichage du combo touche au DOM : on le limite à ~9 mises à jour par seconde (sinon, avec des dizaines d'éliminations par seconde, le téléphone saccade) */
+  function comboRender() {
+    if (!state || KC.n < 5) return;
+    KC.domT = now();
     var el = KC.el; if (!el) { el = KC.el = document.createElement("div"); el.id = "kcombo"; el.innerHTML = '<div class="kc-n"></div><div class="kc-l"></div><div class="kc-bar"><i></i></div>'; document.body.appendChild(el); }
     var tr = KC_TIERS.filter(function (x) { return KC.n >= x[0]; })[0];
     el.style.opacity = "1"; el.querySelector(".kc-n").textContent = "×" + KC.n; el.querySelector(".kc-n").style.color = tr[2]; el.querySelector(".kc-l").textContent = tr[1];
@@ -13328,9 +13336,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
 
   /* ---------- éclairage sombre, façon donjon gothique ---------- */
   var DKC = null, DKX = null;
-  function drawLightDark(sight, flick, t) {
-    var S = perf.low ? 1 : 2, cw2 = LW * S, ch2 = LH * S, i, tq;
-    if (!DKC || DKC.width !== cw2) { DKC = mkCanvas(cw2, ch2); DKX = DKC.getContext("2d"); }
+  function drawLightDark(sight, flick, t, vw, vh) {
+    /* l'obscurité n'est calculée que sur la zone visible (et non sur toute la carte) : bien plus léger sur téléphone */
+    var S = perf.low ? 0.6 : 1, cw2 = Math.ceil(vw * S), ch2 = Math.ceil(vh * S), i, tq, ox = camX, oy = camY;
+    if (!DKC || DKC.width !== cw2 || DKC.height !== ch2) { DKC = mkCanvas(cw2, ch2); DKX = DKC.getContext("2d"); }
     var x = DKX;
     // 1) lueurs colorées ajoutées à la scène
     function glow(px, py, r, col, a) { var gg = ctx.createRadialGradient(px, py, 1, px, py, r); gg.addColorStop(0, "rgba(" + col + "," + a.toFixed(3) + ")"); gg.addColorStop(1, "rgba(" + col + ",0)"); ctx.fillStyle = gg; ctx.fillRect(px - r, py - r, r * 2, r * 2); }
@@ -13355,9 +13364,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     x.fillStyle = "rgba(6,4,10,0.86)"; x.fillRect(0, 0, cw2, ch2);
     x.globalCompositeOperation = "destination-out";
     function hole(px, py, r, a) {
-      var hg = x.createRadialGradient(px * S, py * S, r * S * 0.04, px * S, py * S, r * S);
+      var qx = (px - ox) * S, qy = (py - oy) * S, hg = x.createRadialGradient(qx, qy, r * S * 0.04, qx, qy, r * S);
       hg.addColorStop(0, "rgba(0,0,0," + a + ")"); hg.addColorStop(0.5, "rgba(0,0,0," + (a * 0.62).toFixed(3) + ")"); hg.addColorStop(1, "rgba(0,0,0,0)");
-      x.fillStyle = hg; x.fillRect((px - r) * S, (py - r) * S, r * 2 * S, r * 2 * S);
+      x.fillStyle = hg; x.fillRect(qx - r * S, qy - r * S, r * 2 * S, r * 2 * S);
     }
     hole(pcx, pcy, (sight + 1.4) * TILE * (0.95 + 0.05 * flick), 1);
     for (i = 0; i < torches.length; i++) { tq = torches[i]; if (seen[tq.y][tq.x]) hole(tq.x * TILE + 8, tq.y * TILE + 9, 3.6 * TILE * (0.92 + 0.08 * Math.sin(t / 130 + tq.phase)), 0.92); }
@@ -13372,8 +13381,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       dt[q] = 4; dt[q + 1] = 3; dt[q + 2] = 8; dt[q + 3] = Math.round(a * 255);
     }
     lmCtx.putImageData(lmData, 0, 0);
-    x.imageSmoothingEnabled = true; x.drawImage(LM, 0, 0, W, H, 0, 0, cw2, ch2);
-    ctx.imageSmoothingEnabled = true; ctx.drawImage(DKC, 0, 0, cw2, ch2, 0, 0, LW, LH); ctx.imageSmoothingEnabled = false;
+    x.imageSmoothingEnabled = true; x.drawImage(LM, ox / TILE, oy / TILE, vw / TILE, vh / TILE, 0, 0, cw2, ch2);
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(DKC, 0, 0, cw2, ch2, ox, oy, vw, vh); ctx.imageSmoothingEnabled = false;
   }
   function gradeDark(vw, vh) {
     ctx.save();
@@ -14210,14 +14219,14 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       wg.addColorStop(1, "rgba(255,170,80,0)");
       ctx.fillStyle = wg; ctx.fillRect(wx - 36, wy - 36, 72, 72);
     }
-    if (GFX === "dark") drawLightDark(sight, flick, t); else drawLight(sight, flick);
+    if (GFX === "dark") drawLightDark(sight, flick, t, vw, vh); else drawLight(sight, flick);
 
     var gx = p.vx * TILE + 8, gy = p.vy * TILE + 8;
     var rad = sight * TILE * (0.92 + 0.05 * Math.sin(t / 140) + 0.03 * Math.sin(t / 61));
     var grad = ctx.createRadialGradient(gx, gy, 2, gx, gy, rad);
     grad.addColorStop(0, "rgba(255,180,90,0.16)");
     grad.addColorStop(1, "rgba(255,180,90,0)");
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, LW, LH);
+    ctx.fillStyle = grad; ctx.fillRect(camX, camY, vw, vh);
     ctx.restore();
 
     ctx.save();
@@ -14330,7 +14339,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     requestAnimationFrame(loop);
     var t = now();
     var dt = last ? Math.min(50, t - last) : 16;
-    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 150 && perf.ema > 44) { perf.low = true; document.body.classList.add("lowfx"); } }
+    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 90 && perf.ema > 30) { perf.low = true; document.body.classList.add("lowfx"); } }
     last = t;
     if (!g) return;
     if (mode !== "play") haltInput();
