@@ -14,7 +14,7 @@ const out = process.argv[6];
     await p.getByText('Mode Survie').first().click(); await p.waitForTimeout(1500);
     await p.getByText('Cocotte').first().click(); await p.waitForTimeout(600);
     await p.click('#hp-go'); await p.waitForTimeout(1200);
-    await p.getByText('Chef : Maître Hachoir').first().click(); await p.waitForTimeout(2500);
+    await p.getByText('Chef : Gaston le Fermier').first().click(); await p.waitForTimeout(2500);
     await p.evaluate(([map, GOD, LEG, HERO]) => {
       window.__GOD = GOD; window.__LEG = LEG; window.__HERO = HERO; const t0 = performance.now(); window.__T = t0; performance.now = () => window.__T; window.requestAnimationFrame = () => 0;
       const d = window.__d; if (map !== 0) d.gen(map); if (window.__LEG) Object.keys(d.LEGENDS).forEach(id => d.legGain(id)); if (window.__HERO) d.setHero(window.__HERO);
