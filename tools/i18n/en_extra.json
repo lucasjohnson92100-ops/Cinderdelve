@@ -502,5 +502,6 @@
  "★ Fusions : ": "★ Merges: ",
  " fusionne : rang ": " merges: rank ",
  " (+45 % de dégâts par rang).": " (+45% damage per rank).",
- "Rang max": "Max rank"
+ "Rang max": "Max rank",
+ "2 offres verrouillées au maximum.": "2 locked offers maximum."
 }
