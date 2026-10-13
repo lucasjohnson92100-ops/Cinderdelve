@@ -486,5 +486,10 @@
  "Un éclair saute du monstre touché vers 2 voisins ; +15 % de dégâts.": "A bolt jumps from the hit monster to 2 neighbors; +15% damage.",
  "Ton attaque de base devient : ": "Your basic attack becomes: ",
  "L'éclair rebondit sur": "The bolt bounces onto",
- "Résiste": "Resists"
+ "Résiste": "Resists",
+ "Transcender": "Transcend",
+ "Don · ": "Gift · ",
+ " (niveau max, évolué) devient un don permanent : il se lance tout seul toutes les ": " (max level, evolved) becomes a permanent gift: it casts itself every ",
+ " s à 60 % de sa puissance, et son emplacement est libéré.": " s at 60% of its power, and its slot is freed.",
+ " se transcende en don permanent.": " transcends into a permanent gift."
 }
