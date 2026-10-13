@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mahjong Poker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&display=swap&text=%E4%B8%AD%E7%99%BC%E7%99%BD%E8%90%AC%E7%AB%B9%E7%AD%92%E7%87%88%E7%AD%86%E7%8F%A0%E6%89%87%E7%8E%89%E5%A2%A8%E7%AE%97%E6%9F%B1%E9%B6%B4%E8%B2%93%E9%BE%9C%E8%A2%8B%E9%9B%99%E7%A0%82%E7%B5%82%E9%9A%B1%E9%AA%B0%E9%99%B0%E9%99%BD%E8%93%AE%E5%8D%B0%E9%BA%BB%E9%9B%80%E7%89%8C%E8%B2%A0%E5%8B%9D">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one centred column, a felt table. Hand of ivory tiles at the bottom, relics as red seals on top. */
+:root {
+  --felt: #0d2b23;
+  --felt-2: #123629;
+  --felt-3: #1a4636;
+  --ink: #ece4cd;
+  --muted: #8fa89a;
+  --ivory: #f4ecd3;
+  --ivory-2: #e3d7b4;
+  --tile-edge: #2f7d62;
+  --tile-edge-dark: #1b4d3b;
+  --bamboo: #1d7a4b;
+  --circle: #25579e;
+  --char: #b5302a;
+  --chips: #3b7fd1;
+  --mult: #d1493a;
+  --gold: #e0b341;
+  --seal: #b8322a;
+  --line: rgba(236, 228, 205, .14);
+  --font-display: "Noto Serif TC", "Songti TC", "Noto Serif CJK TC", "Hiragino Mincho ProN", serif;
+  --font-body: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--felt);
+  background-image: radial-gradient(ellipse at 50% 0%, var(--felt-3), var(--felt) 70%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 14px 40px;
+  min-height: 100%;
+}
+#app { max-width: 760px; margin-inline: auto; }
+h1, h2, h3, p { margin: 0; }
+h2 { font-size: 1.15rem; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+
+/* Buttons */
+.btn {
+  border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; letter-spacing: .01em;
+  background: var(--gold); color: #2a1f05; box-shadow: 0 3px 0 #8d6b17;
+  transition: transform .08s, box-shadow .08s, filter .15s;
+}
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #8d6b17; }
+.btn.play { background: var(--chips); color: #fff; box-shadow: 0 3px 0 #1d4d8a; }
+.btn.play:active:not(:disabled) { box-shadow: 0 1px 0 #1d4d8a; }
+.btn.disc { background: var(--mult); color: #fff; box-shadow: 0 3px 0 #8a2a20; }
+.btn.disc:active:not(:disabled) { box-shadow: 0 1px 0 #8a2a20; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn:disabled { filter: grayscale(.8) brightness(.6); cursor: not-allowed; }
+
+/* Title */
+.title { display: grid; gap: 18px; justify-items: start; padding-block: 8vh 4vh; }
+.title .mark {
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(5rem, 24vw, 9rem); line-height: .95;
+  color: var(--seal); text-shadow: 0 0 0 #000; letter-spacing: .02em;
+}
+.title h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); font-weight: 800; letter-spacing: -.01em; }
+.title p { max-width: 52ch; color: var(--muted); }
+.title .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.record { font-family: var(--font-num); font-size: .85rem; color: var(--muted); }
+
+/* Panels */
+.panel { background: rgba(0, 0, 0, .22); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.stack { display: grid; gap: 12px; }
+.hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.eyebrow { font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+
+/* Blind select */
+.blinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.blind { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 4px; background: rgba(0,0,0,.2); align-content: start; }
+.blind.cur { border-color: var(--gold); background: rgba(224,179,65,.09); }
+.blind.done { opacity: .5; }
+.blind .nm { font-weight: 800; }
+.blind .tg { font-family: var(--font-num); font-size: 1.15rem; color: var(--gold); }
+.blind .tag { font-size: .75rem; color: var(--muted); }
+.boss-note { color: #ff9a8c; font-size: .85rem; }
+@media (max-width: 520px) { .blinds { grid-template-columns: 1fr; } }
+
+/* Round */
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+.target { display: grid; gap: 6px; }
+.target .big { font-family: var(--font-num); font-size: clamp(1.8rem, 7vw, 2.4rem); font-weight: 600; line-height: 1; }
+.bar { height: 8px; border-radius: 6px; background: rgba(255,255,255,.1); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #f3d783); transition: width .35s; }
+.stats { display: grid; grid-template-columns: repeat(2, auto); gap: 6px 14px; align-content: center; }
+.stat { display: grid; justify-items: start; }
+.stat b { font-family: var(--font-num); font-size: 1.25rem; font-weight: 600; }
+.stat span { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.stat.money b { color: var(--gold); }
+
+.relics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.relic, .slot { aspect-ratio: 1; border-radius: 10px; position: relative; }
+.slot { border: 1.5px dashed var(--line); }
+.relic {
+  border: 0; background: var(--seal); box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 3px 0 #6a1d18;
+  display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; color: var(--ivory); font-size: clamp(1.4rem, 6vw, 2.2rem);
+  transition: transform .12s;
+}
+.relic.sel { outline: 2px solid var(--gold); outline-offset: 2px; }
+.relic.fire { animation: fire .35s; }
+@keyframes fire { 40% { transform: scale(1.18) rotate(-4deg); } }
+.relicinfo { min-height: 3.2em; font-size: .9rem; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.relicinfo .tx { flex: 1 1 14em; min-width: 0; }
+
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.calc .hn { font-weight: 800; font-size: 1.1rem; text-wrap: balance; }
+.calc .hn small { display: block; font-weight: 500; font-size: .75rem; color: var(--muted); }
+.calc .eq { display: flex; align-items: center; gap: 6px; font-family: var(--font-num); font-weight: 600; font-size: 1.25rem; }
+.calc .eq span.v { min-width: 3.4ch; text-align: center; padding: 6px 8px; border-radius: 8px; color: #fff; }
+.calc .c { background: var(--chips); }
+.calc .m { background: var(--mult); }
+.calc .bump { animation: bump .22s; }
+@keyframes bump { 40% { transform: scale(1.2); } }
+
+/* Tiles */
+.hand { display: grid; grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr)); gap: 6px; padding-block: 22px 8px; max-width: 100%; }
+.tile {
+  container-type: inline-size; position: relative; aspect-ratio: 3 / 4.1; border: 0; padding: 0; min-width: 0;
+  border-radius: 14% / 10%; background: linear-gradient(180deg, var(--ivory), var(--ivory-2));
+  box-shadow: 0 5px 0 var(--tile-edge), 0 6px 0 var(--tile-edge-dark), 0 10px 12px rgba(0,0,0,.45);
+  display: grid; justify-items: center; align-content: center; gap: 2cqw; color: var(--ink);
+  transition: transform .12s;
+}
+.tile .tn { font-family: var(--font-num); font-weight: 600; font-size: 54cqw; line-height: 1; }
+.tile .ts { font-family: var(--font-display); font-weight: 700; font-size: 36cqw; line-height: 1; }
+.tile.B { color: var(--bamboo); }
+.tile.C { color: var(--circle); }
+.tile.K { color: var(--char); }
+.tile.D .dg { font-family: var(--font-display); font-weight: 700; font-size: 74cqw; line-height: 1; }
+.tile.D1 { color: var(--char); }
+.tile.D2 { color: var(--bamboo); }
+.tile.D3 { color: var(--circle); }
+.tile.D3 .dg { font-size: 0; width: 56cqw; height: 74cqw; border: 5cqw solid var(--circle); border-radius: 6cqw; }
+.tile.sel { transform: translateY(-12%); box-shadow: 0 5px 0 var(--gold), 0 6px 0 #8d6b17, 0 14px 14px rgba(0,0,0,.5); }
+.tile.dead { filter: grayscale(1) brightness(.7); }
+.tile.score { animation: tilepulse .35s; }
+@keyframes tilepulse { 40% { transform: translateY(-22%) scale(1.08); } }
+.tile .eng { position: absolute; top: 5%; right: 7%; width: 16cqw; height: 16cqw; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(0,0,0,.35); }
+.tile .eng.chips { background: var(--chips); }
+.tile .eng.mult { background: var(--mult); }
+.tile .eng.gold { background: var(--gold); }
+.tile.mini { box-shadow: 0 2px 0 var(--tile-edge), 0 3px 0 var(--tile-edge-dark); }
+.tile.dim { opacity: .28; }
+.pop {
+  position: absolute; left: 50%; top: -10%; transform: translateX(-50%); font-family: var(--font-num); font-weight: 700; font-size: 1rem;
+  padding: 2px 8px; border-radius: 8px; color: #fff; pointer-events: none; z-index: 5; white-space: nowrap; animation: pop .9s forwards;
+}
+.pop.c { background: var(--chips); } .pop.m { background: var(--mult); } .pop.x { background: #8e44ad; } .pop.g { background: var(--gold); color: #2a1f05; }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 10px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -34px); } }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions .btn { padding-block: 14px; font-size: 1rem; }
+.subactions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+.pill { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 6px 12px; font-size: .85rem; }
+
+/* Shop */
+.offers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .offers { grid-template-columns: 1fr; } }
+.offer { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: rgba(0,0,0,.2); }
+.offer .relic { width: 56px; font-size: 1.8rem; }
+.offer .item { width: 56px; aspect-ratio: 1; border-radius: 10px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; background: var(--felt-3); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--gold); }
+.offer h3 { font-size: 1rem; }
+.offer p { font-size: .85rem; color: var(--muted); }
+.offer .buy { margin-top: 8px; padding: 8px 14px; font-size: .9rem; }
+.offer.sold { opacity: .35; }
+.lines { display: grid; gap: 6px; }
+.line { display: flex; justify-content: space-between; gap: 12px; }
+.line.total { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 800; font-size: 1.1rem; }
+.gold { color: var(--gold); }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.7); display: grid; place-items: center; padding: 16px; }
+.modal .box {
+  background: var(--felt-2); border: 1px solid var(--line); border-radius: 16px; padding: 16px; width: 100%; max-width: 640px; max-height: 88vh; overflow: auto; display: grid; gap: 12px;
+}
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+td.n { font-family: var(--font-num); white-space: nowrap; }
+.decks { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; padding-bottom: 6px; }
+.decks .tile { cursor: pointer; }
+@media (max-width: 520px) { .decks { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: #000; color: var(--ink); border: 1px solid var(--line); padding: 10px 16px; border-radius: 99px; z-index: 80; max-width: calc(100% - 32px); }
+.end { text-align: left; }
+.end .mark { font-family: var(--font-display); font-weight: 700; font-size: 5rem; line-height: 1; color: var(--seal); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ==CORE==
+const SUIT_NAME = { B: 'Bambous', C: 'Cercles', K: 'Caractères', D: 'Dragons' };
+const SUIT_GLYPH = { B: '竹', C: '筒', K: '萬' };
+const DRAGON_GLYPH = { 1: '中', 2: '發', 3: '白' };
+const DRAGON_NAME = { 1: 'Dragon rouge', 2: 'Dragon vert', 3: 'Dragon blanc' };
+
+function makeDeck() {
+  const d = []; let id = 0;
+  for (const s of ['B', 'C', 'K']) for (let v = 1; v <= 9; v++) for (let c = 0; c < 4; c++) d.push({ id: id++, suit: s, v, eng: null });
+  for (let v = 1; v <= 3; v++) for (let c = 0; c < 4; c++) d.push({ id: id++, suit: 'D', v, eng: null });
+  return d;
+}
+function shuffle(a, rng = Math.random) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const chipVal = t => (t.suit === 'D' ? 10 : t.v);
+const tileName = t => (t.suit === 'D' ? DRAGON_NAME[t.v] : t.v + ' de ' + SUIT_NAME[t.suit]);
+
+// Combinaisons : jetons et mult de base, bonus par niveau (dc, dm)
+const HAND_TYPES = [
+  { id: 'suiteCouleur', name: 'Suite pure', chips: 100, mult: 8, dc: 40, dm: 4, desc: '5 tuiles qui se suivent, même famille' },
+  { id: 'mahjong', name: 'Mahjong pur', chips: 90, mult: 8, dc: 40, dm: 4, desc: 'Brelan ou séquence + paire, tout dans la même famille' },
+  { id: 'carre', name: 'Carré', chips: 60, mult: 7, dc: 30, dm: 3, desc: '4 tuiles identiques' },
+  { id: 'sequencePaire', name: 'Séquence + paire', chips: 45, mult: 4, dc: 25, dm: 2, desc: 'Séquence de 3 + paire (la main de mahjong)' },
+  { id: 'full', name: 'Full', chips: 40, mult: 4, dc: 25, dm: 2, desc: 'Brelan + paire' },
+  { id: 'couleur', name: 'Couleur', chips: 35, mult: 4, dc: 15, dm: 2, desc: '5 tuiles de la même famille' },
+  { id: 'suite', name: 'Suite', chips: 30, mult: 4, dc: 30, dm: 3, desc: '5 valeurs qui se suivent, familles libres' },
+  { id: 'brelan', name: 'Brelan', chips: 30, mult: 3, dc: 20, dm: 2, desc: '3 tuiles identiques' },
+  { id: 'sequence', name: 'Séquence', chips: 25, mult: 3, dc: 20, dm: 2, desc: '3 valeurs qui se suivent, même famille' },
+  { id: 'doublePaire', name: 'Double paire', chips: 20, mult: 2, dc: 20, dm: 1, desc: '2 paires' },
+  { id: 'paire', name: 'Paire', chips: 10, mult: 2, dc: 15, dm: 1, desc: '2 tuiles identiques' },
+  { id: 'haute', name: 'Tuile haute', chips: 5, mult: 1, dc: 10, dm: 1, desc: 'Aucune combinaison' },
+];
+const HT = Object.fromEntries(HAND_TYPES.map(h => [h.id, h]));
+const SEQ_TYPES = ['sequence', 'sequencePaire', 'suite', 'suiteCouleur'];
+const SET_TYPES = ['brelan', 'full', 'carre'];
+const SUIT_HANDS = ['couleur', 'mahjong', 'suiteCouleur'];
+
+// Reliques. tile(t, c) s'applique à chaque tuile marquée, hand(c) une fois par main.
+const RELICS = [
+  { id: 'lantern', name: 'Lanterne de papier', icon: '燈', cost: 4, desc: '+4 mult à chaque main.', hand: () => ({ mult: 4 }) },
+  { id: 'brush', name: 'Pinceau de calligraphe', icon: '筆', cost: 4, desc: '+30 jetons à chaque main.', hand: () => ({ chips: 30 }) },
+  { id: 'twins', name: 'Jumelles', icon: '雙', cost: 4, desc: 'Paire ou Double paire : +10 mult.', hand: c => (['paire', 'doublePaire'].includes(c.type) ? { mult: 10 } : null) },
+  { id: 'pearl', name: 'Perle de dragon', icon: '珠', cost: 5, desc: 'Chaque Dragon marqué donne +6 mult.', tile: t => (t.suit === 'D' ? { mult: 6 } : null) },
+  { id: 'fan', name: 'Éventail de bambou', icon: '扇', cost: 5, desc: 'Chaque Bambous marqué donne +20 jetons.', tile: t => (t.suit === 'B' ? { chips: 20 } : null) },
+  { id: 'jade', name: 'Anneau de jade', icon: '玉', cost: 5, desc: 'Chaque Cercles marqué donne +3 mult.', tile: t => (t.suit === 'C' ? { mult: 3 } : null) },
+  { id: 'ink', name: 'Pierre à encre', icon: '墨', cost: 5, desc: 'Chaque Caractères marqué donne +12 jetons et +1 mult.', tile: t => (t.suit === 'K' ? { chips: 12, mult: 1 } : null) },
+  { id: 'yin', name: 'Yin', icon: '陰', cost: 5, desc: 'Chaque tuile de valeur paire marquée donne +16 jetons.', tile: t => (t.suit !== 'D' && t.v % 2 === 0 ? { chips: 16 } : null) },
+  { id: 'yang', name: 'Yang', icon: '陽', cost: 5, desc: 'Chaque tuile de valeur impaire marquée donne +2 mult.', tile: t => (t.suit !== 'D' && t.v % 2 === 1 ? { mult: 2 } : null) },
+  { id: 'lotus', name: 'Lotus', icon: '蓮', cost: 5, desc: 'Couleur, Mahjong pur ou Suite pure : +50 jetons.', hand: c => (SUIT_HANDS.includes(c.type) ? { chips: 50 } : null) },
+  { id: 'hermit', name: 'Ermite', icon: '隱', cost: 5, desc: 'Tuile haute : +10 mult.', hand: c => (c.type === 'haute' ? { mult: 10 } : null) },
+  { id: 'crane', name: 'Grue en origami', icon: '鶴', cost: 5, desc: '+1 défausse par manche.', p: { discards: 1 } },
+  { id: 'purse', name: 'Bourse brodée', icon: '袋', cost: 5, desc: '+$4 à la fin de chaque manche.', p: { endMoney: 4 } },
+  { id: 'cat', name: 'Chat porte-bonheur', icon: '貓', cost: 6, desc: '+1 main par manche.', p: { hands: 1 } },
+  { id: 'turtle', name: 'Tortue de jade', icon: '龜', cost: 6, desc: '+1 tuile en main.', p: { size: 1 } },
+  { id: 'hourglass', name: 'Sablier', icon: '砂', cost: 6, desc: 'Première main de la manche : ×2 mult.', hand: c => (c.isFirst ? { xmult: 2 } : null) },
+  { id: 'last', name: 'Dernier souffle', icon: '終', cost: 6, desc: 'Dernière main de la manche : ×2 mult.', hand: c => (c.isLast ? { xmult: 2 } : null) },
+  { id: 'dice', name: "Dés d'os", icon: '骰', cost: 6, desc: '1 chance sur 4 : ×3 mult.', hand: c => (c.rng() < 0.25 ? { xmult: 3 } : null) },
+  { id: 'abacus', name: 'Boulier', icon: '算', cost: 7, desc: 'Séquence, Séquence + paire, Suite ou Suite pure : ×2 mult.', hand: c => (SEQ_TYPES.includes(c.type) ? { xmult: 2 } : null) },
+  { id: 'totem', name: 'Totem', icon: '柱', cost: 7, desc: 'Brelan, Full ou Carré : ×2 mult.', hand: c => (SET_TYPES.includes(c.type) ? { xmult: 2 } : null) },
+  { id: 'seal', name: 'Sceau impérial', icon: '印', cost: 9, desc: '×1,5 mult à chaque main.', hand: () => ({ xmult: 1.5 }) },
+];
+const RELIC_BY_ID = Object.fromEntries(RELICS.map(r => [r.id, r]));
+function passive(relicIds, key) { return relicIds.reduce((s, id) => s + ((RELIC_BY_ID[id].p || {})[key] || 0), 0); }
+
+// Évalue 1 à 5 tuiles : renvoie la combinaison et les indices des tuiles qui marquent.
+function evaluate(tiles) {
+  const n = tiles.length, all = tiles.map((_, i) => i);
+  const byKey = {};
+  tiles.forEach((t, i) => (byKey[t.suit + t.v] = byKey[t.suit + t.v] || []).push(i));
+  const groups = Object.values(byKey).sort((a, b) => b.length - a.length);
+  const numeric = tiles.every(t => t.suit !== 'D');
+  const sameSuit = numeric && tiles.every(t => t.suit === tiles[0].suit);
+  const res = (type, scoring) => ({ type, scoring: scoring.slice().sort((a, b) => a - b) });
+  const findChow = idx => {
+    for (const i of idx) {
+      const a = tiles[i]; if (a.suit === 'D') continue;
+      const j = idx.find(k => tiles[k].suit === a.suit && tiles[k].v === a.v + 1);
+      const l = idx.find(k => tiles[k].suit === a.suit && tiles[k].v === a.v + 2);
+      if (j !== undefined && l !== undefined) return [i, j, l];
+    }
+    return null;
+  };
+  if (n === 5) {
+    const vals = tiles.map(t => t.v).sort((a, b) => a - b);
+    const straight = numeric && vals.every((v, i) => i === 0 || v === vals[i - 1] + 1);
+    if (sameSuit && straight) return res('suiteCouleur', all);
+    if (groups[0].length === 4) return res('carre', groups[0]);
+    let kind = null;
+    for (let i = 0; i < 5 && !kind; i++) for (let j = i + 1; j < 5 && !kind; j++) {
+      if (tiles[i].suit !== tiles[j].suit || tiles[i].v !== tiles[j].v) continue;
+      const rest = all.filter(k => k !== i && k !== j);
+      const [a, b, c] = rest.map(k => tiles[k]);
+      if (a.suit === b.suit && b.suit === c.suit && a.v === b.v && b.v === c.v) kind = 'pung';
+      else if (findChow(rest)) kind = 'chow';
+    }
+    if (kind) return res(sameSuit ? 'mahjong' : kind === 'pung' ? 'full' : 'sequencePaire', all);
+    if (sameSuit) return res('couleur', all);
+    if (straight) return res('suite', all);
+  }
+  if (groups[0].length === 4) return res('carre', groups[0]);
+  if (groups[0].length === 3) return res('brelan', groups[0]);
+  const chow = n >= 3 ? findChow(all) : null;
+  if (chow) return res('sequence', chow);
+  if (groups[0].length === 2 && groups[1] && groups[1].length === 2) return res('doublePaire', groups[0].concat(groups[1]));
+  if (groups[0].length === 2) return res('paire', groups[0]);
+  let best = 0; tiles.forEach((t, i) => { if (chipVal(t) > chipVal(tiles[best])) best = i; });
+  return res('haute', [best]);
+}
+
+function handStats(id, levels) {
+  const h = HT[id], L = ((levels && levels[id]) || 1) - 1;
+  return { chips: h.chips + L * h.dc, mult: h.mult + L * h.dm };
+}
+
+// Calcule le score d'une main jouée. events = suite d'étapes, rejouée telle quelle par l'animation.
+function scorePlay(played, ctx) {
+  const ev = evaluate(played), base = handStats(ev.type, ctx.levels);
+  const rng = ctx.rng || Math.random;
+  const relics = (ctx.relics || []).map(id => RELIC_BY_ID[id]);
+  const events = []; let chips = base.chips, mult = base.mult, money = 0;
+  const push = e => {
+    events.push(e);
+    if (e.chips) chips += e.chips; if (e.mult) mult += e.mult; if (e.xmult) mult *= e.xmult; if (e.money) money += e.money;
+  };
+  const c = { type: ev.type, played, isFirst: !!ctx.isFirst, isLast: !!ctx.isLast, rng };
+  for (const i of ev.scoring) {
+    const t = played[i];
+    if (ctx.debuffSuit && t.suit === ctx.debuffSuit) { push({ tile: i, dead: true }); continue; }
+    push({ tile: i, chips: chipVal(t) });
+    if (t.eng === 'chips') push({ tile: i, chips: 30 });
+    if (t.eng === 'mult') push({ tile: i, mult: 4 });
+    if (t.eng === 'gold') push({ tile: i, money: 2 });
+    relics.forEach((r, ri) => { if (r.tile) { const e = r.tile(t, c); if (e) push({ tile: i, relic: ri, ...e }); } });
+  }
+  relics.forEach((r, ri) => { if (r.hand) { const e = r.hand(c); if (e) push({ relic: ri, ...e }); } });
+  return { type: ev.type, scoring: ev.scoring, base, events, chips, mult, total: Math.floor(chips * mult), money };
+}
+
+// Blindes
+const ANTE_BASE = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000];
+const BOSSES = [
+  { id: 'bamboo', name: 'La Forêt silencieuse', desc: 'Les Bambous ne marquent rien.', debuffSuit: 'B' },
+  { id: 'lake', name: 'Le Lac gelé', desc: 'Les Cercles ne marquent rien.', debuffSuit: 'C' },
+  { id: 'ink', name: "L'Encre séchée", desc: 'Les Caractères ne marquent rien.', debuffSuit: 'K' },
+  { id: 'fast', name: 'Le Jeûne du dragon', desc: 'Les Dragons ne peuvent pas être joués.' },
+  { id: 'wall', name: 'Le Mur de pierre', desc: '1 main de moins.' },
+  { id: 'silence', name: 'Le Silence', desc: 'Aucune défausse.' },
+  { id: 'cage', name: 'La Cage', desc: '2 tuiles de moins en main.' },
+  { id: 'usurer', name: "L'Usurier", desc: 'Chaque main jouée vous coûte $1.' },
+];
+function blindTarget(ante, idx) { return Math.round(ANTE_BASE[ante - 1] * [1, 1.5, 2][idx]); }
+// ==/CORE==
+
+// ====== Interface ======
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const MAX_RELICS = 5;
+let G = null, R = null, shop = null, fast = false, selRelic = -1;
+
+function load() { try { return JSON.parse(localStorage.getItem('mjp-best') || '{}'); } catch (e) { return {}; } }
+function save(o) { try { localStorage.setItem('mjp-best', JSON.stringify(o)); } catch (e) { /* stockage indisponible */ } }
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+const fmt = n => Math.round(n).toLocaleString('fr-FR');
+const fmtM = n => (Math.round(n * 10) / 10).toString().replace('.', ',');
+
+function tileHTML(t, cls = '', extra = '') {
+  const eng = t.eng ? `<i class="eng ${t.eng}" title="Gravure"></i>` : '';
+  let inner;
+  if (t.suit === 'D') inner = `<span class="dg">${DRAGON_GLYPH[t.v]}</span>`;
+  else inner = `<span class="tn">${t.v}</span><span class="ts">${SUIT_GLYPH[t.suit]}</span>`;
+  const k = t.suit === 'D' ? 'D D' + t.v : t.suit;
+  return `<button class="tile ${k} ${cls}" data-id="${t.id}" aria-label="${tileName(t)}" ${extra}>${inner}${eng}</button>`;
+}
+function relicHTML(id, i, cls = '') {
+  const r = RELIC_BY_ID[id];
+  return `<button class="relic ${cls}" data-relic="${i}" aria-label="${r.name}" title="${r.name}">${r.icon}</button>`;
+}
+
+// ---- Partie ----
+function newRun() {
+  G = { ante: 1, blind: 0, money: 4, relics: [], levels: {}, deck: makeDeck(), best: 0, bosses: [], sort: 'suit' };
+  shuffle(BOSSES.slice()).slice(0, 8).forEach(b => G.bosses.push(b));
+  toBlindScreen();
+}
+const curBoss = () => G.bosses[G.ante - 1];
+function blindInfo(ante, idx) {
+  const target = blindTarget(ante, idx);
+  if (idx === 2) { const b = G.bosses[ante - 1]; return { idx, name: b.name, boss: b, target: target, reward: 5 }; }
+  return { idx, name: idx === 0 ? 'Novice' : 'Maître', boss: null, target, reward: idx === 0 ? 3 : 4 };
+}
+
+function toBlindScreen() {
+  const items = [0, 1, 2].map(i => {
+    const b = blindInfo(G.ante, i);
+    const st = i < G.blind ? 'done' : i === G.blind ? 'cur' : '';
+    return `<div class="blind ${st}">
+      <span class="eyebrow">${['Petite blinde', 'Grande blinde', 'Boss'][i]}</span>
+      <span class="nm">${b.name}</span>
+      <span class="tg">${fmt(b.target)}</span>
+      <span class="tag">Gain : $${b.reward}${i < G.blind ? ' · vaincue' : ''}</span>
+      ${b.boss ? `<span class="boss-note">${b.boss.desc}</span>` : ''}
+    </div>`;
+  }).join('');
+  const b = blindInfo(G.ante, G.blind);
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><h2>Ante ${G.ante} sur 8</h2><span class="num gold">$${G.money}</span></div>
+    <div class="blinds">${items}</div>
+    <div class="panel stack">
+      <div class="eyebrow">Vos reliques</div>
+      <div class="relics">${relicSlots()}</div>
+      <div class="relicinfo muted" id="rinfo">Touchez une relique pour lire son effet.</div>
+    </div>
+    <div class="subactions"><button class="pill" data-act="combos">Combinaisons</button><button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button></div>
+    <button class="btn" data-act="start" style="padding-block:16px">Jouer : ${b.name} (objectif ${fmt(b.target)})</button>
+  </div>`;
+}
+function relicSlots() {
+  let h = '';
+  for (let i = 0; i < MAX_RELICS; i++) h += G.relics[i] ? relicHTML(G.relics[i], i, i === selRelic ? 'sel' : '') : '<div class="slot"></div>';
+  return h;
+}
+function showRelicInfo() {
+  const el = $('#rinfo'); if (!el) return;
+  if (selRelic < 0 || !G.relics[selRelic]) { el.className = 'relicinfo muted'; el.textContent = 'Touchez une relique pour lire son effet.'; return; }
+  const r = RELIC_BY_ID[G.relics[selRelic]];
+  const canSell = !(R && R.busy);
+  el.className = 'relicinfo';
+  el.innerHTML = `<div class="tx"><b>${r.name}</b><br>${r.desc}</div>${canSell ? `<button class="pill" data-act="sell">Vendre $${Math.floor(r.cost / 2)}</button>` : ''}`;
+}
+
+// ---- Manche ----
+function startRound() {
+  const b = blindInfo(G.ante, G.blind), id = b.boss && b.boss.id;
+  let hands = 4 + passive(G.relics, 'hands'), disc = 3 + passive(G.relics, 'discards'), size = 8 + passive(G.relics, 'size');
+  if (id === 'wall') hands -= 1;
+  if (id === 'silence') disc = 0;
+  if (id === 'cage') size -= 2;
+  R = { blind: b, target: b.target, score: 0, hands, discards: disc, size, played: 0, draw: shuffle(G.deck.slice()), hand: [], sel: [], busy: false, best: 0 };
+  drawUp(); renderRound();
+}
+function sortHand() {
+  const so = { B: 0, C: 1, K: 2, D: 3 };
+  R.hand.sort(G.sort === 'suit' ? (a, b) => so[a.suit] - so[b.suit] || a.v - b.v : (a, b) => chipVal(a) - chipVal(b) || so[a.suit] - so[b.suit]);
+}
+function drawUp() { while (R.hand.length < R.size && R.draw.length) R.hand.push(R.draw.pop()); sortHand(); }
+
+function renderRound() {
+  const b = R.blind;
+  app.innerHTML = `<div class="stack">
+    <div class="top panel">
+      <div class="target">
+        <div class="eyebrow">${b.name} · Ante ${G.ante}${b.boss ? ' · Boss' : ''}</div>
+        <div class="big" id="score">${fmt(R.score)} <span class="muted small">/ ${fmt(R.target)}</span></div>
+        <div class="bar"><i id="bar"></i></div>
+        ${b.boss ? `<div class="boss-note">${b.boss.desc}</div>` : ''}
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="st-h">${R.hands}</b><span>Mains</span></div>
+        <div class="stat"><b id="st-d">${R.discards}</b><span>Défausses</span></div>
+        <div class="stat money"><b id="st-m">$${G.money}</b><span>Argent</span></div>
+        <div class="stat"><b>${R.draw.length}</b><span>Pioche</span></div>
+      </div>
+    </div>
+    <div class="relics">${relicSlots()}</div>
+    <div class="relicinfo muted" id="rinfo"></div>
+    <div class="panel calc">
+      <div class="hn" id="hn">Choisissez 1 à 5 tuiles<small>Touchez les tuiles pour les sélectionner</small></div>
+      <div class="eq"><span class="v c num" id="cc">0</span>×<span class="v m num" id="cm">0</span></div>
+    </div>
+    <div class="hand" id="hand" style="--cols:${Math.max(R.size, 6)}"></div>
+    <div class="actions">
+      <button class="btn play" data-act="play" id="bplay">Jouer</button>
+      <button class="btn disc" data-act="discard" id="bdisc">Défausser</button>
+    </div>
+    <div class="subactions">
+      <span><button class="pill" data-act="sort">Tri : ${G.sort === 'suit' ? 'famille' : 'valeur'}</button> <button class="pill" data-act="combos">Combinaisons</button></span>
+      <button class="pill" data-act="deck">Paquet</button>
+    </div>
+  </div>`;
+  renderHand(); updatePreview(); updateBar(); showRelicInfo();
+}
+function isLocked(t) { return R.blind.boss && R.blind.boss.id === 'fast' && t.suit === 'D'; }
+function renderHand() {
+  const el = $('#hand'); if (!el) return;
+  el.innerHTML = R.hand.map(t => tileHTML(t, (R.sel.includes(t.id) ? 'sel ' : '') + (isLocked(t) ? 'dead' : ''))).join('');
+  const none = R.busy || !R.sel.length;
+  $('#bplay').disabled = none;
+  $('#bdisc').disabled = none || R.discards <= 0;
+}
+function updateBar() {
+  const b = $('#bar'); if (b) b.style.width = Math.min(100, (R.score / R.target) * 100) + '%';
+  const s = $('#score'); if (s) s.innerHTML = `${fmt(R.score)} <span class="muted small">/ ${fmt(R.target)}</span>`;
+  const h = $('#st-h'); if (h) h.textContent = R.hands;
+  const d = $('#st-d'); if (d) d.textContent = R.discards;
+  const m = $('#st-m'); if (m) m.textContent = '$' + G.money;
+}
+function selTiles() { return R.sel.map(id => R.hand.find(t => t.id === id)).filter(Boolean); }
+function updatePreview() {
+  const hn = $('#hn'); if (!hn) return;
+  const ts = selTiles();
+  if (!ts.length) { hn.innerHTML = 'Choisissez 1 à 5 tuiles<small>Touchez les tuiles pour les sélectionner</small>'; $('#cc').textContent = 0; $('#cm').textContent = 0; return; }
+  const ev = evaluate(ts), st = handStats(ev.type, G.levels);
+  hn.innerHTML = `${HT[ev.type].name}<small>Niveau ${G.levels[ev.type] || 1}</small>`;
+  $('#cc').textContent = st.chips; $('#cm').textContent = st.mult;
+}
+function toggleTile(id) {
+  if (R.busy) return;
+  const t = R.hand.find(x => x.id === id); if (!t) return;
+  if (isLocked(t)) { toast('Le Jeûne du dragon bloque les Dragons.'); return; }
+  const i = R.sel.indexOf(id);
+  if (i >= 0) R.sel.splice(i, 1);
+  else if (R.sel.length < 5) R.sel.push(id);
+  else { toast('5 tuiles au maximum.'); return; }
+  renderHand(); updatePreview();
+}
+
+function popAt(el, text, cls) {
+  if (!el) return;
+  const p = document.createElement('span'); p.className = 'pop ' + cls; p.textContent = text; el.appendChild(p);
+  setTimeout(() => p.remove(), 950);
+}
+async function doPlay() {
+  if (R.busy || !R.sel.length) return;
+  const played = selTiles();
+  R.busy = true; renderHand();
+  const boss = R.blind.boss;
+  const res = scorePlay(played, { levels: G.levels, relics: G.relics, debuffSuit: boss && boss.debuffSuit, isFirst: R.played === 0, isLast: R.hands === 1 });
+  const wait = ms => sleep(fast ? 40 : ms);
+  const cc = $('#cc'), cm = $('#cm'), hn = $('#hn');
+  hn.innerHTML = `${HT[res.type].name}<small>Niveau ${G.levels[res.type] || 1}</small>`;
+  let chips = res.base.chips, mult = res.base.mult;
+  cc.textContent = chips; cm.textContent = fmtM(mult);
+  const handEls = id => document.querySelector(`#hand .tile[data-id="${id}"]`);
+  await wait(450);
+  for (const e of res.events) {
+    const tEl = e.tile !== undefined ? handEls(played[e.tile].id) : null;
+    const rEl = e.relic !== undefined ? document.querySelector(`.relics [data-relic="${e.relic}"]`) : null;
+    if (tEl) { tEl.classList.remove('score'); void tEl.offsetWidth; tEl.classList.add('score'); }
+    if (rEl) { rEl.classList.remove('fire'); void rEl.offsetWidth; rEl.classList.add('fire'); }
+    const host = rEl && !tEl ? rEl : tEl;
+    if (e.dead) { if (tEl) tEl.classList.add('dead'); popAt(tEl, '0', 'c'); await wait(220); continue; }
+    if (e.chips) { chips += e.chips; popAt(host, '+' + e.chips, 'c'); cc.textContent = chips; cc.classList.remove('bump'); void cc.offsetWidth; cc.classList.add('bump'); }
+    if (e.mult) { mult += e.mult; popAt(e.chips ? rEl || tEl : host, '+' + e.mult + ' mult', 'm'); cm.textContent = fmtM(mult); cm.classList.remove('bump'); void cm.offsetWidth; cm.classList.add('bump'); }
+    if (e.xmult) { mult *= e.xmult; popAt(host, '×' + fmtM(e.xmult), 'x'); cm.textContent = fmtM(mult); cm.classList.remove('bump'); void cm.offsetWidth; cm.classList.add('bump'); }
+    if (e.money) { popAt(host, '+$' + e.money, 'g'); }
+    await wait(e.relic !== undefined ? 520 : 380);
+  }
+  await wait(350);
+  // Score
+  const total = res.total;
+  const start = R.score, end = start + total, steps = fast ? 4 : 18;
+  for (let i = 1; i <= steps; i++) { R.score = Math.round(start + (total * i) / steps); updateBar(); await sleep(fast ? 10 : 24); }
+  R.score = end; R.best = Math.max(R.best, total); G.best = Math.max(G.best, total);
+  G.money += res.money;
+  if (R.blind.boss && R.blind.boss.id === 'usurer') G.money = Math.max(0, G.money - 1);
+  R.hands--; R.played++;
+  R.hand = R.hand.filter(t => !R.sel.includes(t.id)); R.sel = [];
+  updateBar();
+  await wait(300);
+  if (R.score >= R.target) return winRound();
+  if (R.hands <= 0 || (!R.hand.length && !R.draw.length)) return loseRun();
+  drawUp(); R.busy = false; renderRound();
+}
+function doDiscard() {
+  if (R.busy || !R.sel.length || R.discards <= 0) return;
+  R.discards--; R.hand = R.hand.filter(t => !R.sel.includes(t.id)); R.sel = [];
+  drawUp(); renderRound();
+}
+
+// ---- Fin de manche ----
+function winRound() {
+  const b = R.blind, lines = [[`Blinde vaincue : ${b.name}`, b.reward]];
+  if (R.hands > 0) lines.push([`Mains restantes (${R.hands})`, R.hands]);
+  const interest = Math.min(5, Math.floor(G.money / 5));
+  if (interest) lines.push([`Intérêts ($1 par $5)`, interest]);
+  const pm = passive(G.relics, 'endMoney'); if (pm) lines.push(['Bourse brodée', pm]);
+  const total = lines.reduce((s, l) => s + l[1], 0);
+  G.money += total;
+  const final = G.ante === 8 && G.blind === 2;
+  const rec = load(); rec.ante = Math.max(rec.ante || 0, G.ante + (final ? 1 : 0)); rec.hand = Math.max(rec.hand || 0, G.best); if (final) rec.wins = (rec.wins || 0) + 1; save(rec);
+  R.busy = true;
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><h2>Manche gagnée</h2><span class="num gold">$${G.money}</span></div>
+    <div class="panel lines">
+      <div class="line"><span>Score</span><span class="num">${fmt(R.score)} / ${fmt(R.target)}</span></div>
+      ${lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
+      <div class="line total"><span>Total</span><span class="num gold">+$${total}</span></div>
+    </div>
+    ${final ? '<button class="btn" data-act="victory">Continuer</button>' : '<button class="btn" data-act="toshop">Aller à la boutique</button>'}
+  </div>`;
+}
+function loseRun() {
+  const rec = load(); rec.ante = Math.max(rec.ante || 0, G.ante); rec.hand = Math.max(rec.hand || 0, G.best); save(rec);
+  app.innerHTML = `<div class="stack end">
+    <div class="mark">負</div>
+    <h2>Défaite à l'ante ${G.ante}</h2>
+    <p class="muted">Il manquait ${fmt(R.target - R.score)} points sur « ${R.blind.name} ».</p>
+    <div class="panel lines">
+      <div class="line"><span>Meilleure main</span><span class="num gold">${fmt(G.best)}</span></div>
+      <div class="line"><span>Reliques</span><span>${G.relics.length ? G.relics.map(id => RELIC_BY_ID[id].name).join(', ') : 'aucune'}</span></div>
+    </div>
+    <button class="btn" data-act="new">Nouvelle partie</button>
+  </div>`;
+}
+function victory() {
+  app.innerHTML = `<div class="stack end">
+    <div class="mark">勝</div>
+    <h2>Victoire : les 8 antes sont à vous</h2>
+    <div class="panel lines"><div class="line"><span>Meilleure main</span><span class="num gold">${fmt(G.best)}</span></div>
+    <div class="line"><span>Reliques</span><span>${G.relics.map(id => RELIC_BY_ID[id].name).join(', ') || 'aucune'}</span></div></div>
+    <button class="btn" data-act="new">Rejouer</button>
+  </div>`;
+}
+
+// ---- Boutique ----
+function genShop() {
+  const owned = new Set(G.relics);
+  const pool = RELICS.filter(r => !owned.has(r.id));
+  const picks = [];
+  while (picks.length < 2 && pool.length) {
+    const w = pool.map(r => (r.cost >= 8 ? 1 : r.cost >= 6 ? 2 : 3));
+    let x = Math.random() * w.reduce((a, b) => a + b, 0), k = 0;
+    while (x >= w[k]) { x -= w[k]; k++; }
+    picks.push(pool.splice(k, 1)[0]);
+  }
+  const kinds = shuffle(['engChips', 'engMult', 'engGold', 'purge', 'study', 'study']).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2);
+  const items = kinds.map(k => {
+    if (k === 'study') { const h = HAND_TYPES[Math.floor(Math.random() * HAND_TYPES.length)]; return { kind: k, type: h.id, cost: 3 }; }
+    return { kind: k, cost: { engChips: 4, engMult: 5, engGold: 4, purge: 3 }[k] };
+  });
+  return { relics: picks.map(r => ({ id: r.id, sold: false })), items: items.map(i => ({ ...i, sold: false })), rerolls: 0 };
+}
+const ITEM_INFO = {
+  engChips: { icon: '墨', name: "Encre d'or", desc: 'Grave une tuile de votre choix : +30 jetons quand elle marque.' },
+  engMult: { icon: '朱', name: 'Cinabre', desc: 'Grave une tuile de votre choix : +4 mult quand elle marque.' },
+  engGold: { icon: '金', name: 'Feuille d’or', desc: 'Grave une tuile de votre choix : +$2 quand elle marque.' },
+  purge: { icon: '空', name: 'Purge', desc: 'Retire une tuile de votre choix du paquet.' },
+  study: { icon: '學', name: 'Étude', desc: '' },
+};
+function renderShop() {
+  const rc = 3 + shop.rerolls;
+  const relicOffers = shop.relics.map((o, i) => {
+    const r = RELIC_BY_ID[o.id];
+    return `<div class="offer ${o.sold ? 'sold' : ''}">${relicHTML(o.id, -1)}
+      <div><h3>${r.name}</h3><p>${r.desc}</p>
+      <button class="btn buy" data-act="buyrelic" data-i="${i}" ${o.sold || G.money < r.cost ? 'disabled' : ''}>${o.sold ? 'Acheté' : 'Acheter $' + r.cost}</button></div></div>`;
+  }).join('');
+  const itemOffers = shop.items.map((o, i) => {
+    const info = ITEM_INFO[o.kind];
+    const desc = o.kind === 'study' ? `${HT[o.type].name} passe du niveau ${G.levels[o.type] || 1} au niveau ${(G.levels[o.type] || 1) + 1} (+${HT[o.type].dc} jetons, +${HT[o.type].dm} mult).` : info.desc;
+    return `<div class="offer ${o.sold ? 'sold' : ''}"><div class="item">${info.icon}</div>
+      <div><h3>${info.name}</h3><p>${desc}</p>
+      <button class="btn buy" data-act="builtem" data-i="${i}" ${o.sold || G.money < o.cost ? 'disabled' : ''}>${o.sold ? 'Acheté' : 'Acheter $' + o.cost}</button></div></div>`;
+  }).join('');
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><h2>Boutique</h2><span class="num gold">$${G.money}</span></div>
+    <div class="eyebrow">Reliques (${G.relics.length}/${MAX_RELICS})</div>
+    <div class="offers">${relicOffers}</div>
+    <div class="eyebrow">Atelier</div>
+    <div class="offers">${itemOffers}</div>
+    <div class="panel stack"><div class="eyebrow">Vos reliques</div><div class="relics">${relicSlots()}</div><div class="relicinfo muted" id="rinfo"></div></div>
+    <div class="subactions"><button class="pill" data-act="combos">Combinaisons</button><button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button>
+      <button class="pill" data-act="reroll" ${G.money < rc ? 'disabled' : ''}>Relancer $${rc}</button></div>
+    <button class="btn" data-act="nextblind" style="padding-block:16px">Prochaine blinde</button>
+  </div>`;
+  showRelicInfo();
+}
+
+// ---- Fenêtres ----
+function closeModal() { document.querySelectorAll('.modal').forEach(m => m.remove()); }
+function openModal(html) {
+  closeModal();
+  const m = document.createElement('div'); m.className = 'modal'; m.innerHTML = `<div class="box">${html}</div>`;
+  m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+  document.body.appendChild(m);
+}
+function combosModal() {
+  const rows = HAND_TYPES.map(h => {
+    const st = handStats(h.id, G ? G.levels : {});
+    return `<tr><td><b>${h.name}</b><br><span class="muted small">${h.desc}</span></td><td class="n">${st.chips} × ${st.mult}</td><td class="n">${G ? G.levels[h.id] || 1 : 1}</td></tr>`;
+  }).join('');
+  openModal(`<div class="hd"><h2>Combinaisons</h2><button class="pill" data-act="close">Fermer</button></div>
+    <p class="muted small">Les Dragons ne forment que des paires, brelans et carrés. Chaque tuile qui marque ajoute sa valeur en jetons (les Dragons valent 10). Score = jetons × mult.</p>
+    <div class="tablewrap"><table><tr><th>Main</th><th>Jetons × mult</th><th>Niv.</th></tr>${rows}</table></div>`);
+}
+function deckModal(mode) {
+  const so = { B: 0, C: 1, K: 2, D: 3 };
+  const tiles = G.deck.slice().sort((a, b) => so[a.suit] - so[b.suit] || a.v - b.v);
+  const inDraw = R && !mode ? new Set(R.draw.map(t => t.id)) : null;
+  const title = mode === 'purge' ? 'Choisissez la tuile à retirer' : mode ? 'Choisissez la tuile à graver' : `Paquet (${G.deck.length} tuiles)`;
+  openModal(`<div class="hd"><h2>${title}</h2><button class="pill" data-act="close">${mode ? 'Annuler' : 'Fermer'}</button></div>
+    ${inDraw ? '<p class="muted small">Les tuiles grisées sont déjà en main ou défaussées.</p>' : ''}
+    <div class="decks">${tiles.map(t => tileHTML(t, 'mini ' + (inDraw && !inDraw.has(t.id) ? 'dim' : ''), mode ? `data-pick="${t.id}"` : '')).join('')}</div>`);
+}
+function rulesModal() {
+  openModal(`<div class="hd"><h2>Règles</h2><button class="pill" data-act="close">Fermer</button></div>
+    <div class="stack small">
+    <p>Chaque blinde fixe un score à atteindre avant d'épuiser vos mains. Vous piochez 8 tuiles : sélectionnez 1 à 5 tuiles et jouez-les pour former une combinaison, ou défaussez-en pour piocher.</p>
+    <p>Les tuiles qui forment la combinaison marquent des jetons. Le score de la main est <b>jetons × mult</b>. Les reliques ajoutent des jetons, du mult ou des multiplicateurs.</p>
+    <p>Après chaque blinde, dépensez votre argent en boutique : reliques, études (améliorent une combinaison), gravures (bonus permanents sur une tuile) et purges (retirent une tuile). Battez les 8 antes pour gagner.</p>
+    </div>`);
+}
+
+// ---- Événements ----
+document.addEventListener('click', e => {
+  const tileEl = e.target.closest('.tile');
+  if (tileEl && tileEl.dataset.pick !== undefined) return pickTile(+tileEl.dataset.pick);
+  if (tileEl && tileEl.closest('#hand')) return toggleTile(+tileEl.dataset.id);
+  const relicEl = e.target.closest('.relic[data-relic]');
+  if (relicEl && +relicEl.dataset.relic >= 0) { selRelic = selRelic === +relicEl.dataset.relic ? -1 : +relicEl.dataset.relic; document.querySelectorAll('.relics .relic').forEach(r => r.classList.toggle('sel', +r.dataset.relic === selRelic)); return showRelicInfo(); }
+  if (R && R.busy && !e.target.closest('[data-act]')) { fast = true; return; }
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'new') { selRelic = -1; newRun(); }
+  else if (a === 'rules') rulesModal();
+  else if (a === 'start') startRound();
+  else if (a === 'play') { fast = false; doPlay(); }
+  else if (a === 'discard') doDiscard();
+  else if (a === 'sort') { G.sort = G.sort === 'suit' ? 'value' : 'suit'; sortHand(); renderRound(); }
+  else if (a === 'combos') combosModal();
+  else if (a === 'deck') deckModal();
+  else if (a === 'close') { closeModal(); pending = null; }
+  else if (a === 'toshop') { shop = genShop(); selRelic = -1; renderShop(); }
+  else if (a === 'victory') victory();
+  else if (a === 'nextblind') { G.blind++; if (G.blind > 2) { G.blind = 0; G.ante++; } selRelic = -1; R = null; toBlindScreen(); }
+  else if (a === 'sell') {
+    if (selRelic < 0) return;
+    const r = RELIC_BY_ID[G.relics[selRelic]]; G.money += Math.floor(r.cost / 2); G.relics.splice(selRelic, 1); selRelic = -1;
+    toast(`${r.name} vendue.`); R && R.blind && document.getElementById('hand') ? renderRound() : shop ? renderShop() : toBlindScreen();
+  }
+  else if (a === 'buyrelic') {
+    const o = shop.relics[+b.dataset.i], r = RELIC_BY_ID[o.id];
+    if (G.relics.length >= MAX_RELICS) return toast('Vous n’avez plus de place : vendez une relique.');
+    if (G.money < r.cost) return;
+    G.money -= r.cost; G.relics.push(o.id); o.sold = true; renderShop();
+  }
+  else if (a === 'builtem') {
+    const o = shop.items[+b.dataset.i]; if (G.money < o.cost) return;
+    if (o.kind === 'study') { G.money -= o.cost; G.levels[o.type] = (G.levels[o.type] || 1) + 1; o.sold = true; toast(`${HT[o.type].name} : niveau ${G.levels[o.type]}`); renderShop(); }
+    else { pending = o; deckModal(o.kind === 'purge' ? 'purge' : 'eng'); }
+  }
+  else if (a === 'reroll') {
+    const c = 3 + shop.rerolls; if (G.money < c) return;
+    G.money -= c; const n = shop.rerolls + 1; shop = genShop(); shop.rerolls = n; renderShop();
+  }
+});
+let pending = null;
+function pickTile(id) {
+  if (!pending) return;
+  const t = G.deck.find(x => x.id === id); if (!t) return;
+  const o = pending; pending = null;
+  G.money -= o.cost; o.sold = true;
+  if (o.kind === 'purge') { if (G.deck.length <= 20) { G.money += o.cost; o.sold = false; closeModal(); return toast('Gardez au moins 20 tuiles.'); } G.deck = G.deck.filter(x => x.id !== id); toast(`${tileName(t)} retirée du paquet.`); }
+  else { t.eng = { engChips: 'chips', engMult: 'mult', engGold: 'gold' }[o.kind]; toast(`${tileName(t)} gravée.`); }
+  closeModal(); renderShop();
+}
+
+function showTitle() {
+  const rec = load();
+  app.innerHTML = `<div class="title">
+    <div class="mark">麻雀</div>
+    <h1>Mahjong Poker</h1>
+    <p>Formez des combinaisons de mahjong avec cinq tuiles au plus. Chaque main est notée comme au poker : jetons × mult. Collectez des reliques, améliorez vos mains et franchissez huit antes.</p>
+    <div class="row"><button class="btn" data-act="new">Nouvelle partie</button><button class="btn ghost" data-act="rules">Règles</button></div>
+    <div class="record">${rec.ante ? `Meilleure ante : ${rec.ante} · Meilleure main : ${fmt(rec.hand || 0)}${rec.wins ? ' · Victoires : ' + rec.wins : ''}` : 'Aucune partie jouée pour le moment.'}</div>
+  </div>`;
+}
+showTitle();
+</script>
+</body>
+</html>
