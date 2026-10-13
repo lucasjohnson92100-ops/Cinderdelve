@@ -7301,7 +7301,13 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (!C) return;
       var c = new C();
       AU.ctx = c;
-      AU.master = c.createGain(); AU.master.gain.value = 0.9; AU.master.connect(c.destination);
+      AU.master = c.createGain(); AU.master.gain.value = 0.9;
+      var comp = c.createDynamicsCompressor(); comp.threshold.value = -16; comp.knee.value = 24; comp.ratio.value = 5; comp.attack.value = 0.004; comp.release.value = 0.22;
+      AU.master.connect(comp); comp.connect(c.destination);
+      /* petite réverbération pour les sorts et les carillons */
+      var rl = Math.floor(c.sampleRate * 1.3), rb = c.createBuffer(2, rl, c.sampleRate);
+      for (var rch = 0; rch < 2; rch++) { var rd = rb.getChannelData(rch); for (var ri = 0; ri < rl; ri++) rd[ri] = (Math.random() * 2 - 1) * Math.pow(1 - ri / rl, 2.6); }
+      var cvl = c.createConvolver(); cvl.buffer = rb; AU.rev = c.createGain(); var rvg = c.createGain(); rvg.gain.value = 0.3; AU.rev.connect(cvl); cvl.connect(rvg); rvg.connect(AU.master);
       AU.sfxG = c.createGain(); AU.sfxG.gain.value = 0.5; AU.sfxG.connect(AU.master);
       AU.musG = c.createGain(); AU.musG.gain.value = AU.musOn ? 0.42 : 0; AU.musG.connect(AU.master);
       var len = c.sampleRate, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
@@ -7326,10 +7332,12 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
   }
   function aTone(f, dur, type, vol, t, f2, dest) {
     var c = AU.ctx, o = c.createOscillator(), g = c.createGain();
+    if (AU.jit) { var jv = 1 + (Math.random() - 0.5) * AU.jit; f *= jv; if (f2) f2 *= jv; }
     o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
     if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
     aEnv(g, t, 0.006, dur, vol);
     o.connect(g); g.connect(dest || AU.sfxG);
+    if (AU.wet && AU.rev && !dest) { var wg = c.createGain(); wg.gain.value = AU.wet; g.connect(wg); wg.connect(AU.rev); }
     o.start(t); o.stop(t + dur + 0.06);
   }
   function aNoise(dur, vol, t, ftype, f0, f1, q, dest) {
@@ -7340,22 +7348,38 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     fl.Q.value = q || 0.8;
     aEnv(g, t, 0.004, dur, vol);
     sr.connect(fl); fl.connect(g); g.connect(dest || AU.sfxG);
+    if (AU.wet && AU.rev && !dest) { var wg2 = c.createGain(); wg2.gain.value = AU.wet * 0.7; g.connect(wg2); wg2.connect(AU.rev); }
     sr.start(t); sr.stop(t + dur + 0.06);
   }
   var VIBP = { hit: 8, crit: [10, 20, 14], parry: [20, 30, 36], block: 22, hurt: 45, guardbreak: [60, 30, 80], kill: 12, bossdeath: [40, 40, 100],
     boom: 70, levelup: [20, 40, 20, 40, 60], death: [120, 60, 220], dodge: 12, chest: 25, trap: 55, gear: 18, rage: [50, 30, 50] };
+  /* cadence maximale par son (ms), réverbération et variation de hauteur : les hordes ne saturent plus et les sons ne se répètent plus à l'identique */
+  var SFX_THR = { hit: 30, kill: 38, orb: 30, energy: 50, slash: 50, swing: 55, boom: 70, coin: 45, chain: 60, acorn: 60, egg: 60 };
+  var SFX_WET = { crit: 0.22, kill: 0.1, boom: 0.35, ice: 0.35, fire: 0.18, heal: 0.45, levelup: 0.4, level2: 0.45, cast: 0.4, coin: 0.25, chain: 0.2, rune: 0.55, trans: 0.7, pick: 0.15, meteor: 0.3, energy: 0.2, bossdeath: 0.4, revive: 0.4, acorn: 0.1, egg: 0.15, shock: 0.2 };
+  var SFX_JIT = { hit: 0.2, kill: 0.22, slash: 0.14, swing: 0.14, energy: 0.1, orb: 0.06, boom: 0.1, coin: 0.04, chain: 0.12, acorn: 0.14, egg: 0.16, hurt: 0.06 };
   function sfx(name, a) {
     var v = VIBP[name];
     if (v && AU.vibOn) { try { if (navigator.vibrate) navigator.vibrate(v); } catch (err) {} }
     if (!AU.ctx || !AU.sfxOn || !AU.noise) return;
+    var th = SFX_THR[name]; if (th) { var tn0 = performance.now(); AU.lastT = AU.lastT || {}; if (tn0 - (AU.lastT[name] || -1e9) < th) return; AU.lastT[name] = tn0; }
     var c = AU.ctx, t = c.currentTime + 0.002, i;
+    AU.wet = SFX_WET[name] || 0; AU.jit = SFX_JIT[name] || 0;
     try {
       switch (name) {
-        case "hit": { var k = Math.min(3, a || 1); aNoise(0.07, 0.32, t, "bandpass", 1800 + k * 250, 600, 1.2); aTone(150 + k * 35, 0.09, "square", 0.12, t, 70); break; }
-        case "crit": aNoise(0.1, 0.35, t, "highpass", 2200, 800); aTone(880, 0.14, "triangle", 0.18, t, 1400); aTone(200, 0.12, "square", 0.14, t, 80); break;
-        case "kill": aTone(320, 0.16, "sawtooth", 0.14, t, 80); aNoise(0.12, 0.2, t, "lowpass", 1400, 200); break;
+        case "slash": aNoise(0.16, 0.3, t, "bandpass", 600, 3200, 1.1); aTone(300, 0.1, "sine", 0.05, t, 900); break;
+        case "swing": if (a === "thrust") { aNoise(0.1, 0.32, t, "bandpass", 900, 4200, 2); aTone(500, 0.08, "sine", 0.07, t, 1400); } else if (a === "slam") { aTone(110, 0.24, "sine", 0.34, t + 0.04, 42); aNoise(0.22, 0.3, t + 0.03, "lowpass", 900, 120); aNoise(0.08, 0.16, t, "bandpass", 500, 1800, 1); } else { aNoise(0.17, 0.34, t, "bandpass", 550, 3400, 1.1); aTone(280, 0.1, "sine", 0.07, t, 850); } break;
+        case "cast": aTone(660, 0.2, "triangle", 0.1, t, 1100); aTone(990, 0.26, "sine", 0.08, t + 0.04, 1500); aNoise(0.14, 0.09, t, "highpass", 4000); break;
+        case "coin": aTone(1319, 0.07, "square", 0.06, t); aTone(1760, 0.18, "triangle", 0.1, t + 0.06); aTone(2637, 0.14, "sine", 0.05, t + 0.07); break;
+        case "chain": for (i = 0; i < 4; i++) aTone(1100 + Math.random() * 1300, 0.06, "sawtooth", 0.09, t + i * 0.035, 200); aNoise(0.26, 0.16, t, "highpass", 2500, 1200); aTone(90, 0.2, "sine", 0.2, t, 50); break;
+        case "acorn": aTone(150, 0.13, "sine", 0.34, t, 60); aNoise(0.1, 0.28, t, "bandpass", 1300, 500, 1.5); aTone(900, 0.06, "triangle", 0.07, t + 0.02, 500); break;
+        case "egg": aTone(720, 0.05, "sine", 0.2, t, 260); aNoise(0.14, 0.28, t + 0.02, "bandpass", 1700, 500, 1); aTone(110, 0.12, "sine", 0.2, t, 55); break;
+        case "rune": [784, 1175, 1568, 2093].forEach(function (f, j) { aTone(f, 0.45, "triangle", 0.1, t + j * 0.07); aTone(f * 2, 0.3, "sine", 0.03, t + j * 0.07); }); aTone(98, 0.5, "sine", 0.2, t, 70); break;
+        case "trans": [392, 523, 659, 784, 1047, 1319, 1568].forEach(function (f, j) { aTone(f, 0.7, j % 2 ? "triangle" : "sine", 0.1, t + j * 0.07); }); aTone(65, 1.0, "sine", 0.35, t, 40); aNoise(0.9, 0.12, t + 0.2, "highpass", 5000, 2500); break;
+        case "hit": { var k = Math.min(3, a || 1); aNoise(0.06, 0.3, t, "bandpass", 2200 + k * 200, 700, 1.4); aTone(180 + k * 40, 0.08, "square", 0.1, t, 80); aTone(95, 0.07, "sine", 0.22, t, 55); break; }
+        case "crit": aNoise(0.09, 0.3, t, "highpass", 2600, 900); aTone(1200, 0.16, "triangle", 0.16, t, 1900); aTone(1800, 0.22, "sine", 0.1, t + 0.03); aTone(160, 0.12, "square", 0.14, t, 70); break;
+        case "kill": aTone(520, 0.08, "triangle", 0.16, t, 200); aTone(240, 0.14, "sawtooth", 0.1, t + 0.02, 70); aNoise(0.1, 0.16, t, "lowpass", 1800, 300); break;
         case "bossdeath": aTone(180, 0.9, "sawtooth", 0.3, t, 40); aNoise(0.9, 0.45, t, "lowpass", 1600, 60); aTone(70, 0.9, "sine", 0.4, t + 0.1, 30); break;
-        case "hurt": aTone(130, 0.2, "sawtooth", 0.22, t, 55); aNoise(0.12, 0.3, t, "lowpass", 900, 150); break;
+        case "hurt": aTone(130, 0.2, "sawtooth", 0.22, t, 55); aNoise(0.12, 0.3, t, "lowpass", 900, 150); try { if (typeof VOX !== "undefined" && state && state.variant) VOX.hurt(state.variant); } catch (e2) {} break;
         case "parry": aTone(1500, 0.4, "triangle", 0.2, t, 1470); aTone(2270, 0.3, "sine", 0.14, t); aTone(760, 0.3, "square", 0.05, t); aNoise(0.05, 0.3, t, "highpass", 3200); break;
         case "block": aTone(320, 0.12, "square", 0.14, t, 180); aNoise(0.07, 0.2, t, "bandpass", 900, 500); break;
         case "guardbreak": aTone(220, 0.45, "sawtooth", 0.22, t, 60); aNoise(0.35, 0.3, t, "lowpass", 1600, 100); break;
@@ -7382,14 +7406,14 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         case "chest": aTone(110, 0.28, "sawtooth", 0.08, t, 190); [880, 1109, 1319].forEach(function (f, j) { aTone(f, 0.16, "square", 0.08, t + 0.25 + j * 0.06); }); break;
         case "levelup": [523, 659, 784, 1047, 1319].forEach(function (f, j) { aTone(f, 0.3, "triangle", 0.15, t + j * 0.08); }); break;
         case "warn": aTone(220, 0.4, "sawtooth", 0.13, t, 170); aTone(224, 0.4, "sawtooth", 0.1, t, 170); break;
-        case "boom": aNoise(0.45, 0.5, t, "lowpass", 800, 70); aTone(72, 0.4, "sine", 0.5, t, 34); break;
+        case "boom": aNoise(0.55, 0.5, t, "lowpass", 1000, 50); aTone(70, 0.5, "sine", 0.55, t, 28); aNoise(0.12, 0.38, t, "highpass", 2500, 900); aTone(150, 0.3, "triangle", 0.15, t, 50); break;
         case "charge": aNoise(0.6, 0.3, t, "lowpass", 200, 950); break;
         case "rage": aTone(95, 0.7, "sawtooth", 0.25, t, 60); aTone(99, 0.7, "sawtooth", 0.2, t, 62); break;
         case "shoot": if (a === "bolt") aTone(700, 0.22, "sine", 0.12, t, 1500); else if (a === "flame") aNoise(0.3, 0.28, t, "bandpass", 400, 1400); else aNoise(0.12, 0.2, t, "bandpass", 1500, 3200); break;
         case "trap": aTone(95, 0.2, "square", 0.2, t, 60); aNoise(0.12, 0.3, t, "highpass", 2000); break;
         case "crumble": aNoise(0.5, 0.4, t, "lowpass", 1200, 150); break;
         case "stairs": aTone(320, 0.5, "sine", 0.14, t, 150); aNoise(0.4, 0.15, t, "bandpass", 700, 300); break;
-        case "death": [392, 330, 262, 196].forEach(function (f, j) { aTone(f, 0.4, "sawtooth", 0.16, t + j * 0.22, f * 0.9); }); break;
+        case "death": [392, 330, 262, 196].forEach(function (f, j) { aTone(f, 0.4, "sawtooth", 0.16, t + j * 0.22, f * 0.9); }); try { if (typeof VOX !== "undefined" && state && state.variant) VOX.death(state.variant); } catch (e2) {} break;
         case "revive": [262, 330, 392, 523, 659].forEach(function (f, j) { aTone(f, 0.3, "triangle", 0.15, t + j * 0.07); }); break;
         case "buy": aTone(880, 0.07, "square", 0.09, t); aTone(1175, 0.13, "square", 0.09, t + 0.07); break;
         case "equip": aTone(300, 0.06, "square", 0.1, t); aNoise(0.08, 0.2, t, "highpass", 2500); break;
@@ -7397,6 +7421,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
         case "step": if (Math.random() < 0.6) aNoise(0.04, 0.06, t, "lowpass", 520, 250); break;
       }
     } catch (err) {}
+    AU.wet = 0; AU.jit = 0;
   }
 
   /* ---------- musique : petites compositions en boucle ---------- */
@@ -9269,9 +9294,34 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       lama: function (t) { nz(t, 0.05, 3000, 3000, 2, 0.6); nz(t + 0.03, 0.35, 4500, 1500, 1.5, 0.45); },
       cavia: function (t) { var c = AU.ctx; for (var i = 0; i < 6; i++) tn(t + i * 0.04, 0.05, 1800 + Math.random() * 1500, 600, "square", 0.12); nz(t, 0.25, 6000, 2000, 1, 0.25); }
     };
+    /* ---------- cris de douleur et de défaite de chaque animal ---------- */
+    var HP = {
+      meuh: { d: 0.35, f: [[0, 125], [1, 95]], F: [[0, "o"], [1, "u"]], k: 0.85, vib: [4.5, 2] }, taureau: { d: 0.4, f: [[0, 90], [1, 62]], F: [[0, "o"], [1, "u"]], w: "square", am: [28, 0.5], k: 0.7, q: 4 },
+      cochon: { d: 0.22, f: [[0, 230], [1, 150]], F: [[0, "n"], [1, "o"]], am: [62, 0.9], n: 0.4, k: 0.9, q: 4 }, cocotte: { d: 0.2, f: [[0, 780], [1, 520]], F: [[0, "a"], [1, "o"]], n: 0.25, k: 1.2 },
+      coq: { d: 0.22, f: [[0, 760], [1, 540]], F: [[0, "o"], [1, "a"]], n: 0.15, k: 1.3 }, canard: { d: 0.16, f: [[0, 330], [1, 250]], F: [[0, "a"], [1, "e"]], am: [95, 0.8], n: 0.25, k: 1.05, q: 9 },
+      oie: { d: 0.25, f: [[0, 430], [1, 340]], F: [[0, "a"], [1, "o"]], am: [70, 0.6], n: 0.2, k: 1.1, q: 8 }, mouton: { d: 0.4, f: [[0, 330], [1, 270]], F: [[0, "m"], [0.2, "a"], [1, "e"]], vib: [7, 26], k: 1 },
+      bouc: { d: 0.4, f: [[0, 430], [1, 340]], F: [[0, "e"], [1, "a"]], vib: [10, 42], k: 1.15 }, cheval: { d: 0.42, f: [[0, 1050], [1, 600]], F: [[0, "i"], [1, "a"]], vib: [15, 85], k: 1.1 },
+      chien: { d: 0.22, f: [[0, 520], [1, 300]], F: [[0, "a"], [1, "o"]], n: 0.3, k: 0.95 }, chat: { d: 0.3, f: [[0, 780], [1, 520]], F: [[0, "i"], [1, "a"]], k: 1.4 },
+      lapin: { d: 0.1, f: [[0, 1800], [1, 2600]], F: [[0, "i"], [1, "i"]], w: "triangle", k: 0.95 }, cavia: { d: 0.14, f: [[0, 1300], [1, 2600]], F: [[0, "u"], [1, "i"]], w: "triangle", k: 1.6 },
+      ane: { d: 0.45, f: [[0, 780], [1, 260]], F: [[0, "i"], [0.6, "a"], [1, "o"]], n: 0.3, k: 1.1 }, dinde: { d: 0.35, f: [[0, 520], [1, 380]], F: [[0, "o"], [1, "u"]], am: [21, 1], k: 1 },
+      paon: { d: 0.35, f: [[0, 900], [1, 1300]], F: [[0, "e"], [1, "a"]], vib: [13, 40], k: 1.3 }, pintade: { d: 0.07, f: [[0, 1800], [1, 1500]], F: [[0, "e"], [1, "a"]], n: 0.35, k: 1.5, atk: 0.003 },
+      lama: { d: 0.3, f: [[0, 200], [1, 160]], F: [[0, "m"], [1, "u"]], k: 0.9 }
+    };
+    var lastHurt = 0;
+    function hurt(id) {
+      if (!ok() || !HP[id]) return; var now = AU.ctx.currentTime; if (now - lastHurt < 1.1) return; lastHurt = now;
+      var o = {}, b = HP[id]; for (var q in b) o[q] = b[q]; o.a = 0.45; if (o.n == null) o.n = 0.15;
+      try { syl(T() + 0.03, o); if (id === "pintade") { syl(T() + 0.11, o); syl(T() + 0.19, o); } } catch (e) {}
+    }
+    function death(id) {
+      if (!ok() || !HP[id]) return;
+      var o = {}, b = HP[id]; for (var q in b) o[q] = b[q]; o.a = 0.5; if (o.n == null) o.n = 0.15; o.d = b.d * 2.6;
+      o.f = b.f.map(function (p) { return [p[0], p[1] * (0.5 + 0.5 * (1 - p[0]))]; });
+      try { syl(T() + 0.15, o); } catch (e) {}
+    }
     function cry(id) { if (!ok() || !CRY[id]) return; try { CRY[id](T()); } catch (e) {} }
     function power(id) { if (!ok() || !PW[id]) return; try { PW[id](T()); } catch (e) {} }
-    return { cry: cry, power: power };
+    return { cry: cry, power: power, hurt: hurt, death: death };
   })();
   function animalCry(id) {
     if (typeof VOX !== "undefined") { VOX.cry(id); return; }
@@ -9977,7 +10027,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xAcT <= 0) {
         if (enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; })) {
           state.xAcT = 3; var acn = 2 + Math.floor(SW.acorns / 2), acr = 1.1 * ar, acd = (1 + 0.12 * (SW.acorns - 1)) * 1.0;
-          for (var ai = 0; ai < acn; ai++) { var aa = Math.random() * 6.283, ad0 = 1.5 + Math.random() * 6.5, ax = p.vx + Math.cos(aa) * ad0, ay = p.vy + Math.sin(aa) * ad0, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("boom"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
+          for (var ai = 0; ai < acn; ai++) { var aa = Math.random() * 6.283, ad0 = 1.5 + Math.random() * 6.5, ax = p.vx + Math.cos(aa) * ad0, ay = p.vy + Math.sin(aa) * ad0, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("acorn"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
         } else state.xAcT = 0.4;
       }
     }
@@ -10242,7 +10292,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     banner("Les gardiens de la rune s'éveillent !", "#c48bff", 1600, 26); sfx("warn");
   }
   function collectRune(gm) {
-    state.runeN = (state.runeN || 0) + 1; burst(gm.x, gm.y, "#c48bff", 14, 70); sfx("levelup"); addFloat(gm.x, gm.y, "Rune " + state.runeN + "/" + runeNeed(), "#d9b8ff");
+    state.runeN = (state.runeN || 0) + 1; burst(gm.x, gm.y, "#c48bff", 14, 70); sfx("rune"); addFloat(gm.x, gm.y, "Rune " + state.runeN + "/" + runeNeed(), "#d9b8ff");
     if (state.runeN < runeNeed()) { say("Rune ramassée (" + state.runeN + "/" + runeNeed() + ")."); return; }
     state.runeN = 0; mode = "altar"; haltInput();
     var o = [];
@@ -10962,8 +11012,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         projs.push({ own: "player", src: "Attaque", target: t, x: pcx + 0.5, y: pcy + 0.5, vx: Math.cos(ba) * spdP, vy: Math.sin(ba) * spdP, spd: spdP, kind: st.kind, life: Rs / spdP + 0.15, dmg: per, splash: st.sp2 || 0, lvl: 1, imb: 1 });
       });
       else for (var q = 0; q < nS; q++) { var ba2 = a + (q - (nS - 1) / 2) * 0.28; projs.push({ own: "player", src: "Attaque", x: pcx + 0.5, y: pcy + 0.5, vx: Math.cos(ba2) * spdP, vy: Math.sin(ba2) * spdP, spd: spdP, kind: st.kind, life: Rs / spdP, dmg: per, splash: st.sp2 || 0, lvl: 1, imb: 1 }); }
-      if (st.st === "staff") { AFX.add("shock", pcx + ca * 1.3, pcy + sa * 1.3, 260, { R: 0.8, pal: P, rays: 8 }); sfx("energy"); }
-      else { AFX.add("shock", pcx + ca * 0.9, pcy + sa * 0.9, 160, { R: 0.55, pal: P, rays: 6 }); AFX.add("beam", pcx, pcy, 130, { R: Math.min(Rs, tg.length ? bd2 : Rs), a: a, w: 0.18, pal: P }); sfx("hit"); }
+      if (st.st === "staff") { AFX.add("shock", pcx + ca * 1.3, pcy + sa * 1.3, 260, { R: 0.8, pal: P, rays: 8 }); sfx("cast"); }
+      else { AFX.add("shock", pcx + ca * 0.9, pcy + sa * 0.9, 160, { R: 0.55, pal: P, rays: 6 }); AFX.add("beam", pcx, pcy, 130, { R: Math.min(Rs, tg.length ? bd2 : Rs), a: a, w: 0.18, pal: P }); sfx("shoot"); }
       hit = tg.length;
     } else {
       var R = st.R * rm + rb, off = (st.off || 0) * 0.72, targets = [];
@@ -10987,7 +11037,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       AFX.add("blade", pcx, pcy, st.st === "thrust" ? 280 : 340, { R: Rv, a: a, shape: st.sh, style: st.st, flip: baseFlip, pal: P, sp: st.sp || 1 });
       if (st.st === "slam") { AFX.add("shock", pcx + ca * off, pcy + sa * off, 380, { R: R, pal: P, rays: 10 }); shake(hit ? 2.2 : 1, 150); }
       if (st.st === "thrust") AFX.add("beam", pcx, pcy, 200, { R: R, a: a, w: 0.35 + st.w * 0.5, pal: P });
-      sfx(hit ? "hit" : "slash");
+      sfx("swing", st.st); if (hit) sfx("hit", Math.min(3, hit));
     }
     state.atk = atkM; baseMul = 1; baseFloor = 1;
     p.atkCd = survBaseCd(st);
@@ -11800,7 +11850,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         apply: function () {
           var i = state.slots.indexOf(id); if (i >= 0) state.slots.splice(i, 1);
           state.spells[id] = false; state.trans[id] = true; state.transT = state.transT || {}; state.transT[id] = 2;
-          banner("✦ " + transName(id) + " !", "#ffb02e", 2200, 32); screenFlash("255,190,90", 450); sfx("levelup"); shake(3, 300); AFX.legend();
+          banner("✦ " + transName(id) + " !", "#ffb02e", 2200, 32); screenFlash("255,190,90", 450); sfx("trans"); shake(3, 300); AFX.legend();
           say(SPELLS[id].name + " se transcende en don permanent.");
         } });
     });
