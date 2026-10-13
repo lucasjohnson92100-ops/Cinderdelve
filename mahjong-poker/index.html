@@ -128,14 +128,30 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .calc .hn { font-weight: 800; font-size: 1.1rem; text-wrap: balance; }
 .calc .hn small { display: block; font-weight: 500; font-size: .75rem; color: var(--muted); }
 .calc .eq { display: flex; align-items: center; gap: 6px; font-family: var(--font-num); font-weight: 600; font-size: 1.25rem; }
-.calc .eq span.v { min-width: 3.4ch; text-align: center; padding: 6px 8px; border-radius: 8px; color: #fff; }
+.calc .eq span.v { min-width: 3.6ch; text-align: center; padding: 6px 8px; border-radius: 8px; color: #fff; }
 .calc .c { background: var(--chips); }
 .calc .m { background: var(--mult); }
 .calc .bump { animation: bump .22s; }
 @keyframes bump { 40% { transform: scale(1.2); } }
 
 /* Tiles */
-.hand { display: grid; grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr)); gap: 6px; padding-block: 22px 8px; max-width: 100%; }
+.handwrap { container-type: inline-size; }
+.hand { --tw: min(calc((100cqw - 64px) / 7), 66px); display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 8px; padding-block: 18px 8px; }
+.g { display: flex; gap: 3px; padding: 5px 5px 8px; border-radius: 12px; }
+.g.meld { background: rgba(70, 170, 120, .16); box-shadow: inset 0 0 0 1.5px rgba(90, 200, 140, .4); }
+.g.pair { background: rgba(224, 179, 65, .14); box-shadow: inset 0 0 0 1.5px rgba(224, 179, 65, .5); }
+.g.left { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.hand .tile { width: var(--tw); flex: none; }
+.tile.D3 .jk { position: absolute; right: 9%; bottom: 7%; font-size: 17cqw; line-height: 1; color: var(--circle); }
+.tile.inline { width: 30px; display: inline-grid; vertical-align: middle; margin-inline: 2px; }
+.wall { text-align: center; }
+.fans { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.fans:empty { display: none; }
+.fanpill { font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: rgba(224, 179, 65, .18); color: var(--gold); }
+.proj { grid-column: 1 / -1; }
+.hn.win { color: var(--gold); }
+.btn.glow { animation: glow 1.1s infinite alternate; }
+@keyframes glow { to { box-shadow: 0 3px 0 #1d4d8a, 0 0 18px 3px rgba(224, 179, 65, .7); } }
 .tile {
   container-type: inline-size; position: relative; aspect-ratio: 3 / 4.1; border: 0; padding: 0; min-width: 0;
   border-radius: 14% / 10%; background: linear-gradient(180deg, var(--ivory), var(--ivory-2));
@@ -152,7 +168,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .tile.D1 { color: var(--char); }
 .tile.D2 { color: var(--bamboo); }
 .tile.D3 { color: var(--circle); }
-.tile.D3 .dg { font-size: 0; width: 56cqw; height: 74cqw; border: 5cqw solid var(--circle); border-radius: 6cqw; }
+.tile.D3 .dg { font-size: 0; width: 56cqw; height: 66cqw; border: 5cqw solid var(--circle); border-radius: 6cqw; }
 .tile.sel { transform: translateY(-12%); box-shadow: 0 5px 0 var(--gold), 0 6px 0 #8d6b17, 0 14px 14px rgba(0,0,0,.5); }
 .tile.dead { filter: grayscale(1) brightness(.7); }
 .tile.score { animation: tilepulse .35s; }
@@ -232,139 +248,160 @@ function shuffle(a, rng = Math.random) {
 }
 const chipVal = t => (t.suit === 'D' ? 10 : t.v);
 const tileName = t => (t.suit === 'D' ? DRAGON_NAME[t.v] : t.v + ' de ' + SUIT_NAME[t.suit]);
+const keyOf = t => (t.suit === 'D' ? 26 + t.v : { B: 0, C: 9, K: 18 }[t.suit] + t.v - 1);
 
-// Combinaisons : jetons et mult de base, bonus par niveau (dc, dm)
-const HAND_TYPES = [
-  { id: 'suiteCouleur', name: 'Suite pure', chips: 100, mult: 8, dc: 40, dm: 4, desc: '5 tuiles qui se suivent, même famille' },
-  { id: 'mahjong', name: 'Mahjong pur', chips: 90, mult: 8, dc: 40, dm: 4, desc: 'Brelan ou séquence + paire, tout dans la même famille' },
-  { id: 'carre', name: 'Carré', chips: 60, mult: 7, dc: 30, dm: 3, desc: '4 tuiles identiques' },
-  { id: 'sequencePaire', name: 'Séquence + paire', chips: 45, mult: 4, dc: 25, dm: 2, desc: 'Séquence de 3 + paire (la main de mahjong)' },
-  { id: 'full', name: 'Full', chips: 40, mult: 4, dc: 25, dm: 2, desc: 'Brelan + paire' },
-  { id: 'couleur', name: 'Couleur', chips: 35, mult: 4, dc: 15, dm: 2, desc: '5 tuiles de la même famille' },
-  { id: 'suite', name: 'Suite', chips: 30, mult: 4, dc: 30, dm: 3, desc: '5 valeurs qui se suivent, familles libres' },
-  { id: 'brelan', name: 'Brelan', chips: 30, mult: 3, dc: 20, dm: 2, desc: '3 tuiles identiques' },
-  { id: 'sequence', name: 'Séquence', chips: 25, mult: 3, dc: 20, dm: 2, desc: '3 valeurs qui se suivent, même famille' },
-  { id: 'doublePaire', name: 'Double paire', chips: 20, mult: 2, dc: 20, dm: 1, desc: '2 paires' },
-  { id: 'paire', name: 'Paire', chips: 10, mult: 2, dc: 15, dm: 1, desc: '2 tuiles identiques' },
-  { id: 'haute', name: 'Tuile haute', chips: 5, mult: 1, dc: 10, dm: 1, desc: 'Aucune combinaison' },
-];
-const HT = Object.fromEntries(HAND_TYPES.map(h => [h.id, h]));
-const SEQ_TYPES = ['sequence', 'sequencePaire', 'suite', 'suiteCouleur'];
-const SET_TYPES = ['brelan', 'full', 'carre'];
-const SUIT_HANDS = ['couleur', 'mahjong', 'suiteCouleur'];
+// Le Dragon blanc est un joker : il remplace n'importe quelle tuile d'un groupe ou de la paire.
+const isWild = t => t.suit === 'D' && t.v === 3;
 
-// Reliques. tile(t, c) s'applique à chaque tuile marquée, hand(c) une fois par main.
+// Cherche la meilleure découpe d'une main en groupes (séquence de 3 ou brelan) + une paire, jokers compris.
+// Renvoie les indices des tuiles : melds (avec keys), pair, left. mahjong = au moins 4 groupes et une paire.
+function analyze(tiles, isLocked) {
+  const lists = Array.from({ length: 29 }, () => []), wilds = [], dead = [];
+  tiles.forEach((t, i) => {
+    if (isLocked && isLocked(t)) dead.push(i);
+    else if (isWild(t)) wilds.push(i);
+    else lists[keyOf(t)].push(i);
+  });
+  const cnt = lists.map(l => l.length), memo = new Map();
+  const val = k => (k >= 27 ? 10 : (k % 9) + 1);
+  function dfs(p, pu, w) {
+    while (p < 29 && cnt[p] === 0) p++;
+    if (p >= 29) {
+      const mk = Math.floor(w / 3);
+      if (!pu && w >= 2) { const k = Math.floor((w - 2) / 3), v = 50 + 100 * k; if (v >= 100 * mk) return { v, m: Array(k).fill(['W']), pair: 'W' }; }
+      return { v: 100 * mk, m: Array(mk).fill(['W']), pair: null };
+    }
+    const mkey = p + '|' + cnt.join('') + (pu ? 1 : 0) + w;
+    if (memo.has(mkey)) return memo.get(mkey);
+    let best = null;
+    const take = (r, add, m, pair) => {
+      const v = r.v + add;
+      if (!best || v > best.v) best = { v, m: m ? [m, ...r.m] : r.m, pair: pair !== undefined ? pair : r.pair };
+    };
+    cnt[p]--; take(dfs(p, pu, w), 0); cnt[p]++;
+    { const real = Math.min(3, cnt[p]), need = 3 - real;
+      if (need <= w) { cnt[p] -= real; take(dfs(p, pu, w - need), 100 + val(p) * 0.003 - need * 0.01, [p, 'pung', [p, p, p]]); cnt[p] += real; } }
+    if (p < 27) for (const s of [p - 2, p - 1, p]) {
+      if (s < 0 || s % 9 > 6 || Math.floor(s / 9) !== Math.floor(p / 9)) continue;
+      const ks = [s, s + 1, s + 2], need = ks.filter(k => cnt[k] === 0).length;
+      if (need > w) continue;
+      const used = ks.filter(k => cnt[k] > 0); used.forEach(k => cnt[k]--);
+      take(dfs(p, pu, w - need), 100 + (val(s) * 3 + 3) * 0.001 - need * 0.01, [s, 'chow', ks]);
+      used.forEach(k => cnt[k]++);
+    }
+    if (!pu) { const real = Math.min(2, cnt[p]), need = 2 - real;
+      if (need <= w) { cnt[p] -= real; take(dfs(p, true, w - need), 50 + val(p) * 0.002 - need * 0.01, null, p); cnt[p] += real; } }
+    memo.set(mkey, best); return best;
+  }
+  const r = dfs(0, false, wilds.length), pool = lists.map(l => l.slice()), wp = wilds.slice();
+  const grab = k => (k !== undefined && pool[k] && pool[k].length ? pool[k].pop() : wp.pop());
+  const melds = r.m.map(([k, kind, keys]) => (k === 'W'
+    ? { kind: 'pung', idx: [wp.pop(), wp.pop(), wp.pop()], keys: null }
+    : { kind, idx: keys.map(grab), keys }));
+  const pair = r.pair === null ? null : r.pair === 'W' ? [wp.pop(), wp.pop()] : [grab(r.pair), grab(r.pair)];
+  const pairKey = r.pair === null || r.pair === 'W' ? null : r.pair;
+  const left = dead.concat(wp, ...pool).sort((a, b) => keyOf(tiles[a]) - keyOf(tiles[b]));
+  return { melds, pair, pairKey, left, mahjong: melds.length >= 4 && !!pair };
+}
+
+const MELD_BASE = { chow: { c: 8, dc: 8 }, pung: { c: 16, dc: 12 }, pair: { c: 4, dc: 4 } };
+const STUDIES = {
+  chow: { name: 'Séquences', icon: '順', note: '+8 jetons par séquence et par niveau' },
+  pung: { name: 'Brelans', icon: '刻', note: '+12 jetons par brelan et par niveau' },
+  pair: { name: 'Paire', icon: '對', note: '+4 jetons pour la paire et par niveau' },
+  mahjong: { name: 'Mahjong', icon: '和', note: '+25 jetons et +1 mult de base au Mahjong, par niveau' },
+};
+
+// Combinaisons bonus d'un Mahjong : [nom, mult]. Les jokers (keys absentes) ne bloquent aucune condition.
+function fansOf(tiles, A) {
+  const fans = [], chows = A.melds.filter(m => m.kind === 'chow' && m.keys), pungs = A.melds.filter(m => m.kind === 'pung');
+  const allKeys = A.melds.flatMap(m => m.keys || []).concat(A.pairKey === null ? [] : [A.pairKey]);
+  if (A.melds.filter(m => m.kind === 'chow').length === 4) fans.push(['Quatre séquences', 3]);
+  if (pungs.length === 4) fans.push(['Quatre brelans', 5]);
+  const suits = new Set(allKeys.filter(k => k < 27).map(k => Math.floor(k / 9)));
+  const hasHonor = allKeys.some(k => k >= 27);
+  if (suits.size <= 1 && !(suits.size === 0 && !hasHonor)) fans.push(hasHonor ? ['Famille et dragons', 4] : ['Une seule famille', 8]);
+  for (const m of pungs) if (m.keys && m.keys[0] >= 27) fans.push([DRAGON_NAME[m.keys[0] - 26], 2]);
+  if (A.pairKey !== null && A.pairKey >= 27) fans.push(['Paire de dragons', 1]);
+  const starts = chows.map(m => m.keys[0]);
+  if (starts.some((k, i) => starts.indexOf(k) !== i)) fans.push(['Séquences jumelles', 2]);
+  for (const s of [0, 9, 18]) if ([0, 3, 6].every(o => starts.includes(s + o))) fans.push(['Grande séquence', 5]);
+  return fans;
+}
+
+// Reliques. tile(t,c) par tuile qui marque, group(g,c) par groupe, hand(c) une fois par main.
 const RELICS = [
   { id: 'lantern', name: 'Lanterne de papier', icon: '燈', cost: 4, desc: '+4 mult à chaque main.', hand: () => ({ mult: 4 }) },
   { id: 'brush', name: 'Pinceau de calligraphe', icon: '筆', cost: 4, desc: '+30 jetons à chaque main.', hand: () => ({ chips: 30 }) },
-  { id: 'twins', name: 'Jumelles', icon: '雙', cost: 4, desc: 'Paire ou Double paire : +10 mult.', hand: c => (['paire', 'doublePaire'].includes(c.type) ? { mult: 10 } : null) },
-  { id: 'pearl', name: 'Perle de dragon', icon: '珠', cost: 5, desc: 'Chaque Dragon marqué donne +6 mult.', tile: t => (t.suit === 'D' ? { mult: 6 } : null) },
-  { id: 'fan', name: 'Éventail de bambou', icon: '扇', cost: 5, desc: 'Chaque Bambous marqué donne +20 jetons.', tile: t => (t.suit === 'B' ? { chips: 20 } : null) },
-  { id: 'jade', name: 'Anneau de jade', icon: '玉', cost: 5, desc: 'Chaque Cercles marqué donne +3 mult.', tile: t => (t.suit === 'C' ? { mult: 3 } : null) },
-  { id: 'ink', name: 'Pierre à encre', icon: '墨', cost: 5, desc: 'Chaque Caractères marqué donne +12 jetons et +1 mult.', tile: t => (t.suit === 'K' ? { chips: 12, mult: 1 } : null) },
-  { id: 'yin', name: 'Yin', icon: '陰', cost: 5, desc: 'Chaque tuile de valeur paire marquée donne +16 jetons.', tile: t => (t.suit !== 'D' && t.v % 2 === 0 ? { chips: 16 } : null) },
-  { id: 'yang', name: 'Yang', icon: '陽', cost: 5, desc: 'Chaque tuile de valeur impaire marquée donne +2 mult.', tile: t => (t.suit !== 'D' && t.v % 2 === 1 ? { mult: 2 } : null) },
-  { id: 'lotus', name: 'Lotus', icon: '蓮', cost: 5, desc: 'Couleur, Mahjong pur ou Suite pure : +50 jetons.', hand: c => (SUIT_HANDS.includes(c.type) ? { chips: 50 } : null) },
-  { id: 'hermit', name: 'Ermite', icon: '隱', cost: 5, desc: 'Tuile haute : +10 mult.', hand: c => (c.type === 'haute' ? { mult: 10 } : null) },
-  { id: 'crane', name: 'Grue en origami', icon: '鶴', cost: 5, desc: '+1 défausse par manche.', p: { discards: 1 } },
+  { id: 'twins', name: 'Jumelles', icon: '雙', cost: 4, desc: 'La paire donne +20 jetons et +2 mult.', group: g => (g.kind === 'pair' ? { chips: 20, mult: 2 } : null) },
+  { id: 'pearl', name: 'Perle de dragon', icon: '珠', cost: 5, desc: 'Chaque Dragon qui marque donne +3 mult.', tile: t => (t.suit === 'D' ? { mult: 3 } : null) },
+  { id: 'fan', name: 'Éventail de bambou', icon: '扇', cost: 5, desc: 'Chaque Bambous qui marque donne +8 jetons.', tile: t => (t.suit === 'B' ? { chips: 8 } : null) },
+  { id: 'jade', name: 'Anneau de jade', icon: '玉', cost: 5, desc: 'Chaque Cercles qui marque donne +1 mult.', tile: t => (t.suit === 'C' ? { mult: 1 } : null) },
+  { id: 'ink', name: 'Pierre à encre', icon: '墨', cost: 5, desc: 'Chaque Caractères qui marque donne +12 jetons.', tile: t => (t.suit === 'K' ? { chips: 12 } : null) },
+  { id: 'yin', name: 'Yin', icon: '陰', cost: 5, desc: 'Chaque tuile de valeur paire qui marque donne +6 jetons.', tile: t => (t.suit !== 'D' && t.v % 2 === 0 ? { chips: 6 } : null) },
+  { id: 'yang', name: 'Yang', icon: '陽', cost: 6, desc: 'Chaque tuile de valeur impaire qui marque donne +1 mult.', tile: t => (t.suit !== 'D' && t.v % 2 === 1 ? { mult: 1 } : null) },
+  { id: 'abacus', name: 'Boulier', icon: '算', cost: 6, desc: 'Chaque séquence donne +3 mult.', group: g => (g.kind === 'chow' ? { mult: 3 } : null) },
+  { id: 'totem', name: 'Totem', icon: '柱', cost: 6, desc: 'Chaque brelan donne +5 mult.', group: g => (g.kind === 'pung' ? { mult: 5 } : null) },
+  { id: 'lotus', name: 'Lotus', icon: '蓮', cost: 5, desc: 'Mahjong : +60 jetons.', hand: c => (c.mahjong ? { chips: 60 } : null) },
+  { id: 'patience', name: 'Patience', icon: '忍', cost: 5, desc: 'Main posée sans Mahjong, avec 3 groupes ou plus : +10 mult.', hand: c => (!c.mahjong && c.melds >= 3 ? { mult: 10 } : null) },
+  { id: 'crane', name: 'Grue en origami', icon: '鶴', cost: 5, desc: '+2 échanges par manche.', p: { swaps: 2 } },
+  { id: 'river', name: 'Rivière', icon: '河', cost: 5, desc: 'Un échange peut remplacer 2 tuiles de plus.', p: { maxSwap: 2 } },
+  { id: 'eye', name: 'Œil de lynx', icon: '眼', cost: 5, desc: 'Montre les 3 prochaines tuiles du mur.', p: { eye: 1 } },
   { id: 'purse', name: 'Bourse brodée', icon: '袋', cost: 5, desc: '+$4 à la fin de chaque manche.', p: { endMoney: 4 } },
   { id: 'cat', name: 'Chat porte-bonheur', icon: '貓', cost: 6, desc: '+1 main par manche.', p: { hands: 1 } },
-  { id: 'turtle', name: 'Tortue de jade', icon: '龜', cost: 6, desc: '+1 tuile en main.', p: { size: 1 } },
+  { id: 'turtle', name: 'Tortue de jade', icon: '龜', cost: 6, desc: '+1 tuile en main (le Mahjong accepte une tuile en trop).', p: { size: 1 } },
   { id: 'hourglass', name: 'Sablier', icon: '砂', cost: 6, desc: 'Première main de la manche : ×2 mult.', hand: c => (c.isFirst ? { xmult: 2 } : null) },
   { id: 'last', name: 'Dernier souffle', icon: '終', cost: 6, desc: 'Dernière main de la manche : ×2 mult.', hand: c => (c.isLast ? { xmult: 2 } : null) },
   { id: 'dice', name: "Dés d'os", icon: '骰', cost: 6, desc: '1 chance sur 4 : ×3 mult.', hand: c => (c.rng() < 0.25 ? { xmult: 3 } : null) },
-  { id: 'abacus', name: 'Boulier', icon: '算', cost: 7, desc: 'Séquence, Séquence + paire, Suite ou Suite pure : ×2 mult.', hand: c => (SEQ_TYPES.includes(c.type) ? { xmult: 2 } : null) },
-  { id: 'totem', name: 'Totem', icon: '柱', cost: 7, desc: 'Brelan, Full ou Carré : ×2 mult.', hand: c => (SET_TYPES.includes(c.type) ? { xmult: 2 } : null) },
   { id: 'seal', name: 'Sceau impérial', icon: '印', cost: 9, desc: '×1,5 mult à chaque main.', hand: () => ({ xmult: 1.5 }) },
 ];
 const RELIC_BY_ID = Object.fromEntries(RELICS.map(r => [r.id, r]));
-function passive(relicIds, key) { return relicIds.reduce((s, id) => s + ((RELIC_BY_ID[id].p || {})[key] || 0), 0); }
+function passive(ids, key) { return ids.reduce((s, id) => s + ((RELIC_BY_ID[id].p || {})[key] || 0), 0); }
 
-// Évalue 1 à 5 tuiles : renvoie la combinaison et les indices des tuiles qui marquent.
-function evaluate(tiles) {
-  const n = tiles.length, all = tiles.map((_, i) => i);
-  const byKey = {};
-  tiles.forEach((t, i) => (byKey[t.suit + t.v] = byKey[t.suit + t.v] || []).push(i));
-  const groups = Object.values(byKey).sort((a, b) => b.length - a.length);
-  const numeric = tiles.every(t => t.suit !== 'D');
-  const sameSuit = numeric && tiles.every(t => t.suit === tiles[0].suit);
-  const res = (type, scoring) => ({ type, scoring: scoring.slice().sort((a, b) => a - b) });
-  const findChow = idx => {
-    for (const i of idx) {
-      const a = tiles[i]; if (a.suit === 'D') continue;
-      const j = idx.find(k => tiles[k].suit === a.suit && tiles[k].v === a.v + 1);
-      const l = idx.find(k => tiles[k].suit === a.suit && tiles[k].v === a.v + 2);
-      if (j !== undefined && l !== undefined) return [i, j, l];
-    }
-    return null;
-  };
-  if (n === 5) {
-    const vals = tiles.map(t => t.v).sort((a, b) => a - b);
-    const straight = numeric && vals.every((v, i) => i === 0 || v === vals[i - 1] + 1);
-    if (sameSuit && straight) return res('suiteCouleur', all);
-    if (groups[0].length === 4) return res('carre', groups[0]);
-    let kind = null;
-    for (let i = 0; i < 5 && !kind; i++) for (let j = i + 1; j < 5 && !kind; j++) {
-      if (tiles[i].suit !== tiles[j].suit || tiles[i].v !== tiles[j].v) continue;
-      const rest = all.filter(k => k !== i && k !== j);
-      const [a, b, c] = rest.map(k => tiles[k]);
-      if (a.suit === b.suit && b.suit === c.suit && a.v === b.v && b.v === c.v) kind = 'pung';
-      else if (findChow(rest)) kind = 'chow';
-    }
-    if (kind) return res(sameSuit ? 'mahjong' : kind === 'pung' ? 'full' : 'sequencePaire', all);
-    if (sameSuit) return res('couleur', all);
-    if (straight) return res('suite', all);
-  }
-  if (groups[0].length === 4) return res('carre', groups[0]);
-  if (groups[0].length === 3) return res('brelan', groups[0]);
-  const chow = n >= 3 ? findChow(all) : null;
-  if (chow) return res('sequence', chow);
-  if (groups[0].length === 2 && groups[1] && groups[1].length === 2) return res('doublePaire', groups[0].concat(groups[1]));
-  if (groups[0].length === 2) return res('paire', groups[0]);
-  let best = 0; tiles.forEach((t, i) => { if (chipVal(t) > chipVal(tiles[best])) best = i; });
-  return res('haute', [best]);
-}
-
-function handStats(id, levels) {
-  const h = HT[id], L = ((levels && levels[id]) || 1) - 1;
-  return { chips: h.chips + L * h.dc, mult: h.mult + L * h.dm };
-}
-
-// Calcule le score d'une main jouée. events = suite d'étapes, rejouée telle quelle par l'animation.
-function scorePlay(played, ctx) {
-  const ev = evaluate(played), base = handStats(ev.type, ctx.levels);
-  const rng = ctx.rng || Math.random;
-  const relics = (ctx.relics || []).map(id => RELIC_BY_ID[id]);
-  const events = []; let chips = base.chips, mult = base.mult, money = 0;
+// Calcule le score d'une main posée. events = étapes rejouées telles quelles par l'animation.
+function scoreHand(tiles, ctx) {
+  const A = analyze(tiles, ctx.locked), lv = k => (ctx.levels && ctx.levels[k]) || 1;
+  const rng = ctx.rng || Math.random, relics = (ctx.relics || []).map(id => RELIC_BY_ID[id]);
+  const mj = A.mahjong;
+  const base = { chips: mj ? 40 + 25 * (lv('mahjong') - 1) : 10, mult: mj ? 3 + (lv('mahjong') - 1) : 1 };
+  let chips = base.chips, mult = base.mult, money = 0;
+  const events = [];
   const push = e => {
     events.push(e);
     if (e.chips) chips += e.chips; if (e.mult) mult += e.mult; if (e.xmult) mult *= e.xmult; if (e.money) money += e.money;
   };
-  const c = { type: ev.type, played, isFirst: !!ctx.isFirst, isLast: !!ctx.isLast, rng };
-  for (const i of ev.scoring) {
-    const t = played[i];
-    if (ctx.debuffSuit && t.suit === ctx.debuffSuit) { push({ tile: i, dead: true }); continue; }
-    push({ tile: i, chips: chipVal(t) });
-    if (t.eng === 'chips') push({ tile: i, chips: 30 });
-    if (t.eng === 'mult') push({ tile: i, mult: 4 });
-    if (t.eng === 'gold') push({ tile: i, money: 2 });
-    relics.forEach((r, ri) => { if (r.tile) { const e = r.tile(t, c); if (e) push({ tile: i, relic: ri, ...e }); } });
-  }
+  const groups = A.melds.map(m => ({ kind: m.kind, idx: m.idx })).concat(A.pair ? [{ kind: 'pair', idx: A.pair }] : []);
+  const c = { mahjong: mj, melds: A.melds.length, isFirst: !!ctx.isFirst, isLast: !!ctx.isLast, rng };
+  groups.forEach((g, gi) => {
+    for (const i of g.idx) {
+      const t = tiles[i];
+      if (ctx.debuffSuit && t.suit === ctx.debuffSuit) { push({ tile: i, group: gi, dead: true }); continue; }
+      push({ tile: i, group: gi, chips: chipVal(t) });
+      if (t.eng === 'chips') push({ tile: i, chips: 30 });
+      if (t.eng === 'mult') push({ tile: i, mult: 4 });
+      if (t.eng === 'gold') push({ tile: i, money: 2 });
+      relics.forEach((r, ri) => { if (r.tile) { const e = r.tile(t, c); if (e) push({ tile: i, relic: ri, ...e }); } });
+    }
+    const mb = MELD_BASE[g.kind];
+    push({ group: gi, chips: mb.c + (lv(g.kind) - 1) * mb.dc, mult: g.kind === 'pair' ? 0 : 1 });
+    relics.forEach((r, ri) => { if (r.group) { const e = r.group(g, c); if (e) push({ group: gi, relic: ri, ...e }); } });
+  });
+  if (mj) for (const [name, m] of fansOf(tiles, A)) push({ fan: name, mult: m });
   relics.forEach((r, ri) => { if (r.hand) { const e = r.hand(c); if (e) push({ relic: ri, ...e }); } });
-  return { type: ev.type, scoring: ev.scoring, base, events, chips, mult, total: Math.floor(chips * mult), money };
+  return { analysis: A, groups, mahjong: mj, base, events, chips, mult, total: Math.floor(chips * mult), money };
 }
 
 // Blindes
-const ANTE_BASE = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000];
+const ANTE_BASE = [700, 1800, 4500, 10000, 22000, 40000, 70000, 120000];
 const BOSSES = [
-  { id: 'bamboo', name: 'La Forêt silencieuse', desc: 'Les Bambous ne marquent rien.', debuffSuit: 'B' },
-  { id: 'lake', name: 'Le Lac gelé', desc: 'Les Cercles ne marquent rien.', debuffSuit: 'C' },
-  { id: 'ink', name: "L'Encre séchée", desc: 'Les Caractères ne marquent rien.', debuffSuit: 'K' },
-  { id: 'fast', name: 'Le Jeûne du dragon', desc: 'Les Dragons ne peuvent pas être joués.' },
+  { id: 'bamboo', name: 'La Forêt silencieuse', desc: 'Les Bambous ne marquent aucun jeton.', debuffSuit: 'B' },
+  { id: 'lake', name: 'Le Lac gelé', desc: 'Les Cercles ne marquent aucun jeton.', debuffSuit: 'C' },
+  { id: 'ink', name: "L'Encre séchée", desc: 'Les Caractères ne marquent aucun jeton.', debuffSuit: 'K' },
+  { id: 'fast', name: 'Le Jeûne du dragon', desc: 'Les Dragons sont inutilisables dans les groupes.' },
   { id: 'wall', name: 'Le Mur de pierre', desc: '1 main de moins.' },
-  { id: 'silence', name: 'Le Silence', desc: 'Aucune défausse.' },
-  { id: 'cage', name: 'La Cage', desc: '2 tuiles de moins en main.' },
-  { id: 'usurer', name: "L'Usurier", desc: 'Chaque main jouée vous coûte $1.' },
+  { id: 'silence', name: 'Le Silence', desc: '4 échanges de moins.' },
+  { id: 'mist', name: 'La Brume', desc: 'Un échange remplace 3 tuiles au plus.' },
+  { id: 'usurer', name: "L'Usurier", desc: 'Chaque main posée vous coûte $1.' },
 ];
 function blindTarget(ante, idx) { return Math.round(ANTE_BASE[ante - 1] * [1, 1.5, 2][idx]); }
 // ==/CORE==
@@ -374,25 +411,26 @@ const $ = s => document.querySelector(s);
 const app = $('#app');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const MAX_RELICS = 5;
-let G = null, R = null, shop = null, fast = false, selRelic = -1;
+let G = null, R = null, shop = null, fast = false, selRelic = -1, pending = null;
 
-function load() { try { return JSON.parse(localStorage.getItem('mjp-best') || '{}'); } catch (e) { return {}; } }
-function save(o) { try { localStorage.setItem('mjp-best', JSON.stringify(o)); } catch (e) { /* stockage indisponible */ } }
+function load() { try { return JSON.parse(localStorage.getItem('mjp2-best') || '{}'); } catch (e) { return {}; } }
+function save(o) { try { localStorage.setItem('mjp2-best', JSON.stringify(o)); } catch (e) { /* stockage indisponible */ } }
 function toast(msg) {
   document.querySelectorAll('.toast').forEach(e => e.remove());
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2200);
+  setTimeout(() => t.remove(), 2400);
 }
 const fmt = n => Math.round(n).toLocaleString('fr-FR');
 const fmtM = n => (Math.round(n * 10) / 10).toString().replace('.', ',');
+const plural = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
 
 function tileHTML(t, cls = '', extra = '') {
   const eng = t.eng ? `<i class="eng ${t.eng}" title="Gravure"></i>` : '';
   let inner;
-  if (t.suit === 'D') inner = `<span class="dg">${DRAGON_GLYPH[t.v]}</span>`;
+  if (t.suit === 'D') inner = `<span class="dg">${DRAGON_GLYPH[t.v]}</span>` + (t.v === 3 ? '<span class="jk">★</span>' : '');
   else inner = `<span class="tn">${t.v}</span><span class="ts">${SUIT_GLYPH[t.suit]}</span>`;
   const k = t.suit === 'D' ? 'D D' + t.v : t.suit;
-  return `<button class="tile ${k} ${cls}" data-id="${t.id}" aria-label="${tileName(t)}" ${extra}>${inner}${eng}</button>`;
+  return `<button class="tile ${k} ${cls}" data-id="${t.id}" aria-label="${tileName(t)}${t.v === 3 && t.suit === 'D' ? ' (joker)' : ''}" ${extra}>${inner}${eng}</button>`;
 }
 function relicHTML(id, i, cls = '') {
   const r = RELIC_BY_ID[id];
@@ -401,17 +439,15 @@ function relicHTML(id, i, cls = '') {
 
 // ---- Partie ----
 function newRun() {
-  G = { ante: 1, blind: 0, money: 4, relics: [], levels: {}, deck: makeDeck(), best: 0, bosses: [], sort: 'suit' };
-  shuffle(BOSSES.slice()).slice(0, 8).forEach(b => G.bosses.push(b));
+  G = { ante: 1, blind: 0, money: 4, relics: [], levels: {}, deck: makeDeck(), best: 0, bosses: shuffle(BOSSES.slice()) };
+  R = null; shop = null; selRelic = -1;
   toBlindScreen();
 }
-const curBoss = () => G.bosses[G.ante - 1];
 function blindInfo(ante, idx) {
   const target = blindTarget(ante, idx);
-  if (idx === 2) { const b = G.bosses[ante - 1]; return { idx, name: b.name, boss: b, target: target, reward: 5 }; }
+  if (idx === 2) { const b = G.bosses[ante - 1]; return { idx, name: b.name, boss: b, target, reward: 5 }; }
   return { idx, name: idx === 0 ? 'Novice' : 'Maître', boss: null, target, reward: idx === 0 ? 3 : 4 };
 }
-
 function toBlindScreen() {
   const items = [0, 1, 2].map(i => {
     const b = blindInfo(G.ante, i);
@@ -431,11 +467,12 @@ function toBlindScreen() {
     <div class="panel stack">
       <div class="eyebrow">Vos reliques</div>
       <div class="relics">${relicSlots()}</div>
-      <div class="relicinfo muted" id="rinfo">Touchez une relique pour lire son effet.</div>
+      <div class="relicinfo muted" id="rinfo"></div>
     </div>
-    <div class="subactions"><button class="pill" data-act="combos">Combinaisons</button><button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button></div>
+    <div class="subactions"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button></div>
     <button class="btn" data-act="start" style="padding-block:16px">Jouer : ${b.name} (objectif ${fmt(b.target)})</button>
   </div>`;
+  showRelicInfo();
 }
 function relicSlots() {
   let h = '';
@@ -444,97 +481,126 @@ function relicSlots() {
 }
 function showRelicInfo() {
   const el = $('#rinfo'); if (!el) return;
-  if (selRelic < 0 || !G.relics[selRelic]) { el.className = 'relicinfo muted'; el.textContent = 'Touchez une relique pour lire son effet.'; return; }
+  if (selRelic < 0 || !G.relics[selRelic]) { el.className = 'relicinfo muted'; el.textContent = G.relics.length ? 'Touchez une relique pour lire son effet.' : 'Aucune relique pour le moment : la boutique en propose.'; return; }
   const r = RELIC_BY_ID[G.relics[selRelic]];
-  const canSell = !(R && R.busy);
   el.className = 'relicinfo';
-  el.innerHTML = `<div class="tx"><b>${r.name}</b><br>${r.desc}</div>${canSell ? `<button class="pill" data-act="sell">Vendre $${Math.floor(r.cost / 2)}</button>` : ''}`;
+  el.innerHTML = `<div class="tx"><b>${r.name}</b><br>${r.desc}</div>${R && R.busy ? '' : `<button class="pill" data-act="sell">Vendre $${Math.floor(r.cost / 2)}</button>`}`;
 }
 
 // ---- Manche ----
+const isLocked = t => !!(R && R.blind.boss && R.blind.boss.id === 'fast' && t.suit === 'D');
 function startRound() {
   const b = blindInfo(G.ante, G.blind), id = b.boss && b.boss.id;
-  let hands = 4 + passive(G.relics, 'hands'), disc = 3 + passive(G.relics, 'discards'), size = 8 + passive(G.relics, 'size');
+  let hands = 3 + passive(G.relics, 'hands'), swaps = 12 + passive(G.relics, 'swaps'), maxSwap = 6 + passive(G.relics, 'maxSwap');
   if (id === 'wall') hands -= 1;
-  if (id === 'silence') disc = 0;
-  if (id === 'cage') size -= 2;
-  R = { blind: b, target: b.target, score: 0, hands, discards: disc, size, played: 0, draw: shuffle(G.deck.slice()), hand: [], sel: [], busy: false, best: 0 };
-  drawUp(); renderRound();
+  if (id === 'silence') swaps -= 4;
+  if (id === 'mist') maxSwap = 3;
+  R = { blind: b, target: b.target, score: 0, hands, swaps, maxSwap, size: 14 + passive(G.relics, 'size'), played: 0, draw: [], hand: [], sel: [], busy: false, an: null };
+  deal(); renderRound();
 }
-function sortHand() {
-  const so = { B: 0, C: 1, K: 2, D: 3 };
-  R.hand.sort(G.sort === 'suit' ? (a, b) => so[a.suit] - so[b.suit] || a.v - b.v : (a, b) => chipVal(a) - chipVal(b) || so[a.suit] - so[b.suit]);
+function deal() { R.draw = shuffle(G.deck.slice()); R.hand = R.draw.splice(-R.size); R.sel = []; }
+function ctxFor(preview) {
+  const b = R.blind.boss;
+  return { levels: G.levels, relics: G.relics, debuffSuit: b && b.debuffSuit, locked: isLocked, isFirst: R.played === 0, isLast: R.hands === 1, rng: preview ? () => 1 : Math.random };
 }
-function drawUp() { while (R.hand.length < R.size && R.draw.length) R.hand.push(R.draw.pop()); sortHand(); }
 
 function renderRound() {
-  const b = R.blind;
+  const b = R.blind, eye = passive(G.relics, 'eye');
   app.innerHTML = `<div class="stack">
     <div class="top panel">
       <div class="target">
         <div class="eyebrow">${b.name} · Ante ${G.ante}${b.boss ? ' · Boss' : ''}</div>
-        <div class="big" id="score">${fmt(R.score)} <span class="muted small">/ ${fmt(R.target)}</span></div>
+        <div class="big" id="score"></div>
         <div class="bar"><i id="bar"></i></div>
         ${b.boss ? `<div class="boss-note">${b.boss.desc}</div>` : ''}
       </div>
       <div class="stats">
-        <div class="stat"><b id="st-h">${R.hands}</b><span>Mains</span></div>
-        <div class="stat"><b id="st-d">${R.discards}</b><span>Défausses</span></div>
-        <div class="stat money"><b id="st-m">$${G.money}</b><span>Argent</span></div>
-        <div class="stat"><b>${R.draw.length}</b><span>Pioche</span></div>
+        <div class="stat"><b id="st-h"></b><span>Mains</span></div>
+        <div class="stat"><b id="st-d"></b><span>Échanges</span></div>
+        <div class="stat money"><b id="st-m"></b><span>Argent</span></div>
+        <div class="stat"><b id="st-w"></b><span>Mur</span></div>
       </div>
     </div>
     <div class="relics">${relicSlots()}</div>
     <div class="relicinfo muted" id="rinfo"></div>
     <div class="panel calc">
-      <div class="hn" id="hn">Choisissez 1 à 5 tuiles<small>Touchez les tuiles pour les sélectionner</small></div>
+      <div class="hn" id="hn"></div>
       <div class="eq"><span class="v c num" id="cc">0</span>×<span class="v m num" id="cm">0</span></div>
+      <div class="fans" id="fans"></div>
+      <div class="proj muted small" id="proj"></div>
     </div>
-    <div class="hand" id="hand" style="--cols:${Math.max(R.size, 6)}"></div>
+    <div class="handwrap"><div class="hand" id="hand"></div></div>
+    ${eye ? '<div class="wall small muted" id="wall"></div>' : ''}
     <div class="actions">
-      <button class="btn play" data-act="play" id="bplay">Jouer</button>
-      <button class="btn disc" data-act="discard" id="bdisc">Défausser</button>
+      <button class="btn disc" data-act="swap" id="bswap">Échanger</button>
+      <button class="btn play" data-act="pose" id="bpose">Poser la main</button>
     </div>
     <div class="subactions">
-      <span><button class="pill" data-act="sort">Tri : ${G.sort === 'suit' ? 'famille' : 'valeur'}</button> <button class="pill" data-act="combos">Combinaisons</button></span>
+      <span><button class="pill" data-act="useless">Choisir les tuiles inutiles</button> <button class="pill" data-act="help">Aide</button></span>
       <button class="pill" data-act="deck">Paquet</button>
     </div>
   </div>`;
-  renderHand(); updatePreview(); updateBar(); showRelicInfo();
+  renderHand(); updateStats(); showRelicInfo();
 }
-function isLocked(t) { return R.blind.boss && R.blind.boss.id === 'fast' && t.suit === 'D'; }
+function updateStats() {
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set('st-h', R.hands); set('st-d', R.swaps); set('st-m', '$' + G.money); set('st-w', R.draw.length);
+  const s = $('#score'); if (s) s.innerHTML = `${fmt(R.score)} <span class="muted small">/ ${fmt(R.target)}</span>`;
+  const b = $('#bar'); if (b) b.style.width = Math.min(100, (R.score / R.target) * 100) + '%';
+}
 function renderHand() {
   const el = $('#hand'); if (!el) return;
-  el.innerHTML = R.hand.map(t => tileHTML(t, (R.sel.includes(t.id) ? 'sel ' : '') + (isLocked(t) ? 'dead' : ''))).join('');
+  const A = R.an = analyze(R.hand, isLocked);
+  const cell = i => { const t = R.hand[i]; return tileHTML(t, (R.sel.includes(t.id) ? 'sel ' : '') + (isLocked(t) ? 'dead' : '')); };
+  let h = A.melds.map((m, gi) => `<div class="g meld" data-g="${gi}">${m.idx.map(cell).join('')}</div>`).join('');
+  if (A.pair) h += `<div class="g pair" data-g="${A.melds.length}">${A.pair.map(cell).join('')}</div>`;
+  if (A.left.length) h += `<div class="g left">${A.left.map(cell).join('')}</div>`;
+  el.innerHTML = h;
   const none = R.busy || !R.sel.length;
-  $('#bplay').disabled = none;
-  $('#bdisc').disabled = none || R.discards <= 0;
+  $('#bswap').disabled = none || R.swaps <= 0;
+  $('#bswap').textContent = R.sel.length ? `Échanger (${R.sel.length})` : 'Échanger';
+  const pose = $('#bpose'); pose.disabled = R.busy; pose.textContent = A.mahjong ? 'Mahjong !' : 'Poser la main'; pose.classList.toggle('glow', A.mahjong);
+  const w = $('#wall'); if (w) w.innerHTML = 'Prochaines tuiles du mur : ' + R.draw.slice(-3).reverse().map(t => tileHTML(t, 'mini inline')).join('');
+  updatePreview(); updateStats();
 }
-function updateBar() {
-  const b = $('#bar'); if (b) b.style.width = Math.min(100, (R.score / R.target) * 100) + '%';
-  const s = $('#score'); if (s) s.innerHTML = `${fmt(R.score)} <span class="muted small">/ ${fmt(R.target)}</span>`;
-  const h = $('#st-h'); if (h) h.textContent = R.hands;
-  const d = $('#st-d'); if (d) d.textContent = R.discards;
-  const m = $('#st-m'); if (m) m.textContent = '$' + G.money;
+function statusOf(A) {
+  const n = A.melds.length;
+  if (A.mahjong) return ['Mahjong !', plural(n, 'groupe') + ' et une paire'];
+  const need = Math.max(0, 4 - n);
+  const miss = need ? `Il manque ${plural(need, 'groupe')}${A.pair ? '' : ' et une paire'}` : 'Il manque une paire';
+  return [`${plural(n, 'groupe')} ${A.pair ? 'et une paire' : 'sans paire'}`, miss];
 }
-function selTiles() { return R.sel.map(id => R.hand.find(t => t.id === id)).filter(Boolean); }
 function updatePreview() {
   const hn = $('#hn'); if (!hn) return;
-  const ts = selTiles();
-  if (!ts.length) { hn.innerHTML = 'Choisissez 1 à 5 tuiles<small>Touchez les tuiles pour les sélectionner</small>'; $('#cc').textContent = 0; $('#cm').textContent = 0; return; }
-  const ev = evaluate(ts), st = handStats(ev.type, G.levels);
-  hn.innerHTML = `${HT[ev.type].name}<small>Niveau ${G.levels[ev.type] || 1}</small>`;
-  $('#cc').textContent = st.chips; $('#cm').textContent = st.mult;
+  const res = scoreHand(R.hand, ctxFor(true)), [t1, t2] = statusOf(res.analysis);
+  hn.innerHTML = `${t1}<small>${t2}</small>`;
+  hn.classList.toggle('win', res.mahjong);
+  $('#cc').textContent = fmtM(res.chips); $('#cm').textContent = fmtM(res.mult);
+  $('#fans').innerHTML = res.events.filter(e => e.fan).map(e => `<span class="fanpill">${e.fan} +${e.mult}</span>`).join('');
+  $('#proj').textContent = `≈ ${fmt(res.total)} points si vous posez maintenant`;
 }
 function toggleTile(id) {
   if (R.busy) return;
   const t = R.hand.find(x => x.id === id); if (!t) return;
-  if (isLocked(t)) { toast('Le Jeûne du dragon bloque les Dragons.'); return; }
   const i = R.sel.indexOf(id);
   if (i >= 0) R.sel.splice(i, 1);
-  else if (R.sel.length < 5) R.sel.push(id);
-  else { toast('5 tuiles au maximum.'); return; }
-  renderHand(); updatePreview();
+  else if (R.sel.length < R.maxSwap) R.sel.push(id);
+  else { toast(`Un échange remplace ${R.maxSwap} tuiles au plus.`); return; }
+  renderHand();
+}
+function selectUseless() {
+  if (R.busy) return;
+  R.sel = R.an.left.slice(0, R.maxSwap).map(i => R.hand[i].id);
+  if (!R.sel.length) toast('Aucune tuile inutile : toutes servent dans un groupe ou la paire.');
+  renderHand();
+}
+function doSwap() {
+  if (R.busy || !R.sel.length || R.swaps <= 0) return;
+  const n = R.sel.length;
+  R.hand = R.hand.filter(t => !R.sel.includes(t.id)); R.sel = [];
+  R.hand.push(...R.draw.splice(-n)); R.swaps--;
+  renderHand();
+  if (R.an.mahjong) toast('Mahjong ! Posez la main pour marquer.');
 }
 
 function popAt(el, text, cls) {
@@ -542,52 +608,44 @@ function popAt(el, text, cls) {
   const p = document.createElement('span'); p.className = 'pop ' + cls; p.textContent = text; el.appendChild(p);
   setTimeout(() => p.remove(), 950);
 }
-async function doPlay() {
-  if (R.busy || !R.sel.length) return;
-  const played = selTiles();
-  R.busy = true; renderHand();
-  const boss = R.blind.boss;
-  const res = scorePlay(played, { levels: G.levels, relics: G.relics, debuffSuit: boss && boss.debuffSuit, isFirst: R.played === 0, isLast: R.hands === 1 });
-  const wait = ms => sleep(fast ? 40 : ms);
+const retrig = (el, cls) => { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+async function doPose() {
+  if (R.busy) return;
+  R.busy = true; R.sel = []; renderHand();
+  const hand = R.hand, res = scoreHand(hand, ctxFor(false));
+  const wait = ms => sleep(fast ? 25 : ms);
   const cc = $('#cc'), cm = $('#cm'), hn = $('#hn');
-  hn.innerHTML = `${HT[res.type].name}<small>Niveau ${G.levels[res.type] || 1}</small>`;
+  hn.innerHTML = `${res.mahjong ? 'Mahjong !' : 'Main posée'}<small>${plural(res.groups.length, 'groupe')}</small>`;
+  $('#fans').innerHTML = ''; $('#proj').textContent = '';
   let chips = res.base.chips, mult = res.base.mult;
-  cc.textContent = chips; cm.textContent = fmtM(mult);
-  const handEls = id => document.querySelector(`#hand .tile[data-id="${id}"]`);
+  cc.textContent = fmtM(chips); cm.textContent = fmtM(mult);
   await wait(450);
   for (const e of res.events) {
-    const tEl = e.tile !== undefined ? handEls(played[e.tile].id) : null;
+    const tEl = e.tile !== undefined ? document.querySelector(`#hand .tile[data-id="${hand[e.tile].id}"]`) : null;
+    const gEl = e.group !== undefined && e.tile === undefined ? document.querySelector(`#hand .g[data-g="${e.group}"]`) : null;
     const rEl = e.relic !== undefined ? document.querySelector(`.relics [data-relic="${e.relic}"]`) : null;
-    if (tEl) { tEl.classList.remove('score'); void tEl.offsetWidth; tEl.classList.add('score'); }
-    if (rEl) { rEl.classList.remove('fire'); void rEl.offsetWidth; rEl.classList.add('fire'); }
-    const host = rEl && !tEl ? rEl : tEl;
-    if (e.dead) { if (tEl) tEl.classList.add('dead'); popAt(tEl, '0', 'c'); await wait(220); continue; }
-    if (e.chips) { chips += e.chips; popAt(host, '+' + e.chips, 'c'); cc.textContent = chips; cc.classList.remove('bump'); void cc.offsetWidth; cc.classList.add('bump'); }
-    if (e.mult) { mult += e.mult; popAt(e.chips ? rEl || tEl : host, '+' + e.mult + ' mult', 'm'); cm.textContent = fmtM(mult); cm.classList.remove('bump'); void cm.offsetWidth; cm.classList.add('bump'); }
-    if (e.xmult) { mult *= e.xmult; popAt(host, '×' + fmtM(e.xmult), 'x'); cm.textContent = fmtM(mult); cm.classList.remove('bump'); void cm.offsetWidth; cm.classList.add('bump'); }
-    if (e.money) { popAt(host, '+$' + e.money, 'g'); }
-    await wait(e.relic !== undefined ? 520 : 380);
+    retrig(tEl, 'score'); retrig(rEl, 'fire');
+    const host = e.relic !== undefined && !tEl ? rEl : tEl || gEl;
+    if (e.dead) { if (tEl) tEl.classList.add('dead'); popAt(tEl, '0', 'c'); await wait(90); continue; }
+    if (e.fan) { hn.innerHTML = `${e.fan}<small>Combinaison bonus</small>`; popAt(cm.parentElement, '+' + e.mult, 'm'); }
+    if (e.chips) { chips += e.chips; popAt(host, '+' + e.chips, 'c'); cc.textContent = fmtM(chips); retrig(cc, 'bump'); }
+    if (e.mult) { mult += e.mult; if (!e.fan) popAt(e.chips && rEl ? rEl : host, '+' + e.mult + ' mult', 'm'); cm.textContent = fmtM(mult); retrig(cm, 'bump'); }
+    if (e.xmult) { mult *= e.xmult; popAt(host, '×' + fmtM(e.xmult), 'x'); cm.textContent = fmtM(mult); retrig(cm, 'bump'); }
+    if (e.money) popAt(host, '+$' + e.money, 'g');
+    await wait(e.fan ? 420 : e.relic !== undefined ? 480 : e.tile !== undefined ? 110 : 260);
   }
-  await wait(350);
-  // Score
-  const total = res.total;
-  const start = R.score, end = start + total, steps = fast ? 4 : 18;
-  for (let i = 1; i <= steps; i++) { R.score = Math.round(start + (total * i) / steps); updateBar(); await sleep(fast ? 10 : 24); }
-  R.score = end; R.best = Math.max(R.best, total); G.best = Math.max(G.best, total);
+  await wait(400);
+  const total = res.total, start = R.score, steps = fast ? 4 : 18;
+  for (let i = 1; i <= steps; i++) { R.score = Math.round(start + (total * i) / steps); updateStats(); await sleep(fast ? 10 : 24); }
+  R.score = start + total; G.best = Math.max(G.best, total);
   G.money += res.money;
   if (R.blind.boss && R.blind.boss.id === 'usurer') G.money = Math.max(0, G.money - 1);
   R.hands--; R.played++;
-  R.hand = R.hand.filter(t => !R.sel.includes(t.id)); R.sel = [];
-  updateBar();
+  updateStats();
   await wait(300);
   if (R.score >= R.target) return winRound();
-  if (R.hands <= 0 || (!R.hand.length && !R.draw.length)) return loseRun();
-  drawUp(); R.busy = false; renderRound();
-}
-function doDiscard() {
-  if (R.busy || !R.sel.length || R.discards <= 0) return;
-  R.discards--; R.hand = R.hand.filter(t => !R.sel.includes(t.id)); R.sel = [];
-  drawUp(); renderRound();
+  if (R.hands <= 0) return loseRun();
+  deal(); R.busy = false; fast = false; renderRound(); toast('Nouvelle main : ' + plural(R.hands, 'main') + ' restante' + (R.hands > 1 ? 's' : ''));
 }
 
 // ---- Fin de manche ----
@@ -647,18 +705,16 @@ function genShop() {
     picks.push(pool.splice(k, 1)[0]);
   }
   const kinds = shuffle(['engChips', 'engMult', 'engGold', 'purge', 'study', 'study']).filter((v, i, a) => a.indexOf(v) === i).slice(0, 2);
-  const items = kinds.map(k => {
-    if (k === 'study') { const h = HAND_TYPES[Math.floor(Math.random() * HAND_TYPES.length)]; return { kind: k, type: h.id, cost: 3 }; }
-    return { kind: k, cost: { engChips: 4, engMult: 5, engGold: 4, purge: 3 }[k] };
-  });
-  return { relics: picks.map(r => ({ id: r.id, sold: false })), items: items.map(i => ({ ...i, sold: false })), rerolls: 0 };
+  const keys = Object.keys(STUDIES);
+  const items = kinds.map(k => (k === 'study' ? { kind: k, type: keys[Math.floor(Math.random() * keys.length)], cost: 3, sold: false }
+    : { kind: k, cost: { engChips: 4, engMult: 5, engGold: 4, purge: 3 }[k], sold: false }));
+  return { relics: picks.map(r => ({ id: r.id, sold: false })), items, rerolls: 0 };
 }
 const ITEM_INFO = {
   engChips: { icon: '墨', name: "Encre d'or", desc: 'Grave une tuile de votre choix : +30 jetons quand elle marque.' },
   engMult: { icon: '朱', name: 'Cinabre', desc: 'Grave une tuile de votre choix : +4 mult quand elle marque.' },
   engGold: { icon: '金', name: 'Feuille d’or', desc: 'Grave une tuile de votre choix : +$2 quand elle marque.' },
-  purge: { icon: '空', name: 'Purge', desc: 'Retire une tuile de votre choix du paquet.' },
-  study: { icon: '學', name: 'Étude', desc: '' },
+  purge: { icon: '空', name: 'Purge', desc: 'Retire une tuile de votre choix du paquet (30 tuiles au minimum).' },
 };
 function renderShop() {
   const rc = 3 + shop.rerolls;
@@ -669,10 +725,9 @@ function renderShop() {
       <button class="btn buy" data-act="buyrelic" data-i="${i}" ${o.sold || G.money < r.cost ? 'disabled' : ''}>${o.sold ? 'Acheté' : 'Acheter $' + r.cost}</button></div></div>`;
   }).join('');
   const itemOffers = shop.items.map((o, i) => {
-    const info = ITEM_INFO[o.kind];
-    const desc = o.kind === 'study' ? `${HT[o.type].name} passe du niveau ${G.levels[o.type] || 1} au niveau ${(G.levels[o.type] || 1) + 1} (+${HT[o.type].dc} jetons, +${HT[o.type].dm} mult).` : info.desc;
+    const st = STUDIES[o.type], info = o.kind === 'study' ? { icon: st.icon, name: 'Étude : ' + st.name, desc: `Niveau ${G.levels[o.type] || 1} → ${(G.levels[o.type] || 1) + 1}. ${st.note}.` } : ITEM_INFO[o.kind];
     return `<div class="offer ${o.sold ? 'sold' : ''}"><div class="item">${info.icon}</div>
-      <div><h3>${info.name}</h3><p>${desc}</p>
+      <div><h3>${info.name}</h3><p>${info.desc}</p>
       <button class="btn buy" data-act="builtem" data-i="${i}" ${o.sold || G.money < o.cost ? 'disabled' : ''}>${o.sold ? 'Acheté' : 'Acheter $' + o.cost}</button></div></div>`;
   }).join('');
   app.innerHTML = `<div class="stack">
@@ -682,7 +737,7 @@ function renderShop() {
     <div class="eyebrow">Atelier</div>
     <div class="offers">${itemOffers}</div>
     <div class="panel stack"><div class="eyebrow">Vos reliques</div><div class="relics">${relicSlots()}</div><div class="relicinfo muted" id="rinfo"></div></div>
-    <div class="subactions"><button class="pill" data-act="combos">Combinaisons</button><button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button>
+    <div class="subactions"><span><button class="pill" data-act="help">Aide</button> <button class="pill" data-act="deck">Voir le paquet (${G.deck.length})</button></span>
       <button class="pill" data-act="reroll" ${G.money < rc ? 'disabled' : ''}>Relancer $${rc}</button></div>
     <button class="btn" data-act="nextblind" style="padding-block:16px">Prochaine blinde</button>
   </div>`;
@@ -694,34 +749,30 @@ function closeModal() { document.querySelectorAll('.modal').forEach(m => m.remov
 function openModal(html) {
   closeModal();
   const m = document.createElement('div'); m.className = 'modal'; m.innerHTML = `<div class="box">${html}</div>`;
-  m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+  m.addEventListener('click', e => { if (e.target === m) { closeModal(); pending = null; } });
   document.body.appendChild(m);
 }
-function combosModal() {
-  const rows = HAND_TYPES.map(h => {
-    const st = handStats(h.id, G ? G.levels : {});
-    return `<tr><td><b>${h.name}</b><br><span class="muted small">${h.desc}</span></td><td class="n">${st.chips} × ${st.mult}</td><td class="n">${G ? G.levels[h.id] || 1 : 1}</td></tr>`;
-  }).join('');
-  openModal(`<div class="hd"><h2>Combinaisons</h2><button class="pill" data-act="close">Fermer</button></div>
-    <p class="muted small">Les Dragons ne forment que des paires, brelans et carrés. Chaque tuile qui marque ajoute sa valeur en jetons (les Dragons valent 10). Score = jetons × mult.</p>
-    <div class="tablewrap"><table><tr><th>Main</th><th>Jetons × mult</th><th>Niv.</th></tr>${rows}</table></div>`);
+function helpModal() {
+  const lv = k => (G && G.levels[k]) || 1;
+  const rows = ['chow', 'pung', 'pair', 'mahjong'].map(k => `<tr><td><b>${STUDIES[k].name}</b></td><td class="n">${lv(k)}</td><td class="muted small">${STUDIES[k].note}</td></tr>`).join('');
+  openModal(`<div class="hd"><h2>Aide</h2><button class="pill" data-act="close">Fermer</button></div>
+    <div class="stack small">
+    <p><b>But.</b> Former une main de 14 tuiles : <b>4 groupes + 1 paire</b>. Un groupe est une <b>séquence</b> (3 valeurs qui se suivent dans une famille, ex. 4-5-6 de Cercles) ou un <b>brelan</b> (3 tuiles identiques). Le jeu range votre main tout seul : groupes en vert, paire en or, tuiles inutiles à droite.</p>
+    <p><b>Échanger.</b> Sélectionnez des tuiles (6 au plus) puis échangez-les contre des tuiles du mur. Vos échanges sont partagés entre toutes les mains de la blinde : à vous de décider où les dépenser.</p>
+    <p><b>Poser.</b> Vous pouvez poser votre main quand vous voulez. Chaque groupe ajoute +1 mult, chaque tuile des groupes ajoute sa valeur en jetons (Dragons : 10). Un Mahjong complet démarre à 40 jetons × 3 et déclenche les combinaisons bonus.</p>
+    <p><b>Dragon blanc ★ :</b> c'est un joker, il remplace n'importe quelle tuile.</p>
+    <p><b>Combinaisons bonus (Mahjong).</b> Quatre séquences +3 · Quatre brelans +5 · Une seule famille +8 · Une famille et des dragons +4 · Dragon rouge ou vert en brelan +2 · Paire de dragons +1 · Séquences jumelles +2 · Grande séquence (1-2-3, 4-5-6, 7-8-9) +5.</p>
+    </div>
+    <div class="tablewrap"><table><tr><th>Étude</th><th>Niv.</th><th>Effet</th></tr>${rows}</table></div>`);
 }
 function deckModal(mode) {
   const so = { B: 0, C: 1, K: 2, D: 3 };
   const tiles = G.deck.slice().sort((a, b) => so[a.suit] - so[b.suit] || a.v - b.v);
-  const inDraw = R && !mode ? new Set(R.draw.map(t => t.id)) : null;
+  const inDraw = R && R.draw.length && !mode ? new Set(R.draw.map(t => t.id)) : null;
   const title = mode === 'purge' ? 'Choisissez la tuile à retirer' : mode ? 'Choisissez la tuile à graver' : `Paquet (${G.deck.length} tuiles)`;
   openModal(`<div class="hd"><h2>${title}</h2><button class="pill" data-act="close">${mode ? 'Annuler' : 'Fermer'}</button></div>
-    ${inDraw ? '<p class="muted small">Les tuiles grisées sont déjà en main ou défaussées.</p>' : ''}
+    ${inDraw ? '<p class="muted small">Les tuiles grisées sont déjà dans votre main.</p>' : ''}
     <div class="decks">${tiles.map(t => tileHTML(t, 'mini ' + (inDraw && !inDraw.has(t.id) ? 'dim' : ''), mode ? `data-pick="${t.id}"` : '')).join('')}</div>`);
-}
-function rulesModal() {
-  openModal(`<div class="hd"><h2>Règles</h2><button class="pill" data-act="close">Fermer</button></div>
-    <div class="stack small">
-    <p>Chaque blinde fixe un score à atteindre avant d'épuiser vos mains. Vous piochez 8 tuiles : sélectionnez 1 à 5 tuiles et jouez-les pour former une combinaison, ou défaussez-en pour piocher.</p>
-    <p>Les tuiles qui forment la combinaison marquent des jetons. Le score de la main est <b>jetons × mult</b>. Les reliques ajoutent des jetons, du mult ou des multiplicateurs.</p>
-    <p>Après chaque blinde, dépensez votre argent en boutique : reliques, études (améliorent une combinaison), gravures (bonus permanents sur une tuile) et purges (retirent une tuile). Battez les 8 antes pour gagner.</p>
-    </div>`);
 }
 
 // ---- Événements ----
@@ -730,17 +781,20 @@ document.addEventListener('click', e => {
   if (tileEl && tileEl.dataset.pick !== undefined) return pickTile(+tileEl.dataset.pick);
   if (tileEl && tileEl.closest('#hand')) return toggleTile(+tileEl.dataset.id);
   const relicEl = e.target.closest('.relic[data-relic]');
-  if (relicEl && +relicEl.dataset.relic >= 0) { selRelic = selRelic === +relicEl.dataset.relic ? -1 : +relicEl.dataset.relic; document.querySelectorAll('.relics .relic').forEach(r => r.classList.toggle('sel', +r.dataset.relic === selRelic)); return showRelicInfo(); }
+  if (relicEl && +relicEl.dataset.relic >= 0) {
+    selRelic = selRelic === +relicEl.dataset.relic ? -1 : +relicEl.dataset.relic;
+    document.querySelectorAll('.relics .relic').forEach(r => r.classList.toggle('sel', +r.dataset.relic === selRelic));
+    return showRelicInfo();
+  }
   if (R && R.busy && !e.target.closest('[data-act]')) { fast = true; return; }
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
   const a = b.dataset.act;
-  if (a === 'new') { selRelic = -1; newRun(); }
-  else if (a === 'rules') rulesModal();
+  if (a === 'new') newRun();
+  else if (a === 'rules' || a === 'help') helpModal();
   else if (a === 'start') startRound();
-  else if (a === 'play') { fast = false; doPlay(); }
-  else if (a === 'discard') doDiscard();
-  else if (a === 'sort') { G.sort = G.sort === 'suit' ? 'value' : 'suit'; sortHand(); renderRound(); }
-  else if (a === 'combos') combosModal();
+  else if (a === 'pose') { fast = false; doPose(); }
+  else if (a === 'swap') doSwap();
+  else if (a === 'useless') selectUseless();
   else if (a === 'deck') deckModal();
   else if (a === 'close') { closeModal(); pending = null; }
   else if (a === 'toshop') { shop = genShop(); selRelic = -1; renderShop(); }
@@ -749,17 +803,18 @@ document.addEventListener('click', e => {
   else if (a === 'sell') {
     if (selRelic < 0) return;
     const r = RELIC_BY_ID[G.relics[selRelic]]; G.money += Math.floor(r.cost / 2); G.relics.splice(selRelic, 1); selRelic = -1;
-    toast(`${r.name} vendue.`); R && R.blind && document.getElementById('hand') ? renderRound() : shop ? renderShop() : toBlindScreen();
+    toast(`${r.name} vendue.`);
+    if (R && document.getElementById('hand')) renderRound(); else if (shop && document.querySelector('.offers')) renderShop(); else toBlindScreen();
   }
   else if (a === 'buyrelic') {
     const o = shop.relics[+b.dataset.i], r = RELIC_BY_ID[o.id];
-    if (G.relics.length >= MAX_RELICS) return toast('Vous n’avez plus de place : vendez une relique.');
+    if (G.relics.length >= MAX_RELICS) return toast('Plus de place : vendez une relique.');
     if (G.money < r.cost) return;
     G.money -= r.cost; G.relics.push(o.id); o.sold = true; renderShop();
   }
   else if (a === 'builtem') {
     const o = shop.items[+b.dataset.i]; if (G.money < o.cost) return;
-    if (o.kind === 'study') { G.money -= o.cost; G.levels[o.type] = (G.levels[o.type] || 1) + 1; o.sold = true; toast(`${HT[o.type].name} : niveau ${G.levels[o.type]}`); renderShop(); }
+    if (o.kind === 'study') { G.money -= o.cost; G.levels[o.type] = (G.levels[o.type] || 1) + 1; o.sold = true; toast(`${STUDIES[o.type].name} : niveau ${G.levels[o.type]}`); renderShop(); }
     else { pending = o; deckModal(o.kind === 'purge' ? 'purge' : 'eng'); }
   }
   else if (a === 'reroll') {
@@ -767,13 +822,13 @@ document.addEventListener('click', e => {
     G.money -= c; const n = shop.rerolls + 1; shop = genShop(); shop.rerolls = n; renderShop();
   }
 });
-let pending = null;
 function pickTile(id) {
   if (!pending) return;
   const t = G.deck.find(x => x.id === id); if (!t) return;
   const o = pending; pending = null;
+  if (o.kind === 'purge' && G.deck.length <= 30) { closeModal(); return toast('Gardez au moins 30 tuiles.'); }
   G.money -= o.cost; o.sold = true;
-  if (o.kind === 'purge') { if (G.deck.length <= 20) { G.money += o.cost; o.sold = false; closeModal(); return toast('Gardez au moins 20 tuiles.'); } G.deck = G.deck.filter(x => x.id !== id); toast(`${tileName(t)} retirée du paquet.`); }
+  if (o.kind === 'purge') { G.deck = G.deck.filter(x => x.id !== id); toast(`${tileName(t)} retirée du paquet.`); }
   else { t.eng = { engChips: 'chips', engMult: 'mult', engGold: 'gold' }[o.kind]; toast(`${tileName(t)} gravée.`); }
   closeModal(); renderShop();
 }
@@ -783,8 +838,8 @@ function showTitle() {
   app.innerHTML = `<div class="title">
     <div class="mark">麻雀</div>
     <h1>Mahjong Poker</h1>
-    <p>Formez des combinaisons de mahjong avec cinq tuiles au plus. Chaque main est notée comme au poker : jetons × mult. Collectez des reliques, améliorez vos mains et franchissez huit antes.</p>
-    <div class="row"><button class="btn" data-act="new">Nouvelle partie</button><button class="btn ghost" data-act="rules">Règles</button></div>
+    <p>Construisez une vraie main de mahjong : 14 tuiles, 4 groupes et une paire. Échangez vos tuiles, annoncez Mahjong, et marquez comme au poker : jetons × mult. Collectez des reliques, améliorez vos groupes et franchissez huit antes.</p>
+    <div class="row"><button class="btn" data-act="new">Nouvelle partie</button><button class="btn ghost" data-act="help">Règles</button></div>
     <div class="record">${rec.ante ? `Meilleure ante : ${rec.ante} · Meilleure main : ${fmt(rec.hand || 0)}${rec.wins ? ' · Victoires : ' + rec.wins : ''}` : 'Aucune partie jouée pour le moment.'}</div>
   </div>`;
 }
