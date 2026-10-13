@@ -491,5 +491,16 @@
  "Don · ": "Gift · ",
  " (niveau max, évolué) devient un don permanent : il se lance tout seul toutes les ": " (max level, evolved) becomes a permanent gift: it casts itself every ",
  " s à 60 % de sa puissance, et son emplacement est libéré.": " s at 60% of its power, and its slot is freed.",
- " se transcende en don permanent.": " transcends into a permanent gift."
+ " se transcende en don permanent.": " transcends into a permanent gift.",
+ "Fusion d'armes": "Weapon merge",
+ "Fusion : ": "Merge: ",
+ "🎲 Relancer les offres · ": "🎲 Reroll offers · ",
+ "Une 2e copie fusionne avec l'arme : dégâts +45 % (rang ": "A 2nd copy merges with the weapon: damage +45% (rank ",
+ "Une 2e copie fusionne avec ton arme : dégâts +45 % (rang ": "A 2nd copy merges with your weapon: damage +45% (rank ",
+ "Verrouiller : garde cette offre pour la prochaine boutique": "Lock: keep this offer for the next shop",
+ "Verrouiller cet équipement": "Lock this gear",
+ "★ Fusions : ": "★ Merges: ",
+ " fusionne : rang ": " merges: rank ",
+ " (+45 % de dégâts par rang).": " (+45% damage per rank).",
+ "Rang max": "Max rank"
 }
