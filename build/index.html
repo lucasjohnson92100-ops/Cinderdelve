@@ -14634,6 +14634,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     grad.addColorStop(0, "rgba(255,180,90,0.16)");
     grad.addColorStop(1, "rgba(255,180,90,0)");
     ctx.fillStyle = grad; ctx.fillRect(camX, camY, vw, vh);
+    /* étalonnage des couleurs (remplace le filtre CSS, bien plus lourd) : teinte chaude et couleurs un peu moins criardes */
+    if (state.survival && !perf.flat) { ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "rgb(247,236,220)"; ctx.fillRect(camX, camY, vw, vh); ctx.globalCompositeOperation = "saturation"; ctx.fillStyle = "rgba(128,128,128,0.22)"; ctx.fillRect(camX, camY, vw, vh); ctx.restore(); }
     ctx.restore();
 
     ctx.save();
@@ -14741,12 +14743,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var last = 0;
-  var perf = { ema: 16, n: 0, low: false }, kCap = 3;
+  var perf = { ema: 16, n: 0, low: false, flat: false }, kCap = 4;
   function loop() {
     requestAnimationFrame(loop);
     var t = now();
     var dt = last ? Math.min(50, t - last) : 16;
-    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 90 && perf.ema > 26) { perf.low = true; document.body.classList.add("lowfx"); kCap = 2; try { resize(); } catch (err) {} } }
+    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 90 && perf.ema > 26 && !perf.low) { if (kCap > 3) kCap = 3; else if (kCap > 2) { kCap = 2; perf.flat = true; } else { perf.low = true; document.body.classList.add("lowfx"); } perf.n = 0; perf.ema = 16; try { resize(); } catch (err) {} } }
     last = t;
     if (!g) return;
     if (mode !== "play") haltInput();
@@ -14798,7 +14800,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       rows = Math.min(H, Math.ceil(ah / tile));
     }
     view.cols = cols; view.rows = rows;
-    var k = Math.max(1, Math.min(state && state.survival ? (kCap || 3) : 6, Math.ceil(tile * dpr / TILE)));
+    var k = Math.max(1, Math.min(state && state.survival ? (kCap || 4) : 6, Math.ceil(tile * dpr / TILE)));
     canvas.width = cols * TILE * k; canvas.height = rows * TILE * k;
     canvas.style.width = (cols * tile) + "px";
     canvas.style.height = (rows * tile) + "px";
