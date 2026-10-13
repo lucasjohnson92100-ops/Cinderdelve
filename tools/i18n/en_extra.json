@@ -485,5 +485,6 @@
  "Ton attaque de base ralentit les monstres touchés et peut les étourdir ; +15 % de dégâts.": "Your basic attack slows hit monsters and may stun them; +15% damage.",
  "Un éclair saute du monstre touché vers 2 voisins ; +15 % de dégâts.": "A bolt jumps from the hit monster to 2 neighbors; +15% damage.",
  "Ton attaque de base devient : ": "Your basic attack becomes: ",
- "L'éclair rebondit sur": "The bolt bounces onto"
+ "L'éclair rebondit sur": "The bolt bounces onto",
+ "Résiste": "Resists"
 }
