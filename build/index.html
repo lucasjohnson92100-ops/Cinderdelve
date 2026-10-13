@@ -5594,6 +5594,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       pi_thorns: function (x) { Q(x, function (p) { p.moveTo(6, 54); p.lineTo(58, 54); }, 5, "#6a4426"); [10, 22, 34, 46].forEach(function (d, i) { P(x, [[d, 54], [d + 10, 54], [d + 5, 12 + (i % 2) * 8]], "#3a9a3a", 2.6); L(x, d + 5, 20 + (i % 2) * 8, d + 5, 50, 1.2, "#7ae05a"); }); },
       pi_peck: function (x) { P(x, [[8, 22], [44, 10], [30, 30]], "#ffb03a", 3); P(x, [[8, 22], [30, 30], [24, 48]], "#e08a20", 3); [[50, 20, 56, 14], [54, 30, 60, 30], [48, 40, 56, 46]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3, "#fff"); }); },
       pi_orbit: function (x) { Q(x, function (p) { p.arc(32, 32, 20, 0, 6.2832); }, 2.4, "rgba(255,255,255,0.45)"); sword(x, 0.8, 30); x.save(); x.translate(50, 14); x.rotate(1.2); L(x, 0, 6, 0, -6, 4, "#d8e0ec"); x.restore(); x.save(); x.translate(14, 50); x.rotate(-2); L(x, 0, 6, 0, -6, 4, "#d8e0ec"); x.restore(); },
+      pi_eggbomb: function (x) { glow(x, "rgba(255,140,50,0.35)"); E(x, 30, 40, 16, 19, "#f4ecd8"); E(x, 24, 34, 4.4, 8, "#ffffff", 0.3); x.strokeStyle = "#8a7a5a"; x.lineWidth = 2; x.beginPath(); x.moveTo(20, 40); x.lineTo(26, 36); x.lineTo(30, 42); x.lineTo(35, 36); x.lineTo(41, 41); x.stroke(); Q(x, function (p) { p.moveTo(34, 22); p.quadraticCurveTo(40, 12, 48, 12); }, 2.6, "#8a5a2c"); flame(x, 49, 10, 0.5, "#ff6a2a", "#ffe27a"); [[10, 22], [54, 26], [52, 52]].forEach(function (c) { star(x, c[0], c[1], 4, "#ffe27a"); }); },
       pi_fistmp: function (x) { E(x, 32, 34, 17, 20, "#7ac8ff"); C(x, 32, 34, 6, "#fff"); }
     };
     Object.keys(D).forEach(function (k) { try { var c = mk(D[k]), w = silh(c, "#ffffff"), r = silh(c, "#ff2d3d"); SP[k] = { c: c, ph: c, h: c, hw: w, hr: r, white: w, red: r, native: true }; } catch (e) { if (window.console) console.warn("icône", k, e); } });
@@ -9608,7 +9609,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     hedgehog: { name: "Hérisson", icon: "pi_hedgehog", learn: "Quand tu es touché, des piques jaillissent autour de toi", up: "+12 % de dégâts, piques plus larges" },
     lucky: { name: "Pièce porte-bonheur", icon: "coin", learn: "Une pièce lancée sur un monstre : dégâts aléatoires (×1 à ×4) et un peu d'or", up: "+12 % de dégâts, plus d'or" },
     sonar: { name: "Sonar de basse-cour", icon: "pi_sonar", learn: "Une onde touche tous les monstres à distance moyenne (5 à 8 cases)", up: "+12 % de dégâts, onde plus large" },
-    eggbomb: { name: "Œuf piégé", icon: "egg", learn: "Lance un œuf sur un groupe : il explose après 1 s", up: "+12 % de dégâts (un œuf de plus aux niveaux 3 et 5)" }
+    eggbomb: { name: "Œuf piégé", icon: "pi_eggbomb", learn: "Lance un œuf sur un groupe : il explose après 1 s", up: "+12 % de dégâts (un œuf de plus aux niveaux 3 et 5)" }
   });
   /* carte « Arme en main » : change l'arme de l'attaque de base (et celle qu'on voit dans la main du héros) */
   function survSwapCard() {
