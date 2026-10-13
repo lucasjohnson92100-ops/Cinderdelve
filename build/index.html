@@ -8039,8 +8039,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
 
   function steerVec(e, pcx, pcy, d, sees) {
     var ecx = e.vx + 0.5, ecy = e.vy + 0.5;
-    if (state.survival && !(e.bfsT > gtime)) return [pcx - ecx, pcy - ecy];   /* en Survie : ligne droite vers le héros, donc les meutes arrivent de front et non en file indienne */
-    if (e.ghost || (sees && d < 9)) return [pcx - ecx, pcy - ecy];
+    if (state.survival && !(e.bfsT > gtime)) {   /* en Survie : ligne droite vers le héros quand la voie est libre (les meutes arrivent de front) ; sinon on suit le chemin calculé autour des obstacles */
+      if (!(gtime < e.losC)) { e.losOk = los(e.x, e.y, p.x, p.y); e.losC = gtime + 250 + Math.random() * 150; }
+      if (e.losOk || e.ghost) return [pcx - ecx, pcy - ecy];
+    }
+    if (e.ghost || (!state.survival && sees && d < 9)) return [pcx - ecx, pcy - ecy];
     var cur = pdist[e.y] ? pdist[e.y][e.x] : -1;
     if (cur < 0) return [pcx - ecx, pcy - ecy];
     var best = null, bd = cur;
@@ -8136,10 +8139,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         }
       }
       var ox = e.vx, oy = e.vy;
-      if (mvx || mvy) moveBody(e, mvx * spd * dt, mvy * spd * dt, e.r, e.ghost);
+      if (mvx || mvy) moveBody(e, mvx * spd * dt, mvy * spd * dt, state.survival && e.r > 0.45 ? 0.45 : e.r, e.ghost);   /* les gros monstres se faufilent dans les passages d'une case */
       e.mv = Math.abs(e.vx - ox) + Math.abs(e.vy - oy) > 0.0005 ? 1 : 0;
       tileOfBody(e);
-      if (state.survival) { if (!e.mv && d > 1.4 && !e.dash) { e.stuckT = (e.stuckT || 0) + dt; if (e.stuckT > 0.5) { e.stuckT = 0; e.bfsT = gtime + 1500; } } else e.stuckT = 0; }
+      if (state.survival && !e.dash && d > 1.6) {   /* pas de progrès vers le héros (bloqué ou qui longe un obstacle) : on suit le chemin calculé pendant 3 s */
+        e.stuckT = (e.stuckT || 0) + dt;
+        if (e.stuckT > 0.7) { var pdc = pdist && pdist[e.y] ? pdist[e.y][e.x] : -1; if (!(e.bfsT > gtime) && pdc >= 0 && e.pgV != null && pdc > e.pgV - 1) e.bfsT = gtime + 3000; e.pgV = pdc; e.stuckT = 0; }
+      } else e.stuckT = 0;
     }
     // les monstres ne se superposent pas
     for (i = 0; i < enemies.length; i++) for (var j = i + 1; j < enemies.length; j++) {
@@ -10817,8 +10823,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         [[44, 8], [45, 8], [55, 8], [55, 13]].forEach(function (c, ii) { propAt(c[0], c[1], ii % 2 ? "trough" : "hay"); });
         [[45, 49], [46, 49], [55, 49], [55, 55], [45, 55]].forEach(function (c) { propAt(c[0], c[1], "hay"); });
         [[8, 49], [9, 49], [16, 49], [16, 55], [8, 55]].forEach(function (c, ii) { propAt(c[0], c[1], ii < 2 ? "hay" : "trough"); });
-        for (x = 24; x <= 40; x++) if (x % 7 !== 3) { propAt(x, 21, "fence"); propAt(x, 43, "fence"); }
-        for (y = 24; y <= 40; y++) if (y % 7 !== 3) { propAt(20, y, "fence"); propAt(44, y, "fence"); }
+        for (x = 24; x <= 40; x++) if (x % 7 !== 3 && x % 7 !== 4) { propAt(x, 21, "fence"); propAt(x, 43, "fence"); }
+        for (y = 24; y <= 40; y++) if (y % 7 !== 3 && y % 7 !== 4) { propAt(20, y, "fence"); propAt(44, y, "fence"); }
         discFn(52, 30, 3.6, function (xx, yy) { liqAt(xx, yy, 1); });
         discFn(11, 32, 3.2, function (xx, yy) { liqAt(xx, yy, 1); });
         for (k = 0; k < 26; k++) propAt(4 + rnd(W - 8), 4 + rnd(W - 8), ["hay", "scarecrow", "wagon", "trough", "hay"][rnd(5)]);
