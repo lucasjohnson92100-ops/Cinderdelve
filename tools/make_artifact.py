@@ -13,7 +13,7 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build")
 OUT = sys.argv[1] if len(sys.argv) > 1 else "artifact.html"
-IMG_Q, IMG_MAX, AUDIO_KBPS, LIMIT = 40, 512, 24, 15_800_000
+IMG_Q, IMG_MAX, AUDIO_KBPS, LIMIT = 40, 512, 16, 15_800_000
 
 def b64(mime, data):
     return "data:%s;base64,%s" % (mime, base64.b64encode(data).decode())
