@@ -7024,6 +7024,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     if (e.shieldHp > 0) { e.shieldHp--; addFloat(e.vx, e.vy - 0.4, "Bloqué", "#7fb8ff"); burst(e.vx, e.vy, "#7fb8ff", 5, 40); return false; }
     if (state.survival) { var ds = dmgSrc || "Autre"; state.survDmg = state.survDmg || {}; state.survDmg[ds] = (state.survDmg[ds] || 0) + Math.min(d, Math.max(0, e.hp)); }
     if (e.brittleT > 0) d = Math.round(d * 1.5);
+    if (state.survival && e.boss) d = Math.min(d, Math.max(2, Math.ceil(e.maxHp * (e.superBoss ? 0.035 : 0.05))));   /* aucun pouvoir ne tue un boss d'un coup */
     e.hp -= d;
     e.flash = now() + 130;
     e.hitT = now(); { var hdx = e.vx - p.vx, hdy = e.vy - p.vy, hdl = Math.hypot(hdx, hdy) || 1; e.hdx = hdx / hdl; e.hdy = hdy / hdl; }
@@ -7674,7 +7675,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       rings.push({ x: p.vx, y: p.vy, t0: now(), dur: 450, c: "#6fd6ff" });
       addFloat(p.vx, p.vy - 0.6, "Familier !", "#6fd6ff"); sfx("heal");
     } else {
-      var e0 = pickTarget() || nearestTarget();
+      var e0 = pickTarget(true) || nearestTarget();
       if (!e0) { say("Aucune cible en vue."); return false; }
       var dx = e0.vx - p.vx, dy = e0.vy - p.vy, dist = Math.hypot(dx, dy) || 1;
       var dur = Math.min(0.5, Math.max(0.1, (dist - 0.7) / 18));
@@ -8100,7 +8101,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (!e.aggro) {
         if (d <= (e.boss ? 13 : e.type === "skeleton" ? 11 : 9.5) && (sees || d < 2.5)) e.aggro = true;
         else { e.mv = 0; continue; }
-      } else if (d > 22) { e.aggro = false; e.mv = 0; continue; }
+      } else if (d > (state.survival ? 45 : 22)) { e.aggro = false; e.mv = 0; continue; }
       if (Math.abs(dx) > 0.15) e.face = dx < 0 ? -1 : 1;
       var ux = d ? dx / d : 0, uy = d ? dy / d : 0, mvx = 0, mvy = 0, spd = e.spd * (state.survival ? SURV_PACE : 1) * (e.slowT > 0 ? (e.slowF || 0.45) : 1);
       if (e.slamCd > 0) e.slamCd -= dt;
@@ -8293,11 +8294,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survSpDesc(L) { return L % 4 === 0 ? "Le sort est lancé une fois de plus" : "+10 % de puissance"; }
   function survSpSummary(L) { return "+" + Math.round((survSpMul(L) - 1) * 100) + " % de puissance, lancé " + survSpCasts(L) + " fois"; }
   function survRoundMul(d, m) { return Math.max(1, Math.floor(d * m + Math.random())); }
-  function pickTarget() {
+  function pickTarget(real) {
     if (state.survival) {
       var ve = visibleEnemies();
       aimTarget = null;
-      return ve.length ? ve[rnd(ve.length)] : null;
+      if (real) return ve.length ? ve[rnd(ve.length)] : null;
+      /* en Survie les sorts partent au hasard autour du héros, sans viser un monstre */
+      if (!ve.length) return null;
+      var ra = Math.random() * 6.283, rr = 2.5 + Math.random() * 4.5, rx = p.vx + Math.cos(ra) * rr, ry = p.vy + Math.sin(ra) * rr;
+      return { vx: rx, vy: ry, x: Math.round(rx), y: Math.round(ry), hp: 1, r: 0.3, fake: true };
     }
     var e = (aimTarget && aimTarget.hp > 0 && enemies.indexOf(aimTarget) >= 0) ? aimTarget : nearestTarget();
     aimTarget = null;
@@ -8343,8 +8348,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       run: function () {
         var L = fsL("eggs"), ev = isEvo("eggs"), sc = fsSc(L), n = 2 + Math.floor(L / 2) + (ev ? 3 : 0), pool = enemies.filter(function (o) { return Math.hypot(o.vx - p.vx, o.vy - p.vy) < (ev ? 8 : 6.5); });
         if (!pool.length) { say("Aucune cible en vue."); return false; }
-        pool = shuffle(pool).slice(0, n); var dmg = Math.round((state.atk * 0.8 + 2 + sb()) * sc * (ev ? 1.4 : 1)), r = ev ? 2.3 : L >= 3 ? 1.6 : 1.2;
-        pool.forEach(function (t) { var tx = t.vx, ty = t.vy; enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - tx, o.vy - ty) <= r) dmgEnemy(o, dmg, ev ? "L'omelette atomique explose" : "L'œuf explose"); }); burst(tx, ty, "#fff3c0", ev ? 20 : 12, 70); burst(tx, ty, ev ? "#ff5a2a" : "#ff9a2a", ev ? 18 : 10, 90); rings.push({ x: tx, y: ty, t0: now(), dur: ev ? 520 : 380, c: ev ? "#ff7a2a" : "#ffd23c" }); });
+        pool = shuffle(pool).slice(0, n); var dmg = Math.round((state.atk * 0.65 + 2 + sb()) * sc * (ev ? 1.3 : 1)), r = ev ? 1.9 : L >= 3 ? 1.35 : 1.05;
+        pool.forEach(function () { var ta = Math.random() * 6.283, tr = 1.5 + Math.random() * 5.5, tx = p.vx + Math.cos(ta) * tr, ty = p.vy + Math.sin(ta) * tr; enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - tx, o.vy - ty) <= r) dmgEnemy(o, dmg, ev ? "L'omelette atomique explose" : "L'œuf explose"); }); burst(tx, ty, "#fff3c0", ev ? 20 : 12, 70); burst(tx, ty, ev ? "#ff5a2a" : "#ff9a2a", ev ? 18 : 10, 90); rings.push({ x: tx, y: ty, t0: now(), dur: ev ? 520 : 380, c: ev ? "#ff7a2a" : "#ffd23c" }); });
         
         say(ev ? "Omelette atomique !" : "Pluie d'œufs !"); sfx("meteor"); return true;
       }
@@ -9733,7 +9738,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var bev = state.survWEvo && state.survWEvo.boom, bm = (1 + 0.1 * (SW.boom - 1)) * 1.3 * (bev ? 2 : 1);
       if (state.survBoomT <= 0) {
         state.survBoomT = 2.2;
-        var tg = nearestTarget(), nbo = 1 + Math.floor(SW.boom / 3) + (bev ? 1 : 0);
+        var tg = null, nbo = 1 + Math.floor(SW.boom / 3) + (bev ? 1 : 0);
         for (var k = 0; k < nbo; k++) {
           var a0 = (tg ? Math.atan2(tg.vy - p.vy, tg.vx - p.vx) : Math.random() * 6.283) + (k - (nbo - 1) / 2) * 0.5;
           survBooms.push({ x: p.vx, y: p.vy, dx: Math.cos(a0), dy: Math.sin(a0), d: 0, back: false, id: Math.random() });
@@ -9754,7 +9759,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.survPlT <= 0) {
         var ptg = nearestTarget();
         if (ptg) {
-          state.survPlT = 1.5; var nf = 3 + Math.floor(SW.plumes / 2) + (pev ? 3 : 0), pa = Math.atan2(ptg.vy - p.vy, ptg.vx - p.vx); dmgSrc = survWName("plumes");
+          state.survPlT = 1.5; var nf = 3 + Math.floor(SW.plumes / 2) + (pev ? 3 : 0), pa = Math.random() * 6.283; dmgSrc = survWName("plumes");
           for (var pf = 0; pf < nf; pf++) launchProj(null, pa + (pf - (nf - 1) / 2) * 0.22, survWDmg(pm), "energy", 0, 1);
           AFX.plumes(pa); sfx("energy");
         } else state.survPlT = 0.3;
@@ -9826,7 +9831,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.xSlT = (state.xSlT || 0) - d2;
       if (state.xSlT <= 0) {
         var stg = nearestTarget();
-        if (stg) { state.xSlT = 0.6; var sn = 1 + Math.floor(SW.sling / 3), sa = Math.atan2(stg.vy - p.vy, stg.vx - p.vx); dmgSrc = survWName("sling"); for (var si = 0; si < sn; si++) launchProj(null, sa + (si - (sn - 1) / 2) * 0.16, survWDmg((1 + 0.12 * (SW.sling - 1)) * 0.5), "energy", 0, 1); }
+        if (stg) { state.xSlT = 0.6; var sn = 1 + Math.floor(SW.sling / 3), sa = Math.random() * 6.283; dmgSrc = survWName("sling"); for (var si = 0; si < sn; si++) launchProj(null, sa + (si - (sn - 1) / 2) * 0.16, survWDmg((1 + 0.12 * (SW.sling - 1)) * 0.5), "energy", 0, 1); }
         else state.xSlT = 0.25;
       }
     }
@@ -9844,7 +9849,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var fl = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 8; });
         if (fl.length) {
           state.xFwT = 3.4; var fn = 2 + Math.floor(SW.fireworks / 2), fr = 1.5 * ar, fdm = (1 + 0.12 * (SW.fireworks - 1)) * 1.3;
-          for (var fi = 0; fi < fn; fi++) { var ft = fl[rnd(fl.length)], fx2 = ft.vx, fy2 = ft.vy; SPV.add("meteorfall", fx2, fy2, 1.2, 600); legDefer(0.55 + fi * 0.12, function () { SPV.add("boom", fx2, fy2, fr, 650); sfx("boom"); dmgSrc = survWName("fireworks"); survNearEnemies(fr, fx2, fy2).forEach(function (o) { dmgEnemy(o, survWDmg(fdm), "La gerbe explose"); }); }); }
+          for (var fi = 0; fi < fn; fi++) { var fa = Math.random() * 6.283, fd0 = 2 + Math.random() * 5.5, fx2 = p.vx + Math.cos(fa) * fd0, fy2 = p.vy + Math.sin(fa) * fd0; SPV.add("meteorfall", fx2, fy2, 1.2, 600); (function (fx3, fy3) { legDefer(0.55 + fi * 0.12, function () { SPV.add("boom", fx3, fy3, fr, 650); sfx("boom"); dmgSrc = survWName("fireworks"); survNearEnemies(fr, fx3, fy3).forEach(function (o) { dmgEnemy(o, survWDmg(fdm), "La gerbe explose"); }); }); })(fx2, fy2); }
         } else state.xFwT = 0.4;
       }
     }
@@ -9886,7 +9891,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.xHbT = (state.xHbT || 0) - d2;
       if (state.xHbT <= 0 && enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 9; })) {
         state.xHbT = Math.max(3, 7.2 - 0.45 * SW.haybale);
-        var htg = nearestTarget(), ha = htg ? Math.atan2(htg.vy - p.vy, htg.vx - p.vx) : Math.atan2(lastDir[1], lastDir[0]);
+        var htg = nearestTarget(), ha = Math.random() * 6.283;
         survBales.push({ x: p.vx, y: p.vy, dx: Math.cos(ha), dy: Math.sin(ha), d: 0, id: Math.random() }); sfx("rage");
       }
       var hdm = (1 + 0.12 * (SW.haybale - 1)) * 1.4;
@@ -9902,7 +9907,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xCoT <= 0) {
         var ctg = nearestTarget();
         if (ctg && Math.hypot(ctg.vx - p.vx, ctg.vy - p.vy) < 5.5) {
-          state.xCoT = Math.max(2.2, 4.4 - 0.25 * SW.cone); var ca = Math.atan2(ctg.vy - p.vy, ctg.vx - p.vx), cr = 4.6 * ar, sp = 0.65 + 0.05 * SW.cone; dmgSrc = survWName("cone");
+          state.xCoT = Math.max(2.2, 4.4 - 0.25 * SW.cone); var ca = Math.random() * 6.283, cr = 4.6 * ar, sp = 0.65 + 0.05 * SW.cone; dmgSrc = survWName("cone");
           AFX.add("cone", p.vx, p.vy, 600, { a: ca, sp: sp, R: cr, pal: P.coq }); sfx("energy"); shake(1.4, 120);
           survNearEnemies(cr).forEach(function (o) { var an = Math.atan2(o.vy - p.vy, o.vx - p.vx), df = Math.abs(((an - ca + 3.1416) % 6.2832 + 6.2832) % 6.2832 - 3.1416); if (df > sp) return; if (dmgEnemy(o, survWDmg((1 + 0.12 * (SW.cone - 1)) * 1.1), "Le cri frappe")) return; survPush(o, p.vx, p.vy, 1.2); if (!o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 0.7); o.wind = 0; } });
           if (mode !== "play") return;
@@ -9926,12 +9931,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xPiT <= 0) {
         var pit = nearestTarget();
         if (pit && Math.hypot(pit.vx - p.vx, pit.vy - p.vy) < 6) {
-          state.xPiT = Math.max(3.4, 6.4 - 0.4 * SW.pillar); survTracer(pit.vx, pit.vy, P.bouc); survPillars.push({ x: pit.vx, y: pit.vy, t: 3, c: 0 }); SPV.add("meteorfall", pit.vx, pit.vy, 1.3, 500); sfx("boom");
+          state.xPiT = Math.max(4.8, 8.2 - 0.4 * SW.pillar); var pla = Math.random() * 6.283, plr = 2 + Math.random() * 4.5, plx = p.vx + Math.cos(pla) * plr, ply = p.vy + Math.sin(pla) * plr; survTracer(plx, ply, P.bouc); survPillars.push({ x: plx, y: ply, t: 2.4, c: 0 }); SPV.add("meteorfall", plx, ply, 1.3, 500); sfx("boom");
         } else state.xPiT = 0.4;
       }
       for (var pj = survPillars.length - 1; pj >= 0; pj--) {
         var pl = survPillars[pj]; pl.t -= dt; pl.c -= dt;
-        if (pl.c <= 0) { pl.c = 0.5; AFX.add("shock", pl.x, pl.y, 420, { R: 1.3 * ar, pal: P.bouc }); dmgSrc = survWName("pillar"); survNearEnemies(1.3 * ar, pl.x, pl.y).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.12 * (SW.pillar - 1)) * 0.55), "La colonne brûle"); }); if (mode !== "play") return; }
+        if (pl.c <= 0) { pl.c = 0.7; AFX.add("shock", pl.x, pl.y, 420, { R: 1.15 * ar, pal: P.bouc }); dmgSrc = survWName("pillar"); survNearEnemies(1.15 * ar, pl.x, pl.y).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.1 * (SW.pillar - 1)) * 0.32), "La colonne brûle"); }); if (mode !== "play") return; }
         if (pl.t <= 0) survPillars.splice(pj, 1);
       }
     }
@@ -9967,8 +9972,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xAcT <= 0) {
         if (enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; })) {
           state.xAcT = 3; var acn = 2 + Math.floor(SW.acorns / 2), acr = 1.1 * ar, acd = (1 + 0.12 * (SW.acorns - 1)) * 1.0;
-          var acT = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 8; });
-          for (var ai = 0; ai < acn; ai++) { var tg7 = acT.length ? acT[rnd(acT.length)] : null, ax = tg7 ? tg7.vx + (Math.random() - 0.5) * 1.2 : p.vx + (Math.random() - 0.5) * 8, ay = tg7 ? tg7.vy + (Math.random() - 0.5) * 1.2 : p.vy + (Math.random() - 0.5) * 6, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("boom"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
+          for (var ai = 0; ai < acn; ai++) { var aa = Math.random() * 6.283, ad0 = 1.5 + Math.random() * 6.5, ax = p.vx + Math.cos(aa) * ad0, ay = p.vy + Math.sin(aa) * ad0, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("boom"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
         } else state.xAcT = 0.4;
       }
     }
@@ -10024,7 +10028,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var mel = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7 && Math.hypot(e.vx - p.vx, e.vy - p.vy) > 2; }), mbest = null, mbn = 0;
         mel.forEach(function (e) { var n = mel.filter(function (o) { return Math.hypot(o.vx - e.vx, o.vy - e.vy) < 2; }).length; if (n > mbn) { mbn = n; mbest = e; } });
         if (mbest) {
-          state.xMeT = Math.max(5, 9.5 - 0.6 * SW.meteor); var mx = mbest.vx, my = mbest.vy; survTracer(mx, my, P.taureau); var mrr = 2.2 * ar, mdd = (1 + 0.12 * (SW.meteor - 1)) * 2.6;
+          state.xMeT = Math.max(5, 9.5 - 0.6 * SW.meteor); var mra = Math.random() * 6.283, mrr0 = 3 + Math.random() * 4.5, mx = p.vx + Math.cos(mra) * mrr0, my = p.vy + Math.sin(mra) * mrr0; survTracer(mx, my, P.taureau); var mrr = 2.2 * ar, mdd = (1 + 0.12 * (SW.meteor - 1)) * 2.6;
           SPV.add("meteorfall", mx, my, 2, 800); legDefer(0.75, function () { SPV.add("boom", mx, my, mrr, 800); shake(3, 220); sfx("boom"); dmgSrc = survWName("meteor"); survNearEnemies(mrr, mx, my).forEach(function (o) { dmgEnemy(o, survWDmg(mdd), "La météorite s'écrase"); }); });
         } else state.xMeT = 0.5;
       }
@@ -10081,8 +10085,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xEgT <= 0) {
         var egl = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; });
         if (egl.length) {
-          state.xEgT = Math.max(2.6, 4.6 - 0.3 * SW.eggbomb); var egn = 1 + (SW.eggbomb >= 3 ? 1 : 0) + (SW.eggbomb >= 5 ? 1 : 0), egd = (1 + 0.12 * (SW.eggbomb - 1)) * 1.9, egr = 1.7 * ar;
-          for (var ei = 0; ei < egn; ei++) { var et = egl[rnd(egl.length)], ex = et.vx, ey = et.vy; survTracer(ex, ey, P.cocotte); AFX.add("shock", ex, ey, 600, { R: 0.8, pal: P.cocotte }); (function (x, y) { legDefer(1, function () { SPV.add("boom", x, y, egr, 600); sfx("boom"); dmgSrc = survWName("eggbomb"); survNearEnemies(egr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(egd), "L'œuf explose"); }); }); })(ex, ey); }
+          state.xEgT = Math.max(2.6, 4.6 - 0.3 * SW.eggbomb); var egn = 1 + (SW.eggbomb >= 3 ? 1 : 0) + (SW.eggbomb >= 5 ? 1 : 0), egd = (1 + 0.1 * (SW.eggbomb - 1)) * 1.35, egr = 1.35 * ar;
+          for (var ei = 0; ei < egn; ei++) { var ega = Math.random() * 6.283, egd0 = 1.5 + Math.random() * 5, ex = p.vx + Math.cos(ega) * egd0, ey = p.vy + Math.sin(ega) * egd0; survTracer(ex, ey, P.cocotte); AFX.add("shock", ex, ey, 600, { R: 0.8, pal: P.cocotte }); (function (x, y) { legDefer(1, function () { SPV.add("boom", x, y, egr, 600); sfx("boom"); dmgSrc = survWName("eggbomb"); survNearEnemies(egr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(egd), "L'œuf explose"); }); }); })(ex, ey); }
         } else state.xEgT = 0.4;
       }
     }
@@ -10607,7 +10611,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   /* ---- événements ---- */
   function survSpawnScaled(type, x, y) {
     x = Math.max(1, Math.min(W - 2, Math.round(x))); y = Math.max(1, Math.min(H - 2, Math.round(y)));
-    var fz = survFreeNear(x, y); x = fz[0]; y = fz[1];
+    var fz = survFreeNear(x, y); x = fz[0]; y = fz[1]; var ofz = survOffTile(x, y); if (ofz) { x = ofz[0]; y = ofz[1]; }
     var e = mk(type, x, y), cyc0 = state.survCycle || 0; e.aggro = true;
     e.hp = e.maxHp = survFoeHp(e, 0.3); e.atk = Math.round(e.atk * survAtkMul()); e.spd *= survSpdMul() * Math.min(1.3, 0.98 + cyc0 * 0.05);
     var tnt3 = survTintFor(type); if (tnt3) e.mt = tnt3;
@@ -11035,7 +11039,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       run: function () {
         var ve = visibleEnemies().filter(function (q) { return Math.hypot(q.vx - p.vx, q.vy - p.vy) <= 7; }), eggs = state.farmEggs = state.farmEggs || [], n = 2 + pL(), E = pEvo();
         for (var i = 0; i < n; i++) {
-          var e = ve.length ? ve[rnd(ve.length)] : null, ex = e ? e.vx : p.vx + (Math.random() * 4 - 2), ey = e ? e.vy : p.vy + (Math.random() * 4 - 2);
+          var e = null, ea = Math.random() * 6.283, er = 1.5 + Math.random() * 5, ex = p.vx + Math.cos(ea) * er, ey = p.vy + Math.sin(ea) * er;
           survTracer(ex, ey, AFX.PAL.cocotte); eggs.push({ x: ex, y: ey, t: 0.7 + i * 0.2, evo: E, src: "Ponte explosive" }); fmRing(ex, ey, "#fff3c0", 34); addFloat(ex, ey - 0.4, "🥚", "#ffffff", 1.2);
         }
         sfx("energy");
@@ -11231,7 +11235,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function ulRain(n, m, src, spread) {
     var ve = visibleEnemies().filter(function (q) { return Math.hypot(q.vx - p.vx, q.vy - p.vy) <= 8; }), eggs = state.farmEggs = state.farmEggs || [];
     for (var i = 0; i < n; i++) {
-      var e = ve.length ? ve[rnd(ve.length)] : null, ang = Math.random() * 6.283, rr = 1.5 + Math.random() * (spread || 5);
+      var e = null, ang = Math.random() * 6.283, rr = 1.5 + Math.random() * (spread || 5);
       var ex = e ? e.vx + (Math.random() - 0.5) : p.vx + Math.cos(ang) * rr, ey = e ? e.vy + (Math.random() - 0.5) : p.vy + Math.sin(ang) * rr;
       eggs.push({ x: ex, y: ey, t: 0.5 + i * 0.1, evo: false, src: src, ud: ulD(m) });
       fmRing(ex, ey, "#fff3c0", 30);
@@ -11336,7 +11340,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (eg[i].t <= 0) {
           var q = eg.splice(i, 1)[0];
           dmgSrc = q.src || "Ponte explosive";
-          fmNear((q.evo ? 3.2 : 2.5) * pS(), q.x, q.y).forEach(function (e) { fmHit(e, q.ud || fmDmg(q.evo ? 1.0 : 1.1), "L'œuf explose", 0.7, 0.4); });
+          fmNear((q.evo ? 2.6 : 1.9) * pS(), q.x, q.y).forEach(function (e) { fmHit(e, q.ud || fmDmg(q.evo ? 0.75 : 0.8), "L'œuf explose", 0.7, 0.4); });
           fmRing(q.x, q.y, "#ffb02e", q.evo ? 90 : 70); burst(q.x, q.y, "#fff3c0", 16, 90); AFX.egg(q.x, q.y, q.evo); shake(2, 160); sfx("boom");
           if (q.evo) eg.push({ x: q.x, y: q.y, t: 0.45, evo: false, src: q.src });
         }
@@ -11846,11 +11850,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var a0 = Math.random() * 6.283, packN = 4 + Math.floor(frac * 4), packA = Math.random() * 6.283, packType = null, packIdx = 0, packId = ++survPackSeq, batchFoes = [];
     while (placed < n && tries < 90) {
       tries++;
-      if (!ringMode && packIdx % packN === 0) { packA += 2 + Math.random() * 2.3; packType = pool[rnd(pool.length)]; packId = ++survPackSeq; }
+      if (!ringMode && packIdx % packN === 0) { packA = survPackAngle(packA); packType = pool[rnd(pool.length)]; packId = ++survPackSeq; }
       var a = ringMode ? a0 + placed / n * 6.283 + (Math.random() - 0.5) * 0.25 : packA, r = ringMode ? 10 + Math.random() * 1.5 : 11 + Math.random() * 1.2;
       var lat = ringMode ? 0 : ((packIdx % packN) - (packN - 1) / 2) * 1.15, rowOff = ringMode ? 0 : (packIdx % 2) * 0.9;
       var ex = Math.round(p.x + Math.cos(a) * (r + rowOff) - Math.sin(a) * lat), ey = Math.round(p.y + Math.sin(a) * (r + rowOff) + Math.cos(a) * lat);
       if (!inb(ex, ey) || g[ey][ex] !== 0) { var fr = survFreeNear(ex, ey); ex = fr[0]; ey = fr[1]; if (!inb(ex, ey) || g[ey][ex] !== 0) { if (!ringMode) packIdx++; continue; } }
+      var offp = survOffTile(ex, ey); if (!offp) { if (!ringMode) packIdx++; continue; } ex = offp[0]; ey = offp[1];
       if (!ringMode) packIdx++;
       var type = ringMode ? pool[rnd(pool.length)] : packType, e = mk(type, ex, ey);
       if (!ringMode) { e.pack = packId; batchFoes.push(e); } e.aggro = true; var tnt = survTintFor(type); if (tnt) e.mt = tnt;
@@ -11870,6 +11875,23 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var seenP = {}; state.packAlerts = state.packAlerts || []; batchFoes.forEach(function (f) { if (!seenP[f.pack]) { seenP[f.pack] = 1; state.packAlerts.push({ x: f.vx, y: f.vy, t: 2.6 }); } });
     var packSpd = {}; batchFoes.forEach(function (f) { if (f.kami) return; packSpd[f.pack] = Math.min(packSpd[f.pack] || 99, f.spd); });
     batchFoes.forEach(function (f) { if (!f.kami && packSpd[f.pack]) f.spd = packSpd[f.pack]; });
+  }
+  /* ---- apparitions : jamais dans la zone visible à l'écran ---- */
+  function survOnScreen(x, y, m) {
+    m = m == null ? 20 : m;
+    var wx = x * TILE + 8, wy = y * TILE + 8, sx = ISO ? isoX(wx, wy) - camX : wx - camX, sy = ISO ? isoY(wx, wy) - camY : wy - camY;
+    return sx > -m && sy > -m && sx < view.cols * TILE + m && sy < view.rows * TILE + m;
+  }
+  function survOffTile(x, y) {
+    if (!survOnScreen(x, y)) return [x, y];
+    var dx = x - p.vx, dy = y - p.vy, dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+    for (var k = 1; k <= 24; k++) { var nx = Math.round(x + dx * k), ny = Math.round(y + dy * k); if (nx > 2 && ny > 2 && nx < W - 3 && ny < H - 3 && g[ny][nx] === 0 && !survOnScreen(nx, ny)) return [nx, ny]; }
+    for (var q = 0; q < 40; q++) { var a = Math.random() * 6.283, rr = 12 + Math.random() * 12, mx = Math.round(p.x + Math.cos(a) * rr), my = Math.round(p.y + Math.sin(a) * rr); if (mx > 2 && my > 2 && mx < W - 3 && my < H - 3 && g[my][mx] === 0 && !survOnScreen(mx, my)) return [mx, my]; }
+    return null;
+  }
+  function survPackAngle(prev) {
+    for (var q = 0; q < 16; q++) { var a = Math.random() * 6.283; if (!survOnScreen(p.x + Math.cos(a) * 12, p.y + Math.sin(a) * 12)) return a; }
+    return prev + 2 + Math.random() * 2.3;
   }
   var survPackSeq = 0;
   function spawnSurvivalBoss() {
@@ -13962,17 +13984,31 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     });
     var ry = top + 2 * (sz + 2.5) + 6, rn = state.runeN || 0, lines = [];
     ctx.textAlign = "right"; ctx.font = "bold 6px sans-serif"; ctx.lineWidth = 1.4; ctx.strokeStyle = "#0a0818";
-    function edgeArrow(wx0, wy0, col, pu) {
-      var wx = wx0 * TILE + 8, wy = wy0 * TILE + 8, sx = ISO ? isoX(wx, wy) - camX : wx - camX, sy = ISO ? isoY(wx, wy) - camY : wy - camY, m = 9;
+    function edgeArrow(wx0, wy0, col, pu, big) {
+      var wx = wx0 * TILE + 8, wy = wy0 * TILE + 8, sx = ISO ? isoX(wx, wy) - camX : wx - camX, sy = ISO ? isoY(wx, wy) - camY : wy - camY, m = big ? 16 : 9;
       if (sx >= 0 && sy >= 0 && sx <= vw && sy <= vh) return;
-      var cx2 = vw / 2, cy2 = vh / 2, dx = sx - cx2, dy = sy - cy2, k2 = Math.min((vw / 2 - m) / Math.max(1, Math.abs(dx)), (vh / 2 - m) / Math.max(1, Math.abs(dy))), ax = cx2 + dx * k2, ay = cy2 + dy * k2, an = Math.atan2(dy, dx);
-      ctx.save(); ctx.translate(ax, ay); ctx.rotate(an); ctx.globalAlpha = pu; ctx.fillStyle = col; ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(-4, -4.5); ctx.lineTo(-2, 0); ctx.lineTo(-4, 4.5); ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
+      var cx2 = vw / 2, cy2 = vh / 2, dx = sx - cx2, dy = sy - cy2, k2 = Math.min((vw / 2 - m) / Math.max(1, Math.abs(dx)), (vh / 2 - m) / Math.max(1, Math.abs(dy))), ax = cx2 + dx * k2, ay = cy2 + dy * k2, an = Math.atan2(dy, dx), sz = big ? 1.9 : 1;
+      ctx.save(); ctx.translate(ax, ay);
+      if (big) { ctx.globalAlpha = pu * 0.4; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 13 + 2 * Math.sin(t / 150), 0, 6.2832); ctx.fill(); }
+      ctx.rotate(an); ctx.globalAlpha = Math.min(1, pu + (big ? 0.3 : 0)); ctx.fillStyle = col; ctx.strokeStyle = big ? "#ffffff" : "#0a0818"; ctx.lineWidth = big ? 1.8 : 1.2; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(6 * sz, 0); ctx.lineTo(-4 * sz, -4.5 * sz); ctx.lineTo(-2 * sz, 0); ctx.lineTo(-4 * sz, 4.5 * sz); ctx.closePath(); ctx.stroke(); ctx.fill();
+      if (big) { ctx.lineWidth = 0.9; ctx.strokeStyle = "#0a0818"; ctx.stroke(); }
+      ctx.restore();
+      if (big) { var dist = Math.round(Math.hypot(wx0 - p.vx, wy0 - p.vy)); ctx.save(); ctx.font = "bold 7px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineWidth = 2; ctx.strokeStyle = "#0a0818"; var lx = ax - Math.cos(an) * 17, ly = ay - Math.sin(an) * 17; ctx.strokeText(dist + " m", lx, ly); ctx.fillStyle = "#ffffff"; ctx.fillText(dist + " m", lx, ly); ctx.restore(); }
+    }
+    function runeBeam(wx0, wy0) {
+      var wx = wx0 * TILE + 8, wy = wy0 * TILE + 8, sx = ISO ? isoX(wx, wy) - camX : wx - camX, sy = ISO ? isoY(wx, wy) - camY : wy - camY;
+      if (sx < -20 || sy < -20 || sx > vw + 20 || sy > vh + 40) return;
+      var pu = 0.6 + 0.4 * Math.sin(t / 220);
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      var gr = ctx.createLinearGradient(0, sy - 46, 0, sy); gr.addColorStop(0, "rgba(196,139,255,0)"); gr.addColorStop(1, "rgba(196,139,255," + (0.55 * pu).toFixed(2) + ")"); ctx.fillStyle = gr; ctx.fillRect(sx - 4, sy - 46, 8, 46);
+      ctx.strokeStyle = "rgba(230,200,255," + (0.5 + 0.4 * pu).toFixed(2) + ")"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 9 + 3 * pu, 4.5 + 1.5 * pu, 0, 0, 6.2832); ctx.stroke();
+      ctx.restore();
     }
     if (survRuneWanted()) {
       lines.push(["#d9b8ff", "Cases " + (slotA() + slotP()) + "/" + SLOT_TOTAL + " · Runes " + "◆".repeat(Math.min(rn, runeNeed())) + "◇".repeat(Math.max(0, runeNeed() - rn))]);
       var best = null, bd = 1e9; gems.forEach(function (gm) { if (gm.k !== "rune") return; var dd = Math.hypot(gm.x - p.vx, gm.y - p.vy); if (dd < bd) { bd = dd; best = gm; } });
-      if (best) edgeArrow(best.x, best.y, "#c48bff", 0.7 + 0.3 * Math.sin(t / 200));
+      gems.forEach(function (gm) { if (gm.k === "rune") runeBeam(gm.x, gm.y); }); if (best) edgeArrow(best.x, best.y, "#d9a8ff", 0.8 + 0.2 * Math.sin(t / 200), true);
     }
     if (state.survMod && SURV_MODS[state.survMod]) lines.push(["#ffb06a", "Défi : " + SURV_MODS[state.survMod].name]);
     if (state.blessT > 0) lines.push(["#ffe07a", "Bénédiction " + Math.ceil(state.blessT) + " s"]);
