@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ligne de Front</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: un écran de bataille vertical. QG ennemi en haut, 3 lignes de front au centre, QG allié et main en bas. */
+:root {
+  --bg: #151910;
+  --bg2: #1d2316;
+  --panel: #252c1d;
+  --edge: rgba(222, 212, 170, .16);
+  --ink: #ece6d0;
+  --muted: #9aa586;
+  --khaki: #c9ba8a;
+  --olive: #55683a;
+  --olive-2: #3b4a29;
+  --brass: #d8a93c;
+  --red: #c4493b;
+  --steel: #7f929b;
+  --steel-2: #4d5b62;
+  --font-display: "Black Ops One", "Impact", "Arial Black", sans-serif;
+  --font-body: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-num: "Share Tech Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .012) 0 2px, transparent 2px 6px), radial-gradient(ellipse at 50% -10%, #2a3320, var(--bg) 65%);
+  background-attachment: fixed;
+  color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.35;
+  padding-inline: 14px; padding-block: 12px 36px; min-height: 100%;
+}
+#app { max-width: 720px; margin-inline: auto; }
+h1, h2, h3, p { margin: 0; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; letter-spacing: .03em; text-wrap: balance; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+.stack { display: grid; gap: 12px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.eyebrow { font-size: .75rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); font-weight: 600; }
+.panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 12px; }
+
+.btn {
+  border: 0; border-radius: 8px; padding: 13px 18px; font-weight: 700; font-size: 1.05rem; letter-spacing: .04em; text-transform: uppercase;
+  background: var(--brass); color: #231a05; box-shadow: 0 3px 0 #86641a; transition: transform .08s, box-shadow .08s, filter .15s;
+}
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #86641a; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--edge); }
+.btn.go { background: var(--olive); color: #f0ecd6; box-shadow: 0 3px 0 #2c3a1c; }
+.btn.go:active:not(:disabled) { box-shadow: 0 1px 0 #2c3a1c; }
+.btn:disabled { filter: grayscale(.7) brightness(.6); cursor: not-allowed; }
+.pill { border: 1px solid var(--edge); background: transparent; border-radius: 99px; padding: 5px 12px; font-size: .9rem; }
+
+/* Titre */
+.title { display: grid; gap: 16px; justify-items: start; padding-block: 7vh 3vh; }
+.title .star { font-family: var(--font-display); font-size: 4rem; line-height: 1; color: var(--brass); }
+.title h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.4rem, 11vw, 4.4rem); line-height: .95; letter-spacing: .02em; text-wrap: balance; }
+.title p { max-width: 50ch; color: var(--muted); font-size: 1.05rem; }
+.record { font-family: var(--font-num); font-size: .85rem; color: var(--muted); }
+
+/* Carte de campagne */
+.fronts { display: grid; gap: 6px; }
+.front { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--edge); background: rgba(0, 0, 0, .18); }
+.front.cur { border-color: var(--brass); background: rgba(216, 169, 60, .1); }
+.front.done { opacity: .5; }
+.front b { font-weight: 600; }
+.front .tag { font-size: .8rem; color: var(--muted); }
+.bossmark { color: var(--red); font-weight: 700; }
+
+.hqbar { display: grid; gap: 4px; }
+.hqbar .lbl { display: flex; justify-content: space-between; font-size: .85rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.bar { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--olive); transition: width .3s; }
+.hq.en .bar > i { background: var(--red); }
+.hq.hit { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* Bataille */
+.board { display: grid; gap: 8px; }
+.hq { position: relative; padding: 8px 10px; border-radius: 8px; background: rgba(0, 0, 0, .25); border: 1px solid var(--edge); }
+.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lane { display: grid; gap: 4px; padding: 5px; border-radius: 8px; background: rgba(0, 0, 0, .2); border: 1px solid var(--edge); align-content: start; position: relative; }
+.lane.tgt { border-color: var(--brass); background: rgba(216, 169, 60, .1); cursor: pointer; animation: pulse 1s infinite alternate; }
+@keyframes pulse { to { box-shadow: 0 0 0 2px rgba(216, 169, 60, .5); } }
+.lh { text-align: center; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.half { display: grid; gap: 4px; position: relative; }
+.mid { min-height: 22px; display: grid; place-items: center; border-block: 1px dashed var(--edge); padding-block: 2px; }
+.shell { font-size: .74rem; font-weight: 700; color: #fff; background: var(--red); border-radius: 99px; padding: 1px 7px; text-align: center; }
+.smoke { font-size: .74rem; font-weight: 700; color: #111; background: #b9c0c4; border-radius: 99px; padding: 1px 7px; }
+.slot { height: 64px; border-radius: 6px; border: 1px dashed rgba(222, 212, 170, .1); }
+.u {
+  position: relative; height: 64px; border-radius: 6px; padding: 4px 5px 4px; display: grid; grid-template-rows: auto 1fr auto; gap: 1px;
+  border: 1.5px solid; font-size: .8rem; line-height: 1.1; text-align: left; background: var(--olive-2); border-color: #7a9150; color: #f0ecd6;
+}
+.u.en { background: var(--steel-2); border-color: #98aab3; }
+.u .nm { font-weight: 700; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u .tags { display: flex; gap: 3px; flex-wrap: wrap; font-size: .62rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--khaki); }
+.u .st { display: flex; justify-content: space-between; align-items: center; }
+.u .st i { font-style: normal; font-family: var(--font-num); font-size: 1rem; line-height: 1; min-width: 22px; padding: 2px 5px; border-radius: 99px; text-align: center; }
+.u .a { background: var(--brass); color: #231a05; }
+.u .h { background: var(--red); color: #fff; }
+.u.ghost { background: transparent; border-style: dashed; opacity: .6; }
+.u.wait { opacity: .78; }
+.u.tgt { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); cursor: pointer; animation: pulse 1s infinite alternate; }
+.u.atk { animation: lunge .35s; z-index: 3; }
+.me .u.atk { animation-name: lunge-up; }
+@keyframes lunge { 40% { transform: translateY(10px) scale(1.06); } }
+@keyframes lunge-up { 40% { transform: translateY(-10px) scale(1.06); } }
+.u.spawn { animation: spawn .4s; }
+@keyframes spawn { from { opacity: 0; transform: scale(.7); } }
+.pop { position: absolute; left: 50%; top: 20%; transform: translateX(-50%); z-index: 6; pointer-events: none; font-family: var(--font-num); font-weight: 700; font-size: 1.2rem; color: #fff; background: var(--red); border-radius: 8px; padding: 0 8px; animation: pop .9s forwards; }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 8px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -28px); } }
+.phase { text-align: center; font-family: var(--font-display); letter-spacing: .08em; color: var(--brass); min-height: 1.5em; }
+
+.hint { background: var(--brass); color: #231a05; border-radius: 8px; padding: 9px 12px; font-weight: 600; }
+.status { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.supply { display: flex; gap: 5px; align-items: center; font-weight: 600; }
+.supply .pip { width: 16px; height: 16px; border-radius: 4px; background: var(--brass); }
+.supply .pip.off { background: transparent; box-shadow: inset 0 0 0 1.5px var(--edge); }
+.hand { display: flex; gap: 8px; overflow-x: auto; padding: 14px 10px 10px; scroll-snap-type: x proximity; }
+.card {
+  flex: none; width: 112px; min-height: 148px; scroll-snap-align: start; position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 4px; text-align: left;
+  padding: 8px 8px 8px; border-radius: 8px; border: 1.5px solid #7a9150; background: linear-gradient(180deg, #34421f, #2a3519); color: #f0ecd6; transition: transform .12s;
+}
+.card.order { border-color: #b79a55; background: linear-gradient(180deg, #4a3f22, #3a3119); }
+.card .cost { position: absolute; top: -9px; left: -7px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--brass); color: #231a05; font-family: var(--font-num); font-weight: 700; font-size: 1.05rem; box-shadow: 0 2px 0 #86641a; }
+.card .cn { font-weight: 700; font-size: .95rem; padding-left: 16px; line-height: 1.05; }
+.card .ty { font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--khaki); font-weight: 600; }
+.card .ct { font-size: .8rem; line-height: 1.15; color: #e4dec6; }
+.card .cs { display: flex; gap: 6px; font-family: var(--font-num); font-size: 1rem; }
+.card .cs i { font-style: normal; padding: 1px 7px; border-radius: 99px; }
+.card .cs .a { background: var(--brass); color: #231a05; }
+.card .cs .h { background: var(--red); color: #fff; }
+.card.sel { transform: translateY(-12px); box-shadow: 0 0 0 2px var(--brass), 0 8px 14px rgba(0, 0, 0, .5); }
+.card.off { opacity: .45; }
+.cardrow { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; padding-block: 14px; }
+.cardrow .card { cursor: pointer; }
+.cardrow .card:hover { transform: translateY(-4px); }
+
+.officers { display: grid; gap: 8px; }
+.off-item { display: grid; gap: 2px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--edge); background: rgba(0, 0, 0, .2); text-align: left; }
+button.off-item:hover { border-color: var(--brass); }
+.off-item b { font-family: var(--font-display); font-weight: 400; letter-spacing: .03em; }
+.legend { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.legend i { font-style: normal; font-family: var(--font-num); padding: 1px 8px; border-radius: 99px; }
+.legend .a { background: var(--brass); color: #231a05; }
+.legend .h { background: var(--red); color: #fff; }
+
+.lines { display: grid; gap: 6px; }
+.line { display: flex; justify-content: space-between; gap: 12px; }
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .75); display: grid; place-items: center; padding: 14px; }
+.modal .box { background: var(--bg2); border: 1px solid var(--edge); border-radius: 12px; padding: 16px; width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; display: grid; gap: 12px; }
+.modal ol, .modal ul { margin: 0; padding-left: 1.2em; display: grid; gap: 7px; }
+.deckgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px 8px; padding-top: 8px; }
+.deckgrid .card { width: auto; }
+.deckgrid .card.pick { cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: #000; color: var(--ink); border: 1px solid var(--edge); padding: 10px 16px; border-radius: 99px; z-index: 80; max-width: calc(100% - 28px); text-align: center; }
+.end .big { font-family: var(--font-display); font-size: 3rem; line-height: 1; color: var(--brass); }
+.end .big.lose { color: var(--red); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ==CORE==
+// Cartes du joueur. type : unit (se déploie sur une ligne) ou order (effet immédiat). rar : rareté de récompense.
+const CARDS = {
+  inf: { name: 'Fantassin', type: 'unit', cost: 1, atk: 2, hp: 3, txt: 'Soldat de base.', rar: 0 },
+  mg: { name: 'Mitrailleur', type: 'unit', cost: 2, atk: 2, hp: 3, kw: ['double'], txt: 'Attaque 2 fois par tour.', rar: 1 },
+  medic: { name: 'Médecin', type: 'unit', cost: 1, atk: 0, hp: 3, kw: ['medic'], txt: 'Fin du tour : soigne 2 PV aux autres alliés de sa ligne.', rar: 1 },
+  sniper: { name: "Tireur d'élite", type: 'unit', cost: 2, atk: 2, hp: 2, kw: ['sniper'], txt: "Vise l'ennemi le plus faible de sa ligne.", rar: 2 },
+  bazooka: { name: 'Antichar', type: 'unit', cost: 2, atk: 3, hp: 2, kw: ['pierce'], txt: 'Ignore le blindage.', rar: 2 },
+  para: { name: 'Parachutiste', type: 'unit', cost: 2, atk: 2, hp: 2, kw: ['para'], txt: 'Attaque dès son arrivée.', rar: 2 },
+  tank: { name: 'Char', type: 'unit', cost: 3, atk: 3, hp: 5, armor: 1, txt: 'Blindé : subit 1 dégât de moins.', rar: 3 },
+  artillery: { name: 'Artillerie', type: 'order', cost: 2, target: 'enemy', txt: "4 dégâts à une unité ennemie (ignore le blindage).", rar: 1 },
+  smoke: { name: 'Fumigène', type: 'order', cost: 1, target: 'lane', txt: "Les unités ennemies d'une ligne n'attaquent pas ce tour.", rar: 1 },
+  supplies: { name: 'Renforts', type: 'order', cost: 1, target: 'none', txt: 'Piochez 2 cartes.', rar: 1 },
+  fortify: { name: 'Fortification', type: 'order', cost: 1, target: 'ally', txt: "Une unité alliée gagne +3 PV.", rar: 1 },
+  offensive: { name: 'Offensive', type: 'order', cost: 1, target: 'lane', txt: "Vos unités d'une ligne ont +2 attaque ce tour.", rar: 2 },
+  retreat: { name: 'Repli', type: 'order', cost: 1, target: 'ally', txt: 'Reprenez une unité alliée en main (elle sera comme neuve).', rar: 2 },
+  ration: { name: 'Ravitaillement', type: 'order', cost: 0, target: 'none', txt: '+2 ravitaillement. Retiré du combat après usage.', rar: 2 },
+  airstrike: { name: 'Bombardement aérien', type: 'order', cost: 3, target: 'none', txt: '2 dégâts à toutes les unités ennemies.', rar: 3 },
+};
+const START_DECK = ['inf', 'inf', 'inf', 'inf', 'mg', 'mg', 'artillery', 'artillery', 'smoke', 'supplies', 'fortify', 'medic'];
+
+const ENEMIES = {
+  rifle: { name: 'Soldat', atk: 2, hp: 3, val: 1 },
+  gren: { name: 'Grenadier', atk: 3, hp: 2, val: 1.5 },
+  mgnest: { name: 'Mitrailleuse', atk: 2, hp: 5, val: 2 },
+  sniper: { name: 'Sniper', atk: 2, hp: 2, kw: ['sniper'], val: 2 },
+  panzer: { name: 'Panzer', atk: 3, hp: 6, armor: 2, val: 4 },
+  heavy: { name: 'Char lourd', atk: 4, hp: 8, armor: 2, val: 99 },
+};
+const LEVELS = [
+  { name: "Plage d'assaut", hq: 12, budget: 1.6 },
+  { name: 'Bocage', hq: 14, budget: 2.9 },
+  { name: 'Village fortifié', hq: 16, budget: 3.2 },
+  { name: 'Le pont (boss)', hq: 18, budget: 2.6, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 20, budget: 3.5 },
+  { name: 'Ville en ruines', hq: 22, budget: 3.9 },
+  { name: 'Ligne de défense', hq: 24, budget: 4.4 },
+  { name: 'Quartier général (boss)', hq: 24, budget: 3.5, boss: 'heavy2' },
+];
+const OFFICERS = [
+  { id: 'moreau', name: 'Capitaine Moreau', desc: 'Vos unités arrivent avec +1 PV.' },
+  { id: 'dubois', name: 'Lieutenant Dubois', desc: 'Vos unités ont +1 attaque.' },
+  { id: 'ashby', name: 'Colonel Ashby', desc: 'Vous piochez 1 carte de plus par tour.' },
+  { id: 'kowalski', name: 'Major Kowalski', desc: '+1 ravitaillement par tour.' },
+  { id: 'meyer', name: 'Docteur Meyer', desc: 'Fin du tour : toutes vos unités se soignent de 2 PV.' },
+  { id: 'ito', name: 'Sergent Ito', desc: 'La première unité jouée chaque tour coûte 1 de moins.' },
+  { id: 'silva', name: 'Commandant Silva', desc: 'Le premier ordre joué chaque tour coûte 1 de moins.' },
+  { id: 'brandt', name: 'Général Brandt', desc: 'Votre QG gagne +10 PV max (et se soigne de 10).' },
+];
+
+function shuffle(a, rng = Math.random) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const clone = o => JSON.parse(JSON.stringify(o));
+const has = (S, id) => S.officers.includes(id);
+
+function newBattle(C, rng = Math.random) {
+  const lvl = LEVELS[C.level];
+  const S = {
+    level: C.level, lvl, rng, uid: 1, turn: 1, over: null, officers: C.officers.slice(),
+    hq: { me: C.hq, en: lvl.hq }, hqMax: C.hqMax,
+    lanes: [0, 1, 2].map(() => ({ me: [null, null], en: [null, null], smoke: false })),
+    draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], exhaust: [], supply: 0, flags: {}, plan: [],
+  };
+  if (lvl.boss) deploy(S, 'en', 1, lvl.boss === 'heavy2' ? 'heavy' : 'heavy');
+  if (lvl.boss === 'heavy2') deploy(S, 'en', 0, 'panzer');
+  S.plan = genPlan(S);
+  startTurn(S);
+  return S;
+}
+function startTurn(S) {
+  S.supply = 3 + (has(S, 'kowalski') ? 1 : 0);
+  S.flags = { unitUsed: false, orderUsed: false };
+  drawCards(S, 5 + (has(S, 'ashby') ? 1 : 0));
+}
+function drawCards(S, n) {
+  for (let i = 0; i < n; i++) {
+    if (!S.draw.length) { if (!S.discard.length) return; S.draw = shuffle(S.discard.splice(0), S.rng); }
+    S.hand.push(S.draw.pop());
+  }
+}
+
+function mkUnit(S, side, key, def) {
+  const b = side === 'me';
+  return {
+    uid: S.uid++, key, name: def.name, side,
+    atk: def.atk + (b && has(S, 'dubois') ? 1 : 0), hp: def.hp + (b && has(S, 'moreau') ? 1 : 0),
+    armor: def.armor || 0, kw: def.kw || [], buff: 0, fresh: !(def.kw || []).includes('para'),
+  };
+}
+function deploy(S, side, lane, key) {
+  const def = side === 'me' ? CARDS[key] : ENEMIES[key], slots = S.lanes[lane][side];
+  const i = slots[0] ? (slots[1] ? -1 : 1) : 0;
+  if (i < 0) return null;
+  const u = mkUnit(S, side, key, def); u.max = u.hp; u.lane = lane; slots[i] = u;
+  return u;
+}
+const units = (S, side) => S.lanes.flatMap(l => l[side].filter(Boolean));
+const compact = (S, lane, side) => { const s = S.lanes[lane][side]; if (!s[0] && s[1]) { s[0] = s[1]; s[1] = null; } };
+
+function cardCost(S, key) {
+  const c = CARDS[key]; let cost = c.cost;
+  if (c.type === 'unit' && has(S, 'ito') && !S.flags.unitUsed) cost = Math.max(0, cost - 1);
+  if (c.type === 'order' && has(S, 'silva') && !S.flags.orderUsed) cost = Math.max(0, cost - 1);
+  return cost;
+}
+// Cibles possibles d'une carte : [{lane}] ou [{uid}] ; [{}] si aucune cible n'est nécessaire.
+function targetsFor(S, key) {
+  const c = CARDS[key];
+  if (c.type === 'unit') return [0, 1, 2].filter(l => !S.lanes[l].me[1]).map(l => ({ lane: l }));
+  if (c.target === 'none') return [{}];
+  if (c.target === 'enemy') return units(S, 'en').map(u => ({ uid: u.uid }));
+  if (c.target === 'ally') return units(S, 'me').map(u => ({ uid: u.uid }));
+  if (key === 'offensive') return [0, 1, 2].filter(l => S.lanes[l].me[0]).map(l => ({ lane: l }));
+  return [0, 1, 2].filter(l => S.lanes[l].en[0]).map(l => ({ lane: l }));
+}
+const isPlayable = (S, hi) => !S.over && cardCost(S, S.hand[hi]) <= S.supply && targetsFor(S, S.hand[hi]).length > 0;
+
+function applyDamage(S, u, dmg) {
+  u.hp -= dmg;
+  const hit = { uid: u.uid, dmg, kill: u.hp <= 0, lane: u.lane, side: u.side };
+  if (hit.kill) { const s = S.lanes[u.lane][u.side]; s[s.indexOf(u)] = null; compact(S, u.lane, u.side); }
+  return hit;
+}
+function findUnit(S, uid) { return units(S, 'me').concat(units(S, 'en')).find(u => u.uid === uid); }
+
+// Joue une carte. Renvoie la liste des touches (pour l'affichage) ou null si impossible.
+function playCard(S, hi, tgt) {
+  const key = S.hand[hi], c = CARDS[key];
+  if (key === undefined || S.over || !isPlayable(S, hi)) return null;
+  const ok = targetsFor(S, key).some(t => t.lane === tgt.lane && t.uid === tgt.uid);
+  if (!ok) return null;
+  const cost = cardCost(S, key), hits = [];
+  S.supply -= cost;
+  if (c.type === 'unit') S.flags.unitUsed = true; else S.flags.orderUsed = true;
+  S.hand.splice(hi, 1);
+  let gone = false;
+  if (c.type === 'unit') { const u = deploy(S, 'me', tgt.lane, key); hits.push({ uid: u.uid, spawn: true, lane: u.lane, side: 'me' }); }
+  else if (key === 'artillery') { hits.push(applyDamage(S, findUnit(S, tgt.uid), 4)); }
+  else if (key === 'airstrike') { units(S, 'en').forEach(u => hits.push(applyDamage(S, u, 2))); }
+  else if (key === 'smoke') S.lanes[tgt.lane].smoke = true;
+  else if (key === 'supplies') drawCards(S, 2);
+  else if (key === 'fortify') { const u = findUnit(S, tgt.uid); u.hp += 3; u.max += 3; hits.push({ uid: u.uid, heal: 3 }); }
+  else if (key === 'offensive') S.lanes[tgt.lane].me.filter(Boolean).forEach(u => { u.buff += 2; hits.push({ uid: u.uid, buff: 2 }); });
+  else if (key === 'retreat') {
+    const u = findUnit(S, tgt.uid), s = S.lanes[u.lane].me; s[s.indexOf(u)] = null; compact(S, u.lane, 'me');
+    S.hand.push(u.key);
+  } else if (key === 'ration') { S.supply += 2; S.exhaust.push(key); gone = true; }
+  if (!gone) S.discard.push(key);
+  checkOver(S);
+  return hits;
+}
+function checkOver(S) { if (S.hq.en <= 0) S.over = 'win'; else if (S.hq.me <= 0) S.over = 'lose'; }
+
+// ---- Plan ennemi, annoncé un tour à l'avance ----
+function genPlan(S) {
+  const L = S.lvl, rng = S.rng, lv = S.level;
+  let budget = L.budget + S.turn * 0.35;
+  const free = [0, 1, 2].map(l => S.lanes[l].en.filter(x => !x).length), plan = [];
+  const pool = [['rifle', 1, 4], ['gren', 1.5, 3]];
+  if (lv >= 1) pool.push(['mgnest', 2, 2]);
+  if (lv >= 2) pool.push(['sniper', 2, 1.5], ['shell', 2, 1.5]);
+  if (lv >= 3) pool.push(['panzer', 4, 1.2]);
+  while (budget >= 1 && plan.length < 4) {
+    const opts = pool.filter(p => p[1] <= budget && (p[0] === 'shell' || free.some(f => f > 0)));
+    if (!opts.length) break;
+    let x = rng() * opts.reduce((s, p) => s + p[2], 0), pick = opts[0];
+    for (const p of opts) { if (x < p[2]) { pick = p; break; } x -= p[2]; }
+    budget -= pick[1];
+    if (pick[0] === 'shell') { plan.push({ k: 'shell', lane: Math.floor(rng() * 3), dmg: lv >= 5 ? 4 : 3 }); continue; }
+    const lanes = [0, 1, 2].filter(l => free[l] > 0), lane = lanes[Math.floor(rng() * lanes.length)];
+    free[lane]--; plan.push({ k: 'deploy', lane, key: pick[0] });
+  }
+  return plan;
+}
+
+// ---- Résolution du tour ----
+const snap = S => ({ lanes: clone(S.lanes), hq: { ...S.hq } });
+function attackOnce(S, u, steps) {
+  const foe = u.side === 'me' ? 'en' : 'me', row = S.lanes[u.lane][foe].filter(Boolean);
+  let target = row[0] || null;
+  if (u.kw.includes('sniper') && row.length) target = row.reduce((a, b) => (b.hp < a.hp ? b : a));
+  const atk = u.atk + u.buff, hits = [];
+  if (target) {
+    const dmg = atk <= 0 ? 0 : u.kw.includes('pierce') ? atk : Math.max(1, atk - target.armor);
+    hits.push(applyDamage(S, target, dmg));
+  } else { S.hq[foe] -= atk; hits.push({ hq: foe, dmg: atk }); }
+  checkOver(S);
+  steps.push({ ph: S.phase, from: u.uid, hits, snap: snap(S) });
+}
+function combat(S, side, steps) {
+  const order = units(S, side).filter(u => !u.fresh && u.atk + u.buff > 0);
+  for (const u of order) {
+    if (S.over) return;
+    if (!S.lanes[u.lane][side].includes(u)) continue;
+    if (side === 'en' && S.lanes[u.lane].smoke) continue;
+    attackOnce(S, u, steps);
+    if (!S.over && u.kw.includes('double') && S.lanes[u.lane][side].includes(u)) attackOnce(S, u, steps);
+  }
+}
+function endTurn(S) {
+  const steps = [];
+  S.phase = 'me';
+  S.discard.push(...S.hand.splice(0));
+  combat(S, 'me', steps);
+  if (S.over) return steps;
+  units(S, 'me').forEach(u => { u.fresh = false; u.buff = 0; });
+  // soins de fin de tour
+  for (const u of units(S, 'me')) {
+    if (u.kw.includes('medic')) S.lanes[u.lane].me.filter(a => a && a !== u).forEach(a => { a.hp = Math.min(a.max, a.hp + 2); });
+  }
+  if (has(S, 'meyer')) units(S, 'me').forEach(a => { a.hp = Math.min(a.max, a.hp + 2); });
+  S.phase = 'en';
+  steps.push({ ph: 'en', msg: 'Tour ennemi', snap: snap(S) });
+  // phase ennemie : obus, arrivées, combat
+  for (const p of S.plan.filter(p => p.k === 'shell')) {
+    const t = S.lanes[p.lane].me[0], hits = [];
+    if (t) hits.push(applyDamage(S, t, p.dmg)); else { S.hq.me -= p.dmg; hits.push({ hq: 'me', dmg: p.dmg }); }
+    checkOver(S); steps.push({ ph: 'en', shell: p.lane, hits, snap: snap(S) });
+    if (S.over) return steps;
+  }
+  for (const p of S.plan.filter(p => p.k === 'deploy')) {
+    let lane = p.lane;
+    if (S.lanes[lane].en[1]) lane = [0, 1, 2].find(l => !S.lanes[l].en[1]);
+    if (lane === undefined) continue;
+    const u = deploy(S, 'en', lane, p.key);
+    steps.push({ ph: 'en', hits: [{ uid: u.uid, spawn: true, lane: u.lane, side: 'en' }], snap: snap(S) });
+  }
+  combat(S, 'en', steps);
+  if (S.over) return steps;
+  units(S, 'en').forEach(u => { u.fresh = false; });
+  S.lanes.forEach(l => { l.smoke = false; });
+  S.turn++;
+  S.plan = genPlan(S);
+  startTurn(S);
+  return steps;
+}
+// ==/CORE==
+
+// ====== Interface ======
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const LANE_NAME = ['Gauche', 'Centre', 'Droite'];
+const KW_TAG = { double: '×2 tirs', sniper: 'Viseur', pierce: 'Perce', medic: 'Soin', para: 'Para' };
+let C = null, S = null, sel = null, busy = false, fast = false, pendingToast = null;
+
+function load() { try { return JSON.parse(localStorage.getItem('front-best') || '{}'); } catch (e) { return {}; } }
+function save(o) { try { localStorage.setItem('front-best', JSON.stringify(o)); } catch (e) { /* stockage indisponible */ } }
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2400);
+}
+
+// ---- Campagne ----
+function newCampaign() {
+  C = { level: 0, deck: START_DECK.slice(), hq: 30, hqMax: 30, officers: [], won: 0 };
+  toBriefing();
+}
+function toBriefing() {
+  const rows = LEVELS.map((l, i) => `<div class="front ${i < C.level ? 'done' : i === C.level ? 'cur' : ''}">
+    <span><b>${i + 1}. ${l.name.replace(' (boss)', '')}</b> ${l.boss ? '<span class="bossmark">BOSS</span>' : ''}</span>
+    <span class="tag">${i < C.level ? 'Terminé' : `QG ennemi ${l.hq} PV`}</span></div>`).join('');
+  const offs = C.officers.length ? C.officers.map(id => { const o = OFFICERS.find(x => x.id === id); return `<div class="off-item"><b>${o.name}</b><span class="small muted">${o.desc}</span></div>`; }).join('') : '<p class="muted small">Aucun officier pour le moment. Vous en recruterez après les batailles 3 et 6.</p>';
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><h2>Campagne</h2><span class="num muted">Bataille ${C.level + 1} sur 8</span></div>
+    <div class="panel hqbar hq me"><div class="lbl"><span>Votre QG</span><span class="num">${C.hq} / ${C.hqMax}</span></div><div class="bar"><i style="width:${(C.hq / C.hqMax) * 100}%"></i></div></div>
+    <div class="fronts">${rows}</div>
+    <div class="eyebrow">Officiers</div><div class="officers">${offs}</div>
+    <div class="row"><button class="pill" data-act="help">Comment jouer</button><button class="pill" data-act="deck">Votre paquet (${C.deck.length} cartes)</button></div>
+    <button class="btn go" data-act="fight" style="padding-block:16px">Lancer la bataille ${C.level + 1}</button>
+  </div>`;
+}
+function startBattle() {
+  S = newBattle(C); sel = null; busy = false;
+  renderBattle();
+  if (C.level === 0 && !load().seen) { helpModal(true); const r = load(); r.seen = 1; save(r); }
+}
+
+// ---- Affichage du champ de bataille ----
+function unitHTML(u, cls = '') {
+  const tags = (u.armor ? [`Blindé ${u.armor}`] : []).concat((u.kw || []).map(k => KW_TAG[k])).concat(u.fresh ? ['En attente'] : []);
+  return `<div class="u ${u.side} ${u.fresh ? 'wait' : ''} ${cls}" data-uid="${u.uid}">
+    <span class="nm">${u.name}</span><span class="tags">${tags.map(t => `<span>${t}</span>`).join('')}</span>
+    <span class="st"><i class="a">${u.atk + (u.buff || 0)}</i><i class="h">${u.hp}</i></span></div>`;
+}
+function ghostHTML(key) {
+  const d = ENEMIES[key];
+  return `<div class="u en ghost"><span class="nm">${d.name}</span><span class="tags"><span>Arrive</span>${d.armor ? `<span>Blindé ${d.armor}</span>` : ''}</span><span class="st"><i class="a">${d.atk}</i><i class="h">${d.hp}</i></span></div>`;
+}
+function targetsOf() {
+  if (sel === null || !S) return { lanes: [], uids: [] };
+  const t = targetsFor(S, S.hand[sel]);
+  return { lanes: t.filter(x => x.lane !== undefined).map(x => x.lane), uids: t.filter(x => x.uid !== undefined).map(x => x.uid) };
+}
+function boardHTML(view, live) {
+  const T = live ? targetsOf() : { lanes: [], uids: [] };
+  // arrivées prévues (fantômes) : même placement que le moteur
+  const ghosts = [[], [], []], occ = view.lanes.map(l => l.en.filter(Boolean).length);
+  if (live) {
+    for (const p of S.plan.filter(p => p.k === 'deploy')) {
+      let l = p.lane; if (occ[l] >= 2) l = [0, 1, 2].find(x => occ[x] < 2);
+      if (l === undefined) continue;
+      occ[l]++; ghosts[l].push(p.key);
+    }
+  }
+  const shells = [0, 1, 2].map(l => live ? S.plan.filter(p => p.k === 'shell' && p.lane === l) : []);
+  const lanes = view.lanes.map((ln, i) => {
+    const enSlots = [1, 0].map(s => ln.en[s] ? unitHTML(ln.en[s], T.uids.includes(ln.en[s].uid) ? 'tgt' : '') : '<div class="slot"></div>');
+    // fantômes dans les emplacements libres de l'ennemi
+    const gh = ghosts[i].slice(); const fill = (html, s) => (html.includes('class="slot"') && gh.length ? ghostHTML(gh.shift()) : html);
+    const enFront = fill(enSlots[1], 0), enBack = fill(enSlots[0], 1);
+    const meSlots = [0, 1].map(s => (ln.me[s] ? unitHTML(ln.me[s], T.uids.includes(ln.me[s].uid) ? 'tgt' : '') : '<div class="slot"></div>'));
+    const sh = shells[i].map(p => `<span class="shell">Obus −${p.dmg} sur ${ln.me[0] ? 'la tête de ligne' : 'le QG'}</span>`).join('');
+    const mid = (ln.smoke ? '<span class="smoke">Fumigène</span>' : '') + sh;
+    return `<div class="lane ${T.lanes.includes(i) ? 'tgt' : ''}" data-lane="${i}"><div class="lh">${LANE_NAME[i]}</div>
+      <div class="half en">${enBack}${enFront}</div><div class="mid">${mid}</div><div class="half me">${meSlots.join('')}</div></div>`;
+  }).join('');
+  const hqHTML = (side, label) => `<div class="hq ${side} hqbar"><div class="lbl"><span>${label}</span><span class="num">${Math.max(0, view.hq[side])} / ${side === 'en' ? S.lvl.hq : C.hqMax}</span></div><div class="bar"><i style="width:${Math.max(0, view.hq[side]) / (side === 'en' ? S.lvl.hq : C.hqMax) * 100}%"></i></div></div>`;
+  return hqHTML('en', 'QG ennemi') + `<div class="lanes">${lanes}</div>` + hqHTML('me', 'Votre QG');
+}
+function cardHTML(key, extra = '', attrs = '') {
+  const c = CARDS[key];
+  const stats = c.type === 'unit' ? `<span class="cs"><i class="a">${c.atk}</i><i class="h">${c.hp}</i></span>` : '<span></span>';
+  const arm = c.armor ? ' Blindé.' : '';
+  return `<button class="card ${c.type} ${extra}" ${attrs}><span class="cost">${c.cost}</span><span class="cn">${c.name}</span>
+    <span class="ty">${c.type === 'unit' ? 'Unité' : 'Ordre'}</span><span class="ct">${c.txt}</span>${stats}</button>`;
+}
+function hintText() {
+  if (C.level !== 0 || S.turn > 2) return '';
+  if (!S.hand.some((_, i) => isPlayable(S, i))) return 'Plus de ravitaillement : touchez « Fin du tour ». Vos unités attaqueront, puis l’ennemi.';
+  if (sel === null) return S.turn === 1 ? '1. Touchez une carte de votre main (en bas).' : 'Jouez vos cartes, puis « Fin du tour ». Regardez les fantômes en pointillé : ce sont les ennemis qui arrivent.';
+  const c = CARDS[S.hand[sel]];
+  if (c.type === 'unit') return '2. Touchez une ligne en surbrillance pour y déployer l’unité.';
+  return '2. Touchez la cible en surbrillance.';
+}
+function renderBattle() {
+  const lvl = S.lvl;
+  const pips = Array.from({ length: Math.max(S.supply, 3 + (has(S, 'kowalski') ? 1 : 0)) }, (_, i) => `<span class="pip ${i < S.supply ? '' : 'off'}"></span>`).join('');
+  const hand = S.hand.map((k, i) => cardHTML(k, (sel === i ? 'sel ' : '') + (isPlayable(S, i) ? '' : 'off'), `data-hi="${i}"`)).join('');
+  const hint = hintText();
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><h2>${lvl.name}</h2><span class="num muted">Tour ${S.turn}</span></div>
+    <div class="phase" id="phase"></div>
+    <div class="board" id="board">${boardHTML({ lanes: S.lanes, hq: S.hq }, true)}</div>
+    ${hint ? `<div class="hint">${hint}</div>` : ''}
+    <div class="status"><div class="supply" title="Ravitaillement">Ravitaillement ${pips}</div><span class="muted small num">Pioche ${S.draw.length} · Défausse ${S.discard.length}</span></div>
+    <div class="hand" id="hand">${hand}</div>
+    <div class="row" style="justify-content:space-between"><span><button class="pill" data-act="help">Aide</button> <button class="pill" data-act="deck">Paquet</button></span>
+    <button class="btn" data-act="end" id="bend">Fin du tour</button></div>
+  </div>`;
+}
+function popAt(el, text, bg) {
+  if (!el) return;
+  const p = document.createElement('span'); p.className = 'pop'; p.textContent = text; if (bg) p.style.background = bg; el.appendChild(p);
+  setTimeout(() => p.remove(), 950);
+}
+function showHits(hits, from) {
+  if (from) document.querySelector(`.u[data-uid="${from}"]`)?.classList.add('atk');
+  for (const h of hits || []) {
+    if (h.spawn) { document.querySelector(`.u[data-uid="${h.uid}"]`)?.classList.add('spawn'); continue; }
+    let el = null;
+    if (h.hq) { el = document.querySelector(`.hq.${h.hq}`); el?.classList.add('hit'); }
+    else el = document.querySelector(`.u[data-uid="${h.uid}"]`) || document.querySelector(`.lane[data-lane="${h.lane}"] .half.${h.side}`);
+    if (h.heal) popAt(el, '+' + h.heal + ' PV', '#4f7a3a');
+    else if (h.buff) popAt(el, '+' + h.buff + ' ATK', '#9a7b24');
+    else if (h.dmg !== undefined) popAt(el, h.dmg === 0 ? '0' : '−' + h.dmg + (h.kill ? ' ✕' : ''));
+  }
+}
+
+// ---- Actions ----
+function why(i) {
+  const k = S.hand[i];
+  if (cardCost(S, k) > S.supply) return 'Pas assez de ravitaillement.';
+  return CARDS[k].type === 'unit' ? 'Aucune ligne libre.' : 'Aucune cible possible.';
+}
+function onCard(i) {
+  if (busy || S.over) return;
+  if (!isPlayable(S, i)) return toast(why(i));
+  const key = S.hand[i], t = targetsFor(S, key);
+  if (t.length === 1 && t[0].lane === undefined && t[0].uid === undefined) return doPlay(i, {});
+  sel = sel === i ? null : i; renderBattle();
+}
+function doPlay(i, tgt) {
+  const hits = playCard(S, i, tgt);
+  if (!hits) return;
+  sel = null; renderBattle(); showHits(hits);
+  if (S.over) finishBattle();
+}
+async function doEnd() {
+  if (busy || S.over) return;
+  busy = true; fast = false; sel = null;
+  const before = S.turn, steps = endTurn(S);
+  $('#bend').disabled = true; $('#hand').innerHTML = '<p class="muted" style="padding:20px 4px">Tour en cours…</p>';
+  const ph = $('#phase'), board = $('#board');
+  let lastPh = '';
+  for (const st of steps) {
+    if (st.ph !== lastPh) { lastPh = st.ph; ph.textContent = st.ph === 'me' ? 'Vos unités attaquent' : 'Tour ennemi'; await sleep(fast ? 50 : 350); }
+    board.innerHTML = boardHTML(st.snap, false);
+    showHits(st.hits, st.from);
+    await sleep(st.msg ? (fast ? 30 : 250) : fast ? 70 : 480);
+  }
+  busy = false;
+  if (S.over) return finishBattle();
+  renderBattle();
+}
+function finishBattle() {
+  busy = true;
+  setTimeout(() => {
+    if (S.over === 'win') return toReward();
+    const rec = load(); rec.level = Math.max(rec.level || 0, C.level + 1); save(rec);
+    app.innerHTML = `<div class="stack end"><div class="big lose">Défaite</div><h2>Le front a cédé à la bataille ${C.level + 1}</h2>
+      <p class="muted">${LEVELS[C.level].name}. Vous aviez battu ${C.level} ${C.level > 1 ? 'fronts' : 'front'}.</p>
+      <button class="btn" data-act="new">Nouvelle campagne</button></div>`;
+  }, 900);
+}
+
+// ---- Récompenses ----
+function toReward() {
+  C.hq = Math.min(C.hqMax, S.hq.me + 6);
+  const rec = load(); rec.level = Math.max(rec.level || 0, C.level + 1); save(rec);
+  if (C.level === 7) return victory();
+  const next = () => { C.level++; toBriefing(); };
+  const cardStep = () => {
+    const pool = Object.keys(CARDS).filter(k => CARDS[k].rar > 0), w = k => [0, 4, 3, 1.5][CARDS[k].rar];
+    const opts = []; while (opts.length < 3) { let x = Math.random() * pool.reduce((s, k) => s + (opts.includes(k) ? 0 : w(k)), 0); for (const k of pool) { if (opts.includes(k)) continue; if (x < w(k)) { opts.push(k); break; } x -= w(k); } }
+    app.innerHTML = `<div class="stack"><div class="hd"><h2>Victoire !</h2><span class="num muted">QG ${C.hq} / ${C.hqMax}</span></div>
+      <p>Choisissez une carte pour renforcer votre paquet.</p>
+      <div class="cardrow">${opts.map(k => cardHTML(k, 'pick', `data-add="${k}"`)).join('')}</div>
+      <button class="btn ghost" data-act="skipcard">Ne rien prendre</button></div>`;
+  };
+  window.__after = { cardStep, next };
+  if (C.level === 2 || C.level === 5) {
+    const opts = shuffle(OFFICERS.filter(o => !C.officers.includes(o.id))).slice(0, 3);
+    app.innerHTML = `<div class="stack"><div class="hd"><h2>Un officier vous rejoint</h2></div><p>Choisissez-en un. Son effet dure toute la campagne.</p>
+      <div class="officers">${opts.map(o => `<button class="off-item" data-officer="${o.id}"><b>${o.name}</b><span class="small muted">${o.desc}</span></button>`).join('')}</div></div>`;
+  } else cardStep();
+}
+function toCamp() {
+  app.innerHTML = `<div class="stack"><div class="hd"><h2>Camp de base</h2><span class="num muted">QG ${C.hq} / ${C.hqMax}</span></div><p>Un seul choix avant la prochaine bataille.</p>
+    <button class="off-item" data-act="heal"><b>Soigner le QG</b><span class="small muted">+8 PV (jusqu'au maximum).</span></button>
+    <button class="off-item" data-act="removecard"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></button></div>`;
+}
+function victory() {
+  app.innerHTML = `<div class="stack end"><div class="big">Victoire</div><h2>Le dernier quartier général est tombé</h2>
+    <p class="muted">Vous avez gagné les 8 batailles avec ${C.deck.length} cartes et ${C.officers.length} officiers.</p>
+    <button class="btn" data-act="new">Rejouer</button></div>`;
+}
+
+// ---- Fenêtres ----
+function closeModal() { document.querySelectorAll('.modal').forEach(m => m.remove()); }
+function openModal(html) {
+  closeModal();
+  const m = document.createElement('div'); m.className = 'modal'; m.innerHTML = `<div class="box">${html}</div>`;
+  m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+  document.body.appendChild(m);
+}
+function helpModal(first) {
+  openModal(`<div class="hd"><h2>Comment jouer</h2><button class="pill" data-act="close">${first ? 'Compris' : 'Fermer'}</button></div>
+    <ol>
+    <li><b>But :</b> détruire le <b>QG ennemi</b> (en haut) avant que <b>votre QG</b> (en bas) tombe.</li>
+    <li>Le front a <b>3 lignes</b>. Sur chaque ligne, vos unités (en bas) affrontent les unités ennemies (en haut). Si la ligne d'en face est vide, elles frappent directement le QG.</li>
+    <li><b>Votre tour :</b> vous avez 3 de <b>ravitaillement</b>. Chaque carte coûte un peu de ravitaillement (le chiffre rond en haut à gauche). Touchez une carte, puis la cible en surbrillance.</li>
+    <li>Touchez <b>« Fin du tour »</b> : vos unités attaquent, puis l'ennemi attaque et fait arriver des renforts. Une unité qui vient d'arriver attend un tour avant d'attaquer.</li>
+    <li><b>L'ennemi se montre à l'avance :</b> les cadres en pointillé sont les renforts qui arriveront, et les bandeaux rouges « Obus » annoncent un tir sur la ligne. Vous pouvez réagir avant.</li>
+    </ol>
+    <div class="legend"><span class="legend"><i class="a">2</i> attaque</span><span class="legend"><i class="h">3</i> points de vie</span></div>
+    <p class="small muted">Entre deux batailles, vous ajoutez des cartes à votre paquet et recrutez des officiers. Votre QG ne se soigne que partiellement : gardez-le en vie sur 8 batailles.</p>`);
+}
+function deckModal(pickMode) {
+  const counts = {}; C.deck.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+  const keys = Object.keys(counts).sort((a, b) => CARDS[a].type.localeCompare(CARDS[b].type) || CARDS[a].cost - CARDS[b].cost);
+  openModal(`<div class="hd"><h2>${pickMode ? 'Retirer quelle carte ?' : `Votre paquet (${C.deck.length})`}</h2><button class="pill" data-act="close">${pickMode ? 'Annuler' : 'Fermer'}</button></div>
+    <div class="deckgrid">${keys.map(k => `<div>${cardHTML(k, pickMode ? 'pick' : '', pickMode ? `data-remove="${k}"` : '')}<div class="small muted" style="text-align:center;margin-top:3px">× ${counts[k]}</div></div>`).join('')}</div>`);
+}
+
+// ---- Événements ----
+document.addEventListener('click', e => {
+  const t = e.target;
+  const add = t.closest('[data-add]'); if (add) { C.deck.push(add.dataset.add); return toCamp(); }
+  const rem = t.closest('[data-remove]');
+  if (rem) { if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); } C.deck.splice(C.deck.indexOf(rem.dataset.remove), 1); closeModal(); return window.__after.next(); }
+  const off = t.closest('[data-officer]');
+  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 10; C.hq = Math.min(C.hqMax, C.hq + 10); } return window.__after.cardStep(); }
+  if (S && document.getElementById('hand')) {
+    const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
+    if (sel !== null && !busy) {
+      const u = t.closest('.u.tgt'); if (u) return doPlay(sel, { uid: +u.dataset.uid });
+      const lane = t.closest('.lane.tgt'); if (lane) return doPlay(sel, { lane: +lane.dataset.lane });
+    }
+  }
+  const b = t.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'new') newCampaign();
+  else if (a === 'help') helpModal(false);
+  else if (a === 'close') closeModal();
+  else if (a === 'fight') startBattle();
+  else if (a === 'end') doEnd();
+  else if (a === 'deck') deckModal(false);
+  else if (a === 'skipcard') toCamp();
+  else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 8); window.__after.next(); }
+  else if (a === 'removecard') deckModal(true);
+});
+document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
+
+function showTitle() {
+  const rec = load();
+  app.innerHTML = `<div class="title"><div class="star">★</div><h1>Ligne de Front</h1>
+    <p>1944. Construisez votre paquet, déployez vos unités sur trois lignes et brisez le front ennemi en huit batailles. L'ennemi annonce chacun de ses mouvements : à vous de lire le terrain.</p>
+    <div class="row"><button class="btn" data-act="new">Nouvelle campagne</button><button class="btn ghost" data-act="help">Comment jouer</button></div>
+    <div class="record">${rec.level ? `Meilleure progression : bataille ${Math.min(8, rec.level)} sur 8` : 'Aucune campagne jouée pour le moment.'}</div></div>`;
+}
+showTitle();
+</script>
+</body>
+</html>
