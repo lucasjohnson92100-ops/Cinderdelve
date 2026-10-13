@@ -11942,8 +11942,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
     spawnCyc: 0.75,                      /* nombre de monstres par lot : + 80 % par vague passée */
     capBase: 52, capCyc: 12,            /* nombre maximal de monstres à l'écran */
-    firstWaveN: 1.3,                    /* vague 1 : proportion du lot normal (débutants) */
-    ivStart: 1.9, ivSlope: 1.2, ivMin: 0.75, ivCyc: 0.18,   /* cadence des lots : intervalle en secondes */
+    firstWaveN: 0.75,                   /* vague 1 : proportion du lot normal (débutants) */
+    ivStart: 2.5, ivSlope: 1.2, ivMin: 0.75, ivCyc: 0.18,   /* cadence des lots : intervalle en secondes */
     eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
     boss1: 1.1, bossCyc: 0.6, superBoss: 3.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
     xpQuad: 1.1                         /* coût du niveau suivant : plus haut = on monte moins vite */
@@ -11980,7 +11980,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var nBase = (frac < 0.15 ? 4 : 4 + Math.floor((frac - 0.15) * 11 + Math.random() * 4)) * (1 + cycW * BAL.spawnCyc) * survPhaseN() * (survModIs("dense") ? 1.35 : 1);
     var n = Math.min(capW - enemies.length, Math.round(nBase)), placed = 0, tries = 0;
     if (WT) n = Math.max(1, Math.round(n * WT.n));
-    if (cycW === 0) n = Math.max(1, Math.round(n * BAL.firstWaveN));
+    if (cycW === 0) n = Math.max(1, Math.round(n * BAL.firstWaveN * Math.min(1, 0.6 + frac * 1.4)));
     if (forceN) n = Math.min(capW - enemies.length, forceN);
     if (WT && WT.ring) ringMode = true;
     var a0 = Math.random() * 6.283, packN = 4 + Math.floor(frac * 4), packA = Math.random() * 6.283, packType = null, packIdx = 0, packId = ++survPackSeq, batchFoes = [];
@@ -12192,7 +12192,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     if (state.survOpenRush && !state.survBossUp && (state.survModDone || (state.survCycle || 0) < 1)) {
       state.survOpenRush = false;
-      var rushN = 4 + (state.survCycle || 0) * 2; spawnWaveBatch(0.1, rushN, true);
+      var rushN = (state.survCycle || 0) ? 4 + state.survCycle * 2 : 2; spawnWaveBatch(0.1, rushN, true);
       if ((state.survCycle || 0) >= 1) { banner("Ils arrivent de partout !", "#ff5a4f", 1500, 26); sfx("warn"); }
     }
     if (!state.survBossUp && (state.survCycle || 0) >= 1) {
