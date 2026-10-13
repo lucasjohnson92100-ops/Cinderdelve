@@ -8315,8 +8315,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var bolts = [];
   function spL(id) { return (state.spellLv && state.spellLv[id]) || 1; }
   function pick5(arr, id) { if (state && state.survival) return arr[0]; return arr[Math.min(4, spL(id) - 1)]; }
-  var castMul = 1, SURV_SP_MAX = 12, SPELL_NERF = { eggs: 0.42, milk: 0.34, scare: 0.53, vortex: 0.78 };
-  function spNerf(id, L) { return ((L >= 8 || (state.survEvo && state.survEvo[id])) && SPELL_NERF[id]) || 1; }
+  var castMul = 1, SURV_SP_MAX = 12, SPELL_MUL = {"barrier":[0.77,1,1],"eggs":[6,2.52,0.42],"feathers":[0.74,0.79,1],"manure":[0.63,0.74,1],"milk":[1,0.34,0.25],"pitch":[3.53,1.71,0.61],"poison":[0.76,1,1],"scare":[1,0.53,0.74],"vortex":[0.7,0.78,0.54]};
+  /* coefficients [niveaux 1-7, niveaux 8-11, niveau 12 ou évolué] issus de mesures de dégâts par seconde, pour que tous les sorts jouent dans la même fourchette */
+  function spNerf(id, L) { var m = SPELL_MUL[id]; if (!m) return 1; return (state.survEvo && state.survEvo[id]) || L >= 12 ? m[2] : L >= 8 ? m[1] : m[0]; }
   function fsL(id) { return state && state.survival ? (state.spRealL || 1) : spL(id); }
   function fsSc(L) { return state && state.survival ? 1 : 1 + 0.25 * (L - 1); }
   function isEvo(id) { return !!(state && state.survival && state.survEvo && state.survEvo[id]); }
@@ -9765,9 +9766,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (state.hp <= 0) { state.hp = 0; gameOver(); }
   }
   /* rééquilibrage mesuré (dégâts par seconde sur une horde de 30) : les armes qui dépassaient largement les autres sont ramenées vers la moyenne */
-  var WNERF = { boom: 0.5, hedgehog: 0.65, trail: 0.7, mines: 0.8, orbit: 0.8, storm: 0.85, scythe: 0.85, aura: 0.9 }, WNERFN = null;
+  var WNERF = {"aura":0.9,"bees":2.11,"boom":0.24,"cleaver":1.9,"cone":1.25,"crows":1.41,"eggbomb":1.62,"hedgehog":0.43,"meteor":2.98,"mines":0.56,"orbit":0.66,"peck":1.38,"plumes":1.28,"scythe":0.72,"spikes":0.45,"storm":0.58,"trail":0.86,"turret":1.89}, WEVO = { spikes: 0.6 }, WNERFN = null;
   function survWDmg(mult) {
-    if (!WNERFN) { WNERFN = {}; Object.keys(WNERF).forEach(function (k) { [SURV_WEAPONS[k] && SURV_WEAPONS[k].name, SURV_WEVOS[k] && SURV_WEVOS[k].name].forEach(function (n) { if (n) WNERFN[n] = WNERF[k]; }); }); }
+    if (!WNERFN) { WNERFN = {}; Object.keys(WNERF).forEach(function (k) { if (SURV_WEAPONS[k]) WNERFN[SURV_WEAPONS[k].name] = WNERF[k]; if (SURV_WEVOS[k]) WNERFN[SURV_WEVOS[k].name] = WNERF[k] * (WEVO[k] || 1); }); }
     return survRoundMul(Math.max(1, state.atk * 0.8), mult * (WNERFN[dmgSrc] || 1));
   }
   function survWeaponsTick(dt) {
@@ -11063,7 +11064,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function pL() { return (state && state.farmPwLv) || 1; }
   function pS() { return 1 + 0.15 * (pL() - 1); }
   function pEvo() { return pL() >= 4; }
-  var PW_NERF = { meuh: 0.8, taureau: 0.85, dinde: 0.85, lapin: 0.9, coq: 0.9 }, ULT_NERF = { chat: 0.6, meuh: 0.8, ane: 0.8, cochon: 0.8, canard: 0.85, coq: 0.85, cocotte: 0.85 };
+  var PW_NERF = {"ane":0.6,"bouc":0.63,"chat":1.6,"cochon":0.63,"coq":0.9,"dinde":0.6,"lapin":0.9,"meuh":0.8,"oie":1.6,"paon":1.6,"taureau":0.85}, ULT_NERF = {"ane":1.28,"bouc":0.69,"canard":0.85,"chat":0.24,"cheval":0.69,"cochon":0.8,"cocotte":1.36,"coq":0.85,"dinde":0.47,"lama":1.6,"meuh":0.8,"mouton":0.4,"oie":1.6};
   function fmDmg(m) { m *= PW_NERF[state.variant] || 1; return Math.max(2, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * m * (1 + 0.25 * (pL() - 1)) * (state.farmPwMul || 1))); }
   function fmNear(r, cx, cy) {
     cx = cx == null ? p.vx : cx; cy = cy == null ? p.vy : cy;
