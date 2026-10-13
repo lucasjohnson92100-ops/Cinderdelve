@@ -292,7 +292,8 @@ body.dark-ui .fill.xp { background: linear-gradient(#f0d070, #b8892a 60%, #6a4a1
 body.land.dark-ui .orb { width: 58px; height: 58px; }
 body.land.dark-ui .orbs { padding: 0; justify-content: flex-start; gap: 6px; }
 body.dark-ui .chip { background-image: var(--grain-stone), linear-gradient(#211710, #120c08); background-blend-mode: overlay; background-size: 90px 90px, 100% 100%; border: 1px solid #6a4a1c; border-radius: 4px; color: #e6d3a8; box-shadow: inset 0 1px 0 rgba(255,220,160,0.12), inset 0 0 8px rgba(0, 0, 0, 0.6); }
-body.lowfx canvas.board { filter: none !important; }
+body.lowfx canvas.board, body.surv canvas.board { filter: none !important; }
+body.surv .actions button { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 body.dark-ui canvas.board { filter: saturate(0.74) contrast(1.07) sepia(0.12) brightness(1.03); box-shadow: 0 0 0 3px #4a3218, 0 0 0 5px #120a04, 0 10px 26px rgba(0, 0, 0, 0.85); border-radius: 2px; }
 body.dark-ui .box { background-image: var(--grain-parchment), linear-gradient(180deg, #1d1610, #0f0a07); background-blend-mode: overlay; background-size: 120px 120px, 100% 100%; border: 2px solid #6a4a1c; border-radius: 6px; color: var(--ink);
   box-shadow: inset 0 0 0 2px #22160a, inset 0 0 40px rgba(0, 0, 0, 0.7), 0 0 0 1px #000, 0 10px 40px rgba(0, 0, 0, 0.85); }
@@ -4607,6 +4608,25 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
           ctx.strokeStyle = tg0; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx + dx0 / dl * tl, my + dy0 / dl * tl); ctx.stroke(); ctx.lineWidth = 5; ctx.strokeStyle = "rgba(255,240,190,0.7)"; ctx.stroke();
           var g3 = ctx.createRadialGradient(mx, my, 0, mx, my, 16); g3.addColorStop(0, "rgba(255,240,180,0.95)"); g3.addColorStop(0.5, "rgba(255,130,40,0.6)"); g3.addColorStop(1, "rgba(255,60,0,0)"); ctx.fillStyle = g3; ctx.fillRect(mx - 16, my - 16, 32, 32);
           ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = "#6a4a3a"; ctx.strokeStyle = OC; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(mx, my, 5 + 3 * e1, 0, 6.2832); ctx.fill(); ctx.stroke();
+        } else if (f.k === "acorn") {
+          /* un gland tombe tout droit : ombre qui grandit, cercle de visée, noix qui grossit en s'approchant */
+          var ek = k * k, gy = cy - (1 - ek) * TILE * 9, sc2 = 0.5 + 0.35 * ek;
+          ctx.strokeStyle = "rgba(255,230,150," + (0.55 * (1 - k) + 0.15).toFixed(3) + ")"; ctx.lineWidth = 1.4; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(0,0,0," + (0.18 + 0.2 * k).toFixed(3) + ")"; ctx.beginPath(); ctx.ellipse(cx, cy + 2, 7 * sc2, 3.6 * sc2, 0, 0, 6.2832); ctx.fill();
+          ctx.translate(cx, gy); ctx.rotate(Math.sin(f.seed + k * 6) * 0.35); ctx.scale(sc2, sc2);
+          ctx.strokeStyle = OC; ctx.lineWidth = 1.4; ctx.lineJoin = "round";
+          ctx.fillStyle = "#b8803c"; ctx.beginPath(); ctx.ellipse(0, 2, 6, 7.6, 0, 0, 6.2832); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = "#e0b070"; ctx.beginPath(); ctx.ellipse(-2, 1, 1.6, 3.4, 0.3, 0, 6.2832); ctx.fill();
+          ctx.fillStyle = "#6a4426"; ctx.beginPath(); ctx.moveTo(-7, -1); ctx.quadraticCurveTo(0, -9, 7, -1); ctx.quadraticCurveTo(0, 2, -7, -1); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = "#8a5a30"; ctx.lineWidth = 0.8; for (var hx = -4; hx <= 4; hx += 4) { ctx.beginPath(); ctx.moveTo(hx, -4.6); ctx.lineTo(hx + 1, -0.6); ctx.stroke(); }
+          ctx.strokeStyle = OC; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(1, -10.4); ctx.stroke();
+        } else if (f.k === "acornhit") {
+          var ra = R * (0.25 + 0.75 * Math.min(1, k * 2.4));
+          ctx.fillStyle = "rgba(150,110,60," + (0.35 * (1 - k)).toFixed(3) + ")"; ctx.beginPath(); ctx.ellipse(cx, cy + 1, ra, ra * 0.7, 0, 0, 6.2832); ctx.fill();
+          ctx.strokeStyle = "rgba(255,235,170," + (0.9 * (1 - k)).toFixed(3) + ")"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy + 1, ra, ra * 0.7, 0, 0, 6.2832); ctx.stroke();
+          for (var jn = 0; jn < 7; jn++) { var anh = f.seed + jn * 0.9, dh = R * 0.9 * Math.min(1, k * 2.6) * (0.5 + ((jn * 7) % 4) / 5), nx = cx + Math.cos(anh) * dh, ny = cy + Math.sin(anh) * dh * 0.7 - Math.sin(Math.min(1, k * 2) * 3.14) * 9;
+            ctx.fillStyle = jn % 2 ? "#b8803c" : "#6a4426"; ctx.globalAlpha = Math.max(0, 1 - k * 1.2); ctx.beginPath(); ctx.arc(nx, ny, 2.2 * (1 - k * 0.5), 0, 6.2832); ctx.fill(); }
+          ctx.globalAlpha = 1;
         } else if (f.k === "scorch") {
           ctx.fillStyle = "rgba(25,12,8," + (0.5 * (1 - k)).toFixed(3) + ")"; ctx.beginPath(); ctx.ellipse(cx, cy + 1, R * 0.9, R * 0.7, 0, 0, 6.2832); ctx.fill();
           ctx.strokeStyle = "rgba(255,110,30," + (0.45 * Math.max(0, 1 - k * 1.6)).toFixed(3) + ")"; ctx.lineWidth = 2; ctx.stroke();
@@ -5550,6 +5570,30 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       pi_feeder: function (x) { S(x, function (p) { p.moveTo(6, 30); p.lineTo(58, 30); p.lineTo(50, 52); p.lineTo(14, 52); p.closePath(); }, "#a8743a"); [[16, 28], [26, 26], [36, 28], [46, 26]].forEach(function (d) { C(x, d[0], d[1], 3.4, "#f0c030"); }); Q(x, function (p) { p.arc(32, 10, 9, 0, 3.1416); }, 6, "#d8281a"); },
       pi_soup: function (x) { S(x, function (p) { p.moveTo(8, 32); p.lineTo(56, 32); p.quadraticCurveTo(54, 56, 32, 56); p.quadraticCurveTo(10, 56, 8, 32); }, "#aab4c4"); E(x, 32, 32, 24, 6, "#e8a050"); heart(x, 32, 14, 0.8, "#e84a5a"); },
       pi_safe: function (x) { R(x, 8, 12, 48, 42, "#7a8498"); R(x, 14, 18, 36, 30, "#9aa4b8"); C(x, 32, 33, 9, "#d8e0ec"); L(x, 32, 33, 38, 28, 3, O); L(x, 14, 54, 14, 60, 4, O); L(x, 50, 54, 50, 60, 4, O); },
+      pi_acorn: function (x) { glow(x, "rgba(255,210,120,0.3)"); E(x, 32, 38, 15, 18, "#b8803c"); E(x, 26, 34, 4, 9, "#e0b070", 0.3); S(x, function (p) { p.moveTo(14, 26); p.quadraticCurveTo(32, 2, 50, 26); p.quadraticCurveTo(32, 32, 14, 26); }, "#6a4426"); [22, 32, 42].forEach(function (d) { L(x, d, 14, d + 2, 25, 1.6, "#8a5a30"); }); L(x, 32, 8, 34, 2, 4, "#6a4426"); L(x, 14, 56, 22, 60, 2.4, "#ffe27a"); L(x, 46, 56, 40, 60, 2.4, "#ffe27a"); },
+      pi_sling: function (x) { Q(x, function (p) { p.moveTo(10, 52); p.quadraticCurveTo(10, 24, 32, 20); p.quadraticCurveTo(54, 24, 54, 52); }, 4, "#a8743a"); E(x, 32, 24, 7, 6, "#8a5a2c"); E(x, 22, 12, 5, 7, "#f0c030", 0.5); E(x, 42, 8, 4.4, 6.4, "#f0c030", -0.4); },
+      pi_bees: function (x) { [[22, 22], [42, 30], [26, 44]].forEach(function (b) { E(x, b[0], b[1], 8, 6, "#ffd23c"); L(x, b[0] - 2, b[1] - 5, b[0] - 2, b[1] + 5, 2.4, O); L(x, b[0] + 3, b[1] - 5, b[0] + 3, b[1] + 5, 2.4, O); E(x, b[0] - 3, b[1] - 8, 5, 3, "rgba(220,240,255,0.85)", -0.5); E(x, b[0] + 3, b[1] - 8, 5, 3, "rgba(220,240,255,0.85)", 0.5); }); },
+      pi_scythe: function (x) { L(x, 14, 58, 44, 8, 5, "#8a5a2c"); Q(x, function (p) { p.moveTo(44, 10); p.quadraticCurveTo(62, 14, 56, 36); p.quadraticCurveTo(54, 22, 40, 18); }, 5, "#d8e0ec"); },
+      pi_bell: function (x) { S(x, function (p) { p.moveTo(14, 46); p.quadraticCurveTo(14, 12, 32, 10); p.quadraticCurveTo(50, 12, 50, 46); p.closePath(); }, "#ffc83a"); R(x, 10, 44, 44, 6, "#e0a020"); C(x, 32, 54, 4.4, "#8a5a2c"); C(x, 32, 8, 3.4, "#ffc83a"); Q(x, function (p) { p.arc(32, 28, 26, 3.6, 5.8); }, 2.4, "#fff"); },
+      pi_turret: function (x) { L(x, 32, 58, 32, 20, 4, "#8a5a2c"); L(x, 14, 30, 50, 30, 4, "#8a5a2c"); C(x, 32, 14, 9, "#e0b070"); P(x, [[22, 10], [42, 10], [32, 0]], "#6a4426", 2.4); [[28, 14], [36, 14]].forEach(function (d) { C(x, d[0], d[1], 1.6, "#ff4a3a"); }); L(x, 36, 34, 56, 38, 5, "#aab4c4"); },
+      pi_haybale: function (x) { C(x, 32, 34, 22, "#e0b84a"); C(x, 32, 34, 14, "#f0d070"); C(x, 32, 34, 6, "#e0b84a"); Q(x, function (p) { p.arc(32, 34, 10, 0.4, 4.2); }, 2, "#a8862a"); Q(x, function (p) { p.moveTo(4, 56); p.lineTo(14, 56); p.moveTo(2, 48); p.lineTo(10, 48); }, 3, "#fff"); },
+      pi_crows: function (x) { [[20, 24, 1], [42, 18, 0.8], [34, 44, 1.1]].forEach(function (c) { x.save(); x.translate(c[0], c[1]); x.scale(c[2], c[2]); S(x, function (p) { p.moveTo(-14, -6); p.quadraticCurveTo(-6, -2, 0, 2); p.quadraticCurveTo(6, -2, 14, -6); p.quadraticCurveTo(8, 6, 0, 8); p.quadraticCurveTo(-8, 6, -14, -6); }, "#2a2438"); P(x, [[-3, 0], [3, 0], [0, 5]], "#ffb03a", 1.6); x.restore(); }); },
+      pi_boomerang: function (x) { Q(x, function (p) { p.moveTo(10, 14); p.quadraticCurveTo(52, 8, 54, 52); }, 9, "#d8a050"); Q(x, function (p) { p.moveTo(10, 14); p.quadraticCurveTo(52, 8, 54, 52); }, 3, "#f0c878"); },
+      pi_mines: function (x) { E(x, 32, 44, 22, 8, "#6a4a2a"); C(x, 32, 34, 14, "#5a5a6a"); [[32, 14, 32, 20], [16, 24, 21, 28], [48, 24, 43, 28]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3.4, "#aab4c4"); }); C(x, 32, 34, 4.4, "#ff4a3a"); [[14, 52], [50, 54]].forEach(function (d) { E(x, d[0], d[1], 3, 5, "#f0c030"); }); },
+      pi_fireworks: function (x) { L(x, 32, 58, 32, 36, 3, "#a8743a"); for (var i = 0; i < 8; i++) { var a = i * 0.7854; L(x, 32 + Math.cos(a) * 6, 22 + Math.sin(a) * 6, 32 + Math.cos(a) * 20, 22 + Math.sin(a) * 20, 3, i % 2 ? "#ff6a8a" : "#ffe27a"); } C(x, 32, 22, 4, "#fff"); },
+      pi_trail: function (x) { [[10, 50, 0.7], [24, 44, 0.9], [38, 36, 1.1], [50, 26, 1.3]].forEach(function (f) { flame(x, f[0], f[1], f[2] * 0.6, "#ff6a2a", "#ffd23c"); }); },
+      pi_pillar: function (x) { glow(x, "rgba(255,120,40,0.35)"); R(x, 22, 6, 20, 50, "#ff8a2a"); R(x, 27, 6, 10, 50, "#ffd23c"); E(x, 32, 56, 16, 5, "#3a2a2a"); flame(x, 32, 12, 0.7, "#ff6a2a", "#ffe27a"); },
+      pi_aura: function (x) { glow(x, "rgba(255,120,40,0.4)"); Q(x, function (p) { p.arc(32, 32, 22, 0, 6.2832); }, 4, "#ff8a2a"); flame(x, 32, 34, 0.8, "#ff6a2a", "#ffd23c"); },
+      pi_frostring: function (x) { Q(x, function (p) { p.arc(32, 32, 22, 0, 6.2832); }, 5, "#9ae6ff"); for (var i = 0; i < 6; i++) { var a = i * 1.0472; P(x, [[32 + Math.cos(a) * 22, 32 + Math.sin(a) * 22], [32 + Math.cos(a + 0.2) * 12, 32 + Math.sin(a + 0.2) * 12], [32 + Math.cos(a - 0.2) * 12, 32 + Math.sin(a - 0.2) * 12]], "#e8f8ff", 2); } },
+      pi_sonar: function (x) { C(x, 32, 32, 6, "#ffd23c"); [12, 20, 28].forEach(function (r, i) { Q(x, function (p) { p.arc(32, 32, r, -0.9, 0.9); p.moveTo(32 - Math.cos(0.9) * r, 32 - Math.sin(0.9) * r); p.arc(32, 32, r, 3.14 - 0.9, 3.14 + 0.9); }, 3, i ? "#aaf0ff" : "#ffffff"); }); },
+      pi_leech: function (x) { heart(x, 32, 28, 1.3, "#d8281a"); S(x, function (p) { p.moveTo(12, 56); p.quadraticCurveTo(24, 36, 40, 48); p.quadraticCurveTo(48, 54, 54, 46); p.quadraticCurveTo(46, 62, 34, 58); p.quadraticCurveTo(22, 54, 12, 56); }, "#3a2a2a"); },
+      pi_gust: function (x) { Q(x, function (p) { p.moveTo(6, 24); p.lineTo(40, 24); p.bezierCurveTo(54, 24, 54, 8, 42, 10); }, 4, "#e8f8ff"); Q(x, function (p) { p.moveTo(10, 38); p.lineTo(46, 38); p.bezierCurveTo(60, 38, 60, 54, 46, 52); }, 4, "#bfeaff"); Q(x, function (p) { p.moveTo(6, 50); p.lineTo(26, 50); }, 4, "#e8f8ff"); },
+      pi_hedgehog: function (x) { E(x, 32, 38, 22, 16, "#8a5a3a"); for (var i = 0; i < 9; i++) { var a = 3.3 + i * 0.35; L(x, 32 + Math.cos(a) * 16, 38 + Math.sin(a) * 12, 32 + Math.cos(a) * 28, 38 + Math.sin(a) * 22, 3, "#d8c8a0"); } E(x, 52, 42, 8, 7, "#e8c8a0"); C(x, 55, 40, 1.8, O); C(x, 60, 43, 1.8, O); },
+      pi_whip: function (x) { Q(x, function (p) { p.moveTo(8, 54); p.bezierCurveTo(8, 20, 34, 60, 34, 28); p.bezierCurveTo(34, 8, 54, 14, 56, 8); }, 4, "#c8903a"); L(x, 6, 56, 14, 48, 6, "#6a4426"); star(x, 52, 10, 8, "#fff3a0"); },
+      pi_storm: function (x) { S(x, function (p) { p.moveTo(10, 28); p.bezierCurveTo(4, 14, 24, 8, 30, 14); p.bezierCurveTo(38, 4, 58, 12, 54, 26); p.bezierCurveTo(60, 34, 12, 40, 10, 28); }, "#7a8ab8"); P(x, [[34, 28], [24, 46], [32, 46], [26, 62], [44, 40], [35, 40], [42, 28]], "#ffe27a", 2.4); },
+      pi_thorns: function (x) { Q(x, function (p) { p.moveTo(6, 54); p.lineTo(58, 54); }, 5, "#6a4426"); [10, 22, 34, 46].forEach(function (d, i) { P(x, [[d, 54], [d + 10, 54], [d + 5, 12 + (i % 2) * 8]], "#3a9a3a", 2.6); L(x, d + 5, 20 + (i % 2) * 8, d + 5, 50, 1.2, "#7ae05a"); }); },
+      pi_peck: function (x) { P(x, [[8, 22], [44, 10], [30, 30]], "#ffb03a", 3); P(x, [[8, 22], [30, 30], [24, 48]], "#e08a20", 3); [[50, 20, 56, 14], [54, 30, 60, 30], [48, 40, 56, 46]].forEach(function (t) { L(x, t[0], t[1], t[2], t[3], 3, "#fff"); }); },
+      pi_orbit: function (x) { Q(x, function (p) { p.arc(32, 32, 20, 0, 6.2832); }, 2.4, "rgba(255,255,255,0.45)"); sword(x, 0.8, 30); x.save(); x.translate(50, 14); x.rotate(1.2); L(x, 0, 6, 0, -6, 4, "#d8e0ec"); x.restore(); x.save(); x.translate(14, 50); x.rotate(-2); L(x, 0, 6, 0, -6, 4, "#d8e0ec"); x.restore(); },
       pi_fistmp: function (x) { E(x, 32, 34, 17, 20, "#7ac8ff"); C(x, 32, 34, 6, "#fff"); }
     };
     Object.keys(D).forEach(function (k) { try { var c = mk(D[k]), w = silh(c, "#ffffff"), r = silh(c, "#ff2d3d"); SP[k] = { c: c, ph: c, h: c, hw: w, hr: r, white: w, red: r, native: true }; } catch (e) { if (window.console) console.warn("icône", k, e); } });
@@ -9434,14 +9478,14 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   };
   /* ---- armes de survie ---- */
   var SURV_WEAPONS = {
-    aura: { name: "Aura ardente", icon: "fire", learn: "Brûle tout ce qui t'approche", up: "+10 % de dégâts et rayon plus large" },
-    orbit: { name: "Lames tournoyantes", icon: "sword", learn: "Des lames tournent autour de toi", up: "+10 % de dégâts (une lame de plus aux niveaux pairs)" },
-    boom: { name: "Boomerang", icon: "axe", learn: "Part vers un ennemi et revient", up: "+10 % de dégâts (un de plus aux niveaux 3 et 6)" },
+    aura: { name: "Aura ardente", icon: "pi_aura", learn: "Brûle tout ce qui t'approche", up: "+10 % de dégâts et rayon plus large" },
+    orbit: { name: "Lames tournoyantes", icon: "pi_orbit", learn: "Des lames tournent autour de toi", up: "+10 % de dégâts (une lame de plus aux niveaux pairs)" },
+    boom: { name: "Boomerang", icon: "pi_boomerang", learn: "Part vers un ennemi et revient", up: "+10 % de dégâts (un de plus aux niveaux 3 et 6)" },
     summon: { name: "Épouvantails vivants", icon: "skeleton", learn: "Invoque un squelette allié qui combat pour toi", up: "+10 % de dégâts (un squelette de plus aux niveaux pairs)" },
     wolves: { name: "Meute spectrale", icon: "wolf", learn: "Invoque un loup spectral rapide qui chasse pour toi", up: "+10 % de dégâts (un loup de plus aux niveaux 3 et 6)" },
     plumes: { name: "Salve de plumes", icon: "sp_feather", learn: "Des plumes tranchantes partent en éventail vers l'ennemi le plus proche", up: "+10 % de dégâts (une plume de plus aux niveaux pairs)" },
     spikes: { name: "Pointes du sol", icon: "sp_fork", learn: "Des pointes jaillissent sous les monstres proches", up: "+10 % de dégâts (une cible de plus aux niveaux pairs)" },
-    storm: { name: "Foudre du ciel", icon: "chain", learn: "La foudre frappe un monstre au hasard toutes les secondes", up: "+10 % de dégâts (un éclair de plus aux niveaux 3 et 6)" }
+    storm: { name: "Foudre du ciel", icon: "pi_storm", learn: "La foudre frappe un monstre au hasard toutes les secondes", up: "+10 % de dégâts (un éclair de plus aux niveaux 3 et 6)" }
   };
   /* ---- emplacements : 5 attaques et 5 passifs au maximum (3 au départ, +1 par achat après un boss) ---- */
   var SLOT_START = 3, SLOT_TOTAL = 10, SLOT_SIDE = 7; /* 10 cases au total à répartir : jusqu'à 7 d'attaque ou 7 de passif (3 au minimum de chaque) */
@@ -9467,35 +9511,35 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survArea() { return 1 + 0.1 * pasLv("pArea"); }
   /* ---- nouvelles attaques ---- */
   Object.assign(SURV_WEAPONS, {
-    mines: { name: "Mines à grain", icon: "bomb", learn: "Pose des mines qui explosent quand un monstre s'approche", up: "+12 % de dégâts (une mine de plus aux niveaux pairs)" },
-    scythe: { name: "Faux de moisson", icon: "dagger", learn: "Un grand coup de faux balaie tout autour de toi", up: "+12 % de dégâts, revient plus vite" },
-    sling: { name: "Fronde à maïs", icon: "orb", learn: "Tire vite et sans arrêt sur l'ennemi le plus proche", up: "+12 % de dégâts (un projectile de plus aux niveaux 3 et 6)" },
-    bees: { name: "Essaim d'abeilles", icon: "soul", learn: "Des abeilles pourchassent des monstres au hasard", up: "+12 % de dégâts (une abeille de plus aux niveaux pairs)" },
-    fireworks: { name: "Feux d'artifice", icon: "meteor", learn: "Des gerbes explosent au hasard autour de toi", up: "+12 % de dégâts (une gerbe de plus aux niveaux pairs)" },
-    trail: { name: "Traînée de braises", icon: "fire", learn: "Tu laisses des flammes derrière toi quand tu cours", up: "+12 % de dégâts, les flammes durent plus longtemps" },
-    bell: { name: "Cloche d'alarme", icon: "ring", learn: "Un coup de cloche repousse et étourdit les monstres proches", up: "+12 % de dégâts, onde plus large" },
-    turret: { name: "Épouvantail-tourelle", icon: "torch", learn: "Plante un épouvantail qui tire sur les monstres", up: "+12 % de dégâts, dure plus longtemps" },
-    haybale: { name: "Meule roulante", icon: "chest", learn: "Une meule dévale devant toi et écrase tout", up: "+12 % de dégâts, plus souvent" },
+    mines: { name: "Mines à grain", icon: "pi_mines", learn: "Pose des mines qui explosent quand un monstre s'approche", up: "+12 % de dégâts (une mine de plus aux niveaux pairs)" },
+    scythe: { name: "Faux de moisson", icon: "pi_scythe", learn: "Un grand coup de faux balaie tout autour de toi", up: "+12 % de dégâts, revient plus vite" },
+    sling: { name: "Fronde à maïs", icon: "pi_sling", learn: "Tire vite et sans arrêt sur l'ennemi le plus proche", up: "+12 % de dégâts (un projectile de plus aux niveaux 3 et 6)" },
+    bees: { name: "Essaim d'abeilles", icon: "pi_bees", learn: "Des abeilles pourchassent des monstres au hasard", up: "+12 % de dégâts (une abeille de plus aux niveaux pairs)" },
+    fireworks: { name: "Feux d'artifice", icon: "pi_fireworks", learn: "Des gerbes explosent au hasard autour de toi", up: "+12 % de dégâts (une gerbe de plus aux niveaux pairs)" },
+    trail: { name: "Traînée de braises", icon: "pi_trail", learn: "Tu laisses des flammes derrière toi quand tu cours", up: "+12 % de dégâts, les flammes durent plus longtemps" },
+    bell: { name: "Cloche d'alarme", icon: "pi_bell", learn: "Un coup de cloche repousse et étourdit les monstres proches", up: "+12 % de dégâts, onde plus large" },
+    turret: { name: "Épouvantail-tourelle", icon: "pi_turret", learn: "Plante un épouvantail qui tire sur les monstres", up: "+12 % de dégâts, dure plus longtemps" },
+    haybale: { name: "Meule roulante", icon: "pi_haybale", learn: "Une meule dévale devant toi et écrase tout", up: "+12 % de dégâts, plus souvent" },
     cone: { name: "Cocorico sonique", icon: "cry", learn: "Un cri en cône repousse et étourdit devant toi", up: "+12 % de dégâts, cône plus large" }
   });
   Object.assign(SURV_WEAPONS, {
-    crows: { name: "Nuée de corbeaux", icon: "soul", learn: "Des corbeaux fondent sur plusieurs monstres proches", up: "+12 % de dégâts (un corbeau de plus aux niveaux pairs)" },
-    pillar: { name: "Colonne de feu", icon: "fire", learn: "Une colonne de feu brûle un monstre et ceux autour pendant 3 s", up: "+12 % de dégâts, plus souvent" },
+    crows: { name: "Nuée de corbeaux", icon: "pi_crows", learn: "Des corbeaux fondent sur plusieurs monstres proches", up: "+12 % de dégâts (un corbeau de plus aux niveaux pairs)" },
+    pillar: { name: "Colonne de feu", icon: "pi_pillar", learn: "Une colonne de feu brûle un monstre et ceux autour pendant 3 s", up: "+12 % de dégâts, plus souvent" },
     quake: { name: "Séisme", heavy: true, icon: "sp_quake", learn: "Le sol tremble : tous les monstres proches sont blessés et repoussés (arme lourde : 2 cases)", up: "+12 % de dégâts, secousse plus large" },
-    whip: { name: "Fouet en chaîne", icon: "chain", learn: "Un fouet frappe un monstre puis rebondit sur 3 autres", up: "+12 % de dégâts (un rebond de plus aux niveaux 3 et 5)" },
-    acorns: { name: "Pluie de glands", icon: "orb", learn: "Des glands tombent du ciel autour de toi", up: "+12 % de dégâts (un gland de plus aux niveaux pairs)" },
-    frost: { name: "Anneau de givre", icon: "ring", learn: "Un anneau de givre gèle les monstres proches", up: "+12 % de dégâts, gel plus long" },
-    leech: { name: "Sangsue", icon: "heart", learn: "Pompe la vie du monstre le plus proche : 1 PV rendu tous les 6 coups", up: "+12 % de dégâts, soin plus fréquent" },
-    peck: { name: "Coups de bec", icon: "dagger", learn: "Rafale de coups de bec sur le monstre au corps à corps", up: "+12 % de dégâts, rafale plus rapide" }
+    whip: { name: "Fouet en chaîne", icon: "pi_whip", learn: "Un fouet frappe un monstre puis rebondit sur 3 autres", up: "+12 % de dégâts (un rebond de plus aux niveaux 3 et 5)" },
+    acorns: { name: "Pluie de glands", icon: "pi_acorn", learn: "Des glands tombent du ciel autour de toi", up: "+12 % de dégâts (un gland de plus aux niveaux pairs)" },
+    frost: { name: "Anneau de givre", icon: "pi_frostring", learn: "Un anneau de givre gèle les monstres proches", up: "+12 % de dégâts, gel plus long" },
+    leech: { name: "Sangsue", icon: "pi_leech", learn: "Pompe la vie du monstre le plus proche : 1 PV rendu tous les 6 coups", up: "+12 % de dégâts, soin plus fréquent" },
+    peck: { name: "Coups de bec", icon: "pi_peck", learn: "Rafale de coups de bec sur le monstre au corps à corps", up: "+12 % de dégâts, rafale plus rapide" }
   });
   Object.assign(SURV_WEAPONS, {
-    gust: { name: "Bourrasque", icon: "vortex", learn: "Un coup de vent attire les monstres vers toi et les blesse", up: "+12 % de dégâts, portée plus grande" },
+    gust: { name: "Bourrasque", icon: "pi_gust", learn: "Un coup de vent attire les monstres vers toi et les blesse", up: "+12 % de dégâts, portée plus grande" },
     meteor: { name: "Météorite géante", heavy: true, icon: "meteor", learn: "Une énorme météorite s'écrase sur le plus gros groupe de monstres (arme lourde : 2 cases)", up: "+12 % de dégâts, plus souvent" },
-    thorns: { name: "Mur d'épines", icon: "barrier", learn: "Un mur d'épines jaillit devant toi : dégâts et étourdissement", up: "+12 % de dégâts, mur plus large" },
+    thorns: { name: "Mur d'épines", icon: "pi_thorns", learn: "Un mur d'épines jaillit devant toi : dégâts et étourdissement", up: "+12 % de dégâts, mur plus large" },
     cleaver: { name: "Hache du Boucher", heavy: true, icon: "axe", learn: "Un coup de hache monstrueux sur le monstre le plus costaud (pas les boss) (arme lourde : 2 cases)", up: "+12 % de dégâts, recharge plus courte" },
-    hedgehog: { name: "Hérisson", icon: "shield", learn: "Quand tu es touché, des piques jaillissent autour de toi", up: "+12 % de dégâts, piques plus larges" },
+    hedgehog: { name: "Hérisson", icon: "pi_hedgehog", learn: "Quand tu es touché, des piques jaillissent autour de toi", up: "+12 % de dégâts, piques plus larges" },
     lucky: { name: "Pièce porte-bonheur", icon: "coin", learn: "Une pièce lancée sur un monstre : dégâts aléatoires (×1 à ×4) et un peu d'or", up: "+12 % de dégâts, plus d'or" },
-    sonar: { name: "Sonar de basse-cour", icon: "ring", learn: "Une onde touche tous les monstres à distance moyenne (5 à 8 cases)", up: "+12 % de dégâts, onde plus large" },
+    sonar: { name: "Sonar de basse-cour", icon: "pi_sonar", learn: "Une onde touche tous les monstres à distance moyenne (5 à 8 cases)", up: "+12 % de dégâts, onde plus large" },
     eggbomb: { name: "Œuf piégé", icon: "egg", learn: "Lance un œuf sur un groupe : il explose après 1 s", up: "+12 % de dégâts (un œuf de plus aux niveaux 3 et 5)" }
   });
   /* carte « Arme en main » : change l'arme de l'attaque de base (et celle qu'on voit dans la main du héros) */
@@ -9917,7 +9961,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xAcT <= 0) {
         if (enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; })) {
           state.xAcT = 3; var acn = 2 + Math.floor(SW.acorns / 2), acr = 1.1 * ar, acd = (1 + 0.12 * (SW.acorns - 1)) * 1.0;
-          for (var ai = 0; ai < acn; ai++) { var ax = p.vx + (Math.random() - 0.5) * 11, ay = p.vy + (Math.random() - 0.5) * 8; SPV.add("meteorfall", ax, ay, 1, 500); (function (x, y) { legDefer(0.5 + Math.random() * 0.4, function () { SPV.add("boom", x, y, acr, 500); sfx("boom"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay); }
+          var acT = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 8; });
+          for (var ai = 0; ai < acn; ai++) { var tg7 = acT.length ? acT[rnd(acT.length)] : null, ax = tg7 ? tg7.vx + (Math.random() - 0.5) * 1.2 : p.vx + (Math.random() - 0.5) * 8, ay = tg7 ? tg7.vy + (Math.random() - 0.5) * 1.2 : p.vy + (Math.random() - 0.5) * 6, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("boom"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
         } else state.xAcT = 0.4;
       }
     }
@@ -14138,7 +14183,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.restore();
     }
     for (i = puffs.length - 1; i >= 0; i--) {
-      var pf = puffs[i], pk = (t - pf.t0) / 360;
+      var pf = puffs[i], pk = Math.max(0, (t - pf.t0) / 360);
       if (pk >= 1) { puffs.splice(i, 1); continue; }
       var pr0 = 1.2 + pk * (pf.big ? 6 : 3.6);
       ctx.fillStyle = "rgba(226,212,186," + ((1 - pk) * (pf.big ? 0.55 : 0.4)).toFixed(2) + ")"; ctx.beginPath(); ctx.ellipse(pf.x + pf.dx * pk, pf.y - pk * 2, pr0, pr0, 0, 0, 6.283); ctx.fill();
@@ -14458,7 +14503,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.restore();
     }
     for (i = puffs.length - 1; i >= 0; i--) {
-      var pf = puffs[i], pk = (t - pf.t0) / 360;
+      var pf = puffs[i], pk = Math.max(0, (t - pf.t0) / 360);
       if (pk >= 1) { puffs.splice(i, 1); continue; }
       var pr = 1.2 + pk * (pf.big ? 6 : 3.6), pxp = pf.x + pf.dx * pk, pyp = pf.y - pk * 5;
       ctx.save(); ctx.globalAlpha = (1 - pk) * (pf.big ? 0.85 : 0.7);
@@ -14696,12 +14741,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var last = 0;
-  var perf = { ema: 16, n: 0, low: false };
+  var perf = { ema: 16, n: 0, low: false }, kCap = 3;
   function loop() {
     requestAnimationFrame(loop);
     var t = now();
     var dt = last ? Math.min(50, t - last) : 16;
-    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 90 && perf.ema > 30) { perf.low = true; document.body.classList.add("lowfx"); } }
+    if (last && mode === "play") { perf.ema += (Math.min(120, t - last) - perf.ema) * 0.03; perf.n++; if (!perf.low && perf.n > 90 && perf.ema > 26) { perf.low = true; document.body.classList.add("lowfx"); kCap = 2; try { resize(); } catch (err) {} } }
     last = t;
     if (!g) return;
     if (mode !== "play") haltInput();
@@ -14753,7 +14798,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       rows = Math.min(H, Math.ceil(ah / tile));
     }
     view.cols = cols; view.rows = rows;
-    var k = Math.max(1, Math.min(6, Math.ceil(tile * dpr / TILE)));
+    var k = Math.max(1, Math.min(state && state.survival ? (kCap || 3) : 6, Math.ceil(tile * dpr / TILE)));
     canvas.width = cols * TILE * k; canvas.height = rows * TILE * k;
     canvas.style.width = (cols * tile) + "px";
     canvas.style.height = (rows * tile) + "px";
