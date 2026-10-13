@@ -6996,7 +6996,10 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       if (!state.survFamine && Math.random() < 0.012 / (1 + 0.5 * (state.survCycle || 0))) gems.push({ x: e.vx - 0.3, y: e.vy + 0.25, k: "heart" });
       if (e.elite) state.survElites = (state.survElites || 0) + 1;
       var chd = survChData(); chd.kills++; if (e.survivalBoss) chd.bosses++; chd.dirty = true;
-      var u0 = state.survUlt || 0; state.survUlt = Math.min(100, u0 + (e.elite ? 5 : 1.1)); if (u0 < 100 && state.survUlt >= 100) survTip("ult", "Ton ultime est prêt : touche le bouton ⚡ à gauche pour dévaster tout autour de toi !");
+      var u0 = state.survUlt || 0;
+      /* les éliminations causées par l'ultime lui-même (ou pendant qu'il agit) ne le rechargent pas */
+      if (!ultNames) { ultNames = { "Ultime": 1, "Déchaînement": 1 }; Object.keys(ULTS).forEach(function (k) { if (ULTS[k] && ULTS[k].name) ultNames[ULTS[k].name] = 1; if (ULTS[k] && ULTS[k].evoName) ultNames[ULTS[k].evoName] = 1; }); }
+      if (!ultNames[dmgSrc] && !(state.farmAct && /^u_/.test(state.farmAct.id))) state.survUlt = Math.min(100, u0 + (e.elite ? 5 : 1.1)); if (u0 < 100 && state.survUlt >= 100) survTip("ult", "Ton ultime est prêt : touche le bouton ⚡ à gauche pour dévaster tout autour de toi !");
       if (e.type === "slime" && !e.small && !e.minion) for (var si = 0; si < 2; si++) {
         var fs = survFreeNear(e.x + (si ? 1 : -1), e.y), sm = mk("slime", fs[0], fs[1]);
         sm.small = true; sm.hp = sm.maxHp = Math.max(1, Math.round(e.maxHp * 0.4)); sm.atk = Math.max(1, Math.round(e.atk * 0.6)); sm.scale = (sm.scale || 1) * 0.7; sm.spd = e.spd * 1.2; sm.aggro = true; sm.xp = 1; enemies.push(sm);
@@ -9543,6 +9546,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     sv_ban: { name: "Parchemin d'exil", desc: "+1 bannissement pour les choix de niveau", icon: "scroll", base: 12, step: 4,
       block: function () { return null; }, apply: function () { state.survBanLeft = (state.survBanLeft || 0) + 1; } }
   };
+  var ultNames = null;
   var survBooms = [];
   var SURV_CLASS_DESC = {
     warrior: "Robuste (+4 PV) : ses coups repoussent et portent plus loin",
