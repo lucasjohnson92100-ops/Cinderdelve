@@ -8315,7 +8315,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var bolts = [];
   function spL(id) { return (state.spellLv && state.spellLv[id]) || 1; }
   function pick5(arr, id) { if (state && state.survival) return arr[0]; return arr[Math.min(4, spL(id) - 1)]; }
-  var castMul = 1, SURV_SP_MAX = 12;
+  var castMul = 1, SURV_SP_MAX = 12, SPELL_NERF = { eggs: 0.42, milk: 0.34, scare: 0.53, vortex: 0.78 };
+  function spNerf(id, L) { return ((L >= 8 || (state.survEvo && state.survEvo[id])) && SPELL_NERF[id]) || 1; }
   function fsL(id) { return state && state.survival ? (state.spRealL || 1) : spL(id); }
   function fsSc(L) { return state && state.survival ? 1 : 1 + 0.25 * (L - 1); }
   function isEvo(id) { return !!(state && state.survival && state.survEvo && state.survEvo[id]); }
@@ -8615,7 +8616,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!state.spells[id]) { say("Sort inconnu : cherche son parchemin à la boutique."); ui(); return false; }
     if (!state.survival && state.mp < spCost(sp)) { say("Pas assez de mana (" + spCost(sp) + " requis)."); sfx("nomana"); ui(); return false; }
     var atkBackup = state.atk, realL = spL(id), p0 = projs.length, z0 = zones.length, ok = false; state.spRealL = realL;
-    if (state.survival) { state.atk = Math.max(1, Math.round(state.atk * (0.5 + (state.survSpellPow || 0) * 0.08))); state.spellLv[id] = 1; castMul = survSpMul(realL); dmgSrc = (state.survEvo && state.survEvo[id] && SURV_EVOS[id]) ? SURV_EVOS[id].name : sp.name; }
+    if (state.survival) { state.atk = Math.max(1, Math.round(state.atk * (0.5 + (state.survSpellPow || 0) * 0.08))); state.spellLv[id] = 1; castMul = survSpMul(realL) * spNerf(id, realL); dmgSrc = (state.survEvo && state.survEvo[id] && SURV_EVOS[id]) ? SURV_EVOS[id].name : sp.name; }
     try {
       ok = sp.run();
       if (ok && state.survival) {
@@ -9763,7 +9764,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     sfx("hurt", d); p.flash = now() + 160; addFloat(p.vx, p.vy, "-" + d, "#ff5a4f"); burst(p.vx, p.vy, "#ff2d3d", 4, 40);
     if (state.hp <= 0) { state.hp = 0; gameOver(); }
   }
-  function survWDmg(mult) { return survRoundMul(Math.max(1, state.atk * 0.8), mult); }
+  /* rééquilibrage mesuré (dégâts par seconde sur une horde de 30) : les armes qui dépassaient largement les autres sont ramenées vers la moyenne */
+  var WNERF = { boom: 0.5, hedgehog: 0.65, trail: 0.7, mines: 0.8, orbit: 0.8, storm: 0.85, scythe: 0.85, aura: 0.9 }, WNERFN = null;
+  function survWDmg(mult) {
+    if (!WNERFN) { WNERFN = {}; Object.keys(WNERF).forEach(function (k) { [SURV_WEAPONS[k] && SURV_WEAPONS[k].name, SURV_WEVOS[k] && SURV_WEVOS[k].name].forEach(function (n) { if (n) WNERFN[n] = WNERF[k]; }); }); }
+    return survRoundMul(Math.max(1, state.atk * 0.8), mult * (WNERFN[dmgSrc] || 1));
+  }
   function survWeaponsTick(dt) {
     var SW = state.survW; if (!SW) return;
     var dt0 = dt; dt = dt * survCdMul(); /* passif « Coucou suisse » */
@@ -11057,7 +11063,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function pL() { return (state && state.farmPwLv) || 1; }
   function pS() { return 1 + 0.15 * (pL() - 1); }
   function pEvo() { return pL() >= 4; }
-  function fmDmg(m) { return Math.max(2, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * m * (1 + 0.25 * (pL() - 1)) * (state.farmPwMul || 1))); }
+  var PW_NERF = { meuh: 0.8, taureau: 0.85, dinde: 0.85, lapin: 0.9, coq: 0.9 }, ULT_NERF = { chat: 0.6, meuh: 0.8, ane: 0.8, cochon: 0.8, canard: 0.85, coq: 0.85, cocotte: 0.85 };
+  function fmDmg(m) { m *= PW_NERF[state.variant] || 1; return Math.max(2, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * m * (1 + 0.25 * (pL() - 1)) * (state.farmPwMul || 1))); }
   function fmNear(r, cx, cy) {
     cx = cx == null ? p.vx : cx; cy = cy == null ? p.vy : cy;
     return enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - cx, e.vy - cy) < r; });
@@ -11283,7 +11290,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       } }
   };
   /* ---- ULTIMES propres à chaque animal ---- */
-  function ulD(m) { return Math.max(3, Math.round((state.atk * 5 + 6 + 3 * (state.survCycle || 0)) * m)); }
+  function ulD(m) { m *= ULT_NERF[state.variant] || 1; return Math.max(3, Math.round((state.atk * 5 + 6 + 3 * (state.survCycle || 0)) * m)); }
   function ulAll(r, m, verb, kb, stun, slow) {
     fmNear(r).forEach(function (e) { fmHit(e, ulD(m), verb, kb, stun); if (slow && e.hp > 0) { e.slowT = slow; e.slowF = 0.3; } });
   }
@@ -11859,7 +11866,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function transCast(id) {
     var sp = SPELLS[id]; if (!sp) return false;
     var atkB = state.atk, p0 = projs.length, z0 = zones.length, prevLv = state.spellLv[id], ok = false;
-    state.spRealL = SURV_SP_MAX; state.atk = Math.max(1, Math.round(state.atk * (0.5 + (state.survSpellPow || 0) * 0.08))); state.spellLv[id] = 1; castMul = survSpMul(SURV_SP_MAX) * 0.6; dmgSrc = transName(id);
+    state.spRealL = SURV_SP_MAX; state.atk = Math.max(1, Math.round(state.atk * (0.5 + (state.survSpellPow || 0) * 0.08))); state.spellLv[id] = 1; castMul = survSpMul(SURV_SP_MAX) * spNerf(id, SURV_SP_MAX) * 0.6; dmgSrc = transName(id);
     try { ok = sp.run(); }
     finally {
       for (var a = p0; a < projs.length; a++) if (projs[a].own === "player" && projs[a].dmg) { projs[a].dmg = survRoundMul(projs[a].dmg, castMul); projs[a].src = dmgSrc; }
