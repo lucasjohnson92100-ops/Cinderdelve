@@ -7395,8 +7395,8 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
 
   /* ---------- musique : petites compositions en boucle ---------- */
   /* ---------- musiques Suno (mp3 integres, une par lieu) ---------- */
-  var MUSIC_MP3 = { plage: "music/plage.mp3", temple: "music/temple.mp3", chateau: "music/chateau.mp3", foret: "music/foret.mp3", olympe: "music/olympe.mp3", boss: "music/boss.mp3", glace: "music/glace.mp3", marais: "music/marais.mp3", volcan: "music/volcan.mp3", grottes: "music/grottes.mp3", menu: "music/menu.mp3", crypte: "music/crypte.mp3" };
-  var MAPMUS = { 12: "volcan", 0: "crypte", 1: "grottes", 2: "volcan", 3: "glace", 4: "marais", 5: "temple", 6: "foret", 7: "chateau", 8: "plage", 9: "olympe", 10: "menu", 11: "chateau" };
+  var MUSIC_MP3 = { plage: "music/plage.mp3", temple: "music/temple.mp3", chateau: "music/chateau.mp3", foret: "music/foret.mp3", olympe: "music/olympe.mp3", boss: "music/boss.mp3", glace: "music/glace.mp3", marais: "music/marais.mp3", volcan: "music/volcan.mp3", grottes: "music/grottes.mp3", menu: "music/menu.mp3", crypte: "music/crypte.mp3", ferme: "music/ferme.mp3", ville: "music/ville.mp3" };
+  var MAPMUS = { 12: "volcan", 0: "crypte", 1: "grottes", 2: "volcan", 3: "glace", 4: "marais", 5: "temple", 6: "foret", 7: "chateau", 8: "plage", 9: "olympe", 10: "ferme", 11: "ville" };
   var MP3_GAIN = 0.55, MP3 = { buf: {}, loading: {}, off: {}, cur: null, src: null, gain: null, t0: 0 };
   var MP3DEC = null;
   function mp3Dec() {
