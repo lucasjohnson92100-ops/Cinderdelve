@@ -2,7 +2,7 @@
 const fs = require('fs');
 const src = fs.readFileSync(process.argv[2] || __dirname + '/index.html', 'utf8');
 const core = src.split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E = new Function(core + ';return {newBattle,playCard,endTurn,targetsFor,isPlayable,units,CARDS,START_DECK,deploy,genPlan};')();
+const E = new Function(core + ';return {newBattle,playCard,endTurn,targetsFor,isPlayable,units,CARDS,START_DECK,deploy,genPlan,genMap,battleCfg};')();
 let bad = 0;
 const check = (n, got, exp) => { if (got !== exp) { bad++; console.log('ÉCHEC', n, 'obtenu', got, 'attendu', exp); } };
 const mk = (level = 0, officers = []) => E.newBattle({ level, deck: E.START_DECK.slice(), hq: 30, hqMax: 30, officers }, () => 0.5);
@@ -41,5 +41,26 @@ S = mk(); S.plan = []; S.hq.en = 1; const w = E.deploy(S, 'me', 0, 'inf'); w.fre
 E.endTurn(S); check('victoire', S.over, 'win');
 // plan : les niveaux avancés annoncent des arrivées
 S = mk(3); check('boss : char lourd pré-déployé', E.units(S, 'en').some(u => u.name === 'Char lourd'), true);
+
+// objectifs : tenir N tours, éliminer N unités
+const base = { deck: E.START_DECK.slice(), hq: 30, hqMax: 30, officers: [] };
+S = E.newBattle(base, () => 0.5, E.battleCfg({ type: 'battle', levelIdx: 0, layer: 1, obj: { type: 'hold', n: 3 } }));
+check('tenir : QG ennemi hors d’atteinte', S.hq.en > 1000, true);
+for (let i = 0; i < 3; i++) { S.plan = []; E.endTurn(S); }
+check('tenir 3 tours = victoire', S.over, 'win');
+S = E.newBattle(base, () => 0.5, E.battleCfg({ type: 'battle', levelIdx: 0, layer: 1, obj: { type: 'kills', n: 2 } }));
+S.plan = []; S.hand = ['artillery', 'artillery']; S.supply = 4;
+const k1 = E.deploy(S, 'en', 0, 'rifle'), k2 = E.deploy(S, 'en', 1, 'rifle');
+E.playCard(S, 0, { uid: k1.uid }); check('1 unité éliminée, pas fini', S.over, null);
+E.playCard(S, 0, { uid: k2.uid }); check('2 unités éliminées = victoire', S.over, 'win');
+// carte : toutes les cases sont accessibles et chaque étape a une suite
+for (let k = 0; k < 500; k++) {
+  const L = E.genMap();
+  L.forEach((layer, l) => layer.forEach((n, j) => {
+    if (l < L.length - 1 && !n.next.length) { bad++; console.log('ÉCHEC étape sans suite', n.id); }
+    if (l > 0 && !L[l - 1].some(p => p.next.includes(j))) { bad++; console.log('ÉCHEC étape inaccessible', n.id); }
+  }));
+  if (L[4][0].type !== 'boss' || L[8][0].type !== 'boss') { bad++; console.log('ÉCHEC boss absents'); }
+}
 console.log(bad ? bad + ' échec(s)' : 'tests OK');
 process.exit(bad ? 1 : 0);

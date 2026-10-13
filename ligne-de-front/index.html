@@ -159,7 +159,7 @@ button:focus-visible { outline: 3px solid var(--blue-d); outline-offset: 2px; }
   flex: none; width: 122px; scroll-snap-align: start; position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 3px; text-align: left; align-content: start;
   padding: 7px 7px 8px; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); box-shadow: 0 4px 0 var(--ink); color: var(--ink); transition: transform .12s;
 }
-.card .cn { font-family: var(--font-display); font-weight: 700; font-size: .9rem; line-height: 1.05; padding-left: 18px; min-height: 1.1em; overflow-wrap: anywhere; }
+.card .cn { font-family: var(--font-display); font-weight: 700; font-size: .86rem; line-height: 1.05; padding-left: 17px; min-height: 1.1em; overflow-wrap: break-word; }
 .card .art { display: grid; place-items: center; border-radius: 8px; border: 2px solid var(--ink); height: 70px; background: var(--grass); overflow: hidden; }
 .card.order .art { background: var(--sky-2); }
 .card .ct { font-size: .74rem; line-height: 1.12; font-weight: 700; min-height: 3.4em; }
@@ -197,6 +197,29 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 .end { justify-items: center; text-align: center; }
 .end .big { font-family: var(--font-display); font-weight: 700; font-size: 3.4rem; line-height: 1; text-transform: uppercase; color: var(--yellow); text-shadow: 3px 3px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 5px 0 var(--ink); }
 .end .big.lose { color: var(--red); }
+/* Carte */
+.map { position: relative; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); overflow: hidden; background-color: #97d764; background-image: conic-gradient(rgba(255, 255, 255, .14) 25%, transparent 0 50%, rgba(255, 255, 255, .14) 0 75%, transparent 0); background-size: 48px 48px; }
+.mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.road-o { stroke: var(--ink); stroke-width: 12px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.road-i { stroke: var(--dirt); stroke-width: 7px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.road-i.taken { stroke: #6fb0f5; }
+.deco { position: absolute; transform: translate(-50%, -50%); opacity: .9; pointer-events: none; }
+.start { position: absolute; transform: translate(-50%, -100%); font-family: var(--font-display); background: var(--ink); color: var(--cream); border-radius: 8px; padding: 1px 12px; font-size: .85rem; }
+.node { position: absolute; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--ink); background: #e9eef5; box-shadow: 0 4px 0 var(--ink); display: grid; place-items: center; padding: 0; z-index: 2; filter: brightness(.86) saturate(.65); }
+.node .ic { display: grid; place-items: center; }
+.node .lb { position: absolute; top: 100%; margin-top: 5px; left: 50%; transform: translateX(-50%); font-size: .68rem; font-weight: 800; line-height: 1.05; background: var(--cream); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; text-align: center; width: max-content; max-width: 92px; color: var(--ink); }
+.node .otag { position: absolute; top: -9px; right: -14px; font-family: var(--font-display); font-size: .7rem; background: var(--yellow); border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; color: var(--ink); }
+.node .otag.el { background: var(--red); color: #fff; }
+.node.battle { background: #ffc9c0; } .node.elite { background: #ff9d8a; } .node.boss { background: #ff7b66; width: 68px; height: 68px; }
+.node.camp { background: #b9ecb0; } .node.depot { background: #ffe39b; } .node.staff { background: #bcd9ff; }
+.node.reach { filter: none; cursor: pointer; animation: bob .9s ease-in-out infinite alternate; box-shadow: 0 4px 0 var(--ink), 0 0 0 5px var(--yellow); }
+@keyframes bob { to { transform: translate(-50%, -58%); } }
+.node.done { filter: grayscale(.7) brightness(.92); }
+.node.done::after { content: "✓"; position: absolute; right: -4px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; border: 2px solid var(--ink); display: grid; place-items: center; font-size: .8rem; }
+.node.cur { filter: none; box-shadow: 0 4px 0 var(--ink), 0 0 0 5px var(--blue); }
+.chip { display: inline-block; }
+.nodeart { flex: none; width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; }
+.objline { text-align: center; font-weight: 800; font-size: .92rem; background: var(--cream); border: 3px solid var(--ink); border-radius: 10px; padding: 3px 10px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
@@ -218,10 +241,10 @@ const CARDS = {
   artillery: { name: 'Artillerie', type: 'order', cost: 2, target: 'enemy', txt: "4 dégâts à une unité ennemie (ignore le blindage).", rar: 1 },
   smoke: { name: 'Fumigène', type: 'order', cost: 1, target: 'lane', txt: "Les unités ennemies d'une ligne n'attaquent pas ce tour.", rar: 1 },
   supplies: { name: 'Renforts', type: 'order', cost: 1, target: 'none', txt: 'Piochez 2 cartes.', rar: 1 },
-  fortify: { name: 'Fortification', type: 'order', cost: 1, target: 'ally', txt: "Une unité alliée gagne +3 PV.", rar: 1 },
+  fortify: { name: 'Fortifier', type: 'order', cost: 1, target: 'ally', txt: "Une unité alliée gagne +3 PV.", rar: 1 },
   offensive: { name: 'Offensive', type: 'order', cost: 1, target: 'lane', txt: "Vos unités d'une ligne ont +2 attaque ce tour.", rar: 2 },
   retreat: { name: 'Repli', type: 'order', cost: 1, target: 'ally', txt: 'Reprenez une unité alliée en main (elle sera comme neuve).', rar: 2 },
-  ration: { name: 'Ravitaillement', type: 'order', cost: 0, target: 'none', txt: '+2 ravitaillement. Retiré du combat après usage.', rar: 2 },
+  ration: { name: 'Rations', type: 'order', cost: 0, target: 'none', txt: '+2 ravitaillement. Retiré du combat après usage.', rar: 2 },
   airstrike: { name: 'Raid aérien', type: 'order', cost: 3, target: 'none', txt: '2 dégâts à toutes les unités ennemies.', rar: 3 },
 };
 const START_DECK = ['inf', 'inf', 'inf', 'inf', 'mg', 'mg', 'artillery', 'artillery', 'smoke', 'supplies', 'fortify', 'medic'];
@@ -262,15 +285,15 @@ function shuffle(a, rng = Math.random) {
 const clone = o => JSON.parse(JSON.stringify(o));
 const has = (S, id) => S.officers.includes(id);
 
-function newBattle(C, rng = Math.random) {
-  const lvl = LEVELS[C.level];
+function newBattle(C, rng = Math.random, cfg = null) {
+  const lvl = cfg || LEVELS[C.level];
   const S = {
-    level: C.level, lvl, rng, uid: 1, turn: 1, over: null, officers: C.officers.slice(),
-    hq: { me: C.hq, en: lvl.hq }, hqMax: C.hqMax,
+    level: lvl.levelIdx !== undefined ? lvl.levelIdx : C.level, lvl, rng, obj: lvl.obj || { type: 'hq' }, kills: 0, uid: 1, turn: 1, over: null, officers: C.officers.slice(),
+    hq: { me: C.hq, en: (lvl.obj && lvl.obj.type === 'hold') ? 9999 : lvl.hq }, hqMax: C.hqMax,
     lanes: [0, 1, 2].map(() => ({ me: [null, null], en: [null, null], smoke: false })),
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], exhaust: [], supply: 0, flags: {}, plan: [],
   };
-  if (lvl.boss) deploy(S, 'en', 1, lvl.boss === 'heavy2' ? 'heavy' : 'heavy');
+  if (lvl.boss) deploy(S, 'en', 1, 'heavy');
   if (lvl.boss === 'heavy2') deploy(S, 'en', 0, 'panzer');
   S.plan = genPlan(S);
   startTurn(S);
@@ -327,7 +350,7 @@ const isPlayable = (S, hi) => !S.over && cardCost(S, S.hand[hi]) <= S.supply && 
 function applyDamage(S, u, dmg) {
   u.hp -= dmg;
   const hit = { uid: u.uid, dmg, kill: u.hp <= 0, lane: u.lane, side: u.side };
-  if (hit.kill) { const s = S.lanes[u.lane][u.side]; s[s.indexOf(u)] = null; compact(S, u.lane, u.side); }
+  if (hit.kill) { const s = S.lanes[u.lane][u.side]; s[s.indexOf(u)] = null; compact(S, u.lane, u.side); if (u.side === 'en') S.kills++; }
   return hit;
 }
 function findUnit(S, uid) { return units(S, 'me').concat(units(S, 'en')).find(u => u.uid === uid); }
@@ -358,7 +381,10 @@ function playCard(S, hi, tgt) {
   checkOver(S);
   return hits;
 }
-function checkOver(S) { if (S.hq.en <= 0) S.over = 'win'; else if (S.hq.me <= 0) S.over = 'lose'; }
+function checkOver(S) {
+  if (S.hq.me <= 0) S.over = 'lose';
+  else if (S.hq.en <= 0 || (S.obj.type === 'kills' && S.kills >= S.obj.n)) S.over = 'win';
+}
 
 // ---- Plan ennemi, annoncé un tour à l'avance ----
 function genPlan(S) {
@@ -439,9 +465,54 @@ function endTurn(S) {
   units(S, 'en').forEach(u => { u.fresh = false; });
   S.lanes.forEach(l => { l.smoke = false; });
   S.turn++;
+  if (S.obj.type === 'hold' && S.turn > S.obj.n) { S.over = 'win'; return steps; }
   S.plan = genPlan(S);
   startTurn(S);
   return steps;
+}
+
+// ---- Carte de campagne ----
+// Chaque étape est un nœud : battle, elite, boss (combats), camp, depot, staff (sans combat).
+const LAYER_SIZES = [1, 2, 3, 2, 1, 3, 3, 2, 1];
+const LAYER_POOLS = [['battle'], ['battle', 'battle', 'depot'], ['battle', 'elite', 'staff'], ['battle', 'camp', 'battle'], ['boss'],
+  ['battle', 'elite', 'depot'], ['battle', 'staff', 'battle'], ['camp', 'battle', 'battle'], ['boss']];
+const LAYER_LEVEL = [0, 1, 1, 2, 3, 4, 5, 6, 7];
+const PLACES = ["Plage d'assaut", 'Bocage', 'Ferme des Trois Chênes', 'Carrefour de la Croix', 'Colline 62', 'Village fortifié', 'Haies normandes', 'Gare de triage',
+  'Forêt des Ardennes', 'Ville en ruines', 'Aérodrome', 'Ligne de défense', 'Col des Vosges', 'Faubourg nord', 'Usine désaffectée', 'Pont du Rhin'];
+const NODE_LABEL = { battle: 'Bataille', elite: 'Bataille d’élite', boss: 'Boss', camp: 'Camp de base', depot: 'Dépôt de ravitaillement', staff: 'État-major' };
+
+function genMap(rng = Math.random) {
+  const places = shuffle(PLACES.slice(), rng);
+  const layers = LAYER_SIZES.map((size, l) => {
+    let types = shuffle(LAYER_POOLS[l].slice(), rng).slice(0, size);
+    if (l > 0 && size > 1 && !types.includes('battle')) types[0] = 'battle';
+    return types.map((type, i) => {
+      const node = { id: l + '-' + i, layer: l, i, type, levelIdx: LAYER_LEVEL[l], next: [] };
+      if (type === 'boss') node.name = l === 4 ? 'Le pont' : 'Quartier général';
+      else if (type === 'battle' || type === 'elite') node.name = places.pop();
+      else node.name = NODE_LABEL[type];
+      if (type === 'battle' && l > 0) { const r = rng(); node.obj = r < 0.6 ? { type: 'hq' } : r < 0.8 ? { type: 'hold', n: 5 + (node.levelIdx >= 4 ? 1 : 0) + (node.levelIdx >= 6 ? 1 : 0) } : { type: 'kills', n: 6 + Math.floor(node.levelIdx / 2) }; }
+      else if (type === 'battle' || type === 'elite' || type === 'boss') node.obj = { type: 'hq' };
+      return node;
+    });
+  });
+  for (let l = 0; l < layers.length - 1; l++) {
+    const a = layers[l], b = layers[l + 1], inc = b.map(() => 0);
+    a.forEach((n, i) => {
+      const pos = a.length === 1 ? null : (i * (b.length - 1)) / (a.length - 1);
+      const t = pos === null ? b.map((_, j) => j) : [...new Set([Math.floor(pos), Math.ceil(pos)])];
+      n.next = t; t.forEach(j => { inc[j]++; });
+    });
+    inc.forEach((c, j) => { if (!c) { const i = Math.min(a.length - 1, Math.round((j * (a.length - 1)) / Math.max(1, b.length - 1))); a[i].next.push(j); a[i].next.sort(); } });
+  }
+  return layers;
+}
+// Configuration de combat d'un nœud
+function battleCfg(node) {
+  const base = LEVELS[node.levelIdx], elite = node.type === 'elite', o = node.obj || { type: 'hq' };
+  const mult = (elite ? 1.18 : 1) * (o.type === 'hold' ? 1.35 : o.type === 'kills' ? 1.15 : 1);
+  return { name: node.name, hq: base.hq, budget: base.budget * mult, boss: node.type === 'boss' ? base.boss : undefined,
+    levelIdx: node.levelIdx, obj: node.obj || { type: 'hq' }, elite, tutorial: node.layer === 0 };
 }
 // ==/CORE==
 
@@ -588,33 +659,103 @@ function toast(msg) {
   setTimeout(() => t.remove(), 2600);
 }
 
-// ---- Campagne ----
+// ---- Campagne et carte ----
 function newCampaign() {
-  C = { level: 0, deck: START_DECK.slice(), hq: 30, hqMax: 30, officers: [] };
-  toBriefing();
+  C = { deck: START_DECK.slice(), hq: 30, hqMax: 30, officers: [], map: genMap(), pos: null, node: null, decor: null };
+  toMap();
 }
 function officerItem(o, tag, attrs) {
   return `<${tag} class="off-item" ${attrs || ''}>${officerSVG(o.id, 48)}<span class="tx"><b>${o.name}</b><span class="small muted">${o.desc}</span></span></${tag}>`;
 }
-function toBriefing() {
-  const rows = LEVELS.map((l, i) => `<div class="front ${i < C.level ? 'done' : i === C.level ? 'cur' : ''}">
-    <span class="nm">${flagSVG(i < C.level ? 'me' : 'en', 22)} ${i + 1}. ${l.name.replace(' (boss)', '')} ${l.boss ? '<span class="bossmark">BOSS</span>' : ''}</span>
-    <span class="tag">${i < C.level ? 'Libéré' : `QG ennemi ${l.hq} PV`}</span></div>`).join('');
-  const offs = C.officers.length ? C.officers.map(id => officerItem(OFFICERS.find(x => x.id === id), 'div')).join('')
-    : '<div class="off-item plain"><span class="small muted">Aucun officier pour le moment. Vous en recruterez après les batailles 3 et 6.</span></div>';
-  app.innerHTML = `<div class="stack">
-    <div class="hd"><span class="ribbon">Campagne</span><span class="num">Bataille ${C.level + 1} / 8</span></div>
-    <div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${C.hq} / ${C.hqMax}</span></div><div class="bar"><i style="width:${(C.hq / C.hqMax) * 100}%"></i></div></div>
-    <div class="fronts">${rows}</div>
-    <div class="ribbon" style="justify-self:start">Officiers</div><div class="officers">${offs}</div>
-    <div class="row"><button class="pill" data-act="help">Comment jouer</button><button class="pill" data-act="deck">Votre paquet (${C.deck.length} cartes)</button></div>
-    <button class="btn go" data-act="fight" style="padding-block:15px">Bataille ${C.level + 1} : en avant !</button>
-  </div>`;
+const OBJ_SHORT = { hold: 'Tenir', kills: 'Éliminer' };
+function nodeIcon(n) {
+  if (n.type === 'boss') return spriteSVG('heavy', 'en', 54);
+  if (n.type === 'elite') return spriteSVG('panzer', 'en', 40);
+  if (n.type === 'battle') return flagSVG('en', 30);
+  if (n.type === 'camp') return `<svg viewBox="0 0 48 48" width="34" height="34"><path d="M4 40 L24 8 L44 40 Z" fill="#fff6dc" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M24 8 L24 40 M24 40 L17 40 L24 22 L31 40" fill="#52b34f" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></svg>`;
+  if (n.type === 'depot') return iconSVG('ration', 34);
+  return officerSVG('brandt', 38);
 }
-function startBattle() {
-  S = newBattle(C); sel = null; busy = false;
+function mapReach() {
+  if (!C.pos) return { layer: 0, idx: [0] };
+  const cur = C.map[C.pos.layer][C.pos.i];
+  return { layer: C.pos.layer + 1, idx: cur.next };
+}
+function toMap() {
+  const L = C.map, H = 122, total = L.length * H, reach = mapReach();
+  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: (L.length - 1 - n.layer) * H + H / 2 });
+  C.trail = C.trail || {};
+  let edges = '';
+  L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
+    const a = xy(n), b = xy(L[l + 1][j]);
+    const taken = C.trail[l] === n.i && (C.trail[l + 1] === j || (C.pos && C.pos.layer === l + 1 && C.pos.i === j));
+    edges += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="road-o"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="road-i ${taken ? 'taken' : ''}"/>`;
+  })));
+  if (!C.decor) C.decor = Array.from({ length: 26 }, () => ({ x: 3 + Math.random() * 94, y: 10 + Math.random() * (total - 40), k: Math.random() < .7 ? 0 : 1 }));
+  const decor = C.decor.filter(d => !L.some(layer => layer.some(n => { const p = xy(n); return Math.abs(p.x - d.x) < 13 && Math.abs(p.y - d.y) < 38; })))
+    .map(d => `<span class="deco" style="left:${d.x}%;top:${d.y}px">${d.k ? '<svg viewBox="0 0 40 30" width="30" height="22"><path d="M2 28 L16 4 L24 16 L30 8 L38 28Z" fill="#a9a08a" stroke="#1b2540" stroke-width="2.4" stroke-linejoin="round"/></svg>'
+      : '<svg viewBox="0 0 30 34" width="22" height="26"><rect x="13" y="22" width="4" height="9" fill="#8a5a2b" stroke="#1b2540" stroke-width="2"/><circle cx="15" cy="14" r="11" fill="#3f9d46" stroke="#1b2540" stroke-width="2.4"/></svg>'}</span>`).join('');
+  const nodes = L.flatMap(layer => layer.map(n => {
+    const p = xy(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
+    const isDone = C.trail[n.layer] === n.i;
+    const isCur = C.pos && C.pos.layer === n.layer && C.pos.i === n.i;
+    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : ''].join(' ');
+    const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
+    return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}%;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
+  })).join('');
+  const offs = C.officers.map(id => `<span class="chip" title="${OFFICERS.find(x => x.id === id).name}">${officerSVG(id, 34)}</span>`).join('') || '<span class="muted small">Aucun officier</span>';
+  app.innerHTML = `<div class="stack">
+    <div class="hd"><span class="ribbon">Carte du front</span><span class="num">Étape ${C.pos ? Math.min(9, C.pos.layer + 2) : 1} / 9</span></div>
+    <div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${C.hq} / ${C.hqMax}</span></div><div class="bar"><i style="width:${(C.hq / C.hqMax) * 100}%"></i></div></div>
+    <div class="row" style="justify-content:space-between"><span class="row">${offs}</span><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span></div>
+    <div class="panel small">Choisissez votre prochaine étape : touchez un point qui clignote. Les routes montrent où vous pouvez aller.</div>
+    <div class="map" style="height:${total}px"><svg class="mapsvg" viewBox="0 0 100 ${total}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${decor}${nodes}
+      ${C.pos ? '' : `<span class="start" style="left:50%;top:${total - 6}px">Départ</span>`}</div>
+  </div>`;
+  setTimeout(() => { const t = document.querySelector('.node.reach'); if (t) t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 60);
+}
+const NODE_DESC = {
+  battle: 'Une bataille classique. Récompense : 1 carte au choix.',
+  elite: 'Ennemis plus nombreux. Récompense : 1 carte rare au choix.',
+  boss: 'Un chef de guerre vous attend. Récompense : un officier et une carte rare.',
+  camp: 'Un moment de répit : soignez votre QG de 8 PV, ou retirez une carte du paquet.',
+  depot: 'Choisissez 1 carte parmi 3, sans combat.',
+  staff: 'Recrutez un officier dont l’effet dure toute la campagne.',
+};
+function objectiveText(o, hq) {
+  if (o.type === 'hold') return `Tenez la position pendant ${o.n} tours. Le QG ennemi est hors d’atteinte.`;
+  if (o.type === 'kills') return `Éliminez ${o.n} unités ennemies (ou détruisez le QG ennemi, ${hq} PV).`;
+  return `Détruisez le QG ennemi (${hq} PV).`;
+}
+function nodeModal(n) {
+  const fight = ['battle', 'elite', 'boss'].includes(n.type);
+  const cfg = fight ? battleCfg(n) : null;
+  openModal(`<div class="hd"><span class="ribbon ${fight ? 'red' : ''}">${n.name}</span><button class="pill" data-act="close">Retour</button></div>
+    <div class="row" style="gap:14px;flex-wrap:nowrap"><span class="nodeart">${nodeIcon(n)}</span><div class="stack" style="gap:4px"><b>${NODE_LABEL[n.type]}</b>
+    ${fight ? `<span>${objectiveText(cfg.obj, cfg.hq)}</span>` : ''}<span class="small muted">${NODE_DESC[n.type]}</span></div></div>
+    <button class="btn go" data-go="${n.layer}-${n.i}">En avant !</button>`);
+}
+function enterNode(n) {
+  closeModal();
+  C.trail = C.trail || {};
+  if (C.pos) C.trail[C.pos.layer] = C.pos.i;
+  C.pos = { layer: n.layer, i: n.i }; C.node = n; C.inNode = true;
+  const rec = load(); rec.level = Math.max(rec.level || 0, n.layer + 1); save(rec);
+  if (['battle', 'elite', 'boss'].includes(n.type)) startBattle(n);
+  else if (n.type === 'camp') toCamp();
+  else if (n.type === 'depot') cardStep(false);
+  else officerStep();
+}
+function finishNode() {
+  const n = C.node; C.inNode = false;
+  C.trail[n.layer] = n.i;
+  if (n.type === 'boss' && n.layer === 8) return victory();
+  toMap();
+}
+function startBattle(node) {
+  S = newBattle(C, Math.random, battleCfg(node)); sel = null; busy = false;
   renderBattle();
-  if (C.level === 0 && !load().seen) { helpModal(true); const r = load(); r.seen = 1; save(r); }
+  if (S.lvl.tutorial && !load().seen) { helpModal(true); const r = load(); r.seen = 1; save(r); }
 }
 
 // ---- Affichage du champ de bataille ----
@@ -655,6 +796,10 @@ function boardHTML(view, live) {
       <div class="half me">${slot(ln.me[0])}${slot(ln.me[1])}</div></div>`;
   }).join('');
   const max = { en: S.lvl.hq, me: C.hqMax };
+  if (S.obj.type === 'hold') {
+    const hold = `<div class="hq en hqbar"><div class="lbl"><span>${flagSVG('en', 20)} Position à tenir</span><span class="num">Tour ${Math.min(S.obj.n, S.turn)} / ${S.obj.n}</span></div><div class="bar"><i style="width:${Math.min(100, ((S.turn - 1) / S.obj.n) * 100)}%"></i></div></div>`;
+    return hold + `<div class="lanes">${lanes}</div>` + `<div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${Math.max(0, view.hq.me)} / ${C.hqMax}</span></div><div class="bar"><i style="width:${Math.max(0, view.hq.me) / C.hqMax * 100}%"></i></div></div>`;
+  }
   const hqHTML = (side, label) => `<div class="hq ${side} hqbar"><div class="lbl"><span>${flagSVG(side, 20)} ${label}</span><span class="num">${Math.max(0, view.hq[side])} / ${max[side]}</span></div><div class="bar"><i style="width:${Math.max(0, view.hq[side]) / max[side] * 100}%"></i></div></div>`;
   return hqHTML('en', 'QG ennemi') + `<div class="lanes">${lanes}</div>` + hqHTML('me', 'Votre QG');
 }
@@ -665,8 +810,14 @@ function cardHTML(key, extra = '', attrs = '') {
   return `<button class="card ${c.type} ${extra}" ${attrs}><span class="cost">${c.cost}</span><span class="cn">${c.name}</span>
     <span class="art">${art}</span><span class="ct">${c.txt}</span>${stats}</button>`;
 }
+function objLine() {
+  const o = S.obj;
+  if (o.type === 'hold') return `Objectif : tenir ${o.n} tours`;
+  if (o.type === 'kills') return `Objectif : éliminer ${o.n} unités ennemies (${Math.min(o.n, S.kills)} / ${o.n}) ou détruire le QG`;
+  return 'Objectif : détruire le QG ennemi';
+}
 function hintText() {
-  if (C.level !== 0 || S.turn > 2) return '';
+  if (!S.lvl.tutorial || S.turn > 2) return '';
   if (!S.hand.some((_, i) => isPlayable(S, i))) return 'Plus de ravitaillement : touchez « Fin du tour ». Vos unités attaquent, puis l’ennemi.';
   if (sel === null) return S.turn === 1 ? '1. Touchez une carte de votre main (en bas).' : 'Jouez vos cartes, puis « Fin du tour ». Les silhouettes en pointillé sont les ennemis qui vont arriver.';
   return CARDS[S.hand[sel]].type === 'unit' ? '2. Touchez une ligne qui clignote pour y envoyer l’unité.' : '2. Touchez la cible qui clignote.';
@@ -676,7 +827,8 @@ function renderBattle() {
   const hand = S.hand.map((k, i) => cardHTML(k, (sel === i ? 'sel ' : '') + (isPlayable(S, i) ? '' : 'off'), `data-hi="${i}"`)).join('');
   const hint = hintText();
   app.innerHTML = `<div class="stack">
-    <div class="hd"><span class="ribbon">${S.lvl.name}</span><span class="num">Tour ${S.turn}</span></div>
+    <div class="hd"><span class="ribbon ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num">Tour ${S.turn}</span></div>
+    <div class="objline" id="obj">${objLine()}</div>
     <div class="phase" id="phase"></div>
     <div class="board" id="board">${boardHTML({ lanes: S.lanes, hq: S.hq }, true)}</div>
     ${hint ? `<div class="hint">${hint}</div>` : ''}
@@ -745,9 +897,8 @@ function finishBattle() {
   busy = true;
   setTimeout(() => {
     if (S.over === 'win') return toReward();
-    const rec = load(); rec.level = Math.max(rec.level || 0, C.level + 1); save(rec);
-    app.innerHTML = `<div class="stack end"><div class="big lose">Défaite</div>${spriteSVG('inf', 'me', 90)}<h2>Le front a cédé à la bataille ${C.level + 1}</h2>
-      <p>${LEVELS[C.level].name}. Vous aviez libéré ${C.level} ${C.level > 1 ? 'fronts' : 'front'}.</p>
+    app.innerHTML = `<div class="stack end"><div class="big lose">Défaite</div>${spriteSVG('inf', 'me', 90)}<h2>Le front a cédé : ${S.lvl.name}</h2>
+      <p>Vous aviez atteint l’étape ${C.node.layer + 1} sur 9.</p>
       <button class="btn" data-act="new">Nouvelle campagne</button></div>`;
   }, 1000);
 }
@@ -755,32 +906,35 @@ function finishBattle() {
 // ---- Récompenses ----
 function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 6);
-  const rec = load(); rec.level = Math.max(rec.level || 0, C.level + 1); save(rec);
-  if (C.level === 7) return victory();
-  const next = () => { C.level++; toBriefing(); };
-  const cardStep = () => {
-    const pool = Object.keys(CARDS).filter(k => CARDS[k].rar > 0), w = k => [0, 4, 3, 1.5][CARDS[k].rar];
-    const opts = []; while (opts.length < 3) { let x = Math.random() * pool.reduce((s, k) => s + (opts.includes(k) ? 0 : w(k)), 0); for (const k of pool) { if (opts.includes(k)) continue; if (x < w(k)) { opts.push(k); break; } x -= w(k); } }
-    app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Front libéré !</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div>
-      <div class="panel">Choisissez une carte pour renforcer votre paquet.</div>
-      <div class="cardrow">${opts.map(k => cardHTML(k, 'pick', `data-add="${k}"`)).join('')}</div>
-      <button class="btn ghost" data-act="skipcard">Ne rien prendre</button></div>`;
-  };
-  window.__after = { cardStep, next };
-  if (C.level === 2 || C.level === 5) {
-    const opts = shuffle(OFFICERS.filter(o => !C.officers.includes(o.id))).slice(0, 3);
-    app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Un officier se présente</span></div><div class="panel">Choisissez-en un. Son effet dure toute la campagne.</div>
-      <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div></div>`;
-  } else cardStep();
+  const n = C.node;
+  if (n.type === 'boss' && n.layer === 8) return victory();
+  if (n.type === 'boss') return officerStep();
+  cardStep(n.type === 'elite');
+}
+function cardStep(rareOnly) {
+  const pool = Object.keys(CARDS).filter(k => CARDS[k].rar > (rareOnly ? 1 : 0)), w = k => [0, 4, 3, 1.5][CARDS[k].rar];
+  const opts = []; while (opts.length < 3) { let x = Math.random() * pool.reduce((s, k) => s + (opts.includes(k) ? 0 : w(k)), 0); for (const k of pool) { if (opts.includes(k)) continue; if (x < w(k)) { opts.push(k); break; } x -= w(k); } }
+  const title = C.node.type === 'depot' ? 'Dépôt de ravitaillement' : 'Front libéré !';
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">${title}</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div>
+    <div class="panel">Choisissez une carte pour renforcer votre paquet${rareOnly ? ' (cartes rares)' : ''}.</div>
+    <div class="cardrow">${opts.map(k => cardHTML(k, 'pick', `data-add="${k}"`)).join('')}</div>
+    <button class="btn ghost" data-act="skipcard">Ne rien prendre</button></div>`;
+}
+function officerStep() {
+  const left = OFFICERS.filter(o => !C.officers.includes(o.id));
+  if (C.officers.length >= 3 || !left.length) { toast('Votre état-major est au complet : des renforts arrivent à la place.'); return cardStep(true); }
+  const opts = shuffle(left).slice(0, 3);
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Un officier se présente</span></div><div class="panel">Choisissez-en un. Son effet dure toute la campagne (3 officiers au maximum).</div>
+    <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div></div>`;
 }
 function toCamp() {
-  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Camp de base</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div><div class="panel">Un seul choix avant la prochaine bataille.</div>
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Camp de base</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div><div class="panel">Un seul choix avant de reprendre la route.</div>
     <button class="off-item plain" data-act="heal"><span class="tx"><b>Soigner le QG</b><span class="small muted">+8 PV (jusqu'au maximum).</span></span></button>
     <button class="off-item plain" data-act="removecard"><span class="tx"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></span></button></div>`;
 }
 function victory() {
   app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'tank', 'sniper', 'mg'].map(k => spriteSVG(k, 'me', 72)).join('')}</div><h2>Le dernier quartier général est tombé</h2>
-    <p>Huit batailles gagnées avec ${C.deck.length} cartes et ${C.officers.length} officiers.</p>
+    <p>Campagne gagnée avec ${C.deck.length} cartes et ${C.officers.length} officiers.</p>
     <button class="btn" data-act="new">Rejouer</button></div>`;
 }
 
@@ -802,7 +956,7 @@ function helpModal(first) {
     <li><b>L'ennemi se montre à l'avance :</b> les silhouettes en pointillé sont les renforts qui arriveront, et les bandeaux rouges « Obus » annoncent un tir sur la ligne. Vous pouvez réagir avant.</li>
     </ol>
     <div class="legend"><span><i>2</i> attaque</span><span><i class="h">3</i> points de vie</span><span>▣ blindage</span></div>
-    <p class="small muted">Touchez une unité sur le terrain pour lire ses capacités. Entre deux batailles, vous ajoutez des cartes à votre paquet et recrutez des officiers. Votre QG ne se soigne que partiellement : gardez-le en vie sur 8 batailles.</p>`);
+    <p class="small muted">Touchez une unité sur le terrain pour lire ses capacités. Sur la carte, vous choisissez votre route : batailles, camps, dépôts et états-majors. Après chaque étape, vous renforcez votre paquet ou vos officiers. Votre QG ne se soigne que partiellement : gardez-le en vie sur 8 batailles.</p>`);
 }
 function deckModal(pickMode) {
   const counts = {}; C.deck.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
@@ -820,11 +974,13 @@ function describeUnit(uid) {
 // ---- Événements ----
 document.addEventListener('click', e => {
   const t = e.target;
-  const add = t.closest('[data-add]'); if (add) { C.deck.push(add.dataset.add); return toCamp(); }
+  const nd = t.closest('[data-node]'); if (nd && nd.classList.contains('reach')) { const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
+  const go = t.closest('[data-go]'); if (go) { const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
+  const add = t.closest('[data-add]'); if (add) { C.deck.push(add.dataset.add); return finishNode(); }
   const rem = t.closest('[data-remove]');
-  if (rem) { if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); } C.deck.splice(C.deck.indexOf(rem.dataset.remove), 1); closeModal(); return window.__after.next(); }
+  if (rem) { if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); } C.deck.splice(C.deck.indexOf(rem.dataset.remove), 1); closeModal(); return finishNode(); }
   const off = t.closest('[data-officer]');
-  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 10; C.hq = Math.min(C.hqMax, C.hq + 10); } return window.__after.cardStep(); }
+  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 10; C.hq = Math.min(C.hqMax, C.hq + 10); } return C.node.type === 'boss' ? cardStep(true) : finishNode(); }
   if (S && document.getElementById('hand')) {
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
     if (sel !== null && !busy) {
@@ -838,11 +994,10 @@ document.addEventListener('click', e => {
   if (a === 'new') newCampaign();
   else if (a === 'help') helpModal(false);
   else if (a === 'close') closeModal();
-  else if (a === 'fight') startBattle();
-  else if (a === 'end') doEnd();
+    else if (a === 'end') doEnd();
   else if (a === 'deck') deckModal(false);
-  else if (a === 'skipcard') toCamp();
-  else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 8); window.__after.next(); }
+  else if (a === 'skipcard') finishNode();
+  else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 8); finishNode(); }
   else if (a === 'removecard') deckModal(true);
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
@@ -851,10 +1006,10 @@ function showTitle() {
   const rec = load();
   const army = (side, keys) => keys.map(k => spriteSVG(k, side, 64)).join('');
   app.innerHTML = `<div class="title"><h1>Ligne de Front</h1>
-    <div class="tag">1944. Déployez vos soldats sur trois lignes et brisez le front ennemi en huit batailles.</div>
+    <div class="tag">1944. Choisissez votre route sur la carte, déployez vos soldats sur trois lignes et brisez le front ennemi.</div>
     <div class="armies">${army('me', ['inf', 'bazooka', 'tank'])}${army('en', ['panzer', 'gren', 'rifle'])}</div>
     <div class="row" style="justify-content:center"><button class="btn go" data-act="new">Nouvelle campagne</button><button class="btn ghost" data-act="help">Comment jouer</button></div>
-    <div class="record">${rec.level ? `Meilleure progression : bataille ${Math.min(8, rec.level)} sur 8` : 'Aucune campagne jouée pour le moment.'}</div></div>`;
+    <div class="record">${rec.level ? `Meilleure progression : étape ${Math.min(9, rec.level)} sur 9` : 'Aucune campagne jouée pour le moment.'}</div></div>`;
 }
 showTitle();
 </script>
