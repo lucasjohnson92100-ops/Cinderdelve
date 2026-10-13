@@ -1,0 +1,30 @@
+name: Deploy to Cloudflare Workers
+
+# Lancement manuel : Actions > « Deploy to Cloudflare Workers » > Run workflow.
+# Prérequis (une seule fois) : secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID
+# (Settings > Secrets and variables > Actions).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check build directory
+        run: test -f build/index.html && test -f build/manifest.webmanifest && test -f build/sw.js
+
+      # Le service worker reçoit la version du jeu, l'empreinte des images/musiques et la liste hors ligne.
+      - name: Stamp service worker
+        run: python3 tools/stamp_sw.py build "$GITHUB_SHA"
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
