@@ -1525,129 +1525,176 @@ const OUT = `stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-l
 const DK = 'rgba(16,24,48,.22)', LT = 'rgba(255,255,255,.55)';
 const thick = (d, col, w) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 3.2}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
 const STAR = (x, y, r, col = '#fff') => { let p = ''; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r * 0.45 : r; p += `${k ? 'L' : 'M'}${(x + Math.cos(a) * rr).toFixed(1)} ${(y + Math.sin(a) * rr).toFixed(1)} `; } return `<path d="${p}Z" fill="${col}" stroke="${INK}" stroke-width=".9"/>`; };
-// Casque : rond pour vous, évasé pour l'ennemi ; bande à la couleur de la carte
+// Dégradés partagés (volume, verre, acier, mer), posés une fois dans la page et réutilisés par tous les sprites
+const LF_DEFS = `<svg width="0" height="0" style="position:absolute;width:0;height:0" aria-hidden="true" focusable="false"><defs>
+<linearGradient id="lf-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#0a1428" stop-opacity=".36"/></linearGradient>
+<linearGradient id="lf-h" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".42" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#0a1428" stop-opacity=".4"/></linearGradient>
+<radialGradient id="lf-r" cx=".34" cy=".28" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#0a1428" stop-opacity=".38"/></radialGradient>
+<linearGradient id="lf-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2fbff"/><stop offset=".45" stop-color="#86cdf2"/><stop offset="1" stop-color="#2b6a98"/></linearGradient>
+<linearGradient id="lf-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d3dae2"/><stop offset=".5" stop-color="#8f9aa6"/><stop offset="1" stop-color="#4d5764"/></linearGradient>
+<linearGradient id="lf-tread" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58616e"/><stop offset="1" stop-color="#262c36"/></linearGradient>
+<linearGradient id="lf-sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63c4f6"/><stop offset="1" stop-color="#1f6eb3"/></linearGradient>
+<linearGradient id="lf-wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8814a"/><stop offset="1" stop-color="#6e4421"/></linearGradient>
+</defs></svg>`;
+if (typeof document !== 'undefined' && document.body && !document.getElementById('lf-v')) document.body.insertAdjacentHTML('afterbegin', LF_DEFS);
+const vol = (d, g = 'v') => `<path d="${d}" fill="url(#lf-${g})" pointer-events="none"/>`;
+const volR = (x, y, w, h, rx, g = 'v') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="url(#lf-${g})" pointer-events="none"/>`;
+const rivets = pts => pts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".75" fill="#1b2540" opacity=".7"/><circle cx="${x - .25}" cy="${y - .25}" r=".3" fill="#fff" opacity=".6"/>`).join('');
+// Casque : rond (avec filet) pour vous, évasé (Stahlhelm) pour l'ennemi ; bande à la couleur de la carte
 function helmetArt(t, x = 33, y = 3) {
   const h = t.helm || t.dark, band = t.acc || (t.side === 'en' ? '#2f3542' : '#d8c38f');
-  const shape = t.side === 'en'
-    ? `<path d="M${x - 12} ${y + 12} Q${x - 12} ${y + 0.5} ${x} ${y + 0.5} Q${x + 12} ${y + 0.5} ${x + 12} ${y + 10} L${x + 15} ${y + 15.5} L${x + 11} ${y + 16} L${x + 10} ${y + 13} H${x - 10} L${x - 11} ${y + 16} L${x - 15} ${y + 15.5} Z" fill="${h}" ${OUT}/>`
-    : `<path d="M${x - 12.5} ${y + 12} Q${x - 12} ${y} ${x} ${y} Q${x + 12} ${y} ${x + 12.5} ${y + 12} Z" fill="${h}" ${OUT}/><path d="M${x - 15} ${y + 12.5} H${x + 15} Q${x + 15} ${y + 15} ${x + 12} ${y + 15} H${x - 12} Q${x - 15} ${y + 15} ${x - 15} ${y + 12.5} Z" fill="${h}" ${OUT}/>`;
-  return `${shape}<path d="M${x - 11} ${y + 9.5} H${x + 11}" stroke="${band}" stroke-width="2.8"/><path d="M${x - 7} ${y + 4} Q${x - 2} ${y + 1.5} ${x + 3} ${y + 2.5}" fill="none" stroke="${LT}" stroke-width="2" stroke-linecap="round"/>
-  <path d="M${x + 4} ${y + 1} Q${x + 11} ${y + 3} ${x + 11.5} ${y + 11} H${x + 5} Z" fill="${DK}"/>`;
+  const dome = t.side === 'en'
+    ? `M${x - 12} ${y + 12} Q${x - 12} ${y + 0.5} ${x} ${y + 0.5} Q${x + 12} ${y + 0.5} ${x + 12} ${y + 10} L${x + 15} ${y + 15.5} L${x + 11} ${y + 16} L${x + 10} ${y + 13} H${x - 10} L${x - 11} ${y + 16} L${x - 15} ${y + 15.5} Z`
+    : `M${x - 12.5} ${y + 12} Q${x - 12} ${y} ${x} ${y} Q${x + 12} ${y} ${x + 12.5} ${y + 12} Z`;
+  const brim = t.side === 'en' ? '' : `<path d="M${x - 15} ${y + 12.5} H${x + 15} Q${x + 15} ${y + 15.2} ${x + 12} ${y + 15.2} H${x - 12} Q${x - 15} ${y + 15.2} ${x - 15} ${y + 12.5} Z" fill="${h}" ${OUT}/>${vol(`M${x - 15} ${y + 12.5} H${x + 15} Q${x + 15} ${y + 15.2} ${x + 12} ${y + 15.2} H${x - 12} Q${x - 15} ${y + 15.2} ${x - 15} ${y + 12.5} Z`)}`;
+  const net = t.side === 'en' ? `<circle cx="${x + 7.5}" cy="${y + 7}" r=".9" fill="#1b2540" opacity=".55"/>` : `<path d="M${x - 9} ${y + 4.5} L${x + 5} ${y + 11.5} M${x - 4} ${y + 1.5} L${x + 10} ${y + 8.5} M${x + 9} ${y + 3} L${x - 6} ${y + 11.5} M${x + 3} ${y + 0.8} L${x - 10} ${y + 8}" stroke="rgba(20,30,20,.28)" stroke-width=".8"/>`;
+  return `<path d="${dome}" fill="${h}" ${OUT}/>${net}${vol(dome, 'r')}${brim}<path d="M${x - 11} ${y + 9.5} H${x + 11}" stroke="${INK}" stroke-width="4"/><path d="M${x - 11} ${y + 9.5} H${x + 11}" stroke="${band}" stroke-width="2.6"/>
+  <path d="M${x - 7.5} ${y + 3.8} Q${x - 2.5} ${y + 1.3} ${x + 2.5} ${y + 2.2}" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.8" stroke-linecap="round"/>`;
 }
 function headArt(t, x = 33, y = 17.5, r = 11.5) {
-  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${SKIN}" ${OUT}/><path d="M${x + 5} ${y - 9} A${r} ${r} 0 0 1 ${x + 3} ${y + 11}" fill="none" stroke="rgba(190,120,80,.35)" stroke-width="3"/>
+  return `<path d="M${x - 9.6} ${y - 1} q-3.2 -.4 -3.2 3.2 q0 3.4 3.4 3.2" fill="${SKIN}" ${OUT} stroke-width="1.6"/>
+  <circle cx="${x}" cy="${y}" r="${r}" fill="${SKIN}" ${OUT}/><circle cx="${x}" cy="${y}" r="${r - 1}" fill="url(#lf-r)" opacity=".55"/>
   <ellipse cx="${x - 2.6}" cy="${y + 1.6}" rx="2" ry="2.6" fill="#fff" stroke="${INK}" stroke-width="1"/><ellipse cx="${x + 4.8}" cy="${y + 1.6}" rx="2" ry="2.6" fill="#fff" stroke="${INK}" stroke-width="1"/>
   <circle cx="${x - 2}" cy="${y + 2.2}" r="1.3" fill="${INK}"/><circle cx="${x + 5.4}" cy="${y + 2.2}" r="1.3" fill="${INK}"/><circle cx="${x - 2.4}" cy="${y + 1.6}" r=".45" fill="#fff"/><circle cx="${x + 5}" cy="${y + 1.6}" r=".45" fill="#fff"/>
   <path d="M${x - 5.6} ${y - 2} l4.6 1.4 M${x + 8} ${y - 2} l-4.6 1.4" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M${x + 2.2} ${y + 3.6} q1.6 1.3 .2 2.4" fill="none" stroke="#c98a62" stroke-width="1.1" stroke-linecap="round"/>
   <circle cx="${x - 6}" cy="${y + 5.6}" r="1.9" fill="#f29a8a" opacity=".65"/><circle cx="${x + 8.2}" cy="${y + 5.6}" r="1.9" fill="#f29a8a" opacity=".65"/>
-  <path d="M${x - 0.6} ${y + 7.4} q2.1 1.4 4.2 0" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M${x - 10} ${y - 1} Q${x - 9} ${y + 9} ${x - 1} ${y + 10.5}" fill="none" stroke="#6b4a26" stroke-width="1.3"/>`;
+  <path d="M${x - 0.6} ${y + 7.6} q2.1 1.4 4.2 0" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M${x - 10} ${y - 1} Q${x - 9} ${y + 9} ${x - 1} ${y + 10.5}" fill="none" stroke="#4a3418" stroke-width="1.3"/>`;
 }
-// Soldat de profil (tourné vers la droite), arme en diagonale
+// Soldat de profil (tourné vers la droite) : paquetage, bras, ceinturon, gourde ; arme en diagonale
 function trooper(t, o = {}) {
-  const band = t.acc || (t.side === 'en' ? '#2f3542' : '#e9d8a6');
-  const gun = o.gun === false ? '' : o.gun || `${thick('M13 48 L57 22', INK, 2.4)}<path d="M13 48 L32 37" stroke="#9b6532" stroke-width="4" stroke-linecap="round"/><path d="M32 37 L57 22" stroke="#626e7b" stroke-width="2.6" stroke-linecap="round"/><path d="M56 22.6 L62.5 18.8" stroke="#dfe5ea" stroke-width="1.8" stroke-linecap="round"/><rect x="27" y="38.5" width="4" height="3.5" rx="1" fill="#3b4350" transform="rotate(-30 29 40)"/>`;
-  return `${o.pack === false ? '' : `<rect x="10.5" y="27" width="11" height="17" rx="4" fill="#6f6448" ${OUT}/><rect x="9.5" y="23.5" width="13" height="5.5" rx="2.75" fill="#9a8a62" ${OUT}/><path d="M12 31 h8" stroke="${DK}" stroke-width="2"/>`}
-  ${o.legs === false ? '' : `${thick('M25 45 L22.5 54', t.dark, 5.4)}${thick('M37.5 45 L41.5 53', t.dark, 5.4)}
-  <path d="M15.5 57 h10.5 a2.6 2.6 0 0 0 0 -5.2 h-6 q-4.5 0 -4.5 5.2z" fill="#4a3322" ${OUT} stroke-width="1.8"/><path d="M37 56 h10.5 q2.7 0 2.7 -2.6 q0 -2.6 -2.7 -2.6 h-7.5 z" fill="#4a3322" ${OUT} stroke-width="1.8"/>`}
-  <path d="M19 32 Q19 27 25 27 H39 Q45 27 45 32 V45 Q45 47.5 42.5 47.5 H21.5 Q19 47.5 19 45 Z" fill="${t.main}" ${OUT}/>
-  <path d="M35 27.6 H39 Q44.5 27.5 44.5 32 V45 Q44.5 47 42.5 47 H36 Z" fill="${DK}"/><path d="M22 31 V42" stroke="${LT}" stroke-width="2" stroke-linecap="round"/>
+  const band = t.acc || (t.side === 'en' ? '#2f3542' : '#e9d8a6'), hx = o.hx || 43, hy = o.hy || 31.5;
+  const body = 'M19 32 Q19 27 25 27 H39 Q45 27 45 32 V45 Q45 47.5 42.5 47.5 H21.5 Q19 47.5 19 45 Z';
+  const gun = o.gun === false ? '' : o.gun || `${thick('M13 48 L57 22', INK, 2.4)}<path d="M13 48 L32 37" stroke="url(#lf-wood)" stroke-width="4.2" stroke-linecap="round"/><path d="M15 46.2 L30 37.6" stroke="#e0b07a" stroke-width=".9" stroke-linecap="round" opacity=".8"/>
+    <path d="M32 37 L57 22" stroke="#59636f" stroke-width="2.6" stroke-linecap="round"/><path d="M33 35.9 L56 22.4" stroke="#aeb8c3" stroke-width=".8" stroke-linecap="round"/><path d="M56 22.6 L62.5 18.8" stroke="#e6ebef" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="27" y="38.5" width="4" height="3.5" rx="1" fill="#3b4350" transform="rotate(-30 29 40)"/><path d="M17.5 45.8 Q25 50.5 34.5 36.6" fill="none" stroke="#5a3d22" stroke-width="1.1"/>`;
+  return `${o.pack === false ? '' : `<rect x="10.5" y="27" width="11" height="17" rx="4" fill="#6f6448" ${OUT}/>${volR(10.5, 27, 11, 17, 4, 'h')}<rect x="12.4" y="34.5" width="7.2" height="5.4" rx="1.5" fill="#857652" stroke="${INK}" stroke-width="1"/>
+    <rect x="9" y="22.3" width="14" height="6.2" rx="3.1" fill="#8f8058" ${OUT}/>${volR(9, 22.3, 14, 6.2, 3.1)}<path d="M12.6 22.6 v5.6 M19.4 22.6 v5.6" stroke="#4e4229" stroke-width="1.2"/>`}
+  ${o.legs === false ? '' : `${thick('M25 45 L22.5 54', t.dark, 5.4)}<path d="M25 45 L22.5 54" stroke="rgba(0,0,0,.22)" stroke-width="5.4" stroke-linecap="round"/>${thick('M37.5 45 L41.5 53', t.dark, 5.4)}<path d="M36.6 46 L39.6 52.4" stroke="rgba(255,255,255,.25)" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M20.6 50.3 l4.8 .8 -.6 3 -4.8 -.6z M38.3 49.7 l4.6 -1.2 .9 2.9 -4.6 1.2z" fill="#cdbb8b" stroke="${INK}" stroke-width="1"/>
+    <path d="M15.5 57 h10.5 a2.6 2.6 0 0 0 0 -5.2 h-6 q-4.5 0 -4.5 5.2z" fill="#4a3322" ${OUT} stroke-width="1.8"/><path d="M37 56 h10.5 q2.7 0 2.7 -2.6 q0 -2.6 -2.7 -2.6 h-7.5 z" fill="#4a3322" ${OUT} stroke-width="1.8"/>
+    <path d="M18.5 53.4 h5 M40 52.2 h6" stroke="#8a6a4a" stroke-width="1" stroke-linecap="round"/>`}
+  <path d="${body}" fill="${t.main}" ${OUT}/>${vol(body, 'h')}
+  <path d="M22 31 V42" stroke="${LT}" stroke-width="2" stroke-linecap="round"/><path d="M32.5 30.5 V39.5" stroke="rgba(16,24,48,.3)" stroke-width="1"/>${[33, 36].map(y => `<circle cx="32.5" cy="${y}" r=".8" fill="#e9d8a6" stroke="${INK}" stroke-width=".5"/>`).join('')}
   <rect x="19.6" y="40.2" width="24.8" height="4" fill="#6b4a26" stroke="${INK}" stroke-width="1.3"/><rect x="29.6" y="39.4" width="5" height="5.6" rx="1" fill="#f2c14e" stroke="${INK}" stroke-width="1.3"/>
-  <rect x="21.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/><rect x="37.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/>
+  <rect x="21.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/><rect x="37.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/><path d="M21.4 36.6 h5.4 M37.4 36.6 h5.4" stroke="${INK}" stroke-width=".7"/>
+  <ellipse cx="18.6" cy="44.6" rx="3" ry="3.8" fill="#5d6b4a" stroke="${INK}" stroke-width="1.3"/><ellipse cx="18" cy="43.6" rx="1" ry="1.6" fill="#fff" opacity=".35"/>
   <path d="M23.5 29.5 Q32 34.5 40.5 29.5" fill="none" stroke="${INK}" stroke-width="5.2" stroke-linecap="round"/><path d="M23.5 29.5 Q32 34.5 40.5 29.5" fill="none" stroke="${band}" stroke-width="3" stroke-linecap="round"/>
   ${gun}
-  <circle cx="24.5" cy="42.5" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>${o.hand2 === false ? '' : `<circle cx="${o.hx || 43}" cy="${o.hy || 31.5}" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>`}
+  ${thick('M26.5 30.5 Q21.5 36.5 24.5 42.5', t.main, 4.6)}<path d="M26.5 30.5 Q21.5 36.5 24.5 42.5" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="4.6" stroke-linecap="round"/>
+  <circle cx="24.5" cy="42.5" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>${o.hand2 === false ? '' : `${thick(`M38 30.5 Q${(38 + hx) / 2 + 1.5} ${(30.5 + hy) / 2 + 2.5} ${hx} ${hy}`, t.main, 4.6)}<circle cx="${hx}" cy="${hy}" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>`}
   ${headArt(t)}${o.helm === false ? '' : helmetArt(t)}${o.extra || ''}`;
 }
 const SPRITES = {
   inf: t => trooper(t),
   rifle: t => trooper(t),
-  gren: t => trooper(t, { gun: `${thick('M14 47 L50 27', INK, 2.2)}<path d="M14 47 L50 27" stroke="#626e7b" stroke-width="2.4" stroke-linecap="round"/>`, hx: 47, hy: 12,
-    extra: `<g transform="rotate(25 50 9)"><rect x="48.6" y="9" width="3" height="11" rx="1.2" fill="#9b6532" ${OUT} stroke-width="1.5"/><rect x="46" y="2" width="8" height="8" rx="2" fill="#5f6b3c" ${OUT} stroke-width="1.6"/><path d="M47.5 4 h4" stroke="${LT}" stroke-width="1.3"/></g>` }),
-  sniper: t => trooper({ ...t, helm: '#5b7a3a' }, { gun: `${thick('M11 47 L61 18', INK, 2)}<path d="M11 47 L28 37.5" stroke="#7a4a22" stroke-width="4" stroke-linecap="round"/><path d="M28 37.5 L61 18" stroke="#3b4350" stroke-width="2.2" stroke-linecap="round"/><rect x="33" y="29" width="11" height="4" rx="2" fill="#2f3542" stroke="${INK}" stroke-width="1.2" transform="rotate(-30 38 31)"/>`,
+  gren: t => trooper(t, { gun: `${thick('M14 47 L50 27', INK, 2.2)}<path d="M14 47 L50 27" stroke="#626e7b" stroke-width="2.4" stroke-linecap="round"/><path d="M15 45.6 L49 26.6" stroke="#b6c0ca" stroke-width=".7"/>`, hx: 47, hy: 12,
+    extra: `<g transform="rotate(25 50 9)"><rect x="48.6" y="9" width="3" height="11" rx="1.2" fill="url(#lf-wood)" ${OUT} stroke-width="1.5"/><rect x="46" y="2" width="8" height="8" rx="2" fill="#5f6b3c" ${OUT} stroke-width="1.6"/>${volR(46, 2, 8, 8, 2, 'r')}<path d="M47.5 4 h4" stroke="${LT}" stroke-width="1.3"/></g>` }),
+  sniper: t => trooper({ ...t, helm: '#5b7a3a' }, { gun: `${thick('M11 47 L61 18', INK, 2)}<path d="M11 47 L28 37.5" stroke="url(#lf-wood)" stroke-width="4.2" stroke-linecap="round"/><path d="M28 37.5 L61 18" stroke="#3b4350" stroke-width="2.2" stroke-linecap="round"/><rect x="33" y="29" width="11" height="4" rx="2" fill="#2f3542" stroke="${INK}" stroke-width="1.2" transform="rotate(-30 38 31)"/><circle cx="43.4" cy="27.6" r="1.3" fill="#9fe0ff" stroke="${INK}" stroke-width=".6"/>`,
     extra: `${[[22, 5], [27, 2], [33, 1.5], [39, 2.5], [44, 6], [25, 9], [41, 9]].map(([x, y]) => `<path d="M${x} ${y + 4} l-2 -5 l2 2 l1 -4 l1 4 l2 -2 z" fill="#6f9a3e" stroke="${INK}" stroke-width=".8"/>`).join('')}` }),
   mgnest: t => `${trooper(t, { legs: false, pack: false, gun: false, hx: 40, hy: 33 })}
-    ${thick('M40 31 L62 27', INK, 3)}<path d="M40 31 L62 27" stroke="#3b4350" stroke-width="3.4" stroke-linecap="round"/><rect x="36" y="28" width="12" height="7" rx="2" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M47 35 L44 44 M47 35 L52 44" stroke="${INK}" stroke-width="1.8"/>
+    ${thick('M40 31 L62 27', INK, 3)}<path d="M40 31 L62 27" stroke="#3b4350" stroke-width="3.4" stroke-linecap="round"/>${[44, 47, 50, 53, 56].map(x => `<path d="M${x} ${31.6 - (x - 40) * 0.18} v-2.4" stroke="#6d7784" stroke-width=".9"/>`).join('')}<rect x="36" y="28" width="12" height="7" rx="2" fill="url(#lf-steel)" ${OUT} stroke-width="1.6"/><path d="M47 35 L44 44 M47 35 L52 44" stroke="${INK}" stroke-width="1.8"/>
     <path d="M38 35 q-4 6 2 9 q5 2 3 7" fill="none" stroke="#d9a441" stroke-width="2.4" stroke-dasharray="1.6 1.2"/>
-    ${[0, 1, 2, 3].map(i => `<rect x="${1 + i * 15}" y="${i % 2 ? 47 : 48.5}" width="19" height="10" rx="5" fill="#d2b27a" ${OUT}/><path d="M${5 + i * 15} ${i % 2 ? 52 : 53.5} h10" stroke="${DK}" stroke-width="1.6"/>`).join('')}
-    ${[0, 1, 2].map(i => `<rect x="${8 + i * 16}" y="39" width="18" height="10" rx="5" fill="#e0c690" ${OUT}/>`).join('')}`,
+    ${[0, 1, 2, 3].map(i => `<rect x="${1 + i * 15}" y="${i % 2 ? 47 : 48.5}" width="19" height="10" rx="5" fill="#d2b27a" ${OUT}/>${volR(1 + i * 15, i % 2 ? 47 : 48.5, 19, 10, 5)}<path d="M${5 + i * 15} ${i % 2 ? 52 : 53.5} h10" stroke="${DK}" stroke-width="1.6"/>`).join('')}
+    ${[0, 1, 2].map(i => `<rect x="${8 + i * 16}" y="39" width="18" height="10" rx="5" fill="#e0c690" ${OUT}/>${volR(8 + i * 16, 39, 18, 10, 5)}`).join('')}`,
   para: t => `<g class="canopy"><path d="M5 22 Q5 -1 32 -1 Q59 -1 59 22 Q52 16 45.5 22 Q39 15 32 22 Q25 15 18.5 22 Q12 16 5 22Z" fill="#f4f1e8" ${OUT}/>
-    <path d="M18.5 22 Q22 4 32 -1 Q42 4 45.5 22 Q39 15 32 22 Q25 15 18.5 22Z" fill="${t.light}" stroke="${INK}" stroke-width="1.4"/><path d="M12 6 Q20 0 28 0" fill="none" stroke="${LT}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M18.5 22 Q22 4 32 -1 Q42 4 45.5 22 Q39 15 32 22 Q25 15 18.5 22Z" fill="${t.light}" stroke="${INK}" stroke-width="1.4"/>${vol('M5 22 Q5 -1 32 -1 Q59 -1 59 22 Q52 16 45.5 22 Q39 15 32 22 Q25 15 18.5 22 Q12 16 5 22Z', 'h')}<path d="M12 6 Q20 0 28 0" fill="none" stroke="${LT}" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M5 22 L22 40 M18.5 22 L26 38 M45.5 22 L38 38 M59 22 L43 40" stroke="${INK}" stroke-width="1.1" fill="none"/></g>
     <g transform="translate(9 21) scale(.72)">${trooper(t, { pack: false })}</g>`,
-  // ---- Véhicules (de profil, tournés vers la droite) ----
   tank: (t, o = {}) => tankArt(t, o),
   panzer: t => tankArt({ ...t, main: '#8e8b78', dark: '#5f5d4f', acc: t.main }, { cross: true }),
   heavy: t => `<g transform="translate(-4 -6) scale(1.13)">${tankArt({ ...t, main: '#6f6a5a', dark: '#4a4639', acc: t.main }, { cross: true, skirts: true, big: true })}</g>`,
 };
+// Char de profil (vers la droite) : chenille avec barbotin, galets et rouleaux, caisse inclinée, tourelle à masque, antenne
 function tankArt(t, o = {}) {
   const acc = t.acc || '#d8c38f';
-  return `<rect x="3.5" y="40" width="55" height="15.5" rx="7.75" fill="#3b4350" ${OUT}/><path class="treads" d="M10 41.2 H52 M10 54.3 H52" stroke="#7d8794" stroke-width="1.8" stroke-dasharray="3 2.6"/>
-  ${[11.5, 21.5, 31.5, 41.5, 51].map(x => `<circle cx="${x}" cy="47.8" r="4.4" fill="#9aa4b0" ${OUT} stroke-width="1.6"/><circle cx="${x}" cy="47.8" r="1.5" fill="${INK}"/>`).join('')}
-  ${o.skirts ? `<rect x="6" y="38" width="50" height="7" rx="1.5" fill="${t.dark}" ${OUT} stroke-width="1.6"/>${[12, 22, 32, 42].map(x => `<path d="M${x} 38.5 v6" stroke="${INK}" stroke-width="1"/>`).join('')}` : ''}
-  <path d="M5 41 L10 30.5 H51 L59.5 38 L58.5 41 Z" fill="${t.main}" ${OUT}/><path d="M5.5 40.5 L7.8 36 H59 L58.5 40.5 Z" fill="${DK}"/><path d="M12 32.8 H49" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M12 35 H50" stroke="${INK}" stroke-width="4.4"/><path d="M12 35 H50" stroke="${acc}" stroke-width="2.6"/>
-  ${[14, 24, 34, 44].map(x => `<circle cx="${x}" cy="38.6" r=".9" fill="${INK}"/>`).join('')}
-  <circle class="smk" cx="6" cy="28" r="2.6" fill="#cfd6dc" opacity=".8"/>
-  <path d="M17.5 30.5 L20.5 20 Q21.5 16.5 25.5 16.5 H39.5 Q43.5 16.5 44.5 20 L47 30.5 Z" fill="${t.main}" ${OUT}/><path d="M37 16.8 H39.5 Q43.5 16.5 44.5 20 L47 30.3 H39 Z" fill="${DK}"/><path d="M22.5 22 Q23.5 19 27 19" fill="none" stroke="${LT}" stroke-width="1.8" stroke-linecap="round"/>
-  <rect x="44" y="20.5" width="6.5" height="8.5" rx="2" fill="${t.dark}" ${OUT} stroke-width="1.8"/>
-  <rect x="49.5" y="22.6" width="${o.big ? 15 : 12.5}" height="4.2" rx="1.6" fill="#626e7b" ${OUT} stroke-width="1.8"/><rect x="${o.big ? 62.5 : 60}" y="21.4" width="3.6" height="6.6" rx="1" fill="#3b4350" ${OUT} stroke-width="1.6"/>
-  ${o.cross ? `<path d="M29 21 h6 v3 h3 v6 h-3 v-0 h-6 v-6 h-3 v-3z" fill="none"/><circle cx="32.5" cy="24.5" r="4.4" fill="${acc}" stroke="${INK}" stroke-width="1.2"/><path d="M29.6 23 L32.5 26.2 L35.4 23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<circle cx="32" cy="24" r="4.6" fill="#fff6dc" stroke="${INK}" stroke-width="1.3"/>${STAR(32, 24, 3.4, t.main)}`}
+  const hull = 'M4 41 L8.5 31.5 H50 L60 37.5 L59 41 Z', tur = 'M17.5 31 L20.5 20 Q21.5 16.5 25.5 16.5 H39.5 Q43.5 16.5 44.5 20 L47 31 Z';
+  return `<rect x="2.5" y="39.5" width="57" height="16.5" rx="8.25" fill="url(#lf-tread)" ${OUT}/><path class="treads" d="M9 40.8 H53 M9 54.7 H53" stroke="#9aa3ad" stroke-width="1.8" stroke-dasharray="2.6 2.2"/>
+  <circle cx="54.5" cy="47.8" r="5.4" fill="#59626e" ${OUT} stroke-width="1.6"/><circle cx="54.5" cy="47.8" r="5.4" fill="none" stroke="#a6aeb8" stroke-width="1.6" stroke-dasharray="1.4 1.5"/><circle cx="54.5" cy="47.8" r="1.8" fill="${INK}"/>
+  <circle cx="7.8" cy="47.8" r="4.6" fill="#7d8692" ${OUT} stroke-width="1.6"/><circle cx="7.8" cy="47.8" r="1.4" fill="${INK}"/>
+  ${[14, 21.5, 29, 36.5, 44].map(x => `<circle cx="${x}" cy="49.4" r="4.1" fill="#a5afba" ${OUT} stroke-width="1.5"/><circle cx="${x}" cy="49.4" r="4.1" fill="url(#lf-r)"/><circle cx="${x}" cy="49.4" r="1.4" fill="${INK}"/>`).join('')}
+  ${[18, 33, 47].map(x => `<circle cx="${x}" cy="42.6" r="1.5" fill="#7d8692" stroke="${INK}" stroke-width=".8"/>`).join('')}
+  <circle cx="11" cy="55" r=".9" fill="#7a5a33"/><circle cx="26" cy="55.6" r="1.1" fill="#7a5a33"/><circle cx="47" cy="55.2" r=".8" fill="#7a5a33"/>
+  ${o.skirts ? `<rect x="6" y="37.5" width="50" height="8" rx="1.5" fill="${t.dark}" ${OUT} stroke-width="1.6"/>${volR(6, 37.5, 50, 8, 1.5)}${[12, 22, 32, 42].map(x => `<path d="M${x} 38 v7" stroke="${INK}" stroke-width="1"/>`).join('')}` : ''}
+  <path d="${hull}" fill="${t.main}" ${OUT}/>${vol(hull)}<path d="M50 31.5 L60 37.5 L58.6 38.4 L49.6 33 Z" fill="rgba(255,255,255,.28)"/>
+  <path d="M5.5 40.5 L7.4 36.6 H58.8 L58.5 40.5 Z" fill="${DK}"/>
+  <path d="M12 34.6 H47" stroke="${INK}" stroke-width="4.2"/><path d="M12 34.6 H47" stroke="${acc}" stroke-width="2.4"/>
+  <rect x="10" y="29" width="7" height="3" rx="1" fill="#6b4a26" stroke="${INK}" stroke-width="1"/><path d="M38 30.5 h8" stroke="#3b4350" stroke-width="1.6" stroke-linecap="round"/>
+  ${rivets([[14, 38.4], [22, 38.4], [30, 38.4], [38, 38.4], [46, 38.4], [53, 38.4]])}
+  <rect x="3.5" y="30.5" width="4" height="3.4" rx="1" fill="#3b4350" stroke="${INK}" stroke-width="1"/><circle class="smk" cx="4" cy="26.5" r="2.6" fill="#cfd6dc" opacity=".85"/><circle class="smk b" cx="2" cy="22" r="2" fill="#e3e8ec" opacity=".7"/>
+  <path d="${tur}" fill="${t.main}" ${OUT}/>${vol(tur)}<path d="M22.5 22 Q23.5 19 27 19" fill="none" stroke="${LT}" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M21 29.5 H45.5" stroke="${DK}" stroke-width="1.4"/>
+  <rect x="43.5" y="19.8" width="7.5" height="10" rx="2.6" fill="url(#lf-steel)" ${OUT} stroke-width="1.8"/>
+  <rect x="50" y="22.6" width="${o.big ? 15 : 12.5}" height="4.2" rx="1.6" fill="url(#lf-steel)" ${OUT} stroke-width="1.8"/><rect x="${o.big ? 62.5 : 60}" y="21.2" width="4" height="7" rx="1" fill="#3b4350" ${OUT} stroke-width="1.6"/><path d="M${o.big ? 63.4 : 60.9} 23 v3.4 M${o.big ? 65 : 62.5} 23 v3.4" stroke="#8b95a1" stroke-width=".7"/>
+  ${o.cross ? `<circle cx="32.5" cy="24.5" r="4.4" fill="${acc}" stroke="${INK}" stroke-width="1.2"/><path d="M29.6 23 L32.5 26.2 L35.4 23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<circle cx="32" cy="24" r="4.6" fill="#fff6dc" stroke="${INK}" stroke-width="1.3"/>${STAR(32, 24, 3.4, t.main)}`}
+  <rect x="38.5" y="13.8" width="3" height="3.4" rx=".8" fill="#3b4350" stroke="${INK}" stroke-width=".9"/>
   <ellipse cx="29.5" cy="16.6" rx="6" ry="2" fill="${t.dark}" ${OUT} stroke-width="1.6"/>
-  <circle cx="29.5" cy="12" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.8"/><circle cx="31" cy="12" r=".9" fill="${INK}"/><path d="M25 11.8 Q25.2 6.6 29.5 6.6 Q33.8 6.6 34 11.8Z" fill="#3b4350" ${OUT} stroke-width="1.6"/>
-  <path d="M21 18 L18.5 2.5" stroke="${INK}" stroke-width="1.3"/><path class="flag" d="M18.5 2.5 L26 4.2 L18.9 6.3Z" fill="${t.side === 'en' ? t.main : acc}" stroke="${INK}" stroke-width="1"/>`;
+  <circle cx="29.5" cy="12" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.8"/><circle cx="31" cy="12" r=".9" fill="${INK}"/><path d="M25 11.8 Q25.2 6.6 29.5 6.6 Q33.8 6.6 34 11.8Z" fill="#3b4350" ${OUT} stroke-width="1.6"/><path d="M25.2 10.8 h8.6" stroke="#6d7784" stroke-width="1"/>
+  <path d="M21 18 L17.5 1.5" stroke="${INK}" stroke-width="1.2"/><circle cx="17.5" cy="1.5" r=".9" fill="${INK}"/><path class="flag" d="M17.9 3.4 L25.4 5.1 L18.3 7.2Z" fill="${t.side === 'en' ? t.main : acc}" stroke="${INK}" stroke-width="1"/>`;
 }
+// Jeep de profil (vers la droite) : capot et calandre, pare-brise, roue de secours, mitrailleuse sur pivot
 SPRITES.jeep = t => {
   const acc = t.acc || '#d8c38f';
-  return `<circle cx="6" cy="37" r="5" fill="#3b4350" ${OUT} stroke-width="1.8"/><circle cx="6" cy="37" r="2" fill="#8d97a3"/>
-  <path d="M7 45 V36 Q7 32.5 10.5 32.5 H24 L27.5 26.5 H35 L37 32.5 H55 Q59 32.5 59 36.5 V45 Z" fill="${t.main}" ${OUT}/>
-  <path d="M7.5 41 H58.5 V44.5 H7.5 Z" fill="${DK}"/><path d="M11 35.5 H54" stroke="${INK}" stroke-width="4.2"/><path d="M11 35.5 H54" stroke="${acc}" stroke-width="2.4"/><path d="M40 34 H55" stroke="${LT}" stroke-width="1.5" stroke-linecap="round"/>
-  ${STAR(48, 39.6, 3, '#fff6dc')}
-  <path d="M36.5 32.5 L39.5 21.5" stroke="${INK}" stroke-width="2"/><rect x="38" y="21" width="2.2" height="10" fill="#bfe3f5" stroke="${INK}" stroke-width="1"/>
-  <circle cx="33" cy="25" r="4.2" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="34.6" cy="25" r=".9" fill="${INK}"/><path d="M28.6 24.5 Q29 19.6 33 19.6 Q37 19.6 37.4 24.5Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>
-  <rect x="18.6" y="15" width="2.4" height="14" fill="#3b4350" stroke="${INK}" stroke-width="1"/>
-  <circle cx="15.5" cy="15.5" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="17.2" cy="15.5" r=".9" fill="${INK}"/><path d="M11 15 Q11.4 9.8 15.5 9.8 Q19.6 9.8 20 15Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>
-  ${thick('M16 13.5 L33 11.5', INK, 2)}<path d="M16 13.5 L33 11.5" stroke="#3b4350" stroke-width="3.2" stroke-linecap="round"/><rect x="15" y="11.5" width="9" height="5" rx="1.5" fill="#626e7b" stroke="${INK}" stroke-width="1.2"/>
-  ${[17, 49].map(x => `<path d="M${x - 9} 45 A9 9 0 0 1 ${x + 9} 45" fill="${t.dark}" ${OUT} stroke-width="1.8"/><circle cx="${x}" cy="47" r="7.4" fill="#3b4350" ${OUT}/><circle cx="${x}" cy="47" r="3" fill="#9aa4b0" stroke="${INK}" stroke-width="1.2"/><path d="M${x - 4} 43.5 a5 5 0 0 1 4 -1.5" fill="none" stroke="${LT}" stroke-width="1.4"/>`).join('')}`;
+  const body = 'M6 44.5 V36 Q6 32.5 9.5 32.5 H37 L39.5 34 H56.5 Q60.5 34 60.5 38 V44.5 Z';
+  return `<circle cx="6" cy="37.5" r="5.6" fill="#2f3542" ${OUT} stroke-width="1.8"/><circle cx="6" cy="37.5" r="2.6" fill="#8d97a3" stroke="${INK}" stroke-width=".9"/>
+  <path d="${body}" fill="${t.main}" ${OUT}/>${vol(body)}<path d="M40 35.6 H56" stroke="${LT}" stroke-width="1.4" stroke-linecap="round"/>
+  <rect x="58" y="35.5" width="3.4" height="8" rx="1" fill="#3b4350" stroke="${INK}" stroke-width="1.1"/><path d="M59.1 36.5 v6 M60.3 36.5 v6" stroke="#8d97a3" stroke-width=".6"/><circle cx="57.4" cy="37.4" r="1.6" fill="#ffe27a" stroke="${INK}" stroke-width=".9"/>
+  <path d="M9 39.6 H56" stroke="${INK}" stroke-width="3.8"/><path d="M9 39.6 H56" stroke="${acc}" stroke-width="2.2"/>
+  ${STAR(48, 36.6, 2.4, '#fff6dc')}
+  <path d="M37.5 33 L40.5 20.5" stroke="${INK}" stroke-width="2.2"/><path d="M38.2 32 L41.2 21.4 L43 21.8 L40.2 32.4Z" fill="url(#lf-glass)" stroke="${INK}" stroke-width="1"/>
+  <circle cx="33" cy="26" r="4.2" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="34.6" cy="26" r=".9" fill="${INK}"/><path d="M28.6 25.5 Q29 20.6 33 20.6 Q37 20.6 37.4 25.5Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>${vol('M28.6 25.5 Q29 20.6 33 20.6 Q37 20.6 37.4 25.5Z', 'r')}
+  <rect x="25.3" y="15" width="2.6" height="17.5" fill="url(#lf-steel)" stroke="${INK}" stroke-width="1"/>
+  <path d="M10 32.5 V24 Q10 20 14 20 H18 Q21 20 21 23 V32.5" fill="${t.dark}" ${OUT} stroke-width="1.6"/>${vol('M10 32.5 V24 Q10 20 14 20 H18 Q21 20 21 23 V32.5', 'h')}
+  <circle cx="16" cy="14.5" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="17.7" cy="14.5" r=".9" fill="${INK}"/><path d="M11.5 14 Q11.9 8.8 16 8.8 Q20.1 8.8 20.5 14Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>${vol('M11.5 14 Q11.9 8.8 16 8.8 Q20.1 8.8 20.5 14Z', 'r')}
+  <circle cx="20" cy="19.6" r="2.4" fill="${SKIN}" stroke="${INK}" stroke-width="1.2"/>
+  ${thick('M20 15.2 L40 12.4', INK, 2.2)}<path d="M20 15.2 L40 12.4" stroke="#3b4350" stroke-width="3.4" stroke-linecap="round"/><path d="M30 13.6 L39.5 12.3" stroke="#9aa4b0" stroke-width=".8"/>
+  <rect x="19" y="12.6" width="9.5" height="5.4" rx="1.5" fill="url(#lf-steel)" stroke="${INK}" stroke-width="1.2"/><rect x="21" y="18" width="5" height="4" rx=".8" fill="#5d6b4a" stroke="${INK}" stroke-width="1"/>
+  ${[17, 49].map(x => `<path d="M${x - 9.5} 44.5 A9.5 9.5 0 0 1 ${x + 9.5} 44.5" fill="${t.dark}" ${OUT} stroke-width="1.8"/><circle cx="${x}" cy="47" r="7.4" fill="#2f3542" ${OUT}/><circle cx="${x}" cy="47" r="7.4" fill="none" stroke="#535c69" stroke-width="1.6" stroke-dasharray="1.5 1.6"/><circle cx="${x}" cy="47" r="3.2" fill="#a6b0bb" stroke="${INK}" stroke-width="1.2"/><circle cx="${x}" cy="47" r="3.2" fill="url(#lf-r)"/><path d="M${x - 4} 43.5 a5 5 0 0 1 4 -1.5" fill="none" stroke="${LT}" stroke-width="1.4"/>`).join('')}`;
 };
 // ---- Navires (de profil) ----
-const SEA = `<path class="wavefx" d="M-2 52 q4 -4 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v12 h-72z" fill="#4aa8e8" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path class="wavefx" d="M4 57 q3 -2 6 0 M24 59 q3 -2 6 0 M44 57 q3 -2 6 0" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>`;
+const SEA = `<path class="wavefx" d="M-2 52 q4 -4 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v12 h-72z" fill="url(#lf-sea)" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path class="wavefx" d="M4 57 q3 -2 6 0 M24 59 q3 -2 6 0 M44 57 q3 -2 6 0" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>`;
 const smokePuffs = (x, y) => `<circle class="smk" cx="${x}" cy="${y}" r="3.2" fill="#dfe5ea" stroke="${INK}" stroke-width=".8"/><circle class="smk b" cx="${x + 1}" cy="${y - 1}" r="2.6" fill="#eef2f5" stroke="${INK}" stroke-width=".8"/>`;
+const bowWave = (x, y) => `<path d="M${x - 6} ${y} q3 -4 6 -1 q2 -4 5 -1" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M4 ${y + 1} q-3 -2 -6 0" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>`;
+const portholes = (x0, x1, y) => { let p = ''; for (let x = x0; x <= x1; x += 5) p += `<circle cx="${x}" cy="${y}" r=".95" fill="#2f3542"/><circle cx="${x - .3}" cy="${y - .3}" r=".35" fill="#cfe9f7"/>`; return p; };
 SPRITES.destroyer = t => { const acc = t.acc || '#d8c38f'; return `
-  <path d="M2 40 H62 L55.5 53 H9 Z" fill="#8b98a8" ${OUT}/><path d="M6.5 48.5 H57.6 L55.5 53 H9 Z" fill="#b3351f"/><path d="M8 43.6 H58" stroke="${INK}" stroke-width="4.2"/><path d="M8 43.6 H58" stroke="${acc}" stroke-width="2.4"/><path d="M8 41.5 H40" stroke="${LT}" stroke-width="1.4"/>
-  <rect x="21" y="26" width="7" height="14.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/><path d="M21.5 29 h6" stroke="${acc}" stroke-width="2"/>${smokePuffs(24.5, 22)}
-  <rect x="31" y="28" width="14" height="12.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/>${[33, 37, 41].map(x => `<rect x="${x}" y="31" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}<path d="M38 28 V11" stroke="${INK}" stroke-width="1.8"/><path class="flag" d="M38 11 H46 L43.5 14 L46 17 H38z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
-  <rect x="48" y="35" width="9" height="5.5" rx="2.5" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M56 36.8 L63 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
-  <rect x="8" y="35" width="9" height="5.5" rx="2.5" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M9 36.8 L2 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>${SEA}`; };
+  <path d="M2 40 H62 L55.5 53 H9 Z" fill="#8b98a8" ${OUT}/>${vol('M2 40 H62 L55.5 53 H9 Z')}<path d="M6.5 48.5 H57.6 L55.5 53 H9 Z" fill="#b3351f"/><path d="M8 43.6 H58" stroke="${INK}" stroke-width="4.2"/><path d="M8 43.6 H58" stroke="${acc}" stroke-width="2.4"/><path d="M8 41.5 H40" stroke="${LT}" stroke-width="1.4"/>${portholes(12, 50, 46.4)}
+  <rect x="21" y="26" width="7" height="14.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/>${volR(21, 26, 7, 14.5, 1.6, 'h')}<path d="M21.5 29 h6" stroke="${acc}" stroke-width="2"/>${smokePuffs(24.5, 22)}
+  <rect x="31" y="28" width="14" height="12.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/>${volR(31, 28, 14, 12.5, 1.6)}${[33, 37, 41].map(x => `<rect x="${x}" y="31" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}<path d="M38 28 V11" stroke="${INK}" stroke-width="1.8"/><path d="M34.5 15 H41.5" stroke="${INK}" stroke-width="1.4"/><path class="flag" d="M38 11 H46 L43.5 14 L46 17 H38z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
+  <rect x="48" y="35" width="9" height="5.5" rx="2.5" fill="url(#lf-steel)" ${OUT} stroke-width="1.6"/><path d="M56 36.8 L63 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  <rect x="8" y="35" width="9" height="5.5" rx="2.5" fill="url(#lf-steel)" ${OUT} stroke-width="1.6"/><path d="M9 36.8 L2 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>${SEA}${bowWave(60, 51)}`; };
 SPRITES.croiseur = t => { const acc = t.acc || '#d8c38f'; return `
-  <path d="M0 37 H64 L57 53 H8 Z" fill="#7f8c9c" ${OUT}/><path d="M4.5 48 H59.2 L57 53 H8 Z" fill="#b3351f"/><path d="M6 41.5 H59" stroke="${INK}" stroke-width="4.2"/><path d="M6 41.5 H59" stroke="${acc}" stroke-width="2.4"/>
-  ${[17, 25].map(x => `<rect x="${x}" y="22" width="6" height="15.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/>${smokePuffs(x + 3, 18)}`).join('')}
-  <rect x="31" y="24" width="15" height="13.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/><rect x="34" y="17" width="9" height="7.5" rx="1.4" fill="#c9d1da" ${OUT} stroke-width="1.6"/>${[33.5, 37.5, 41.5].map(x => `<rect x="${x}" y="27" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}
-  <path d="M38.5 17 V5" stroke="${INK}" stroke-width="1.8"/><path class="flag" d="M38.5 5 H47 L44.5 8 L47 11 H38.5z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
-  ${[[51, 1], [6, -1], [12, -1]].map(([x, d]) => `<rect x="${x - 4}" y="31.5" width="10" height="6" rx="3" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M${x + (d > 0 ? 5 : -3)} 33 L${x + (d > 0 ? 14 : -11)} 30" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>`).join('')}${SEA}`; };
+  <path d="M0 37 H64 L57 53 H8 Z" fill="#7f8c9c" ${OUT}/>${vol('M0 37 H64 L57 53 H8 Z')}<path d="M4.5 48 H59.2 L57 53 H8 Z" fill="#b3351f"/><path d="M6 41.5 H59" stroke="${INK}" stroke-width="4.2"/><path d="M6 41.5 H59" stroke="${acc}" stroke-width="2.4"/>${portholes(10, 55, 45)}
+  ${[17, 25].map(x => `<rect x="${x}" y="22" width="6" height="15.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/>${volR(x, 22, 6, 15.5, 1.6, 'h')}${smokePuffs(x + 3, 18)}`).join('')}
+  <rect x="31" y="24" width="15" height="13.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/>${volR(31, 24, 15, 13.5, 1.6)}<rect x="34" y="17" width="9" height="7.5" rx="1.4" fill="#c9d1da" ${OUT} stroke-width="1.6"/>${[33.5, 37.5, 41.5].map(x => `<rect x="${x}" y="27" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}
+  <path d="M38.5 17 V5" stroke="${INK}" stroke-width="1.8"/><path d="M35 8.5 H42" stroke="${INK}" stroke-width="1.4"/><path class="flag" d="M38.5 5 H47 L44.5 8 L47 11 H38.5z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
+  ${[[51, 1], [6, -1], [12, -1]].map(([x, d]) => `<rect x="${x - 4}" y="31.5" width="10" height="6" rx="3" fill="url(#lf-steel)" ${OUT} stroke-width="1.6"/><path d="M${x + (d > 0 ? 5 : -3)} 33 L${x + (d > 0 ? 14 : -11)} 30" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>`).join('')}${SEA}${bowWave(61, 51)}`; };
 SPRITES.sousmarin = t => { const acc = t.acc || '#d8c38f'; return `
-  <path d="M3 44 Q3 36 14 36 H52 Q62 36 62 44 Q62 50 52 50 H14 Q3 50 3 44Z" fill="#6f8178" ${OUT}/><path d="M5 46 H60 Q58 50 52 50 H14 Q6 50 5 46Z" fill="${DK}"/><path d="M12 39.5 H48" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M10 42.5 H54" stroke="${INK}" stroke-width="3.6"/><path d="M10 42.5 H54" stroke="${acc}" stroke-width="2"/>
-  <path d="M24 37 L27 25 H39 L41 37 Z" fill="#83968c" ${OUT}/><path d="M33 25 V12 H39" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/><path d="M33 25 V12 H39" fill="none" stroke="#aab4bf" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M3 44 Q3 36 14 36 H52 Q62 36 62 44 Q62 50 52 50 H14 Q3 50 3 44Z" fill="#6f8178" ${OUT}/>${vol('M3 44 Q3 36 14 36 H52 Q62 36 62 44 Q62 50 52 50 H14 Q3 50 3 44Z')}<path d="M12 39.5 H48" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M10 42.5 H54" stroke="${INK}" stroke-width="3.6"/><path d="M10 42.5 H54" stroke="${acc}" stroke-width="2"/>${rivets([[16, 46], [24, 46], [32, 46], [40, 46], [48, 46]])}
+  <path d="M24 37 L27 25 H39 L41 37 Z" fill="#83968c" ${OUT}/>${vol('M24 37 L27 25 H39 L41 37 Z', 'h')}<path d="M33 25 V12 H39" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/><path d="M33 25 V12 H39" fill="none" stroke="#aab4bf" stroke-width="1.4" stroke-linecap="round"/>
   <circle cx="30" cy="30" r="1.8" fill="#ffe27a" stroke="${INK}" stroke-width="1"/><path class="flag" d="M27 25 V19 L32 21 L27 23" fill="${t.main}" stroke="${INK}" stroke-width="1"/>
   <circle class="smk" cx="58" cy="40" r="1.8" fill="#fff" stroke="${INK}" stroke-width=".7"/><circle class="smk b" cx="60" cy="38" r="1.4" fill="#fff" stroke="${INK}" stroke-width=".7"/>${SEA}`; };
 // ---- Avions (vus de dessus, nez vers le haut), hélices qui tournent ----
 const roundel = (x, y, t) => `<circle cx="${x}" cy="${y}" r="4.4" fill="#fff" stroke="${INK}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="2.6" fill="${t.main}"/><circle cx="${x}" cy="${y}" r="1" fill="#fff"/>`;
-const prop = (x, y, w = 11) => `<g class="prop" style="transform-origin:${x}px ${y}px"><ellipse cx="${x}" cy="${y}" rx="${w}" ry="1.8" fill="rgba(40,48,64,.5)"/></g><circle cx="${x}" cy="${y}" r="2.4" fill="#3b4350" stroke="${INK}" stroke-width="1.2"/>`;
-SPRITES.chasseur = t => { const acc = t.acc || '#d8c38f'; return `
-  <path d="M5 33 Q32 26 59 33 L59 40 Q32 36.5 5 40Z" fill="#d7dee6" ${OUT}/><path d="M5 37.5 Q32 34 59 37.5 L59 40 Q32 36.5 5 40Z" fill="${DK}"/><path d="M5 33 L11 32 L11 39.5 L5 40Z M59 33 L53 32 L53 39.5 L59 40Z" fill="${acc}" stroke="${INK}" stroke-width="1.2"/>
+const prop = (x, y, w = 11) => `<g class="prop" style="transform-origin:${x}px ${y}px"><ellipse cx="${x}" cy="${y}" rx="${w}" ry="1.8" fill="rgba(40,48,64,.5)"/><ellipse cx="${x}" cy="${y}" rx="${w}" ry="${w * 0.42}" fill="rgba(200,210,220,.18)"/></g><circle cx="${x}" cy="${y}" r="2.6" fill="${INK}"/><circle cx="${x}" cy="${y}" r="2.4" fill="url(#lf-steel)" stroke="${INK}" stroke-width="1.1"/>`;
+SPRITES.chasseur = t => { const acc = t.acc || '#d8c38f'; const fus = 'M28 13 Q32 3 36 13 L37.5 50 Q32 59 26.5 50 Z', wing = 'M5 33 Q32 26 59 33 L59 40 Q32 36.5 5 40Z'; return `
+  <path d="${wing}" fill="#d7dee6" ${OUT}/>${vol(wing)}<path d="M5 37.5 Q32 34 59 37.5 L59 40 Q32 36.5 5 40Z" fill="${DK}"/><path d="M5 33 L11 32 L11 39.5 L5 40Z M59 33 L53 32 L53 39.5 L59 40Z" fill="${acc}" stroke="${INK}" stroke-width="1.2"/>
+  <path d="M14 31.6 v7.6 M50 31.6 v7.6 M22 30.4 v7.2 M42 30.4 v7.2" stroke="rgba(27,37,64,.25)" stroke-width=".7"/><path d="M22.5 33.6 h-3 M41.5 33.6 h3" stroke="#3b4350" stroke-width="1.4" stroke-linecap="round"/>
   ${roundel(17, 35.5, t)}${roundel(47, 35.5, t)}
-  <path d="M22 52 Q32 48.5 42 52 L42 57 Q32 55 22 57Z" fill="#d7dee6" ${OUT}/>
-  <path d="M28 13 Q32 3 36 13 L37.5 50 Q32 59 26.5 50 Z" fill="${t.main}" ${OUT}/><path d="M32.5 7 Q35 9 36 13 L37.5 50 Q34 56 32.5 56 Z" fill="${DK}"/><path d="M29.5 17 V46" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
-  <ellipse cx="32" cy="24" rx="3.6" ry="6.4" fill="#8fd2f6" ${OUT} stroke-width="1.6"/><path d="M30.6 20.5 Q31 19 32.2 18.6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M22 52 Q32 48.5 42 52 L42 57 Q32 55 22 57Z" fill="#d7dee6" ${OUT}/>${vol('M22 52 Q32 48.5 42 52 L42 57 Q32 55 22 57Z')}
+  <path d="${fus}" fill="${t.main}" ${OUT}/>${vol(fus, 'h')}<path d="M29.5 17 V46" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/><path d="M27.5 30 h9.5 M27 40 h10.5" stroke="rgba(27,37,64,.3)" stroke-width=".7"/>
+  <path d="M28.6 12.5 l-1 4 M35.4 12.5 l1 4" stroke="#3b4350" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+  <ellipse cx="32" cy="24" rx="3.6" ry="6.4" fill="url(#lf-glass)" ${OUT} stroke-width="1.6"/><path d="M30.6 20.5 Q31 19 32.2 18.6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><path d="M28.6 24 h6.8" stroke="${INK}" stroke-width=".7" opacity=".6"/>
   <path d="M28.5 44 H35.5" stroke="${acc}" stroke-width="2.4"/>${prop(32, 6)}`; };
-SPRITES.bombardier = t => { const acc = t.acc || '#d8c38f'; return `
-  <path d="M1 32 Q32 24 63 32 L63 41 Q32 36 1 41Z" fill="#cfd8e2" ${OUT}/><path d="M1 37.5 Q32 32 63 37.5 L63 41 Q32 36 1 41Z" fill="${DK}"/>
-  ${[13, 51].map(x => `<rect x="${x - 3.6}" y="26" width="7.2" height="16" rx="3.4" fill="#626e7b" ${OUT} stroke-width="1.8"/>${prop(x, 25, 9)}`).join('')}
+SPRITES.bombardier = t => { const acc = t.acc || '#d8c38f'; const fus = 'M27.5 15 Q32 3 36.5 15 L38 51 Q32 61 26 51 Z', wing = 'M1 32 Q32 24 63 32 L63 41 Q32 36 1 41Z'; return `
+  <path d="${wing}" fill="#cfd8e2" ${OUT}/>${vol(wing)}<path d="M1 37.5 Q32 32 63 37.5 L63 41 Q32 36 1 41Z" fill="${DK}"/><path d="M8 31 v9.4 M20 29 v9 M44 29 v9 M56 31 v9.4" stroke="rgba(27,37,64,.25)" stroke-width=".7"/>
+  ${[13, 51].map(x => `<rect x="${x - 3.6}" y="26" width="7.2" height="16" rx="3.4" fill="url(#lf-steel)" ${OUT} stroke-width="1.8"/><path d="M${x - 1.5} 37 v4" stroke="#2f3542" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>${prop(x, 25, 9)}`).join('')}
   ${roundel(6, 36, t)}${roundel(58, 36, t)}
-  <path d="M20 53 Q32 49 44 53 L44 59 Q32 57 20 59Z" fill="#cfd8e2" ${OUT}/>
-  <path d="M27.5 15 Q32 3 36.5 15 L38 51 Q32 61 26 51 Z" fill="${t.main}" ${OUT}/><path d="M32.5 6 Q35.5 9 36.5 15 L38 51 Q34.5 58 32.5 58 Z" fill="${DK}"/>
-  <ellipse cx="32" cy="17" rx="3.4" ry="5" fill="#8fd2f6" ${OUT} stroke-width="1.5"/><rect x="28" y="37" width="8" height="10" rx="1.5" fill="#2f3542" stroke="${INK}" stroke-width="1.3"/><path d="M28 40 h8 M28 43.5 h8" stroke="${acc}" stroke-width="1.4"/>
+  <path d="M20 53 Q32 49 44 53 L44 59 Q32 57 20 59Z" fill="#cfd8e2" ${OUT}/>${vol('M20 53 Q32 49 44 53 L44 59 Q32 57 20 59Z')}
+  <path d="${fus}" fill="${t.main}" ${OUT}/>${vol(fus, 'h')}<path d="M27 26 h10 M26.6 48 h11" stroke="rgba(27,37,64,.3)" stroke-width=".7"/>
+  <ellipse cx="32" cy="17" rx="3.4" ry="5" fill="url(#lf-glass)" ${OUT} stroke-width="1.5"/><path d="M30.8 14.4 Q31.2 13 32.2 12.8" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/><circle cx="32" cy="55.4" r="1.8" fill="url(#lf-glass)" stroke="${INK}" stroke-width=".9"/>
+  <rect x="28" y="37" width="8" height="10" rx="1.5" fill="#2f3542" stroke="${INK}" stroke-width="1.3"/><path d="M28 40 h8 M28 43.5 h8" stroke="${acc}" stroke-width="1.4"/>
   <path d="M29.5 28 H34.5" stroke="${acc}" stroke-width="2.6"/>`; };
 SPRITES.tireursX = SPRITES.inf;
 SPRITES.tank0 = SPRITES.tank;
