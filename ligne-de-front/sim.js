@@ -1,8 +1,7 @@
-// Simulation d'une campagne : un bot déploie, déplace, fusionne et achète en boutique. node sim.js [parties] [fichier] [ravitaillement gardé pour les déplacements]
-// Simulation d'une campagne : un bot déploie, déplace, fusionne et achète en boutique (node sim.js [parties] [moteur])
+// Simulation d'une campagne : un bot déploie, fusionne, attaque et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,bestMove,targetsFrom,distMap,terrainCost,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
+const E=new Function(core+';return {airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
 function evalGroups(S,budget){
@@ -17,17 +16,17 @@ function evalGroups(S,budget){
 }
 function chooseCell(S,card){
   const cells=E.deployCells(S,card),def=E.TYPES[card.t];if(!cells.length)return null;
-  const foes=E.units(S,'en').filter(u=>u.land);
   const tmp=E.mkUnit(S,'me',card.t,card.c,card.lv);
   let best=null;
-  const goals=foes.length?foes.map(t=>[t.r,t.c]):[...Array(E.GW).keys()].map(c=>[0,c]);
-  const dm=def.cls==='air'||def.cls==='ship'?null:E.distMap(S,def.cls,goals);
   for(const [r,c] of cells){
-    let sc=0;const ts=E.targetsFrom(S,tmp,r,c);
-    if(def.cls==='ship'||def.cls==='air'){
-      sc=ts.length*10+(tmp.kw.includes('bomb')&&r===0?5:0)-E.dist(r,c,foes.length?foes[0].r:0,foes.length?foes[0].c:c)*0.3;
-      if(def.cls==='ship'&&!ts.length)sc-=(r)*0.5; // monter vers le nord
-    }else{ const k=r+','+c;sc=-(dm.has(k)?dm.get(k):99)*3+(E.TERRAIN[S.grid[r][c]].cover||0)*6+(S.grid[r][c]==='village'?3:0)+(def.cls!=='foot'&&S.grid[r][c]==='route'?1:0); }
+    let sc=0;
+    if(card.t==='bombardier'){sc=r<0?3:E.units(S,'en').filter(t=>Math.abs(t.r-r)<=1&&Math.abs(t.c-c)<=1).length*4;}
+    else{
+      tmp.r=r;tmp.c=c;const ts=E.targetsFrom(S,tmp,r,c),foesHere=E.units(S,'en').some(t=>t.land&&t.c===c),mineHere=E.units(S,'me').some(t=>t.land&&t.c===c);
+      sc=ts.length*4+(!foesHere&&E.hqInRange(S,tmp,r,c)?3:0);
+      if(def.land){sc+=(E.terrainMult(card.c,S.grid[r][c])-1)*8+(E.TERRAIN[S.grid[r][c]].cover||0)*4+(foesHere&&!mineHere?5:0)+(S.grid[r][c]==='village'&&!mineHere?2:0);
+        if(def.rng[1]>1&&r===3)sc+=1;if(def.rng[1]<=1&&r===2)sc+=1;}
+    }
     if(!best||sc>best.sc)best={sc,r,c};
   }
   return best;
@@ -45,14 +44,6 @@ function botTurn(S,reserve){
     const cards=sel.idxs.map(i=>S.hand[i]).sort((a,b)=>E.TYPES[b.t].cost-E.TYPES[a.t].cost);
     for(const card of cards){const hi=S.hand.indexOf(card);if(hi<0)continue;const cell=chooseCell(S,card);if(!cell)continue;if(card.t==='bombardier')E.airStrike(S,hi,cell.r,cell.c);else E.placeCard(S,hi,cell.r,cell.c);}
   }
-  // déplacements, unités les plus avancées d'abord
-  const mine=E.units(S,'me').sort((a,b)=>a.r-b.r);
-  for(const u of mine){
-    if(S.supply<=0)break;if(u.mvLeft<=0)continue;
-    if(u.ttl&&u.kw.includes('bomb'))continue;
-    const m=E.bestMove(S,u,Math.min(u.mvLeft,S.supply));
-    if(m&&(m.r!==u.r||m.c!==u.c)&&m.cost>0)E.moveUnit(S,u.uid,m.r,m.c);
-  }
   // attaques : le bot vise la meilleure cible (le plus de dégâts utiles) ou le QG
   for(const u of E.units(S,'me').sort((a,b)=>a.r-b.r)){
     if(S.over)break;if(!E.canAttack(S,u))continue;
@@ -61,7 +52,7 @@ function botTurn(S,reserve){
     else if(o.hq)E.playerAttack(S,u.uid,'hq');
   }
 }
-const RES=+process.argv[4]||3;
+const RES=0;
 function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S,RES);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
 const PATH=[['battle',0],['battle',1],['elite',1],['battle',2],['boss',3],['battle',4],['elite',4],['battle',5],['battle',6],['boss',7]];
 const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0}));let done=0;const stats={jok:0,lv:0};
