@@ -1,4 +1,5 @@
 // Simulation d'une campagne avec un bot qui respecte la règle des couleurs, fusionne et achète en boutique : node sim.js [nombre de parties]
+const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,planDeploy,deployAll,snapshotState,restoreState,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
