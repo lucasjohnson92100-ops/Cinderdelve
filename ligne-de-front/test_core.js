@@ -72,6 +72,18 @@ S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,S.hqPos
 S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,4,2);check('QG hors de portée',E.playerAttack(S,a.uid,'hq'),null);
 S=mk();S.plan=[];S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,S.hqPos.en[0]+1,S.hqPos.en[1]);S.hand=[];E.endTurn(S);check('fin de tour : plus d\'attaque automatique du joueur',S.hq.en,S.lvl.hq);
 S.units=[];S.turn=2;a=E.mkUnit(S,'me','tireurs','');a.fresh=false;a.attacked=true;E.placeUnit(S,a,3,2);S.hand=[];S.plan=[];E.endTurn(S);check('attaque réarmée au tour suivant',a.attacked,false);
+// riposte : le défenseur qui survit tire sur l'attaquant s'il peut l'atteindre
+S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
+a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','mgnest');E.placeUnit(S,e,2,2);
+let rp=E.playerAttack(S,a.uid,e.uid);check('mitrailleuse survit (12 - 10)',e.hp,2);check('riposte enregistrée',rp.scene.counter.length,1);
+check('riposte : 1 homme restant × 2 dégâts',10-a.hp,2);check('tireurs : 8 hommes',E.shotsOf(a),8);check('touche de riposte',rp.hits.some(h=>h.counter&&h.uid===a.uid),true);
+S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,2,2);rp=E.playerAttack(S,a.uid,e.uid);check('cible détruite : pas de riposte',rp.scene.counter.length,0);
+S.units=[];a=E.mkUnit(S,'me','blinde','');a.fresh=false;E.placeUnit(S,a,4,2);e=E.mkUnit(S,'en','mgnest');e.hp=100;e.hpMax=100;E.placeUnit(S,e,2,2);rp=E.playerAttack(S,a.uid,e.uid);check('mitrailleuse portée 1-2 : riposte à 2 cases',rp.scene.counter.length,1);
+S.units=[];a=E.mkUnit(S,'me','blinde','');a.fresh=false;E.placeUnit(S,a,4,2);e=E.mkUnit(S,'en','rifle');e.hp=100;e.hpMax=100;E.placeUnit(S,e,2,2);rp=E.playerAttack(S,a.uid,e.uid);check('soldats portée 1 : pas de riposte à 2 cases',rp.scene.counter.length,0);
+S.units=[];a=E.mkUnit(S,'me','blinde','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');e.hp=100;e.hpMax=100;E.placeUnit(S,e,2,2);rp=E.playerAttack(S,a.uid,e.uid);check('blindage 2 : riposte sans effet',rp.scene.counter[0].dmgTaken+'/'+a.hp,'0/16');
+S.units=[];a=E.mkUnit(S,'me','destroyer','');E.placeUnit(S,a,3,0);e=E.mkUnit(S,'en','mgnest');e.hp=100;e.hpMax=100;E.placeUnit(S,e,2,0);rp=E.playerAttack(S,a.uid,e.uid);check('navire : pas de riposte',rp.scene.counter.length,0);
+// l'ennemi subit aussi les ripostes de vos unités
+S.units=[];a=E.mkUnit(S,'me','tireurs','');a.hp=100;a.hpMax=100;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');e.fresh=false;E.placeUnit(S,e,2,2);let stE=[];S.phase='en';E.attackUnit(S,e,stE);check('riposte de vos tireurs',e.hp<6||!S.units.includes(e),true);
 // couverture forêt
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
 a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','gren');E.placeUnit(S,e,2,2);S.grid[2][2]='foret';

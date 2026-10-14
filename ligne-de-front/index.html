@@ -731,6 +731,16 @@ body:has(.btl) .sky-fx { display: none; }
 .gc.drophover { box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 7px var(--yellow) !important; }
 .gc.drophover:not(.dep) { box-shadow: inset 0 0 0 4px var(--red) !important; }
 .hc.justfused { animation: justfused .5s cubic-bezier(.2, 1.6, .4, 1) !important; } @keyframes justfused { 0% { transform: scale(1.35) rotate(-6deg); filter: brightness(1.6); } }
+
+/* riposte */
+.tr.rev { animation-name: fly2r; background: linear-gradient(270deg, rgba(255, 210, 74, 0), #ffd24a 40%, #fff); }
+.tr.rev.shell { border-radius: 9px 6px 6px 9px; }
+@keyframes fly2r { from { left: 110%; opacity: 1; } to { left: -10%; opacity: 1; } }
+.sc-riposte { position: absolute; left: 50%; top: 42%; z-index: 6; transform: translate(-50%, -50%); font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: #fff; text-transform: uppercase; letter-spacing: .06em; padding: 2px 16px; border: 3px solid var(--ink); border-radius: 12px; background: var(--red); box-shadow: 0 4px 0 var(--ink); animation: ripo .9s cubic-bezier(.2, 1.4, .4, 1) forwards; pointer-events: none; }
+.scene.theirs .sc-riposte { background: var(--blue); }
+@keyframes ripo { 0% { transform: translate(-50%, -50%) scale(0) rotate(-12deg); } 25% { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
+.sp.att.dead .fig { opacity: 0; transition: opacity .4s .3s; }
+.grip { position: absolute; right: 1px; top: 1px; z-index: 8; font-size: .7rem; font-weight: 800; line-height: 1; color: #fff; background: var(--red-d); border: 1.5px solid var(--ink); border-radius: 50%; width: 15px; height: 15px; display: grid; place-items: center; animation: swd 1s ease-in-out infinite alternate; pointer-events: none; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -1280,8 +1290,22 @@ function attackUnit(S, u, steps, opts = {}) {
     defs.push({ ...b, menAfter: dead ? 0 : menNow(t), hpAfter: Math.max(0, t.hp), dmgTaken: b.hp - Math.max(0, t.hp), dead });
   });
   if (hqDmg > 0) { S.hq[foe] -= hqDmg; hits.push({ hq: foe, dmg: hqDmg }); }
+  const attInfo = unitInfo(u);
+  // Riposte (comme dans Advance Wars) : un défenseur terrestre qui survit et peut atteindre l'attaquant tire à son tour avec les hommes qui lui restent.
+  // Pas de riposte contre les bombes, les navires, les avions, ni sur le QG.
+  const counter = [];
+  if (!bomb && !opts.hq && u.land) for (const t of alive) {
+    if (!S.units.includes(u)) break;
+    if (!S.units.includes(t) || !raw.get(t.uid) || t.kw.includes('bomb')) continue;
+    const d = dist(u.r, u.c, t.r, t.c); if (d < t.rng[0] || d > t.rng[1]) continue;
+    const cshots = menNow(t), per = Math.max(0, t.dmg - Math.max(0, u.armor - t.pierce)), loss = Math.min(u.hp, Math.ceil(cshots * per * (1 - coverOf(S, u))));
+    const before = unitInfo(u);
+    if (loss <= 0) { counter.push({ by: unitInfo(t), shots: cshots, men: before.men, menAfter: before.men, hpAfter: u.hp, dmgTaken: 0, dead: false }); continue; }
+    const h = applyDamage(S, u, loss); h.counter = true; hits.push(h);
+    counter.push({ by: unitInfo(t), shots: cshots, men: before.men, menAfter: h.kill ? 0 : menNow(u), hpAfter: Math.max(0, u.hp), dmgTaken: loss, dead: h.kill });
+  }
   if (!hits.length) hits.push({ uid: u.uid, dmg: 0, miss: true, side: u.side });
-  const scene = { att: unitInfo(u), defs, hqPos: S.hqPos[foe], hq: hqDmg > 0 ? { side: foe, before: hqBefore, after: Math.max(0, S.hq[foe]), max: foe === 'en' ? S.lvl.hq : S.hqMax } : null, shots };
+  const scene = { att: attInfo, defs, counter, hqPos: S.hqPos[foe], hq: hqDmg > 0 ? { side: foe, before: hqBefore, after: Math.max(0, S.hq[foe]), max: foe === 'en' ? S.lvl.hq : S.hqMax } : null, shots };
   u.attacked = true; if (u.side === 'me') u.mvLeft = 0;
   checkOver(S);
   steps.push({ ph: S.phase, from: u.uid, hits, snap: snap(S), scene });
@@ -1960,7 +1984,7 @@ function boardHTML(view, live) {
     const cls = ['gc', 't-' + t, (r + c) % 2 ? 'alt' : '', reach && reach.has(k) && !u ? 'reach' : '', rng && rng.has(k) ? 'inrng' : '', threat && threat.has(k) ? 'threat' : '', dep && dep.has(k) ? 'dep' : '', shells.has(k) ? 'shelled' : '', hqSide ? 'hq-' + hqSide : '', hqT ? 'tgt' : ''].filter(Boolean).join(' ');
     let inner = groundSVG(S.grid, r, c) + decoSVG(S.grid, r, c, hqSide || view.owner[k] || '', hqSide ? hqPct[hqSide] : 1);
     if (hqSide) inner += `<span class="hqhp ${hqSide}"><i style="width:${Math.round(hqPct[hqSide] * 100)}%"></i></span>`;
-    if (u) inner += unitCellHTML(u, u.uid === selU, !!(opt && opt.units.includes(u)));
+    if (u) { const tg = !!(opt && opt.units.includes(u)); inner += unitCellHTML(u, u.uid === selU, tg); if (tg && selected.land && !selected.kw.includes('bomb') && (d => d >= u.rng[0] && d <= u.rng[1])(dist(selected.r, selected.c, u.r, u.c))) inner += '<span class="grip" title="Peut riposter">↺</span>'; }
     else if (ghosts.has(k)) inner += ghostHTML(ghosts.get(k));
     if (u && u.uid === selU) inner += '<span class="cursor"><i></i><i></i><i></i><i></i></span>';
     if (shells.has(k)) inner += `<span class="shmark">−${shells.get(k)}</span>`;
@@ -2022,7 +2046,7 @@ function hintText() {
     const u = findUnit(S, selU); if (!u) return '';
     if (u.side === 'en') return `${u.name} (ennemi) : la zone rouge montre où ils peuvent frapper au prochain tour.`;
     const mv = Math.min(u.mvLeft, S.supply);
-    if (u.side === 'me' && canAttack(S, u)) { const o = attackOptions(S, u); return `${u.name} : touchez ${o.units.length ? 'un ennemi cerclé de rouge' : 'le QG ennemi'} pour attaquer${mv > 0 ? ', ou une case bleue pour bouger' : ''}.`; }
+    if (u.side === 'me' && canAttack(S, u)) { const o = attackOptions(S, u); return `${u.name} : touchez ${o.units.length ? 'un ennemi cerclé de rouge' : 'le QG ennemi'} pour attaquer${mv > 0 ? ', ou une case bleue pour bouger' : ''}.${o.units.length ? ' ↺ = il ripostera s\'il survit.' : ''}`; }
     if (u.attacked) return `${u.name} a déjà attaqué ce tour.`;
     return `${u.name} : ${mv > 0 ? `déplacement jusqu'à ${mv} (1 ravitaillement par point)` : u.mvLeft > 0 ? 'plus de ravitaillement pour bouger' : 'a déjà bougé'}, ${RANGE_TXT(u.rng)}.`;
   }
@@ -2277,7 +2301,8 @@ async function doAttack(uid, tgt) {
   await playScene(st, 1);
   busy = false;
   renderBattle();
-  for (const h of st.hits) { const el = h.hq ? cellEl(S.hqPos[h.hq][0], S.hqPos[h.hq][1]) : to; if (el && h.dmg) { popAt(el, '−' + h.dmg); el.classList.add('impact'); if (h.kill) { const b = document.createElement('span'); b.className = 'boom'; el.appendChild(b); setTimeout(() => b.remove(), 600); } } }
+  const fromRC = [st.scene.att.r, st.scene.att.c], toRC = tgt === 'hq' ? S.hqPos.en : st.scene.defs[0] ? [st.scene.defs[0].r, st.scene.defs[0].c] : null;
+  for (const h of st.hits) { const rc = h.hq ? S.hqPos[h.hq] : h.uid === uid ? fromRC : toRC, el = rc && cellEl(rc[0], rc[1]); if (el && h.dmg) { popAt(el, '−' + h.dmg); el.classList.add('impact'); if (h.kill) { const b = document.createElement('span'); b.className = 'boom'; el.appendChild(b); setTimeout(() => b.remove(), 600); } } }
   if (S.over) return finishBattle();
 }
 function doUnitFuse() {
@@ -2336,7 +2361,7 @@ function confetti(n = 46) {
 }
 // ---- Scène de combat : attaquants à gauche, défenseurs à droite, pertes comptées ----
 const NOUN = { tireurs: ['soldat', 'soldats'], paras: ['para', 'paras'], jeep: ['jeep', 'jeeps'], blinde: ['char', 'chars'], destroyer: ['navire', 'navires'], croiseur: ['navire', 'navires'], sousmarin: ['sous-marin', 'sous-marins'],
-  chasseur: ['avion', 'avions'], bombardier: ['avion', 'avions'], rifle: ['soldat', 'soldats'], gren: ['grenadier', 'grenadiers'], mgnest: ['mitrailleuse', 'mitrailleuses'], sniper: ['sniper', 'snipers'], panzer: ['char', 'chars'], heavy: ['char lourd', 'chars lourds'] };
+  chasseur: ['avion', 'avions'], bombardier: ['avion', 'avions'], rifle: ['soldat', 'soldats'], gren: ['grenadier', 'grenadiers'], mgnest: ['servant', 'servants'], sniper: ['sniper', 'snipers'], panzer: ['char', 'chars'], heavy: ['char lourd', 'chars lourds'] };
 const noun = (k, n) => (NOUN[k] || ['unité', 'unités'])[n > 1 ? 1 : 0];
 const scKey = i => (i.side === 'me' ? SPR_OF[i.key] : i.key);
 // Figurines de la scène : une par homme ou véhicule (jusqu'à 10), qui tombent une à une
@@ -2431,6 +2456,34 @@ async function playScene(st, speed) {
   if (defs.some(d => d.dmgTaken > 0) || sc.hq) ov.querySelector('.scene').classList.add('quake');
   q('.sc-res').innerHTML = rows.map(r => `<span>${r}</span>`).join('');
   q('.sc-res').classList.add('show');
+  // riposte : le défenseur survivant tire à son tour
+  for (const ct of sc.counter || []) {
+    await wait(750);
+    const del = qa('.sp.def').find(el => +el.dataset.uid === ct.by.uid), ael = q('.sp.att');
+    ov.querySelector('.scene').classList.remove('quake');
+    const cap = document.createElement('div'); cap.className = 'sc-riposte'; cap.textContent = 'Riposte !'; ov.querySelector('.scene').appendChild(cap);
+    SFX.play(SND_OF[ct.by.key] || 'rifle', Math.min(ct.shots, 12));
+    if (del) [...del.querySelectorAll('.fig:not(.die)')].forEach((f, j) => { f.style.setProperty('--fd', (j * 70 % 420) + 'ms'); f.classList.remove('flinch'); f.classList.add('shoot'); });
+    const n2 = Math.min(10, Math.max(1, ct.shots));
+    for (let k = 0; k < n2; k++) {
+      const b = document.createElement('i'); b.className = 'tr rev ' + (ct.by.men <= 2 || ['panzer', 'heavy'].includes(ct.by.key) ? 'shell' : 'bullet'); b.style.top = 20 + Math.random() * 60 + '%';
+      lane.appendChild(b); setTimeout(() => b.remove(), 520); await wait(Math.max(40, 420 / n2));
+    }
+    await wait(300);
+    const lost = ct.men - ct.menAfter, keep = ct.dead ? 0 : figCount(sc.att, ct.menAfter);
+    if (ael) {
+      ael.classList.add(ct.dmgTaken > 0 ? 'hit' : 'blocked');
+      [...ael.querySelectorAll('.fig')].forEach((f, j) => { f.classList.remove('shoot'); if (j >= keep) { f.style.setProperty('--dd', ((j - keep) * 90) + 'ms'); f.classList.add('die'); } else if (ct.dmgTaken > 0) f.classList.add('flinch'); });
+      popAt(ael.querySelector('.sp-art'), ct.dmgTaken > 0 ? (lost > 0 ? '−' + lost : '−' + ct.dmgTaken + ' PV') : 'Bloqué');
+      const sub = ael.querySelector('.sp-sub'); if (sub) sub.innerHTML = ct.dead ? '<b>Détruit</b>' : `<b class="cnt">${ct.menAfter}</b> ${noun(sc.att.key, ct.menAfter)} restants`;
+      if (ct.dead) { const x = document.createElement('span'); x.className = 'sp-boom'; ael.querySelector('.sp-art').appendChild(x); setTimeout(() => SFX.play('boom'), 40); }
+      else if (ct.dmgTaken > 0) SFX.play('hqhit');
+    }
+    if (ct.dmgTaken > 0) ov.querySelector('.scene').classList.add('quake');
+    rows.push(ct.dead ? `Riposte : ${sc.att.name} détruit !` : lost > 0 ? `Riposte : ${sc.att.name} −${lost} ${noun(sc.att.key, lost)}` : ct.dmgTaken > 0 ? `Riposte : ${sc.att.name} −${ct.dmgTaken} PV` : `Riposte sans effet (blindage)`);
+    q('.sc-res').innerHTML = rows.map(r => `<span>${r}</span>`).join('');
+    setTimeout(() => cap.remove(), 900);
+  }
   await wait(1350);
   ov.classList.add('out'); await sleep(fast ? 10 : 180); ov.remove();
 }
@@ -2565,6 +2618,7 @@ function helpModal(first) {
     <ol>
     <li><b>But :</b> détruire le <b>QG ennemi</b>, le fort rouge en haut de la carte, avant que <b>votre QG</b>, le fort bleu en bas, tombe. Un QG ne se traverse pas : on l'attaque depuis une case à portée (touchez votre unité, puis le fort ennemi cerclé de rouge).</li>
     <li><b>La carte :</b> une grille façon Advance Wars. Votre QG est en bas, celui de l'ennemi en haut. Les <b>routes</b> accélèrent, les <b>champs</b> ralentissent les véhicules, la <b>forêt</b> et les <b>villages</b> protègent (−30 % de dégâts), la <b>rivière</b> ne se franchit que par les <b>ponts</b> (l'infanterie peut la traverser à gué), la <b>mer</b> est réservée aux navires.</li>
+    <li><b>Riposte :</b> comme dans Advance Wars, un défenseur qui survit à une attaque riposte aussitôt avec les hommes qui lui restent, s'il peut atteindre l'attaquant (portée). Pas de riposte contre les navires, les avions et les bombes. Frapper fort d'un coup, ou de loin, évite la riposte.</li>
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Les unités <b>attaquent seules</b> en fin de tour, sur la cible la plus proche à portée ; si rien n'est à portée mais que le QG ennemi l'est, elles le frappent.</li>
     <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les avions n'importe où. Ils ne peuvent pas être touchés et restent quelques tours.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
