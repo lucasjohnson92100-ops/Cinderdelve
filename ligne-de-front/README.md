@@ -10,17 +10,17 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 ## Règles en bref
 
 - **Paquet de départ fixe : 11 cartes** = 6 armée de terre, 3 marine, 2 armée de l'air.
-- **Chaque carte est un groupe** : par exemple 10 tireurs (10 tirs de 1), 3 spiders (3 tirs de 3, contournent la ligne) ou 1 blindé (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs.
-- **Marine et air** se posent dans la bande « Mer · Air » de chaque ligne, tirent de loin quelques tours et ne peuvent pas être touchés.
-- **Quatre couleurs**, chacune avec un avantage :
-  - Jaune : +1 dégât par tir.
-  - Rouge : +50 % d'effectif (tirs et PV).
-  - Vert : +50 % de PV (marine et air : +1 tour).
-  - Noir : perce 1 de blindage et agit dès l'arrivée.
-- **Fusion** : deux cartes du même type et de couleurs différentes se fusionnent en une carte à deux couleurs (jaune + rouge = orange, etc.) qui cumule les deux avantages et ne coûte qu'une carte. Les deux cartes reviennent séparées dans la défausse.
+- **Un seul front** de 4 places par camp. Le groupe de gauche (1re ligne) reçoit les tirs. Vous choisissez de poser un groupe en 1re ligne ou en renfort, et vous pouvez en passer un en 1re ligne plus tard.
+- **Deux zones de soutien** de 2 places : la mer et l'air. Navires et avions tirent de loin pendant quelques tours et ne peuvent pas être touchés.
+- **Chaque carte est un groupe** : par exemple 10 tireurs (10 tirs de 1), 3 spiders (3 tirs de 3, contournent) ou 1 blindé (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs.
+- **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
+- **Fusion** : deux groupes du même type et de couleurs différentes forment un groupe à deux couleurs (jaune + rouge = orange, etc.).
+  - en main : deux cartes fusionnent et ne coûtent qu'une carte ;
+  - sur le front : un groupe déployé peut fusionner avec un autre dès le tour suivant son arrivée.
+- **Annuler** : le bouton « Annuler » défait les dernières actions du tour (pose, fusion, changement de place).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
-- **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne. Exemples : Capitaine Soleil (jaune +1 dégât), Peintre de guerre (les fusions font +1 dégât), Quartier-maître (+50 % de butin).
-- **Entraînement** : améliorer une carte du paquet jusqu'au niveau 3 (plus d'hommes ou de dégâts). On peut aussi acheter de nouvelles cartes ou en retirer.
+- **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
+- **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
 - L'ennemi annonce renforts et obus un tour à l'avance.
 - **Carte** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
