@@ -597,6 +597,75 @@ body:has(.btl) .sky-fx { display: none; }
 .dust { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: rgba(255, 255, 255, .7); pointer-events: none; z-index: 7; animation: dustp .5s ease-out forwards; }
 @keyframes dustp { to { transform: translate(var(--dx, 0), -10px) scale(2); opacity: 0; } }
 .end .big { animation: titlein .7s cubic-bezier(.2, 1.4, .4, 1); }
+/* ===================== Tuiles raccordées, QG, curseur, portées ===================== */
+.gc .tgnd { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gc .tart { z-index: 1; }
+.gc.t-riviere, .gc.t-pont { background: #9ad65f; background-image: none; animation: none; }
+.gc.t-riviere.alt, .gc.t-pont.alt { background: #8ecb55; }
+.gc.t-route { background: #9ad65f; } .gc.t-route.alt { background: #8ecb55; }
+.gc.t-foret { background: #6fb84f; } .gc.t-village { background: #9fd468; }
+.gc.t-qg { background: #a9a28f; background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .12) 0 6px, transparent 6px 12px), repeating-linear-gradient(90deg, rgba(27, 37, 64, .08) 0 1px, transparent 1px 12px); overflow: visible; z-index: 2; }
+.gc.hq-me { box-shadow: inset 0 0 0 2px rgba(61, 134, 232, .7); } .gc.hq-en { box-shadow: inset 0 0 0 2px rgba(229, 84, 63, .7); }
+.gc .hqsvg { inset: -18% -4% 8% -4%; width: 108%; height: 110%; overflow: visible; filter: drop-shadow(0 2px 0 rgba(27, 37, 64, .25)); }
+.hqhp { position: absolute; left: 10%; right: 10%; bottom: 3px; height: 6px; border: 1.5px solid var(--ink); border-radius: 4px; background: #fff; overflow: hidden; z-index: 3; }
+.hqhp i { display: block; height: 100%; transition: width .6s; } .hqhp.me i { background: var(--blue); } .hqhp.en i { background: var(--red); }
+.gc.tgt[data-hqtgt] { cursor: pointer; } .gc.tgt[data-hqtgt]::after { content: ""; position: absolute; inset: 0; border: 3px solid var(--red); border-radius: 6px; z-index: 5; animation: tgtpulse2 .6s infinite alternate; background: radial-gradient(circle, rgba(229, 84, 63, .25) 0 40%, transparent 41%); }
+.tart .wv, .tgnd .wv { animation: wvp 1.8s ease-in-out infinite alternate; } @keyframes wvp { from { opacity: .3; } to { opacity: 1; } }
+.tgnd .foam { stroke-dasharray: 6 4; animation: foam 2.4s linear infinite; } @keyframes foam { to { stroke-dashoffset: -20; } }
+.tart .fire { animation: fire .25s steps(2) infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; } @keyframes fire { to { transform: scaleY(1.25) skewX(4deg); opacity: .85; } }
+.gc.t-mer { background-color: #3a97da; background-image: repeating-linear-gradient(100deg, rgba(255, 255, 255, .2) 0 6px, transparent 6px 18px), radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .15), transparent 50%); background-size: 36px 100%, 100% 100%; animation: wavemove 3s linear infinite; }
+.gc.inrng { background-image: linear-gradient(rgba(229, 84, 63, .22), rgba(229, 84, 63, .22)); }
+.gc.inrng::before { content: ""; position: absolute; inset: 0; border: 1.5px dashed rgba(179, 53, 31, .7); pointer-events: none; z-index: 1; }
+.gc.threat { background-image: linear-gradient(rgba(229, 84, 63, .32), rgba(229, 84, 63, .32)); }
+.gc.threat::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, rgba(179, 53, 31, .22) 0 4px, transparent 4px 9px); pointer-events: none; z-index: 1; }
+.gc.reach { background-image: linear-gradient(rgba(61, 134, 232, .38), rgba(61, 134, 232, .38)); box-shadow: inset 0 0 0 2px rgba(37, 89, 181, .8); }
+.cursor { position: absolute; inset: -1px; z-index: 7; pointer-events: none; animation: cursor .5s ease-in-out infinite alternate; }
+.cursor i { position: absolute; width: 11px; height: 11px; border: 3px solid #fff; filter: drop-shadow(0 0 1px var(--ink)) drop-shadow(0 0 1px var(--ink)); }
+.cursor i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 4px 0 0 0; } .cursor i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 4px 0 0; }
+.cursor i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 4px; } .cursor i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 4px 0; }
+@keyframes cursor { from { transform: scale(1); } to { transform: scale(.9); } }
+.gu.sel::after { display: none; }
+.gu.done .gart { filter: grayscale(1) brightness(.85); animation: none; } .gu.done::before { box-shadow: none; }
+.gc.captured .flag { animation: flagpop .5s cubic-bezier(.2, 1.6, .4, 1); } @keyframes flagpop { from { transform: scale(0); } }
+.cloudsh { position: absolute; inset: -30%; pointer-events: none; z-index: 4; background: radial-gradient(ellipse 18% 10% at 20% 30%, rgba(27, 37, 64, .13), transparent 70%), radial-gradient(ellipse 22% 12% at 70% 70%, rgba(27, 37, 64, .1), transparent 70%); animation: cloudpass 26s linear infinite; }
+@keyframes cloudpass { from { transform: translate(-25%, -8%); } to { transform: translate(25%, 8%); } }
+.gu { z-index: 3; }
+/* bannière de tour */
+.tban { position: absolute; left: 0; right: 0; top: 38%; z-index: 70; pointer-events: none; display: grid; place-items: center; height: 64px; background: linear-gradient(90deg, transparent, rgba(37, 89, 181, .92) 15%, rgba(37, 89, 181, .92) 85%, transparent); border-block: 3px solid var(--ink); animation: banner 1.1s cubic-bezier(.3, .9, .4, 1) forwards; }
+.tban.en { background: linear-gradient(90deg, transparent, rgba(179, 53, 31, .92) 15%, rgba(179, 53, 31, .92) 85%, transparent); }
+.tban span { font-family: var(--font-display); font-weight: 700; font-size: 2rem; letter-spacing: .06em; text-transform: uppercase; color: #fff; text-shadow: 0 3px 0 var(--ink), 2px 0 0 var(--ink), -2px 0 0 var(--ink); animation: bantext 1.1s cubic-bezier(.3, .9, .4, 1) forwards; }
+@keyframes banner { 0% { transform: scaleY(0); } 15% { transform: scaleY(1); } 85% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(0); opacity: 0; } }
+@keyframes bantext { 0% { transform: translateX(-120%); } 25%, 75% { transform: translateX(0); } 100% { transform: translateX(120%); } }
+/* cartes en main : léger balancement */
+.hand.fan .hc:not(.sel):not(.off) { animation: cardsway 3s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * -.6s); }
+.hand.fan.deal .hc { animation: dealin .35s backwards, cardsway 3s ease-in-out .4s infinite alternate; animation-delay: calc(var(--i, 0) * 50ms), calc(var(--i, 0) * -.6s); }
+@keyframes cardsway { from { translate: 0 0; rotate: -.6deg; } to { translate: 0 -3px; rotate: .6deg; } }
+/* scène : deux décors (attaquant / défenseur) et figurines */
+.scene { grid-template-columns: 1fr 56px 1fr; padding: 34px 6px 14px; }
+.sc-res { top: 40px; bottom: auto; }
+.sc-half { position: absolute; top: 0; bottom: 0; width: 50%; overflow: hidden; } .sc-half.l { left: 0; } .sc-half.r { right: 0; }
+.sc-half .sc-sky { position: absolute; inset: 0; background: linear-gradient(180deg, #5db8f0, #bfe8fb 60%, #e9f8ff); }
+.scene.theirs .sc-half .sc-sky { background: linear-gradient(180deg, #e98a6b, #f7c28d 60%, #fde8b8); }
+.sc-half.t-air .sc-sky { background: linear-gradient(180deg, #3f9be0, #9fdcfb); } .sc-half.t-mer .sc-sky { background: linear-gradient(180deg, #5db8f0, #d8f1ff); }
+.sc-half .scb { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 72%; }
+.sc-split { position: absolute; top: 0; bottom: 0; left: calc(50% - 2px); width: 4px; background: var(--ink); z-index: 1; box-shadow: 0 0 0 2px rgba(255, 255, 255, .5); }
+.scene.quake { animation: quake .35s; } @keyframes quake { 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
+.sp-art { height: 112px; }
+.figs { position: relative; width: 100%; height: 100%; }
+.fig { position: absolute; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2); margin-top: calc(var(--s) / -2); animation: idle 1.4s ease-in-out infinite alternate; animation-delay: calc(var(--j) * -.17s); }
+.fig svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 0 rgba(27, 37, 64, .22)); }
+.fig.shoot::after { content: ""; position: absolute; right: -16%; top: 30%; width: 42%; height: 42%; opacity: 0; background: radial-gradient(circle, #fff 0 25%, #ffd24a 26% 55%, transparent 56%); clip-path: polygon(0 50%, 40% 38%, 50% 0, 60% 38%, 100% 50%, 60% 62%, 50% 100%, 40% 62%); animation: flash .16s 4; animation-delay: var(--fd, 0ms); }
+.sp.def .fig.shoot::after { right: auto; left: -16%; }
+.fig.shoot { animation: recoil .2s 3; animation-delay: var(--fd, 0ms); }
+.fig.die { animation: die .55s ease-in forwards; animation-delay: var(--dd, 0ms); }
+@keyframes die { 0% { transform: none; } 30% { transform: translateY(-6px) rotate(-10deg); filter: brightness(2); } 100% { transform: translate(10px, 10px) rotate(80deg) scale(.8); opacity: 0; } }
+.fig.flinch { animation: flinch .35s; } @keyframes flinch { 30% { transform: translateX(5px); filter: brightness(1.8); } }
+.sp.hit .sp-fig { animation: none; }
+.hqbig { width: 100%; height: 100%; overflow: visible; }
+.sp.hqp.hit .hqbig { animation: hitshake .4s; }
+.sc-half .sc-sky::before, .sc-half .sc-sky::after { content: ""; position: absolute; width: 70px; height: 20px; border-radius: 99px; background: rgba(255, 255, 255, .8); box-shadow: 18px -10px 0 4px rgba(255, 255, 255, .8); animation: sccloud 9s linear infinite; }
+.sc-half .sc-sky::before { top: 22%; left: -30%; } .sc-half .sc-sky::after { top: 40%; left: -60%; transform: scale(.7); animation-duration: 13s; animation-delay: -5s; }
+@keyframes sccloud { to { left: 120%; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -711,13 +780,14 @@ const TERRAIN = {
   pont: { name: 'Pont', foot: 1, wheel: 1, track: 1, cover: 0, txt: 'Franchit la rivière.' },
   village: { name: 'Village', foot: 1, wheel: 1, track: 1, cover: 0.3, txt: 'Protège (−30 %). Un village tenu donne +1 ravitaillement par tour et permet de déployer dessus.' },
   mer: { name: 'Mer', cover: 0, txt: 'Réservée aux navires.' },
+  qg: { name: 'Quartier général', cover: 0, txt: 'Le QG : un bâtiment fortifié. Détruisez celui de l’ennemi en l’attaquant depuis une case à portée ; protégez le vôtre.' },
 };
 const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const dist = (r1, c1, r2, c2) => Math.abs(r1 - r2) + Math.abs(c1 - c2);
 const terrainCost = (cls, ter) => (cls === 'air' ? 1 : cls === 'ship' ? (ter === 'mer' ? 1 : 0) : (TERRAIN[ter] && TERRAIN[ter][cls]) || 0);
 const coverOf = (S, u) => (u.land ? TERRAIN[S.grid[u.r][u.c]].cover || 0 : 0);
 
-// Génère le terrain : mer sur un bord, une route du haut en bas, une rivière avec ponts, forêts et villages
+// Génère le terrain : mer sur un bord, une route d'un QG à l'autre, une rivière avec ponts, forêts et villages
 function genTerrain(rng = Math.random) {
   const g = Array.from({ length: GH }, () => Array(GW).fill('champ'));
   const seaCol = rng() < 0.5 ? 0 : GW - 1, landCols = [...Array(GW).keys()].filter(c => c !== seaCol);
@@ -735,6 +805,9 @@ function genTerrain(rng = Math.random) {
   const other = landCols.filter(c => !bridges.has(c)); if (other.length) bridges.add(pick(other));
   bridges.forEach(c => { g[riverRow][c] = 'pont'; });
   roadCells.forEach(([r, c]) => { if (g[r][c] !== 'pont') g[r][c] = 'route'; });
+  // les deux QG sont des bâtiments au bout de la route
+  const hq = { en: [0, roadCells[0][1]], me: [GH - 1, roadCells[roadCells.length - 1][1]] };
+  g[hq.en[0]][hq.en[1]] = 'qg'; g[hq.me[0]][hq.me[1]] = 'qg';
   const free = (r, c) => g[r][c] === 'champ';
   let forests = 0;
   for (let t = 0; t < 40 && forests < 7; t++) {
@@ -752,7 +825,7 @@ function genTerrain(rng = Math.random) {
       g[r][c] = 'village'; owner[r + ',' + c] = k === 0 ? 'me' : k === 2 ? 'en' : ''; villages.push([r, c]); break;
     }
   });
-  return { grid: g, owner, seaCol };
+  return { grid: g, owner, seaCol, hq };
 }
 
 // ---- Calcul des caractéristiques d'une unité selon sa carte (type, couleurs, niveau) et les jokers ----
@@ -794,7 +867,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
   const S = {
     level: lvl.levelIdx !== undefined ? lvl.levelIdx : C.level, lvl, rng, obj: lvl.obj || { type: 'hq' }, kills: 0, uid: 1, turn: 1, over: null,
     officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax, supplyBonus: C.supplyBonus || 0,
-    grid: T.grid, owner: T.owner, seaCol: T.seaCol, units: [],
+    grid: T.grid, owner: T.owner, seaCol: T.seaCol, hqPos: T.hq, units: [],
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], supply: 0, flags: {}, plan: [],
   };
   if (lvl.tutorial) ['tireurs:R:1', 'tireurs:J:1'].forEach(k => { const i = S.draw.findIndex(c => cardKey(c) === k); if (i >= 0) S.draw.push(S.draw.splice(i, 1)[0]); });
@@ -856,6 +929,25 @@ function reachable(S, u, budget) {
   for (const [k, d] of best) { const [r, c] = k.split(',').map(Number), o = unitAt(S, r, c); if (o && o !== u) continue; out.set(k, { r, c, cost: d }); }
   return out;
 }
+// Chemin le moins coûteux de u jusqu'à (r, c) : liste de cases [r, c], départ compris
+function pathTo(S, u, r, c, budget = 99) {
+  const best = new Map([[u.r + ',' + u.c, 0]]), prev = new Map(), open = [[0, u.r, u.c]];
+  while (open.length) {
+    open.sort((a, b) => a[0] - b[0]);
+    const [d, rr, cc] = open.shift(); if (d > best.get(rr + ',' + cc)) continue;
+    for (const [dr, dc] of DIRS) {
+      const nr = rr + dr, nc = cc + dc; if (nr < 0 || nc < 0 || nr >= GH || nc >= GW) continue;
+      const cost = terrainCost(u.cls, S.grid[nr][nc]); if (!cost) continue;
+      const nd = d + cost; if (nd > budget) continue;
+      const o = unitAt(S, nr, nc); if (o && o !== u && o.side !== u.side) continue;
+      const k = nr + ',' + nc; if (best.has(k) && best.get(k) <= nd) continue;
+      best.set(k, nd); prev.set(k, rr + ',' + cc); open.push([nd, nr, nc]);
+    }
+  }
+  const out = []; let k = r + ',' + c; if (!best.has(k)) return [[u.r, u.c], [r, c]];
+  while (k) { out.unshift(k.split(',').map(Number)); k = prev.get(k); }
+  return out;
+}
 function moveUnit(S, uid, r, c) {
   const u = findUnit(S, uid); if (!u || u.side !== 'me' || S.over || u.attacked) return null;
   const cell = reachable(S, u, Math.min(u.mvLeft, S.supply)).get(r + ',' + c); if (!cell || cell.cost <= 0) return null;
@@ -883,18 +975,22 @@ function distMap(S, cls, sources) {
 function targetsFrom(S, u, r, c) {
   return S.units.filter(t => t.side !== u.side && t.land && (u.kw.includes('bomb') ? Math.max(Math.abs(t.r - r), Math.abs(t.c - c)) <= 1 : (d => d >= u.rng[0] && d <= u.rng[1])(dist(r, c, t.r, t.c))));
 }
-function hqInRange(u, r) {
+// Le QG adverse est-il à portée depuis la case (r, c) ?
+function hqInRange(S, u, r, c) {
   if (u.kw.includes('hunt')) return false;
-  if (u.kw.includes('bomb')) return u.side === 'me' ? r <= 0 : r >= GH - 1;
-  const d = u.side === 'me' ? r + 1 : GH - r; return d >= u.rng[0] && d <= u.rng[1];
+  const [hr, hc] = S.hqPos[u.side === 'me' ? 'en' : 'me'];
+  if (u.kw.includes('bomb')) return Math.max(Math.abs(hr - r), Math.abs(hc - c)) <= 1;
+  const d = dist(r, c, hr, hc); return d >= u.rng[0] && d <= u.rng[1];
 }
+// Cases voisines du QG adverse, praticables pour une classe d'unités
+const hqApproach = (S, side, cls) => { const [hr, hc] = S.hqPos[side === 'me' ? 'en' : 'me']; return DIRS.map(([dr, dc]) => [hr + dr, hc + dc]).filter(([r, c]) => r >= 0 && c >= 0 && r < GH && c < GW && terrainCost(cls, S.grid[r][c])); };
 // Meilleure case où aller (IA ennemie et bot de test) : attaquer si possible, sinon se rapprocher de l'adversaire
 function bestMove(S, u, budget) {
   const reach = reachable(S, u, budget), foes = S.units.filter(t => t.side !== u.side && t.land);
-  const goals = foes.length ? foes.map(t => [t.r, t.c]) : [...Array(GW).keys()].filter(c => terrainCost(u.cls, S.grid[u.side === 'en' ? GH - 1 : 0][c])).map(c => [u.side === 'en' ? GH - 1 : 0, c]);
+  const goals = foes.length ? foes.map(t => [t.r, t.c]) : hqApproach(S, u.side, u.cls);
   const dm = distMap(S, u.cls, goals); let best = null;
   for (const [k, cell] of reach) {
-    const ts = targetsFrom(S, u, cell.r, cell.c), canHit = ts.length > 0 || hqInRange(u, cell.r);
+    const ts = targetsFrom(S, u, cell.r, cell.c), canHit = ts.length > 0 || hqInRange(S, u, cell.r, cell.c);
     const cov = u.land ? TERRAIN[S.grid[cell.r][cell.c]].cover || 0 : 0, dd = dm.has(k) ? dm.get(k) : 99;
     const near = ts.length ? Math.min(...ts.map(t => dist(cell.r, cell.c, t.r, t.c))) : 0;
     const vil = u.land && S.grid[cell.r][cell.c] === 'village' && S.owner[k] !== u.side ? 1.5 : 0;
@@ -918,7 +1014,7 @@ function deployCells(S, card) {
     if (unitAt(S, r, c)) continue;
     const t = S.grid[r][c];
     if (def.fam === 'mer') { if (t === 'mer' && r >= GH - 3) out.push([r, c]); }
-    else if (def.fam === 'air' && !def.land) out.push([r, c]);
+    else if (def.fam === 'air' && !def.land) { if (t !== 'qg') out.push([r, c]); }
     else if (def.fam === 'air') { if (isLandCell(S, r, c) && t !== 'riviere' && r >= 2) out.push([r, c]); }
     else if (terrainCost(def.cls, t) && (r >= GH - 2 || (t === 'village' && S.owner[r + ',' + c] === 'me'))) out.push([r, c]);
   }
@@ -1028,7 +1124,7 @@ function checkOver(S) {
 function genPlan(S) {
   const L = S.lvl, rng = S.rng, lv = S.level;
   let budget = L.budget + S.turn * 0.35, room = Math.max(0, MAX_EN_UNITS - units(S, 'en').length);
-  const spots = shuffle(enemyCols(S).filter(c => !unitAt(S, 0, c) && S.grid[0][c] !== 'riviere'), rng);
+  const spots = shuffle(enemyCols(S).filter(c => !unitAt(S, 0, c) && isLandCell(S, 0, c) && S.grid[0][c] !== 'riviere'), rng);
   const plan = [], pool = [['rifle', 1, 4], ['gren', 1.5, 3]];
   if (lv >= 1) pool.push(['mgnest', 2, 2]);
   if (lv >= 2) pool.push(['sniper', 2, 1.5], ['shell', 2, 1.5]);
@@ -1059,16 +1155,16 @@ function pickTarget(S, u, list, i) {
 }
 // ---- Attaques : le joueur choisit la cible de chaque unité ; l'ennemi attaque automatiquement ----
 const menNow = u => (u.land ? shotsOf(u) : u.menMax);
-const unitInfo = u => ({ uid: u.uid, key: u.key, side: u.side, name: u.name, cols: u.cols, men: menNow(u), menMax: u.menMax, hp: u.hp, hpMax: u.hpMax, dmg: u.dmg, armor: u.armor, land: u.land, kw: u.kw });
+const unitInfo = u => ({ r: u.r, c: u.c, uid: u.uid, key: u.key, side: u.side, name: u.name, cols: u.cols, men: menNow(u), menMax: u.menMax, hp: u.hp, hpMax: u.hpMax, dmg: u.dmg, armor: u.armor, land: u.land, kw: u.kw });
 // Cibles possibles d'une unité depuis sa case : {units, hq}
-function attackOptions(S, u) { return { units: targetsFrom(S, u, u.r, u.c), hq: hqInRange(u, u.r) }; }
+function attackOptions(S, u) { return { units: targetsFrom(S, u, u.r, u.c), hq: hqInRange(S, u, u.r, u.c) }; }
 function canAttack(S, u) {
   if (!u || S.over || u.fresh || u.attacked) return false;
   const o = attackOptions(S, u); return o.units.length > 0 || o.hq;
 }
 // opts.target : unité visée ; opts.hq : viser le QG. Sans option : l'IA choisit.
 function attackUnit(S, u, steps, opts = {}) {
-  const inRange = targetsFrom(S, u, u.r, u.c), hqIn = hqInRange(u, u.r), foe = u.side === 'me' ? 'en' : 'me', bomb = u.kw.includes('bomb');
+  const inRange = targetsFrom(S, u, u.r, u.c), hqIn = hqInRange(S, u, u.r, u.c), foe = u.side === 'me' ? 'en' : 'me', bomb = u.kw.includes('bomb');
   if (opts.hq && !hqIn) return false;
   if (opts.target && !inRange.includes(opts.target)) return false;
   const alive = opts.hq ? [] : inRange;
@@ -1101,7 +1197,7 @@ function attackUnit(S, u, steps, opts = {}) {
   });
   if (hqDmg > 0) { S.hq[foe] -= hqDmg; hits.push({ hq: foe, dmg: hqDmg }); }
   if (!hits.length) hits.push({ uid: u.uid, dmg: 0, miss: true, side: u.side });
-  const scene = { att: unitInfo(u), defs, hq: hqDmg > 0 ? { side: foe, before: hqBefore, after: Math.max(0, S.hq[foe]), max: foe === 'en' ? S.lvl.hq : S.hqMax } : null, shots };
+  const scene = { att: unitInfo(u), defs, hqPos: S.hqPos[foe], hq: hqDmg > 0 ? { side: foe, before: hqBefore, after: Math.max(0, S.hq[foe]), max: foe === 'en' ? S.lvl.hq : S.hqMax } : null, shots };
   u.attacked = true; if (u.side === 'me') u.mvLeft = 0;
   checkOver(S);
   steps.push({ ph: S.phase, from: u.uid, hits, snap: snap(S), scene });
@@ -1128,8 +1224,9 @@ function enemyMoves(S, steps) {
     if (S.over || !S.units.includes(u)) continue;
     const m = bestMove(S, u, u.mv);
     if (m && (m.r !== u.r || m.c !== u.c)) {
+      const path = pathTo(S, u, m.r, m.c, u.mv);
       u.r = m.r; u.c = m.c; if (u.land && S.grid[m.r][m.c] === 'village') S.owner[m.r + ',' + m.c] = 'en';
-      steps.push({ ph: 'en', moved: u.uid, hits: [], snap: snap(S) });
+      steps.push({ ph: 'en', moved: u.uid, path, hits: [], snap: snap(S) });
     }
     attackUnit(S, u, steps);
   }
@@ -1643,6 +1740,7 @@ function startBattle(node) {
   S = newBattle(C, Math.random, battleCfg(node)); picked = []; placing = null; busy = false; selU = null; undo = [];
   renderBattle();
   if (S.lvl.tutorial && !load().seen) { helpModal(true); const r = load(); r.seen = 1; save(r); }
+  else turnBanner('Tour 1', 'me');
 }
 
 // ---- Affichage de la carte de bataille (grille façon Advance Wars) ----
@@ -1651,21 +1749,69 @@ const handPartners = card => S.hand.filter(h => h !== card && canFuse(card, h));
 const pickIdx = () => picked.map(c => S.hand.indexOf(c)).filter(i => i >= 0);
 const unitPartners = u => (u && u.side === 'me' ? S.units.filter(b => canFuseUnits(S, u, b)) : []);
 
-// Décors des cases (petits dessins SVG)
-const TREE = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><g class="tree"><rect x="-1.4" y="8" width="2.8" height="5" fill="#7a4a22"/><circle cx="0" cy="3" r="7.5" fill="#2f7d3a" stroke="#1b2540" stroke-width="1.3"/><circle cx="-2.4" cy="1.4" r="2.2" fill="#4fa24d"/></g></g>`;
-const WAVES = `<path d="M3 9 q3 -3 6 0 t6 0 M22 20 q3 -3 6 0 t6 0 M9 26 q3 -3 6 0 t6 0" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/>`;
-const TART = {
-  champ: `<path d="M5 22 l2 -4 l2 4 M30 9 l2 -4 l2 4 M20 26 l1.6 -3 l1.6 3" fill="none" stroke="#6aa23a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>`,
-  route: `<rect x="0" y="12.5" width="40" height="5" fill="#bd9358" opacity=".0"/><path d="M0 15 H40" stroke="#fff6dc" stroke-width="2" stroke-dasharray="5 5" opacity=".75"/>`,
-  foret: `${TREE(10, 6, 1)}${TREE(28, 5, .9)}${TREE(19, 15, 1.05)}`,
-  riviere: WAVES,
-  pont: `<rect x="0" y="6" width="40" height="18" fill="#9b6532" stroke="#1b2540" stroke-width="1.4"/><path d="M5 6 V24 M13 6 V24 M21 6 V24 M29 6 V24 M37 6 V24" stroke="#6e4220" stroke-width="1.4"/>`,
-  village: `<g stroke="#1b2540" stroke-width="1.3" stroke-linejoin="round"><rect x="6" y="14" width="13" height="10" fill="#fff6dc"/><path d="M4 15 L12.5 7 L21 15 Z" fill="#c4483a"/><rect x="23" y="16" width="11" height="8" fill="#f1e2b8"/><path d="M21.5 17 L28.5 11 L35.5 17 Z" fill="#8a5a2b"/></g><circle class="smk" cx="15.5" cy="8" r="2.2" fill="#fff"/><circle class="smk b" cx="16" cy="8" r="1.8" fill="#eee"/>`,
-  mer: WAVES,
-};
-function cellArt(t, owner) {
-  const flag = t === 'village' && owner ? `<g class="flag"><rect x="35" y="2" width="1.6" height="11" fill="#1b2540"/><path d="M36.6 2 H43 L40.5 5 L43 8 H36.6 Z" fill="${owner === 'me' ? '#3d86e8' : '#e5543f'}" stroke="#1b2540" stroke-width=".9"/></g>` : '';
-  return `<svg class="tart" viewBox="0 0 40 30" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${TART[t] || ''}${flag}</svg>`;
+// Décors des cases : un sol qui se raccorde aux voisins (routes, rivières, côtes), puis les objets (arbres, maisons, QG)
+const hash2 = (r, c, k = 0) => { const x = Math.sin(r * 127.1 + c * 311.7 + k * 74.7) * 43758.5453; return x - Math.floor(x); };
+const TREE = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><g class="tree"><ellipse cx="0" cy="12.6" rx="6" ry="1.8" fill="rgba(27,37,64,.22)"/><rect x="-1.4" y="7" width="2.8" height="6" fill="#7a4a22" stroke="#1b2540" stroke-width=".9"/><path d="M0 -6 L7.5 6.5 H-7.5 Z" fill="#2f7d3a" stroke="#1b2540" stroke-width="1.2" stroke-linejoin="round"/><path d="M0 -10.5 L6 -0.5 H-6 Z" fill="#3f9d46" stroke="#1b2540" stroke-width="1.2" stroke-linejoin="round"/><path d="M-1.8 -6 L-4 -2" stroke="#8fd16a" stroke-width="1.2" stroke-linecap="round"/></g></g>`;
+const isRoadT = x => x === 'route' || x === 'pont' || x === 'qg';
+const isWaterT = x => x === 'riviere' || x === 'pont' || x === 'mer';
+const ARM = { N: [14, 0, 12, 20], S: [14, 20, 12, 20], W: [0, 14, 20, 12], E: [20, 14, 20, 12] };
+const DIR4 = [['N', -1, 0], ['S', 1, 0], ['W', 0, -1], ['E', 0, 1]];
+function groundSVG(g, r, c) {
+  const t = g[r][c], nb = (dr, dc) => (g[r + dr] && g[r + dr][c + dc]) || null;
+  let p = '';
+  // plage : sable le long de la mer
+  if (!isWaterT(t)) DIR4.forEach(([d, dr, dc]) => {
+    if (nb(dr, dc) !== 'mer') return;
+    const R = { N: [0, 0, 40, 6], S: [0, 34, 40, 6], W: [0, 0, 6, 40], E: [34, 0, 6, 40] }[d];
+    p += `<rect x="${R[0]}" y="${R[1]}" width="${R[2]}" height="${R[3]}" fill="#f2dc9b"/>`;
+  });
+  if (t === 'riviere' || t === 'pont') {
+    const arms = DIR4.filter(([, dr, dc]) => isWaterT(nb(dr, dc)) || nb(dr, dc) === null && (dr === 0)).map(([d]) => d);
+    const band = (w, col) => `<rect x="${20 - w / 2}" y="${20 - w / 2}" width="${w}" height="${w}" fill="${col}"/>` + arms.map(d => { const a = ARM[d], e = (w - 12) / 2; return `<rect x="${a[0] - (a[2] === 12 ? e : 0)}" y="${a[1] - (a[3] === 12 ? e : 0)}" width="${a[2] === 12 ? w : a[2]}" height="${a[3] === 12 ? w : a[3]}" fill="${col}"/>`; }).join('');
+    p += band(28, '#d9c27a') + band(22, '#4aa8e8') + `<g class="wv">${band(8, 'rgba(255,255,255,.28)')}</g>`;
+    if (t === 'pont') p += `<g stroke="#1b2540" stroke-width="1.2"><rect x="11" y="0" width="18" height="40" fill="#a86e36"/>${[4, 10, 16, 22, 28, 34].map(y => `<path d="M11 ${y} H29" stroke="#7a4a22"/>`).join('')}<path d="M11 0 V40 M29 0 V40" stroke-width="2.2"/></g>`;
+  }
+  if (t === 'mer') DIR4.forEach(([d, dr, dc]) => {
+    const n = nb(dr, dc); if (!n || isWaterT(n)) return;
+    const P = { N: 'M0 3 q5 3 10 0 t10 0 t10 0 t10 0', S: 'M0 37 q5 -3 10 0 t10 0 t10 0 t10 0', W: 'M3 0 q3 5 0 10 t0 10 t0 10 t0 10', E: 'M37 0 q-3 5 0 10 t0 10 t0 10 t0 10' }[d];
+    p += `<path class="foam" d="${P}" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>`;
+  });
+  if (t === 'route' || t === 'qg') {
+    const arms = DIR4.filter(([, dr, dc]) => isRoadT(nb(dr, dc))).map(([d]) => d);
+    const seg = (pad, col) => `<rect x="${14 - pad}" y="${14 - pad}" width="${12 + pad * 2}" height="${12 + pad * 2}" rx="2" fill="${col}"/>` + arms.map(d => { const a = ARM[d]; return `<rect x="${a[2] === 12 ? a[0] - pad : a[0]}" y="${a[3] === 12 ? a[1] - pad : a[1]}" width="${a[2] === 12 ? 12 + pad * 2 : a[2]}" height="${a[3] === 12 ? 12 + pad * 2 : a[3]}" fill="${col}"/>`; }).join('');
+    if (t === 'route') p += seg(2.5, '#b8925a') + seg(0, '#e2c58e') + arms.map(d => ({ N: '<path d="M20 2 V10"/>', S: '<path d="M20 30 V38"/>', W: '<path d="M2 20 H10"/>', E: '<path d="M30 20 H38"/>' }[d])).join('').replace(/<path /g, '<path stroke="#fff6dc" stroke-width="1.6" stroke-linecap="round" opacity=".8" ');
+  }
+  return `<svg class="tgnd" viewBox="0 0 40 40" preserveAspectRatio="none" aria-hidden="true">${p}</svg>`;
+}
+const HQ_COL = { me: ['#3d86e8', '#2559b5'], en: ['#e5543f', '#b3351f'] };
+// Le QG : un fort avec tour, drapeau et dégâts visibles (fissures, fumée, flammes)
+function hqArt(side, pct) {
+  const [c0, c1] = HQ_COL[side];
+  const cracks = pct < 0.66 ? '<path d="M9 21 l3 3 -2 3 M31 19 l-2 4 2 3 M18 12 l2 3" fill="none" stroke="#1b2540" stroke-width="1"/>' : '';
+  const smoke = pct < 0.5 ? '<circle class="smk" cx="12" cy="13" r="3" fill="#8b8f99"/><circle class="smk b" cx="29" cy="11" r="2.6" fill="#a2a6ae"/>' : '';
+  const fire = pct < 0.25 ? '<g class="fire"><path d="M8 18 q2 -6 4 -2 q1 -5 3 0 q2 -3 1 2 Z" fill="#ff8a2a"/><path d="M27 17 q2 -6 4 -2 q1 -5 3 0 q2 -3 1 2 Z" fill="#ff8a2a"/><path d="M10 18 q1 -3 2 -1 q1 -2 1.5 1 Z" fill="#ffd24a"/></g>' : '';
+  return `<ellipse cx="20" cy="37.5" rx="17" ry="2.6" fill="rgba(27,37,64,.25)"/>
+  <g stroke="#1b2540" stroke-width="1.3" stroke-linejoin="round">
+    <rect x="3" y="30" width="34" height="6.5" rx="2" fill="#b9b2a0"/>${[5, 11, 26, 32].map(x => `<rect x="${x}" y="31.5" width="3" height="3" rx="1" fill="#d2b27a"/>`).join('')}
+    <rect x="5" y="16" width="30" height="16" fill="#ddd6c4"/>${[5, 11.5, 18, 24.5, 31].map(x => `<rect x="${x}" y="12.5" width="4" height="4" fill="#ddd6c4"/>`).join('')}
+    <rect x="5" y="20" width="30" height="3.4" fill="${c0}"/>
+    <rect x="13.5" y="5" width="13" height="19" fill="#ece6d4"/><path d="M11.5 6 L20 -1 L28.5 6 Z" fill="${c0}"/><rect x="17.5" y="9" width="5" height="4.5" rx="1" fill="#ffe27a"/>
+    <path d="M16.5 32 V26 a3.5 3.5 0 0 1 7 0 V32 Z" fill="#6e4220"/><rect x="8" y="24.5" width="3.5" height="3" fill="#ffe27a"/><rect x="28.5" y="24.5" width="3.5" height="3" fill="#ffe27a"/>
+  </g>${cracks}
+  <rect x="19.3" y="-11" width="1.4" height="11" fill="#1b2540"/><g class="flag"><path d="M20.7 -11 H31 L28 -7.5 L31 -4 H20.7 Z" fill="${c0}" stroke="#1b2540" stroke-width="1"/><path d="M23 -9 h4" stroke="#fff" stroke-width="1.2"/></g>${smoke}${fire}`;
+}
+function decoSVG(g, r, c, owner, hqPct) {
+  const t = g[r][c];
+  let p = '';
+  if (t === 'champ') {
+    for (let k = 0; k < 3; k++) { const x = 4 + hash2(r, c, k) * 30, y = 6 + hash2(r, c, k + 9) * 26; p += `<path d="M${x} ${y} l1.6 -3.2 l1.6 3.2 M${x + 2.4} ${y} l1.2 -2.4" fill="none" stroke="#5f9a33" stroke-width="1.1" stroke-linecap="round"/>`; }
+    if (hash2(r, c, 5) > 0.55) { const x = 6 + hash2(r, c, 6) * 28, y = 8 + hash2(r, c, 7) * 24; p += `<circle cx="${x}" cy="${y}" r="1.3" fill="${hash2(r, c, 8) > 0.5 ? '#fff6dc' : '#ffd24a'}" stroke="#c99a58" stroke-width=".5"/>`; }
+  } else if (t === 'foret') p = `${TREE(11, 13, 1)}${TREE(29, 12, .95)}${TREE(20, 24, 1.1)}${hash2(r, c) > .5 ? TREE(33, 27, .75) : ''}`;
+  else if (t === 'village') {
+    p = `<ellipse cx="20" cy="34" rx="16" ry="2.4" fill="rgba(27,37,64,.2)"/><g stroke="#1b2540" stroke-width="1.2" stroke-linejoin="round"><rect x="6" y="20" width="14" height="13" fill="#fff6dc"/><path d="M4 21 L13 12 L22 21 Z" fill="#c4483a"/><rect x="11" y="26" width="4" height="7" fill="#8a5a2b"/><rect x="22" y="23" width="12" height="10" fill="#f1e2b8"/><path d="M20.5 24 L28 17 L35.5 24 Z" fill="#8a5a2b"/><rect x="26" y="26" width="4" height="3.5" fill="#7cc7f4"/><rect x="16" y="11" width="2.6" height="5" fill="#9b6532"/></g><circle class="smk" cx="17.3" cy="9" r="2.2" fill="#fff"/><circle class="smk b" cx="17.6" cy="9" r="1.8" fill="#eee"/>`;
+    if (owner) p += `<rect x="34.3" y="4" width="1.4" height="13" fill="#1b2540"/><g class="flag"><path d="M35.7 4 H42 L39.6 7 L42 10 H35.7 Z" fill="${owner === 'me' ? '#3d86e8' : '#e5543f'}" stroke="#1b2540" stroke-width=".9"/></g>`;
+  } else if (t === 'qg') return `<svg class="tart hqsvg" viewBox="0 -12 40 52" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${hqArt(owner, hqPct)}</svg>`;
+  return p ? `<svg class="tart" viewBox="0 0 40 40" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${p}</svg>` : '';
 }
 function ghostHTML(key) {
   const d = ENEMIES[key];
@@ -1676,7 +1822,8 @@ function unitCellHTML(u, sel, tgt) {
   const canF = u.side === 'me' && !busy && unitPartners(u).length > 0;
   const hp = u.land ? u.hp : u.ttl + 't';
   const ready = u.side === 'me' && !busy && S.units.includes(u) && canAttack(S, u);
-  return `<button class="gu ${u.side} ${u.fresh ? 'wait' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''}" data-uid="${u.uid}" aria-label="${u.name}" style="--d:${(u.uid * 37 % 10) / 10}">
+  const done = u.side === 'me' && !busy && S.units.includes(u) && !u.fresh && (u.attacked || u.mvLeft <= 0) && !canAttack(S, u);
+  return `<button class="gu ${u.side} ${u.fresh ? 'wait' : ''} ${done ? 'done' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''}" data-uid="${u.uid}" aria-label="${u.name}" style="--d:${(u.uid * 37 % 10) / 10}">
     <span class="gart">${squadSVG(key, u.side, men, u.menMax, 32, u.cols)}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
     ${u.armor ? `<span class="garm">▣${u.armor}</span>` : ''}${u.fresh ? '<span class="gzz">zz</span>' : canF ? '<span class="gfz">⇄</span>' : ''}${ready ? '<span class="gswd" title="Peut attaquer">⚔</span>' : ''}
     <span class="gst"><i class="n">${men}</i><i class="h ${low} ${u.land ? '' : 'tt'}">${hp}</i></span></button>`;
@@ -1685,26 +1832,43 @@ function hqBar(side, label, cur, max, extra, tgt) {
   const pct = Math.max(0, Math.min(100, (cur / max) * 100));
   return `<div class="hq ${side} hqbar compact ${tgt ? 'tgt' : ''}" ${tgt ? 'data-hqtgt="1"' : ''}>${flagSVG(side, 16)}<span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
 }
+// Zone de menace d'une unité : cases où elle peut aller, puis cases qu'elle peut frapper
+function threatCells(S, u, budget) {
+  const out = new Set(), reach = reachable(S, u, budget);
+  for (const [, cell] of reach) for (let r = 0; r < GH; r++) for (let c = 0; c < GW; c++) {
+    const d = u.kw.includes('bomb') ? Math.max(Math.abs(r - cell.r), Math.abs(c - cell.c)) : dist(r, c, cell.r, cell.c);
+    if (u.kw.includes('bomb') ? d <= 1 : d >= u.rng[0] && d <= u.rng[1]) out.add(r + ',' + c);
+  }
+  return out;
+}
 function boardHTML(view, live) {
   const selected = live && selU !== null ? view.units.find(u => u.uid === selU) : null;
-  const reach = selected && !placing ? reachable(S, selected, Math.min(selected.mvLeft, S.supply)) : null;
+  const mine = selected && selected.side === 'me';
+  const reach = mine && !placing && !selected.attacked ? reachable(S, selected, Math.min(selected.mvLeft, S.supply)) : null;
   const dep = live && placing && placing.queue.length ? new Set(deployCells(S, placing.queue[0]).map(x => x[0] + ',' + x[1])) : null;
-  const canAtk = live && selected && selected.side === 'me' && !placing && canAttack(S, selected), opt = canAtk ? attackOptions(S, selected) : null;
+  const canAtk = live && mine && !placing && canAttack(S, selected), opt = canAtk ? attackOptions(S, selected) : null;
+  const rng = mine && !placing && !selected.fresh && !selected.attacked ? threatCells(S, selected, 0) : null;
+  const threat = selected && selected.side === 'en' ? threatCells(S, selected, selected.mv) : null;
   const ghosts = new Map(), shells = new Map();
   if (live) S.plan.forEach(p => { if (p.k === 'deploy') ghosts.set(p.r + ',' + p.c, p.key); else if (p.r !== null) shells.set(p.r + ',' + p.c, (shells.get(p.r + ',' + p.c) || 0) + p.dmg); });
   const hqShell = live ? S.plan.filter(p => p.k === 'shell' && p.r === null).reduce((s, p) => s + p.dmg, 0) : 0;
+  const hqPct = { me: Math.max(0, view.hq.me) / C.hqMax, en: S.obj.type === 'hold' ? 1 : Math.max(0, view.hq.en) / S.lvl.hq };
   let cells = '';
   for (let r = 0; r < GH; r++) for (let c = 0; c < GW; c++) {
     const k = r + ',' + c, t = S.grid[r][c], u = view.units.find(x => x.r === r && x.c === c);
-    const cls = ['gc', 't-' + t, (r + c) % 2 ? 'alt' : '', reach && reach.has(k) && !u ? 'reach' : '', dep && dep.has(k) ? 'dep' : '', shells.has(k) ? 'shelled' : ''].filter(Boolean).join(' ');
-    let inner = cellArt(t, view.owner[k] || '');
+    const hqSide = t === 'qg' ? (S.hqPos.en[0] === r && S.hqPos.en[1] === c ? 'en' : 'me') : null;
+    const hqT = hqSide === 'en' && opt && opt.hq;
+    const cls = ['gc', 't-' + t, (r + c) % 2 ? 'alt' : '', reach && reach.has(k) && !u ? 'reach' : '', rng && rng.has(k) ? 'inrng' : '', threat && threat.has(k) ? 'threat' : '', dep && dep.has(k) ? 'dep' : '', shells.has(k) ? 'shelled' : '', hqSide ? 'hq-' + hqSide : '', hqT ? 'tgt' : ''].filter(Boolean).join(' ');
+    let inner = groundSVG(S.grid, r, c) + decoSVG(S.grid, r, c, hqSide || view.owner[k] || '', hqSide ? hqPct[hqSide] : 1);
+    if (hqSide) inner += `<span class="hqhp ${hqSide}"><i style="width:${Math.round(hqPct[hqSide] * 100)}%"></i></span>`;
     if (u) inner += unitCellHTML(u, u.uid === selU, !!(opt && opt.units.includes(u)));
     else if (ghosts.has(k)) inner += ghostHTML(ghosts.get(k));
+    if (u && u.uid === selU) inner += '<span class="cursor"><i></i><i></i><i></i><i></i></span>';
     if (shells.has(k)) inner += `<span class="shmark">−${shells.get(k)}</span>`;
-    cells += `<div class="${cls}" data-r="${r}" data-c="${c}">${inner}</div>`;
+    cells += `<div class="${cls}" data-r="${r}" data-c="${c}" ${hqT ? 'data-hqtgt="1"' : ''}>${inner}</div>`;
   }
   const enHQ = S.obj.type === 'hold' ? hqBar('en', 'À tenir', Math.min(S.obj.n, S.turn) - 1, S.obj.n, `Tour ${Math.min(S.obj.n, S.turn)}/${S.obj.n}`) : hqBar('en', 'QG ennemi', view.hq.en, S.lvl.hq, '', !!(opt && opt.hq));
-  return `${enHQ}<div class="bgrid" id="bgrid" style="grid-template-columns:repeat(${GW},minmax(0,1fr));grid-template-rows:repeat(${GH},minmax(0,1fr))">${cells}</div>${hqBar('me', 'Votre QG' + (hqShell ? ` · obus −${hqShell}` : ''), view.hq.me, C.hqMax)}`;
+  return `${enHQ}<div class="bgrid" id="bgrid" style="grid-template-columns:repeat(${GW},minmax(0,1fr));grid-template-rows:repeat(${GH},minmax(0,1fr))">${cells}<span class="cloudsh" aria-hidden="true"></span></div>${hqBar('me', 'Votre QG' + (hqShell ? ` · obus −${hqShell}` : ''), view.hq.me, C.hqMax)}`;
 }
 
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
@@ -1757,6 +1921,7 @@ function hintText() {
   if (placing) return placing.queue.length ? `Placez ${TYPES[placing.queue[0].t].name.toLowerCase()} ${colorName(placing.queue[0].c).toLowerCase()} (${placing.total - placing.queue.length + 1}/${placing.total}) : touchez une case bleue.` : '';
   if (selU !== null) {
     const u = findUnit(S, selU); if (!u) return '';
+    if (u.side === 'en') return `${u.name} (ennemi) : la zone rouge montre où ils peuvent frapper au prochain tour.`;
     const mv = Math.min(u.mvLeft, S.supply);
     if (u.side === 'me' && canAttack(S, u)) { const o = attackOptions(S, u); return `${u.name} : touchez ${o.units.length ? 'un ennemi cerclé de rouge' : 'le QG ennemi'} pour attaquer${mv > 0 ? ', ou une case bleue pour bouger' : ''}.`; }
     if (u.attacked) return `${u.name} a déjà attaqué ce tour.`;
@@ -1896,12 +2061,12 @@ function onCell(r, c) {
     const su = findUnit(S, selU);
     if (su && su.side === 'me') {
       undo.push(snapshotState(S));
-      const el0 = document.querySelector(`.gu[data-uid="${selU}"]`), r0 = el0 && el0.getBoundingClientRect(), id = selU;
+      const id = selU, path = pathTo(S, su, r, c, Math.min(su.mvLeft, S.supply)), village = S.grid[r][c] === 'village' && S.owner[r + ',' + c] !== 'me';
       const cost = moveUnit(S, selU, r, c);
       if (cost) {
         SFX.play('land'); renderBattle();
-        const el1 = document.querySelector(`.gu[data-uid="${id}"]`);
-        if (r0 && el1 && el1.animate) { const r1 = el1.getBoundingClientRect(); el1.style.zIndex = 8; el1.animate([{ transform: `translate(${r0.left - r1.left}px, ${r0.top - r1.top}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,.9,.4,1)' }); dustAt(el1.parentElement, r0.left - r1.left); }
+        const t = animatePath(id, path);
+        if (village && su.land) setTimeout(() => { SFX.play('stamp'); cellEl(r, c)?.classList.add('captured'); toast('Village capturé : +1 ravitaillement par tour !'); }, t);
         return;
       }
       undo.pop();
@@ -1917,7 +2082,8 @@ function onUnit(uid) {
   const su = selU !== null ? findUnit(S, selU) : null;
   if (u.side === 'en') {
     if (su && su.side === 'me' && canAttack(S, su) && attackOptions(S, su).units.includes(u)) return doAttack(su.uid, u.uid);
-    return unitSheet(uid);
+    if (selU === uid) return unitSheet(uid);
+    selU = uid; SFX.play('tap'); return renderBattle();
   }
   if (selU === uid) return unitSheet(uid);
   selU = uid; SFX.play('select'); renderBattle();
@@ -1956,6 +2122,16 @@ function unitSheet(uid) {
     ${u.fresh ? '<p class="small muted">Vient d’arriver : il attaquera au tour suivant.</p>' : ''}${wait ? '<p class="small muted">Deux groupes du même type, de couleurs différentes, fusionnent quand ils sont côte à côte, à partir du tour suivant leur arrivée.</p>' : ''}
     <p class="small muted">Les unités attaquent toutes seules en fin de tour : elles tirent sur la cible la plus proche à portée.</p>`);
 }
+// Fait glisser une unité case par case le long d'un chemin (façon Advance Wars)
+function animatePath(uid, path, msPer = 120) {
+  const el = document.querySelector(`.gu[data-uid="${uid}"]`); if (!el || !el.animate || !path || path.length < 2) return 0;
+  const end = el.getBoundingClientRect(), pts = path.map(([r, c]) => { const ce = cellEl(r, c); if (!ce) return null; const b = ce.getBoundingClientRect(); return [b.left - end.left + 1, b.top - end.top + 1]; });
+  if (pts.some(p => !p)) return 0;
+  el.style.zIndex = 9;
+  el.animate(pts.map(([x, y]) => ({ transform: `translate(${x}px, ${y}px)` })), { duration: msPer * (path.length - 1), easing: 'linear' });
+  setTimeout(() => { el.style.zIndex = ''; dustAt(el.parentElement, 1); }, msPer * (path.length - 1));
+  return msPer * (path.length - 1);
+}
 function dustAt(cell, dx) {
   if (!cell) return;
   for (let i = 0; i < 4; i++) { const d = document.createElement('i'); d.className = 'dust'; d.style.left = 20 + Math.random() * 50 + '%'; d.style.bottom = '4px'; d.style.setProperty('--dx', (dx > 0 ? 8 : -8) * (i + 1) + 'px'); d.style.animationDelay = i * 40 + 'ms'; cell.appendChild(d); setTimeout(() => d.remove(), 700); }
@@ -1969,62 +2145,105 @@ const NOUN = { tireurs: ['soldat', 'soldats'], paras: ['para', 'paras'], jeep: [
   chasseur: ['avion', 'avions'], bombardier: ['avion', 'avions'], rifle: ['soldat', 'soldats'], gren: ['grenadier', 'grenadiers'], mgnest: ['mitrailleuse', 'mitrailleuses'], sniper: ['sniper', 'snipers'], panzer: ['char', 'chars'], heavy: ['char lourd', 'chars lourds'] };
 const noun = (k, n) => (NOUN[k] || ['unité', 'unités'])[n > 1 ? 1 : 0];
 const scKey = i => (i.side === 'me' ? SPR_OF[i.key] : i.key);
-function scPanel(i, n, role, size = 96) {
+// Figurines de la scène : une par homme ou véhicule (jusqu'à 10), qui tombent une à une
+const FIG_MAX = { inf: 10, rifle: 10, para: 8, gren: 8, sniper: 5, mgnest: 4, jeep: 4, tank: 3, panzer: 3, heavy: 2, destroyer: 1, croiseur: 1, sousmarin: 1, chasseur: 3, bombardier: 2 };
+const figCount = (i, n) => { const mx = Math.min(i.menMax, FIG_MAX[scKey(i)] || 5); return n <= 0 ? 0 : Math.max(1, Math.round((n / i.menMax) * mx)); };
+function figsHTML(i, n, small) {
+  const k = figCount(i, n), key = scKey(i), perRow = k > 5 ? Math.ceil(k / 2) : k, rows = k > 5 ? 2 : 1;
+  const size = small ? (k > 3 ? 26 : 40) : k <= 1 ? 70 : k <= 3 ? 52 : k <= 5 ? 40 : 34;
+  let h = '';
+  for (let j = 0; j < k; j++) {
+    const row = rows === 2 && j < perRow ? 0 : rows - 1, idx = rows === 2 && j >= perRow ? j - perRow : j, inRow = rows === 2 && row === 1 ? k - perRow : perRow;
+    const x = inRow === 1 ? 50 : 10 + (idx / (inRow - 1)) * 80 + (row === 0 && rows === 2 ? 4 : 0), y = rows === 2 ? (row === 0 ? 20 : 62) : 52;
+    h += `<span class="fig" style="left:${x}%;top:${y}%;z-index:${row + 1};--j:${j};--s:${size}px">${spriteSVG(key, i.side, size, i.cols)}</span>`;
+  }
+  return `<div class="figs">${h}</div>`;
+}
+// Décor de chaque moitié de la scène selon le terrain de l'unité
+function scBack(t) {
+  const hill = '<path d="M0 78 Q50 52 100 74 T200 70 V120 H0 Z" fill="#6fb445" stroke="#1b2540" stroke-width="1.5"/>';
+  const B = {
+    champ: hill + '<rect y="86" width="200" height="34" fill="#86c552"/>',
+    route: hill + '<rect y="86" width="200" height="34" fill="#86c552"/><path d="M0 100 H200 V116 H0 Z" fill="#e2c58e" stroke="#b8925a" stroke-width="2"/><path d="M10 108 H40 M70 108 H100 M130 108 H160" stroke="#fff6dc" stroke-width="2"/>',
+    foret: '<rect y="86" width="200" height="34" fill="#7cbf4e"/>' + [10, 42, 74, 106, 138, 170].map((x, k) => `<g transform="translate(${x + 12} ${70 + (k % 2) * 6}) scale(2.2)">${TREE(0, 0, 1)}</g>`).join(''),
+    village: hill + '<rect y="86" width="200" height="34" fill="#86c552"/><g stroke="#1b2540" stroke-width="1.5"><rect x="18" y="60" width="34" height="28" fill="#fff6dc"/><path d="M12 62 L35 42 L58 62 Z" fill="#c4483a"/><rect x="128" y="64" width="40" height="24" fill="#f1e2b8"/><path d="M122 66 L148 46 L174 66 Z" fill="#8a5a2b"/></g>',
+    riviere: hill + '<rect y="86" width="200" height="34" fill="#4aa8e8"/><path d="M0 96 q10 -4 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>',
+    pont: hill + '<rect y="86" width="200" height="34" fill="#4aa8e8"/><rect y="84" width="200" height="12" fill="#a86e36" stroke="#1b2540" stroke-width="2"/>',
+    mer: '<rect y="70" width="200" height="50" fill="#3a97da"/><path d="M0 78 q10 -4 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#fff" stroke-width="2.2" opacity=".7"/>',
+    air: '<g fill="#fff" opacity=".9"><ellipse cx="40" cy="80" rx="30" ry="9"/><ellipse cx="60" cy="74" rx="18" ry="10"/><ellipse cx="150" cy="96" rx="34" ry="10"/><ellipse cx="166" cy="89" rx="17" ry="9"/></g>',
+    qg: hill + '<rect y="86" width="200" height="34" fill="#b9b2a0"/><g stroke="#1b2540" stroke-width="1.5" fill="#ddd6c4"><rect x="0" y="56" width="200" height="32"/>' + [0, 22, 44, 66, 88, 110, 132, 154, 176].map(x => `<rect x="${x + 4}" y="48" width="12" height="9"/>`).join('') + '</g>',
+  };
+  return `<svg class="scb" viewBox="0 0 200 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${B[t] || B.champ}</svg>`;
+}
+const terrOf = (i, pos) => (i && !i.land ? (i.kw && (i.key === 'chasseur' || i.key === 'bombardier') ? 'air' : 'mer') : pos ? S.grid[pos[0]][pos[1]] : 'champ');
+function scPanel(i, n, role, small) {
   const pct = i.land && i.hpMax ? Math.max(0, Math.min(100, (i.hp / i.hpMax) * 100)) : 0;
   const stat = role === 'att' ? `<div class="sp-sub"><b>${i.men}</b> tir${i.men > 1 ? 's' : ''} de <b>${i.dmg}</b></div>` : `<div class="sp-n"><b class="cnt">${n}</b> ${noun(i.key, n)}</div>`;
   return `<div class="sp ${i.side} ${role}" data-uid="${i.uid}"><div class="sp-name">${i.name}${i.cols ? `<i class="cchip2" style="background:${chipBg(i.cols)}"></i>` : ''}</div>
-    <div class="sp-art"><span class="sp-fig">${squadSVG(scKey(i), i.side, n, i.menMax, size, i.cols)}</span><span class="sp-flash"></span></div>${stat}
+    <div class="sp-art">${figsHTML(i, n, small)}</div>${stat}
     ${role === 'def' && i.land ? `<div class="sp-hp"><i style="width:${pct}%"></i></div>` : ''}</div>`;
 }
 function scHQ(hq) {
   const pct = Math.max(0, Math.min(100, (hq.before / hq.max) * 100));
-  return `<div class="sp ${hq.side} def hqp"><div class="sp-name">${hq.side === 'en' ? 'QG ennemi' : 'Votre QG'}</div><div class="sp-art"><span class="sp-fig">${flagSVG(hq.side, 54)}</span><span class="sp-flash"></span></div>
+  return `<div class="sp ${hq.side} def hqp"><div class="sp-name">${hq.side === 'en' ? 'QG ennemi' : 'Votre QG'}</div><div class="sp-art"><svg class="hqbig" viewBox="0 -12 40 52" aria-hidden="true">${hqArt(hq.side, hq.before / hq.max)}</svg></div>
     <div class="sp-n"><b class="cnt">${Math.max(0, hq.before)}</b> PV</div><div class="sp-hp"><i style="width:${pct}%"></i></div></div>`;
 }
-async function playScene(st, speed, host) {
+async function playScene(st, speed) {
   const sc = st.scene, wait = ms => sleep(fast ? ms / 8 : ms * speed);
   const ov = document.createElement('div'); ov.className = 'scene-wrap';
-  const defs = sc.defs.slice(0, 3);
-  ov.innerHTML = `<div class="scene ${sc.att.side === 'me' ? 'mine' : 'theirs'}"><div class="sc-sky"></div><div class="sc-hills"></div><div class="sc-ground"></div>
-    <div class="sc-cap att">${sc.att.side === 'me' ? 'Votre attaque' : 'Attaque ennemie'}</div><div class="sc-cap def">Défense</div>
+  const defs = sc.defs.slice(0, 3), many = defs.length + (sc.hq ? 1 : 0) > 1;
+  const tA = terrOf(sc.att, [sc.att.r, sc.att.c]), tD = sc.hq && !defs.length ? 'qg' : terrOf(defs[0], defs[0] ? [defs[0].r, defs[0].c] : null);
+  ov.innerHTML = `<div class="scene ${sc.att.side === 'me' ? 'mine' : 'theirs'}">
+    <div class="sc-half l t-${tA}"><div class="sc-sky"></div>${scBack(tA)}</div><div class="sc-half r t-${tD}"><div class="sc-sky"></div>${scBack(tD)}</div><div class="sc-split"></div>
+    <div class="sc-cap att">${sc.att.side === 'me' ? 'Votre attaque' : 'Attaque ennemie'}</div><div class="sc-cap def">Défense${TERRAIN[tD] && TERRAIN[tD].cover ? ` · ${TERRAIN[tD].name} −${Math.round(TERRAIN[tD].cover * 100)} %` : ''}</div>
     <div class="sc-col att">${scPanel(sc.att, sc.att.men, 'att')}</div><div class="sc-lane"></div>
-    <div class="sc-col def n${defs.length + (sc.hq ? 1 : 0)}">${defs.map(d => scPanel(d, d.men, 'def', defs.length + (sc.hq ? 1 : 0) > 1 ? 58 : 96)).join('')}${sc.hq ? scHQ(sc.hq) : ''}</div>
+    <div class="sc-col def n${defs.length + (sc.hq ? 1 : 0)}">${defs.map(d => scPanel(d, d.men, 'def', many)).join('')}${sc.hq ? scHQ(sc.hq) : ''}</div>
     <div class="sc-res"></div></div>`;
   (document.querySelector('.btl') || document.body).appendChild(ov);
   const q = sel => ov.querySelector(sel), qa = sel => [...ov.querySelectorAll(sel)];
-  await wait(380);
-  // tirs
+  await wait(420);
+  // tirs : chaque figurine fait feu
   SFX.play(SND_OF[sc.att.key] || 'rifle', Math.min(sc.att.men, 12));
+  qa('.sp.att .fig').forEach((f, j) => { f.style.setProperty('--fd', (j * 70 % 420) + 'ms'); f.classList.add('shoot'); });
   q('.sp.att')?.classList.add('firing');
   const lane = q('.sc-lane'), n = Math.min(14, Math.max(1, sc.shots)), heavy = sc.att.men <= 2 || ['croiseur', 'blinde', 'panzer', 'heavy'].includes(sc.att.key), bomb = (sc.att.kw || []).includes('bomb');
   for (let k = 0; k < n; k++) {
     const b = document.createElement('i'); b.className = 'tr ' + (bomb ? 'bomb' : heavy ? 'shell' : 'bullet'); b.style.top = (bomb ? 0 : 20 + Math.random() * 60) + '%'; b.style.setProperty('--dy', (Math.random() * 16 - 8) + 'px');
     b.style.left = bomb ? 10 + Math.random() * 80 + '%' : ''; lane.appendChild(b); setTimeout(() => b.remove(), 520);
-    await wait(heavy ? 160 : Math.max(40, 520 / n));
+    await wait(heavy ? 170 : Math.max(40, 520 / n));
   }
-  await wait(320);
-  // impacts et pertes
+  await wait(300);
+  // impacts et pertes : les figurines tombent une à une
   const rows = [];
   qa('.sp.def:not(.hqp)').forEach((el, i) => {
     const d = defs[i], lost = d.men - d.menAfter, hpPct = d.hpMax ? Math.max(0, (d.hpAfter / d.hpMax) * 100) : 0;
     el.classList.add(d.dmgTaken > 0 ? 'hit' : 'blocked');
-    if (d.menAfter !== d.men || d.dead) el.querySelector('.sp-fig').innerHTML = d.dead ? '' : squadSVG(scKey(d), d.side, d.menAfter, d.menMax, defs.length + (sc.hq ? 1 : 0) > 1 ? 58 : 96, d.cols);
+    const keep = d.dead ? 0 : figCount(d, d.menAfter);
+    [...el.querySelectorAll('.fig')].forEach((f, j) => { if (j >= keep) { f.style.setProperty('--dd', ((j - keep) * 90) + 'ms'); f.classList.add('die'); } else f.classList.add('flinch'); });
     const hp = el.querySelector('.sp-hp i'); if (hp) hp.style.width = hpPct + '%';
     if (d.dead) { el.classList.add('dead'); const x = document.createElement('span'); x.className = 'sp-boom'; el.querySelector('.sp-art').appendChild(x); }
     popAt(el.querySelector('.sp-art'), d.dmgTaken > 0 ? (lost > 0 ? '−' + lost : '−' + d.dmgTaken + ' PV') : 'Bloqué');
-    const c = el.querySelector('.cnt'); if (c) { c.textContent = d.menAfter; c.classList.add('drop'); }
+    const c = el.querySelector('.cnt'); if (c) countDown(c, d.men, d.menAfter);
     rows.push(d.dead ? `${d.name} détruit !` : lost > 0 ? `${d.name} : −${lost} ${noun(d.key, lost)}` : d.dmgTaken > 0 ? `${d.name} : −${d.dmgTaken} PV` : `${d.name} : aucun dégât (blindage)`);
   });
   if (sc.hq) {
     const el = q('.sp.hqp'), lost = sc.hq.before - sc.hq.after; el.classList.add('hit'); el.querySelector('.sp-hp i').style.width = Math.max(0, (sc.hq.after / sc.hq.max) * 100) + '%';
-    const c = el.querySelector('.cnt'); c.textContent = Math.max(0, sc.hq.after); c.classList.add('drop'); popAt(el.querySelector('.sp-art'), '−' + lost); rows.push(`${sc.hq.side === 'en' ? 'QG ennemi' : 'Votre QG'} : −${lost} PV`);
+    el.querySelector('.hqbig').innerHTML = hqArt(sc.hq.side, sc.hq.after / sc.hq.max);
+    const x = document.createElement('span'); x.className = 'sp-boom'; el.querySelector('.sp-art').appendChild(x);
+    countDown(el.querySelector('.cnt'), Math.max(0, sc.hq.before), Math.max(0, sc.hq.after)); popAt(el.querySelector('.sp-art'), '−' + lost); rows.push(`${sc.hq.side === 'en' ? 'QG ennemi' : 'Votre QG'} : −${lost} PV`);
     setTimeout(() => SFX.play('hqhit'), 60);
   }
   if (defs.some(d => d.dead)) setTimeout(() => SFX.play('boom'), 40); else if (defs.some(d => d.dmgTaken > 0)) SFX.play('hqhit');
+  if (defs.some(d => d.dmgTaken > 0) || sc.hq) ov.querySelector('.scene').classList.add('quake');
   q('.sc-res').innerHTML = rows.map(r => `<span>${r}</span>`).join('');
   q('.sc-res').classList.add('show');
-  await wait(1250);
+  await wait(1350);
   ov.classList.add('out'); await sleep(fast ? 10 : 180); ov.remove();
+}
+// Compteur qui défile jusqu'à la nouvelle valeur
+function countDown(el, from, to) {
+  if (!el) return; el.classList.add('drop'); const steps = Math.min(12, Math.max(1, from - to));
+  for (let k = 1; k <= steps; k++) setTimeout(() => { el.textContent = Math.round(from - ((from - to) * k) / steps); }, k * (fast ? 5 : 45));
 }
 async function doEnd() {
   if (busy || S.over) return;
@@ -2034,16 +2253,25 @@ async function doEnd() {
   const ph = $('#phase'), board = $('#board');
   let lastPh = '';
   for (const st of steps) {
-    if (st.ph !== lastPh) { lastPh = st.ph; ph.innerHTML = st.ph === 'me' ? '<span class="ribbon">Vos unités attaquent</span>' : '<span class="ribbon red">Tour ennemi</span>'; await sleep(fast ? 50 : 380); }
-    if (st.scene) { await playScene(st, 0.7, board); continue; }
+    if (st.ph !== lastPh) { lastPh = st.ph; if (st.ph === 'en') await turnBanner('Tour ennemi', 'en'); }
+    if (st.scene) { await playScene(st, 0.7); board.innerHTML = boardHTML({ units: st.snap.units, owner: st.snap.owner, hq: st.snap.hq }, false); continue; }
     board.innerHTML = boardHTML({ units: st.snap.units, owner: st.snap.owner, hq: st.snap.hq }, false);
     stepSound(st);
     showHits(st.hits, st.from, st);
-    await sleep(st.msg ? (fast ? 30 : 250) : st.moved ? (fast ? 30 : 260) : fast ? 70 : 520);
+    const walk = st.moved && st.path && !fast ? animatePath(st.moved, st.path, 110) : 0;
+    await sleep(st.msg ? (fast ? 30 : 150) : st.moved ? (fast ? 30 : walk + 120) : fast ? 70 : 520);
   }
   busy = false;
   if (S.over) return finishBattle();
   renderBattle();
+  turnBanner(`Tour ${S.turn}`, 'me');
+}
+// Bannière qui traverse l'écran au début de chaque tour
+function turnBanner(text, side) {
+  const host = document.querySelector('.btl'); if (!host) return Promise.resolve();
+  const b = document.createElement('div'); b.className = 'tban ' + side; b.innerHTML = `<span>${text}</span>`; host.appendChild(b);
+  SFX.play(side === 'en' ? 'enemyturn' : 'go');
+  return new Promise(res => setTimeout(() => { b.remove(); res(); }, fast ? 200 : 1100));
 }
 function finishBattle() {
   busy = true;
@@ -2136,7 +2364,7 @@ function openModal(html) {
 function helpModal(first) {
   openModal(`<div class="hd"><span class="ribbon">Comment jouer</span><button class="pill" data-act="close">${first ? 'Compris' : 'Fermer'}</button></div>
     <ol>
-    <li><b>But :</b> détruire le <b>QG ennemi</b> (en haut) avant que <b>votre QG</b> (en bas) tombe.</li>
+    <li><b>But :</b> détruire le <b>QG ennemi</b>, le fort rouge en haut de la carte, avant que <b>votre QG</b>, le fort bleu en bas, tombe. Un QG ne se traverse pas : on l'attaque depuis une case à portée (touchez votre unité, puis le fort ennemi cerclé de rouge).</li>
     <li><b>La carte :</b> une grille façon Advance Wars. Votre QG est en bas, celui de l'ennemi en haut. Les <b>routes</b> accélèrent, les <b>champs</b> ralentissent les véhicules, la <b>forêt</b> et les <b>villages</b> protègent (−30 % de dégâts), la <b>rivière</b> ne se franchit que par les <b>ponts</b> (l'infanterie peut la traverser à gué), la <b>mer</b> est réservée aux navires.</li>
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Les unités <b>attaquent seules</b> en fin de tour, sur la cible la plus proche à portée ; si rien n'est à portée mais que le QG ennemi l'est, elles le frappent.</li>
     <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les avions n'importe où. Ils ne peuvent pas être touchés et restent quelques tours.</li>
@@ -2185,7 +2413,7 @@ document.addEventListener('click', e => {
   if (S && document.getElementById('hand')) {
     const info = t.closest('[data-cinfo]'); if (info) { SFX.play('tap'); return cardModal(+info.dataset.cinfo); }
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
-    const hqt = t.closest('.hq.en[data-hqtgt]'); if (hqt && selU !== null && !busy) return doAttack(selU, 'hq');
+    const hqt = t.closest('[data-hqtgt]'); if (hqt && selU !== null && !busy) return doAttack(selU, 'hq');
     const gc = t.closest('.gc[data-r]'); if (gc && !t.closest('.modal')) return onCell(+gc.dataset.r, +gc.dataset.c);
   }
   const b = t.closest('[data-act]'); if (!b || b.disabled) return;

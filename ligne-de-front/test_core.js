@@ -12,8 +12,9 @@ for(let k=0;k<200;k++){const t=E.genTerrain(Math.random),g=t.grid;
   const sea=g.flat().filter(x=>x==='mer').length;check('mer',sea>=4,true);
   check('ligne 0 sans mer',g[0].every(x=>x!=='mer'),true);check('dernière ligne : au moins 3 cases de terre',g[GH-1].filter(x=>x!=='mer').length>=3,true);
   // connectivité des véhicules : de la dernière ligne à la ligne 0
-  const S0={grid:g,units:[]};const u={cls:'track',r:GH-1,c:g[GH-1].findIndex(x=>x==='route'),side:'me'};
-  if(u.c>=0){const r=E.reachable(S0,u,99);check('blindé peut traverser',[...r.values()].some(x=>x.r===0),true);}
+  check('deux QG',g.flat().filter(x=>x==='qg').length,2);check('QG ennemi en haut',g[t.hq.en[0]][t.hq.en[1]]+t.hq.en[0],'qg0');check('votre QG en bas',t.hq.me[0],GH-1);
+  const S0={grid:g,units:[]};const u={cls:'track',r:GH-2,c:t.hq.me[1],side:'me'};
+  {const r=E.reachable(S0,u,99);check('blindé peut rejoindre le QG ennemi',[...r.values()].some(x=>x.r===1&&x.c===t.hq.en[1]),true);check('QG infranchissable',[...r.values()].some(x=>x.r===0&&x.c===t.hq.en[1]),false);}
 }
 const mk=(o={})=>E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],...o},()=>0.5);
 let S=mk();
@@ -23,7 +24,7 @@ check('main de 6',S.hand.length,6);
 S=mk();S.plan=[];S.hand=[E.mkCard('tireurs','J'),E.mkCard('destroyer','J'),E.mkCard('chasseur','J'),E.mkCard('paras','J')];S.supply=20;
 let cells=E.deployCells(S,S.hand[0]);check('terre : cases de départ',cells.every(([r,c])=>r>=GH-2&&S.grid[r][c]!=='mer'),true);check('terre : au moins 4 cases',cells.length>=4,true);
 cells=E.deployCells(S,S.hand[1]);check('navire en mer',cells.length>0&&cells.every(([r,c])=>S.grid[r][c]==='mer'&&r>=GH-3),true);
-check('avion partout',E.deployCells(S,S.hand[2]).length,GW*GH);
+check('avion partout sauf les QG',E.deployCells(S,S.hand[2]).length,GW*GH-2);
 check('paras loin du QG',E.deployCells(S,S.hand[3]).every(([r])=>r>=2),true);
 const [r0,c0]=E.deployCells(S,S.hand[0])[0];
 check('placer un groupe',!!E.placeCard(S,0,r0,c0),true);check('coût payé',S.supply,18);check('main -1',S.hand.length,3);
@@ -55,9 +56,9 @@ let st=[];S.phase='me';e.r=2;E.attackUnit(S,a,st);check('10 tirs de 1 tuent 6 so
 // surplus de tirs : pas au QG si pas à portée
 check('QG intact',S.hq.en,S.lvl.hq);
 // attaque du QG
-S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);
+S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,S.hqPos.en[0]+1,S.hqPos.en[1]);
 const hq0=S.hq.en;st=[];S.phase='me';E.attackUnit(S,a,st);check('QG touché (10)',hq0-S.hq.en,10);
-a.r=1;check('à 2 du QG : pas de portée',E.hqInRange(a,1),false);
+check('à 2 du QG : pas de portée',E.hqInRange(S,a,S.hqPos.en[0]+2,S.hqPos.en[1]),false);check('à côté du QG : portée',E.hqInRange(S,a,S.hqPos.en[0]+1,S.hqPos.en[1]),true);
 // attaque manuelle : le joueur choisit la cible
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
 a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,2,2);let e2b=E.mkUnit(S,'en','gren');E.placeUnit(S,e2b,3,3);
@@ -67,9 +68,9 @@ check('scène : défenseur',stp.scene.defs[0].menBefore===undefined&&stp.scene.d
 check('une attaque par tour',E.canAttack(S,a),false);check('plus de déplacement après attaque',E.moveUnit(S,a.uid,4,2),null);
 check('cible hors portée refusée',E.playerAttack(S,a.uid,e.uid),null);
 S.units=[];a=E.mkUnit(S,'me','tireurs','');E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,2,2);check('unité qui vient d\'arriver ne peut pas attaquer',E.canAttack(S,a),false);
-S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);const hq1=S.hq.en;stp=E.playerAttack(S,a.uid,'hq');check('attaque du QG',hq1-S.hq.en,10);check('scène QG',stp.scene.hq.before-stp.scene.hq.after,10);
+S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,S.hqPos.en[0]+1,S.hqPos.en[1]);const hq1=S.hq.en;stp=E.playerAttack(S,a.uid,'hq');check('attaque du QG',hq1-S.hq.en,10);check('scène QG',stp.scene.hq.before-stp.scene.hq.after,10);
 S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,4,2);check('QG hors de portée',E.playerAttack(S,a.uid,'hq'),null);
-S=mk();S.plan=[];S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);S.hand=[];E.endTurn(S);check('fin de tour : plus d\'attaque automatique du joueur',S.hq.en,S.lvl.hq);
+S=mk();S.plan=[];S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,S.hqPos.en[0]+1,S.hqPos.en[1]);S.hand=[];E.endTurn(S);check('fin de tour : plus d\'attaque automatique du joueur',S.hq.en,S.lvl.hq);
 S.units=[];S.turn=2;a=E.mkUnit(S,'me','tireurs','');a.fresh=false;a.attacked=true;E.placeUnit(S,a,3,2);S.hand=[];S.plan=[];E.endTurn(S);check('attaque réarmée au tour suivant',a.attacked,false);
 // couverture forêt
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
@@ -103,7 +104,7 @@ const r1=en.r;
 for(let k=0;k<2;k++){S.plan=[];S.hand=[];S.supply=0;E.endTurn(S);}
 check('l\'ennemi avance',E.units(S,'en').length===0||E.units(S,'en')[0].r>r1,true);
 // plan : chaque renfort a une case libre sur la ligne 0
-for(let k=0;k<200;k++){S=mk();const p=S.plan.filter(x=>x.k==='deploy');check('cases distinctes',new Set(p.map(x=>x.c)).size,p.length);check('hors mer',p.every(x=>S.grid[0][x.c]!=='mer'),true);}
+for(let k=0;k<200;k++){S=mk();const p=S.plan.filter(x=>x.k==='deploy');check('cases distinctes',new Set(p.map(x=>x.c)).size,p.length);check('hors mer et hors QG',p.every(x=>S.grid[0][x.c]!=='mer'&&S.grid[0][x.c]!=='qg'),true);}
 // obus ciblé sur une case
 S=mk();S.plan=[];S.units=[];a=E.mkUnit(S,'me','tireurs','');E.placeUnit(S,a,4,2);S.plan=[{k:'shell',dmg:8,r:4,c:2}];S.hand=[];const hp0=a.hp;E.endTurn(S);check('obus touche la case visée',a.hp<hp0||!S.units.includes(a),true);
 S=mk();S.units=[];a=E.mkUnit(S,'me','tireurs','');E.placeUnit(S,a,4,2);S.plan=[{k:'shell',dmg:8,r:4,c:2}];S.hand=[];a.r=5;E.endTurn(S);check('obus esquivé en bougeant',a.hp,a.hpMax);

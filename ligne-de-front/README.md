@@ -10,7 +10,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 ## Règles en bref
 
 - **Paquet de départ fixe : 40 cartes** (13 tireurs, 5 jeeps mitrailleuses, 4 blindés, 5 destroyers, 3 croiseurs, 3 sous-marins, 3 chasseurs, 2 bombardiers, 2 parachutistes), en quatre couleurs.
-- **Une carte de bataille en grille** (6 × 7), façon Advance Wars : votre QG en bas, celui de l'ennemi en haut. Terrains : **route** (rapide), **champ** (ralentit les véhicules), **forêt** et **village** (−30 % de dégâts), **rivière** (infranchissable aux véhicules sauf par les **ponts**, à gué pour l'infanterie), **mer** (navires).
+- **Une carte de bataille en grille** (6 × 7), façon Advance Wars : chaque QG est un **fort** sur la carte (le vôtre en bas, celui de l'ennemi en haut, au bout de la route). On ne le traverse pas ; on l'attaque depuis une case à portée. Ses dégâts se voient (fissures, fumée, flammes). Terrains : **route** (rapide), **champ** (ralentit les véhicules), **forêt** et **village** (−30 % de dégâts), **rivière** (infranchissable aux véhicules sauf par les **ponts**, à gué pour l'infanterie), **mer** (navires).
 - **Le ravitaillement paie tout** : 10 points par tour (+ bonus permanents, + 1 par village tenu). Déployer une carte coûte son prix ; déplacer une unité coûte 1 point par point de mouvement du terrain traversé.
 - **Un tour** : on choisit des cartes (règle des couleurs ci-dessous), « Déployer », puis on touche les cases bleues où les poser (les 2 lignes du bas, un village tenu ; navires en mer près du QG ; avions partout). On déplace ensuite les unités en les touchant. Pour attaquer, on touche une unité puis l'ennemi cerclé de rouge à portée (ou le QG ennemi si on en est assez proche) : une **scène de combat** montre les attaquants à gauche, les défenseurs à droite et leurs pertes. Une unité attaque une fois par tour et ne bouge plus après. « Fin du tour » : l'ennemi avance et attaque à son tour (même scène).
 - **Chaque carte est un groupe** : par exemple 10 soldats (10 tirs de 1), 4 jeeps mitrailleuses (4 tirs de 2) ou 1 char (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs. Les cartes affichent l'effectif (soldats, jeeps, avions…) ; le détail est dans la fiche « i ».
@@ -27,6 +27,14 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
 - **Carte de campagne** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
+
+## Graphismes et animations
+
+- Tuiles raccordées : les routes, rivières et ponts se relient à leurs voisins ; plages et écume le long de la mer.
+- Curseur animé sur l'unité choisie, cases de déplacement en bleu, portée d'attaque en rouge ; toucher un ennemi montre sa zone de menace.
+- Les unités se déplacent case par case (les vôtres comme celles de l'ennemi), se grisent quand elles ont fini leur tour, et une bannière annonce chaque tour.
+- Scène de combat façon Advance Wars : écran coupé en deux, chaque camp sur le décor de sa case (champ, forêt, village, route, rivière, mer, ciel, QG) ; chaque figurine tire, et les pertes tombent une à une.
+- Ambiance : ombres de nuages sur la carte, arbres qui bougent, fumée des villages, drapeaux qui flottent, cartes qui se balancent en main.
 
 ## Sons
 
