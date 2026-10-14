@@ -991,11 +991,11 @@ const TERRAIN = {
 };
 // Une unité peut-elle se tenir sur ce terrain ? (les avions vont partout, les navires en mer)
 const canStand = (cls, ter) => (cls === 'air' ? !!TERRAIN[ter] && ter !== 'qg' : cls === 'ship' ? ter === 'mer' : !!TERRAIN[ter] && ter !== 'mer' && ter !== 'qg' && !(TERRAIN[ter].no || []).includes(cls));
-// Chaque couleur a un terrain de force (+50 % de dégâts) et un terrain de faiblesse (−50 %), pour les unités terrestres
+// Chaque couleur a un terrain de force (+50 % de dégâts) et un terrain de faiblesse (−25 %), pour les unités terrestres
 const COLOR_TERRAIN = { J: { fort: 'route', faible: 'foret' }, R: { fort: 'champ', faible: 'riviere' }, V: { fort: 'foret', faible: 'route' }, N: { fort: 'village', faible: 'champ' } };
 function terrainMult(cols, ter) {
   let m = 1;
-  for (const ch of cols || '') { const t = COLOR_TERRAIN[ch]; if (!t) continue; if (t.fort === ter) m += 0.5; if (t.faible === ter) m -= 0.5; }
+  for (const ch of cols || '') { const t = COLOR_TERRAIN[ch]; if (!t) continue; if (t.fort === ter) m += 0.5; if (t.faible === ter) m -= 0.25; }
   return Math.max(0.5, Math.min(2, m));
 }
 const unitMult = (S, u) => (u.side === 'me' && u.land && u.cols && S.grid[u.r] ? terrainMult(u.cols, S.grid[u.r][u.c]) : 1);
@@ -2318,7 +2318,7 @@ document.addEventListener('pointermove', e => {
     drag.cells = drag.ok.ok ? deployCells(S, drag.card) : [];
     document.querySelectorAll('.tmod').forEach(x => x.remove()); document.querySelectorAll('.dep, .tm-up, .tm-dn').forEach(c => c.classList.remove('dep', 'tm-up', 'tm-dn'));
     drag.cells.forEach(([r2, c2]) => { const ce = spotEl(r2, c2); ce?.classList.add('dep'); const ter = S.grid[r2] && S.grid[r2][c2], tm = ter && TYPES[drag.card.t].land ? tmodOf(drag.card.c, ter) : ''; if (ce && tm) { ce.classList.add('tm-' + tm); ce.insertAdjacentHTML('beforeend', `<span class="tmod ${tm}">${tmodTxt(terrainMult(drag.card.c, ter))}</span>`); } });
-    $('#hint').querySelector('.ht').textContent = drag.ok.ok ? (drag.card.t === 'bombardier' ? 'Lâchez le bombardier sur un ennemi ou le QG ennemi.' : TYPES[drag.card.t].land ? 'Déposez la carte sur une case bleue : +50 % = terrain fort de sa couleur, −50 % = terrain faible.' : 'Déposez la carte sur une case bleue.') : WHY_DEP(drag.ok.reason);
+    $('#hint').querySelector('.ht').textContent = drag.ok.ok ? (drag.card.t === 'bombardier' ? 'Lâchez le bombardier sur un ennemi ou le QG ennemi.' : TYPES[drag.card.t].land ? 'Déposez la carte sur une case bleue : +50 % = terrain fort de sa couleur, −25 % = terrain faible.' : 'Déposez la carte sur une case bleue.') : WHY_DEP(drag.ok.reason);
     SFX.play('select');
   }
   drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.75}px) rotate(${Math.max(-12, Math.min(12, (e.clientX - drag.x) / 12))}deg) scale(.82)`;
@@ -2390,7 +2390,7 @@ function onCell(r, c) {
   if (u) return onUnit(u.uid);
   if (selU !== null) { selU = null; renderBattle(); }
   const ter = S.grid[r][c], t = TERRAIN[ter], up = Object.keys(COLOR_TERRAIN).filter(k => COLOR_TERRAIN[k].fort === ter).map(k => COLORS[k].name.toLowerCase()), dn = Object.keys(COLOR_TERRAIN).filter(k => COLOR_TERRAIN[k].faible === ter).map(k => COLORS[k].name.toLowerCase());
-  toast(`${t.name} : ${t.txt}${up.length ? ` Fort pour : ${up.join(', ')} (+50 %).` : ''}${dn.length ? ` Faible pour : ${dn.join(', ')} (−50 %).` : ''}`);
+  toast(`${t.name} : ${t.txt}${up.length ? ` Fort pour : ${up.join(', ')} (+50 %).` : ''}${dn.length ? ` Faible pour : ${dn.join(', ')} (−25 %).` : ''}`);
 }
 function onUnit(uid) {
   if (busy) return;
@@ -2733,7 +2733,7 @@ function helpModal(first) {
     <ol>
     <li><b>But :</b> détruire le <b>QG ennemi</b>, le fort rouge derrière les lignes ennemies, avant que <b>votre QG</b>, le fort bleu en bas, tombe.</li>
     <li><b>Le plateau :</b> 5 <b>secteurs</b> (colonnes), chacun avec son terrain : <b>route</b>, <b>champ</b>, <b>forêt</b> (−30 % de dégâts reçus, pas de blindés), <b>village</b> (−30 %, et +1 ravitaillement par tour si vous le tenez), <b>rivière</b> (pas de véhicules), <b>mer</b> (navires). Chaque camp a deux lignes : le <b>front</b> et l'<b>arrière</b>. Les unités ne se déplacent pas : choisissez bien où les poser. Les unités au contact (portée 1) avancent seules au front de leur secteur s'il est libre.</li>
-    <li><b>Terrains des couleurs :</b> chaque couleur a un terrain de <b>force ▲ (+50 % de dégâts)</b> et un terrain de <b>faiblesse ▼ (−50 %)</b>, pour les unités terrestres : <i class="dot" style="background:#ffd24a"></i> jaune ▲ route ▼ forêt · <i class="dot" style="background:#e5543f"></i> rouge ▲ champ ▼ rivière · <i class="dot" style="background:#52b34f"></i> vert ▲ forêt ▼ route · <i class="dot" style="background:#39404f"></i> noir ▲ village ▼ champ. Les pastilles en bas de chaque secteur le rappellent, et en glissant une carte, les cases affichent +50 % ou −50 %.</li>
+    <li><b>Terrains des couleurs :</b> chaque couleur a un terrain de <b>force ▲ (+50 % de dégâts)</b> et un terrain de <b>faiblesse ▼ (−25 %)</b>, pour les unités terrestres : <i class="dot" style="background:#ffd24a"></i> jaune ▲ route ▼ forêt · <i class="dot" style="background:#e5543f"></i> rouge ▲ champ ▼ rivière · <i class="dot" style="background:#52b34f"></i> vert ▲ forêt ▼ route · <i class="dot" style="background:#39404f"></i> noir ▲ village ▼ champ. Les pastilles en bas de chaque secteur le rappellent, et en glissant une carte, les cases affichent +50 % ou −25 %.</li>
     <li><b>Attaquer :</b> touchez votre unité, puis un ennemi cerclé de rouge. La portée se compte en cases : du front, des tireurs (portée 1) touchent l'ennemi d'en face ; une jeep ou un char (portée 2) touche aussi les secteurs voisins ou l'arrière d'en face. Le <b>QG ennemi</b> se frappe quand <b>le secteur d'en face est vide</b>. Attention : c'est pareil pour l'ennemi, un secteur que vous ne gardez pas laisse passer ses tirs sur votre QG.</li>
     <li><b>Riposte :</b> comme dans Advance Wars, un défenseur qui survit riposte aussitôt avec les hommes qui lui restent, s'il peut atteindre l'attaquant. Pas de riposte contre les navires, les avions et les bombes.</li>
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs.</li>

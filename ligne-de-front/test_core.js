@@ -24,8 +24,8 @@ check('navire : la mer',cl(S.hand[1]),'2,0 3,0');check('avion : partout',E.deplo
 check('blindé : ni forêt ni rivière',cl(S.hand[3]),'2,1 2,4 3,1 3,4');check('jeep : pas la rivière',cl(S.hand[4]),'2,1 2,2 2,4 3,1 3,2 3,4');
 check('placer',!!E.placeCard(S,0,2,1),true);check('coût payé',S.supply,28);check('case occupée refusée',E.placeCard(S,0,2,1),null);check('ligne ennemie refusée',E.placeCard(S,0,1,2),null);
 // terrains forts et faibles des couleurs
-check('jaune sur route ×1,5',E.terrainMult('J','route'),1.5);check('jaune en forêt ×0,5',E.terrainMult('J','foret'),0.5);check('vert en forêt ×1,5',E.terrainMult('V','foret'),1.5);
-check('jaune+vert en forêt ×1',E.terrainMult('JV','foret'),1);check('rouge au champ',E.terrainMult('R','champ'),1.5);check('noir au village',E.terrainMult('N','village'),1.5);check('noir au champ',E.terrainMult('N','champ'),0.5);
+check('jaune sur route ×1,5',E.terrainMult('J','route'),1.5);check('jaune en forêt ×0,75',E.terrainMult('J','foret'),0.75);check('vert en forêt ×1,5',E.terrainMult('V','foret'),1.5);
+check('jaune+vert en forêt ×1,25',E.terrainMult('JV','foret'),1.25);check('rouge au champ',E.terrainMult('R','champ'),1.5);check('noir au village',E.terrainMult('N','village'),1.5);check('noir au champ',E.terrainMult('N','champ'),0.75);
 check('chaque couleur : 1 fort, 1 faible, différents',Object.values(E.COLOR_TERRAIN).every(t=>t.fort!==t.faible&&E.TERRAIN[t.fort]&&E.TERRAIN[t.faible]),true);
 S=mk();S.plan=[];S.units=[];S.grid=lanes('mer','route','foret','champ','champ');
 let a=E.mkUnit(S,'me','tireurs','J');a.fresh=false;E.placeUnit(S,a,2,1);let e=E.mkUnit(S,'en','panzer');e.armor=0;e.hp=e.hpMax=100;E.placeUnit(S,e,1,1);
@@ -33,7 +33,7 @@ E.playerAttack(S,a.uid,e.uid);check('jaune sur route : 10 tirs de 2 ×1,5 = 30',
 S.units=[];a=E.mkUnit(S,'me','tireurs','J');a.fresh=false;E.placeUnit(S,a,2,3);e=E.mkUnit(S,'en','panzer');e.armor=0;e.hp=e.hpMax=100;E.placeUnit(S,e,1,3);
 E.playerAttack(S,a.uid,e.uid);check('jaune au champ : 20',100-e.hp,20);
 S.units=[];a=E.mkUnit(S,'me','tireurs','J');a.fresh=false;E.placeUnit(S,a,2,2);e=E.mkUnit(S,'en','panzer');e.armor=0;e.hp=e.hpMax=100;E.placeUnit(S,e,1,2);
-E.playerAttack(S,a.uid,e.uid);check('jaune en forêt : 10 (couverture de la forêt pour la cible : −30 %)',100-e.hp,7);
+E.playerAttack(S,a.uid,e.uid);check('jaune en forêt : 15, −30 % de couverture = 11',100-e.hp,11);
 S.units=[];a=E.mkUnit(S,'me','tireurs','J');a.fresh=false;E.placeUnit(S,a,2,1);const hq0=S.hq.en;E.playerAttack(S,a.uid,'hq');check('QG : bonus de terrain aussi',hq0-S.hq.en,30);
 // portées : front contre front, l'arrière est protégé
 S=mk();S.plan=[];S.units=[];S.grid=lanes('champ','champ','champ','champ','mer');
