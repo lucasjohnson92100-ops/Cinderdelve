@@ -438,7 +438,7 @@ const colorHex = c => (c.length === 1 ? COLORS[c].hex : MIXES[c][1]);
 const FAMILIES = { terre: 'Armée de terre', mer: 'Marine', air: "Armée de l'air" };
 const TYPES = {
   tireurs: { fam: 'terre', land: true, name: 'Tireurs', cost: 2, men: 10, dmg: 1, hpm: 1, armor: 0, rar: 1, txt: '10 tireurs : 10 tirs de 1 dégât.' },
-  spiders: { fam: 'terre', land: true, name: 'Spiders', cost: 2, men: 3, dmg: 3, hpm: 3, armor: 0, kw: ['flank'], rar: 1, txt: "3 marcheurs mécaniques. Contournent : frappent l'unité du fond." },
+  jeep: { fam: 'terre', land: true, name: 'Jeeps MG', cost: 2, men: 4, dmg: 2, hpm: 4, armor: 0, rar: 1, txt: '4 jeeps armées de mitrailleuses : 4 tirs de 2 dégâts, 4 PV chacune.' },
   blinde: { fam: 'terre', land: true, name: 'Blindé', cost: 3, men: 1, dmg: 6, hpm: 16, armor: 2, rar: 2, txt: '1 char. Blindage 2 : les petits tirs ne passent pas.' },
   destroyer: { fam: 'mer', name: 'Destroyer', cost: 2, men: 4, dmg: 1, ttl: 3, kw: ['spread'], rar: 1, txt: '4 tirs répartis sur les ennemis de sa ligne. Reste 3 tours.' },
   croiseur: { fam: 'mer', name: 'Croiseur', cost: 3, men: 1, dmg: 7, ttl: 3, pierce: 9, rar: 3, txt: '1 gros obus de 7, ignore le blindage. Reste 3 tours.' },
@@ -451,7 +451,7 @@ const TYPE_KEYS = Object.keys(TYPES);
 TYPE_KEYS.forEach(k => { TYPES[k].id = k; });
 // Entraînement : bonus gagnés au niveau 2, puis au niveau 3
 const UP = {
-  tireurs: [{ men: 3 }, { men: 3 }], spiders: [{ men: 1 }, { men: 1 }], blinde: [{ dmg: 1 }, { hpm: 4 }], destroyer: [{ men: 2 }, { men: 2 }],
+  tireurs: [{ men: 3 }, { men: 3 }], jeep: [{ men: 1 }, { men: 1 }], blinde: [{ dmg: 1 }, { hpm: 4 }], destroyer: [{ men: 2 }, { men: 2 }],
   croiseur: [{ dmg: 2 }, { dmg: 2 }], sousmarin: [{ dmg: 2 }, { dmg: 2 }], chasseur: [{ men: 1 }, { men: 1 }], bombardier: [{ dmg: 2 }, { dmg: 2 }], paras: [{ men: 3 }, { men: 3 }],
 };
 function upText(t, lvl) {
@@ -460,8 +460,9 @@ function upText(t, lvl) {
 }
 // ---- Cartes : {t: type, c: couleurs}. Une carte fusionnée a des parts ----
 const mkCard = (t, c) => ({ t, c });
-const START_DECK = [mkCard('tireurs', 'J'), mkCard('tireurs', 'R'), mkCard('spiders', 'V'), mkCard('spiders', 'N'), mkCard('blinde', 'J'), mkCard('blinde', 'V'),
-  mkCard('destroyer', 'V'), mkCard('destroyer', 'R'), mkCard('croiseur', 'N'), mkCard('chasseur', 'J'), mkCard('chasseur', 'N')];
+const DECK_PLAN = [['tireurs', 'JJJJRRRRVVVNN'], ['jeep', 'JRRVN'], ['blinde', 'JRVN'], ['destroyer', 'JRVVN'], ['croiseur', 'JVN'], ['sousmarin', 'RVN'],
+  ['chasseur', 'JRN'], ['bombardier', 'JN'], ['paras', 'RV']];
+const START_DECK = DECK_PLAN.flatMap(([t, cs]) => [...cs].map(c => mkCard(t, c)));
 const cardKey = c => c.t + ':' + c.c + ':' + (c.lv || 1);
 
 const ENEMIES = {
@@ -474,13 +475,13 @@ const ENEMIES = {
 };
 const LEVELS = [
   { name: "Plage d'assaut", hq: 55, budget: 2.6 },
-  { name: 'Bocage', hq: 76, budget: 8.6 },
-  { name: 'Village fortifié', hq: 94, budget: 10 },
-  { name: 'Le pont (boss)', hq: 120, budget: 7.4, boss: 'heavy' },
-  { name: 'Forêt des Ardennes', hq: 135, budget: 10.8 },
-  { name: 'Ville en ruines', hq: 155, budget: 12 },
-  { name: 'Ligne de défense', hq: 175, budget: 13.4 },
-  { name: 'Quartier général (boss)', hq: 200, budget: 8.8, boss: 'heavy2' },
+  { name: 'Bocage', hq: 87, budget: 11.5 },
+  { name: 'Village fortifié', hq: 108, budget: 13.4 },
+  { name: 'Le pont (boss)', hq: 138, budget: 8.3, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 155, budget: 14.5 },
+  { name: 'Ville en ruines', hq: 178, budget: 16 },
+  { name: 'Ligne de défense', hq: 201, budget: 18 },
+  { name: 'Quartier général (boss)', hq: 230, budget: 9.9, boss: 'heavy2' },
 ];
 // Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
 const JOKERS = [
@@ -971,14 +972,12 @@ const SPRITES = {
     ${[12, 24, 36, 48].map(x => `<path d="M${x} 24 l3 -5 l3 5z" fill="${STEEL}" stroke="${INK}" stroke-width="1.5"/>`).join('')}</g>`,
 };
 
-SPRITES.spider = t => {
+SPRITES.jeep = t => {
   const acc = t.acc || t.dark;
-  const leg = (d) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${STEEL}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`;
-  return `${leg('M24 36 L9 27 L4 47')}${leg('M26 41 L8 43 L7 58')}${leg('M40 36 L55 27 L60 47')}${leg('M38 41 L56 43 L57 58')}
-  <rect x="29" y="6" width="6" height="22" rx="2.4" fill="${STEEL_D}" ${sw}/><rect x="27.5" y="4" width="9" height="6" rx="2" fill="${STEEL}" ${sw}/>
-  <ellipse cx="32" cy="38" rx="16" ry="11" fill="${t.main}" ${sw}/><ellipse cx="32" cy="41" rx="10" ry="5" fill="${t.dark}" opacity=".5"/>
-  <path d="M21 33 Q21 20 32 20 Q43 20 43 33 Z" fill="${acc}" ${sw}/><circle cx="27" cy="29" r="2.6" fill="#ffe27a" ${sw} stroke-width="1.6"/><circle cx="37" cy="29" r="2.6" fill="#ffe27a" ${sw} stroke-width="1.6"/>
-  ${t.acc2 ? `<rect x="17" y="40" width="30" height="4" fill="${t.acc2}" stroke="${INK}" stroke-width="1.4"/>` : ''}`;
+  return `<rect x="4" y="34" width="56" height="16" rx="6" fill="${t.main}" ${sw}/><rect x="4" y="40" width="56" height="4" fill="${t.acc2 || t.dark}" opacity="${t.acc2 ? 1 : .5}"/>
+  <path d="M14 34 L20 22 H40 L44 34 Z" fill="${acc}" ${sw}/><rect x="22" y="24" width="14" height="8" rx="1.5" fill="#bfe3f5" ${sw} stroke-width="1.6"/>
+  <rect x="38" y="14" width="5" height="14" rx="1.6" fill="${STEEL_D}" ${sw}/><rect x="36" y="9" width="16" height="5" rx="2" fill="${STEEL}" ${sw}/><rect x="49" y="7" width="12" height="3.4" rx="1.4" fill="${INK}"/>
+  <circle cx="16" cy="51" r="7" fill="#3b4350" ${sw}/><circle cx="16" cy="51" r="2.8" fill="#8d97a3"/><circle cx="48" cy="51" r="7" fill="#3b4350" ${sw}/><circle cx="48" cy="51" r="2.8" fill="#8d97a3"/>`;
 };
 const WAVE = `<path d="M0 54 q4 -5 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v10 h-64z" fill="#4aa8e8" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
 const hullStripe = t => `<rect x="9" y="43" width="46" height="4.4" fill="${t.acc || t.main}" stroke="${INK}" stroke-width="1.4"/>`;
@@ -1027,8 +1026,8 @@ function spriteSVG(key, side, size, cols) {
 }
 
 // Groupe d'unités : plusieurs figurines selon l'effectif restant (n sur nMax)
-const FIGS = { inf: 5, spider: 3, para: 2, rifle: 5, gren: 3, sniper: 2, mgnest: 2 };
-const SPR_OF = { tireurs: 'inf', spiders: 'spider', blinde: 'tank', destroyer: 'destroyer', croiseur: 'croiseur', sousmarin: 'sousmarin', chasseur: 'chasseur', bombardier: 'bombardier', paras: 'para' };
+const FIGS = { inf: 5, jeep: 2, para: 2, rifle: 5, gren: 3, sniper: 2, mgnest: 2 };
+const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destroyer', croiseur: 'croiseur', sousmarin: 'sousmarin', chasseur: 'chasseur', bombardier: 'bombardier', paras: 'para' };
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), f = SPRITES[key], max = FIGS[key] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
@@ -1173,7 +1172,7 @@ const $ = s => document.querySelector(s);
 const app = $('#app');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const KW_DESC = { flank: "contourne : frappe le dernier ennemi de la ligne", spread: 'répartit ses tirs sur tous les ennemis', heavy: "vise l'ennemi le plus solide", hunt: "chasse l'ennemi le plus faible", cover: 'annule 1 obus ennemi par tour', bomb: 'bombarde tous les ennemis du front', raid: "attaque dès l'arrivée", weak: "vise l'ennemi le plus faible" };
-const SHORT_TAG = { tireurs: 'Tirs nombreux', spiders: 'Contourne', blinde: 'Blindage 2', destroyer: 'Tirs répartis', croiseur: 'Perce tout', sousmarin: 'Vise le plus solide', chasseur: 'Chasse · couvre', bombardier: 'Bombe tous', paras: 'Attaquent de suite' };
+const SHORT_TAG = { tireurs: 'Tirs nombreux', jeep: 'Mitrailleuses', blinde: 'Blindage 2', destroyer: 'Tirs répartis', croiseur: 'Perce tout', sousmarin: 'Vise le plus solide', chasseur: 'Chasse · couvre', bombardier: 'Bombe tous', paras: 'Attaquent de suite' };
 const SHORT_EFF = { J: '+1 dégât par tir', R: "+50 % d'hommes", V: '+50 % de PV', N: 'Perce 1 · agit de suite' };
 const FAM_SHORT = { terre: 'Terre', mer: 'Mer', air: 'Air' };
 const FAM_ORDER = { terre: 0, mer: 1, air: 2 };
@@ -1449,7 +1448,7 @@ function renderBattle() {
   </div>`;
 }
 
-const SND_OF = { tireurs: 'rifle', paras: 'rifle', rifle: 'rifle', gren: 'rifle', sniper: 'sniper', spiders: 'mg', mgnest: 'mg', blinde: 'cannon', panzer: 'cannon', heavy: 'bigcannon',
+const SND_OF = { tireurs: 'rifle', paras: 'rifle', rifle: 'rifle', gren: 'rifle', sniper: 'sniper', jeep: 'mg', mgnest: 'mg', blinde: 'cannon', panzer: 'cannon', heavy: 'bigcannon',
   destroyer: 'cannon', croiseur: 'bigcannon', sousmarin: 'torpedo', chasseur: 'strafe', bombardier: 'bomb' };
 function stepSound(st) {
   if (st.msg) return SFX.play('enemyturn');
@@ -1645,7 +1644,7 @@ function toCamp() {
     <button class="off-item plain" data-act="removecard"><span class="tx"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></span></button></div>`;
 }
 function victory() {
-  app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'spider', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>Le dernier quartier général est tombé</h2>
+  app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'jeep', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>Le dernier quartier général est tombé</h2>
     <p>Campagne gagnée avec ${C.deck.length} cartes et ${C.officers.length} jokers.</p>
     <button class="btn" data-act="new">Rejouer</button></div>`;
 }
@@ -1757,7 +1756,7 @@ function showTitle() {
   const army = (side, keys) => keys.map(k => spriteSVG(k[0], side, 60, k[1])).join('');
   app.innerHTML = `<div class="title"><h1>Ligne de Front</h1>
     <div class="tag">1944. Terre, mer et air : fusionnez vos groupes de couleurs différentes pour créer des unités plus puissantes et brisez le front ennemi.</div>
-    <div class="armies">${army('me', [['inf', 'J'], ['spider', 'V'], ['tank', 'R'], ['chasseur', 'N']])}${army('en', [['panzer', ''], ['gren', ''], ['rifle', '']])}</div>
+    <div class="armies">${army('me', [['inf', 'J'], ['jeep', 'V'], ['tank', 'R'], ['chasseur', 'N']])}${army('en', [['panzer', ''], ['gren', ''], ['rifle', '']])}</div>
     <div class="row" style="justify-content:center"><button class="btn go" data-act="new">Nouvelle campagne</button><button class="btn ghost" data-act="help">Comment jouer</button></div>
     <div class="record">${rec.level ? `Meilleure progression : étape ${Math.min(9, rec.level)} sur 9` : 'Aucune campagne jouée pour le moment.'}</div></div>`;
 }

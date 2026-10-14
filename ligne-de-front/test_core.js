@@ -9,7 +9,7 @@ const T=E.TYPES;
 let st=E.statsFor(T.tireurs,'J');check('tireurs jaunes: dégâts 2',st.dmg,2);check('10 hommes',st.men,10);
 st=E.statsFor(T.tireurs,'JR');check('orange: 15 hommes',st.men,15);check('orange: 15 PV',st.hp,15);
 st=E.statsFor(T.blinde,'R');check('blindé rouge = 2 chars',st.men,2);
-st=E.statsFor(T.spiders,'V');check('spiders verts PV 14',st.hp,14);
+st=E.statsFor(T.jeep,'V');check('jeeps verts PV 24',st.hp,24);
 st=E.statsFor(T.destroyer,'V');check('destroyer vert 4 tours',st.ttl,4);
 st=E.statsFor(T.tireurs,'N');check('noir perce 1',st.pierce,1);check('noir: raid',st.raid,true);
 // --- fusion de cartes en main
@@ -18,7 +18,7 @@ check('fusion possible',E.canFuse(S.hand[0],S.hand[2]),true);check('types diffé
 const f=E.fuseCards(S,0,2);check('carte orange',f.c,'JR');check('fusion de fusion interdite',E.canFuse(f,E.mkCard('tireurs','V')),false);
 E.splitCard(S,S.hand.indexOf(f));check('séparation',S.hand.length,3);
 // --- un seul front : déploiement devant / derrière
-S=mk();S.plan=[];S.hand=[E.mkCard('tireurs','J'),E.mkCard('blinde','V'),E.mkCard('spiders','N')];S.supply=9;
+S=mk();S.plan=[];S.hand=[E.mkCard('tireurs','J'),E.mkCard('blinde','V'),E.mkCard('jeep','N')];S.supply=9;
 check('1re unité : un seul choix',E.targetsFor(S,S.hand[0]).length,1);
 E.playCard(S,0,{pos:'back'});check('unité posée',S.front.me.length,1);
 check('2e unité : choix devant/derrière',E.targetsFor(S,S.hand[0]).length,2);
@@ -33,9 +33,9 @@ check('l’air reste libre',E.isPlayable(S,1),true);
 // --- combat
 S=mk();S.plan=[];S.hand=[];const t1=E.deploy(S,'me','tireurs','');t1.fresh=false;const en=E.deploy(S,'en','rifle');en.fresh=true;
 E.endTurn(S);check('soldats ennemis détruits (6 PV)',E.units(S,'en').filter(x=>x.key==='rifle').length,0);
-// spiders contournent : visent le dernier ennemi de la ligne
-S=mk();S.plan=[];S.hand=[];const sp=E.deploy(S,'me','spiders','');sp.fresh=false;const e1=E.deploy(S,'en','rifle'),e2=E.deploy(S,'en','gren');e1.fresh=e2.fresh=true;
-E.endTurn(S);check('les spiders ont frappé le dernier (grenadiers)',E.units(S,'en').some(x=>x.key==='gren'),false);check('le surplus de tirs va au suivant',e1.hp,3);
+// jeep contournent : visent le dernier ennemi de la ligne
+S=mk();S.plan=[];S.hand=[];E.TYPES.jeep.kw=['flank'];const sp=E.deploy(S,'me','jeep','');sp.fresh=false;const e1=E.deploy(S,'en','rifle'),e2=E.deploy(S,'en','gren');e1.fresh=e2.fresh=true;
+E.endTurn(S);check('les jeep ont frappé le dernier (grenadiers)',E.units(S,'en').some(x=>x.key==='gren'),false);check('le surplus de tirs va au suivant',e1.hp,4);delete E.TYPES.jeep.kw;
 // blindage 2
 S=mk();S.plan=[];S.hand=[];const pz=E.deploy(S,'en','panzer');pz.fresh=true;
 for(const c of ['','J','JN']){S.front.me=[];const a=E.deploy(S,'me','tireurs',c);a.fresh=false;const hp0=pz.hp;E.endTurn(S);check('panzer contre tireurs '+(c||'bleus'),pz.hp<hp0,c==='JN');pz.hp=pz.hpMax;pz.fresh=true;S.plan=[];}
@@ -58,26 +58,26 @@ ua.hp=6;const fu=E.fuseUnits(S,ua.uid,ub.uid);check('groupe orange',fu.cols,'JR'
 check('15 hommes max',fu.menMax,15);check('PV additionnés (6 + 15 → plafonné à 15)',fu.hp,15);
 check('même couleur : fusion interdite',E.canFuseUnits(S,fu,fu),false);
 // ordre et annulation
-S=mk();S.plan=[];S.hand=[E.mkCard('tireurs','J'),E.mkCard('spiders','N')];S.supply=9;
+S=mk();S.plan=[];S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','N')];S.supply=9;
 E.playCard(S,0,{pos:'back'});E.playCard(S,0,{pos:'back'});check('ordre',S.front.me[0].key,'tireurs');
-check('mise en première ligne',E.moveToFront(S,S.front.me[1].uid),true);check('spiders devant',S.front.me[0].key,'spiders');
+check('mise en première ligne',E.moveToFront(S,S.front.me[1].uid),true);check('jeep devant',S.front.me[0].key,'jeep');
 const sn=E.snapshotState(S);S.hand=[E.mkCard('blinde','J')];S.supply=9;E.playCard(S,0,{pos:'back'});check('3 unités',S.front.me.length,3);
 E.restoreState(S,sn);check('annulation : retour à 2 unités',S.front.me.length,2);
 // --- déploiement groupé selon le ravitaillement
-S=mk();S.plan=[];S.supply=4;S.hand=[E.mkCard('tireurs','J'),E.mkCard('spiders','J'),E.mkCard('blinde','J'),E.mkCard('destroyer','J'),E.mkCard('chasseur','J')];
+S=mk();S.plan=[];S.supply=4;S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','J'),E.mkCard('blinde','J'),E.mkCard('destroyer','J'),E.mkCard('chasseur','J')];
 check('2 + 2 = 4 : possible',E.planDeploy(S,[0,1]).ok,true);check('coût 4',E.planDeploy(S,[0,1]).cost,4);
 check('2 + 2 + 2 : pas assez de ravitaillement',E.planDeploy(S,[0,1,3]).reason,'supply');
 check('blindé + tireurs = 5 : trop cher',E.planDeploy(S,[2,0]).ok,false);
 const hh=E.deployAll(S,[0,1],'back');check('2 groupes posés d’un coup',S.front.me.length,2);check('ordre de sélection',S.front.me[0].key,'tireurs');check('2 cartes en défausse',S.discard.length,2);check('ravitaillement épuisé',S.supply,0);check('main restante',S.hand.length,3);
 check('hits de déploiement',hh.length,2);
-S=mk();S.plan=[];S.supply=9;S.front.me=[];E.deploy(S,'me','blinde','J');S.hand=[E.mkCard('tireurs','J'),E.mkCard('spiders','J'),E.mkCard('destroyer','J')];
-E.deployAll(S,[0,1,2],'front');check('devant : ordre de sélection conservé',S.front.me.map(u=>u.key).join(','),'tireurs,spiders,blinde');check('navire posé en mer',S.sea.length,1);
-S=mk();S.supply=9;E.deploy(S,'me','tireurs','');E.deploy(S,'me','tireurs','R');E.deploy(S,'me','tireurs','V');S.hand=[E.mkCard('spiders','J'),E.mkCard('spiders','J')];
+S=mk();S.plan=[];S.supply=9;S.front.me=[];E.deploy(S,'me','blinde','J');S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','J'),E.mkCard('destroyer','J')];
+E.deployAll(S,[0,1,2],'front');check('devant : ordre de sélection conservé',S.front.me.map(u=>u.key).join(','),'tireurs,jeep,blinde');check('navire posé en mer',S.sea.length,1);
+S=mk();S.supply=9;E.deploy(S,'me','tireurs','');E.deploy(S,'me','tireurs','R');E.deploy(S,'me','tireurs','V');S.hand=[E.mkCard('jeep','J'),E.mkCard('jeep','J')];
 check('front plein avec 2 nouveaux groupes',E.planDeploy(S,[0,1]).reason,'front');check('un seul passe',E.planDeploy(S,[0]).ok,true);
 S=mk();S.supply=9;S.hand=[E.mkCard('destroyer','V'),E.mkCard('destroyer','V'),E.mkCard('croiseur','V')];check('3 navires : zone pleine',E.planDeploy(S,[0,1,2]).reason,'sea');
 S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['ito','silva']},()=>0.5);S.hand=[E.mkCard('destroyer','J'),E.mkCard('tireurs','J')];check('ito + silva : destroyer 2-1-1 = 0, tireurs 2',E.planDeploy(S,[0,1]).cost,2);
 // --- règle des couleurs
-S=mk();S.plan=[];S.supply=9;S.hand=[E.mkCard('tireurs','J'),E.mkCard('blinde','J'),E.mkCard('tireurs','R'),E.mkCard('spiders','R'),E.mkCard('destroyer','J')];
+S=mk();S.plan=[];S.supply=9;S.hand=[E.mkCard('tireurs','J'),E.mkCard('blinde','J'),E.mkCard('tireurs','R'),E.mkCard('jeep','R'),E.mkCard('destroyer','J')];
 check('même couleur : possible',E.planDeploy(S,[0,1,4]).ok,true);
 check('couleurs différentes de types différents : refusé',E.planDeploy(S,[0,3]).reason,'colors');
 check('même type, couleurs différentes, non fusionnées : refusé',E.planDeploy(S,[0,2]).reason,'colors');
@@ -86,7 +86,7 @@ check('inatteignable : jaune + rouge de types différents',E.colorsReachable([S.
 check('atteignable : fusion jaune+rouge + une carte jaune en plus',E.colorsReachable([S.hand[0],S.hand[2],S.hand[1]]),true);
 const fz=E.fuseCards(S,0,2);check('fusionnées : déploiement possible',E.planDeploy(S,[S.hand.indexOf(fz)]).ok,true);
 check('fusion orange + carte jaune : autorisé',E.planDeploy(S,[S.hand.indexOf(fz),S.hand.findIndex(c=>c.t==='blinde')]).ok,true);
-let S2=mk();S2.supply=9;S2.hand=[E.mkCard('tireurs','J'),E.mkCard('tireurs','R'),E.mkCard('spiders','J'),E.mkCard('spiders','R')];E.fuseCards(S2,0,1);E.fuseCards(S2,1,2);
+let S2=mk();S2.supply=9;S2.hand=[E.mkCard('tireurs','J'),E.mkCard('tireurs','R'),E.mkCard('jeep','J'),E.mkCard('jeep','R')];E.fuseCards(S2,0,1);E.fuseCards(S2,1,2);
 check('deux fusions de même couleur ensemble : possible',E.planDeploy(S2,[0,1]).ok,true);
 // --- couleurs appartenant à une fusion
 const mkc=(t,c)=>E.mkCard(t,c);const orange=(t)=>({t,c:'JR',lv:1,parts:[mkc(t,'J'),mkc(t,'R')]});
@@ -95,13 +95,13 @@ check('orange + rouge : valide',E.selectionValid([orange('tireurs'),mkc('croiseu
 check('orange + jaune + rouge : valide',E.selectionValid([orange('tireurs'),mkc('blinde','J'),mkc('destroyer','R')]),true);
 check('orange + vert : refusé',E.selectionValid([orange('tireurs'),mkc('blinde','V')]),false);
 check('orange + noir : refusé',E.selectionValid([orange('tireurs'),mkc('blinde','N')]),false);
-check('orange + orange : valide',E.selectionValid([orange('tireurs'),orange('spiders')]),true);
+check('orange + orange : valide',E.selectionValid([orange('tireurs'),orange('jeep')]),true);
 check('orange + sapin : refusé',E.selectionValid([orange('tireurs'),{t:'blinde',c:'VN',lv:1,parts:[1,2]}]),false);
 check('jaune + rouge sans fusion : refusé',E.selectionValid([mkc('tireurs','J'),mkc('blinde','R')]),false);
-check('orange + jaune + rouge du même type non fusionnés : valide',E.selectionValid([orange('spiders'),mkc('tireurs','J'),mkc('tireurs','R')]),true);
+check('orange + jaune + rouge du même type non fusionnés : valide',E.selectionValid([orange('jeep'),mkc('tireurs','J'),mkc('tireurs','R')]),true);
 check('atteignable : jaune + rouge (même type) + jaune',E.colorsReachable([mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','J')]),true);
 check('atteignable : fusion possible puis vert non couvert',E.colorsReachable([mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','V')]),false);
-S=mk();S.plan=[];S.supply=20;S.hand=[mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','J'),mkc('destroyer','R'),mkc('spiders','V')];E.fuseCards(S,0,1);
+S=mk();S.plan=[];S.supply=20;S.hand=[mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','J'),mkc('destroyer','R'),mkc('jeep','V')];E.fuseCards(S,0,1);
 check('déploiement : orange + jaune + rouge',E.planDeploy(S,[0,1,2]).ok,true);check('déploiement : orange + vert refusé',E.planDeploy(S,[0,3]).reason,'colors');
 // --- niveaux, jokers, butin, boutique, carte
 st=E.statsFor(T.tireurs,'',null,'me',3);check('tireurs niv3 = 16 hommes',st.men,16);
