@@ -17,7 +17,8 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Fusion** : deux groupes du même type et de couleurs différentes forment un groupe à deux couleurs (jaune + rouge = orange, etc.).
   - en main : deux cartes fusionnent et ne coûtent qu'une carte ;
   - sur le front : un groupe déployé peut fusionner avec un autre dès le tour suivant son arrivée.
-- **Annuler** : le bouton « Annuler » défait les dernières actions du tour (pose, fusion, changement de place).
+- **Un tour = un déploiement groupé** : on sélectionne toutes les cartes à déployer (leur coût total ne dépasse pas le ravitaillement), un aperçu bleu montre où elles iront, puis « Déployer » pose tout en même temps et termine le tour.
+- **Annuler** : le bouton « Annuler » défait les fusions et changements de place avant le déploiement.
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
 - **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.

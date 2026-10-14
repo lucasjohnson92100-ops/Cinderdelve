@@ -1,7 +1,7 @@
-// Vérifie le moteur : front unique, mer et air, couleurs, fusions (en main et sur le terrain), niveaux, jokers, butin, boutique, carte (node test_core.js)
+// Vérifie le moteur : front unique, mer et air, couleurs, fusions, déploiement groupé, niveaux, jokers, butin, boutique, carte (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,planDeploy,deployAll,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const mk=(o={})=>E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],...o},()=>0.5);
 const T=E.TYPES;
@@ -63,6 +63,19 @@ E.playCard(S,0,{pos:'back'});E.playCard(S,0,{pos:'back'});check('ordre',S.front.
 check('mise en première ligne',E.moveToFront(S,S.front.me[1].uid),true);check('spiders devant',S.front.me[0].key,'spiders');
 const sn=E.snapshotState(S);S.hand=[E.mkCard('blinde','J')];S.supply=9;E.playCard(S,0,{pos:'back'});check('3 unités',S.front.me.length,3);
 E.restoreState(S,sn);check('annulation : retour à 2 unités',S.front.me.length,2);
+// --- déploiement groupé selon le ravitaillement
+S=mk();S.plan=[];S.supply=4;S.hand=[E.mkCard('tireurs','J'),E.mkCard('spiders','V'),E.mkCard('blinde','J'),E.mkCard('destroyer','V'),E.mkCard('chasseur','N')];
+check('2 + 2 = 4 : possible',E.planDeploy(S,[0,1]).ok,true);check('coût 4',E.planDeploy(S,[0,1]).cost,4);
+check('2 + 2 + 2 : pas assez de ravitaillement',E.planDeploy(S,[0,1,3]).reason,'supply');
+check('blindé + tireurs = 5 : trop cher',E.planDeploy(S,[2,0]).ok,false);
+const hh=E.deployAll(S,[0,1],'back');check('2 groupes posés d’un coup',S.front.me.length,2);check('ordre de sélection',S.front.me[0].key,'tireurs');check('2 cartes en défausse',S.discard.length,2);check('ravitaillement épuisé',S.supply,0);check('main restante',S.hand.length,3);
+check('hits de déploiement',hh.length,2);
+S=mk();S.plan=[];S.supply=9;S.front.me=[];E.deploy(S,'me','blinde','J');S.hand=[E.mkCard('tireurs','J'),E.mkCard('spiders','V'),E.mkCard('destroyer','V')];
+E.deployAll(S,[0,1,2],'front');check('devant : ordre de sélection conservé',S.front.me.map(u=>u.key).join(','),'tireurs,spiders,blinde');check('navire posé en mer',S.sea.length,1);
+S=mk();S.supply=9;E.deploy(S,'me','tireurs','');E.deploy(S,'me','tireurs','R');E.deploy(S,'me','tireurs','V');S.hand=[E.mkCard('spiders','J'),E.mkCard('spiders','V')];
+check('front plein avec 2 nouveaux groupes',E.planDeploy(S,[0,1]).reason,'front');check('un seul passe',E.planDeploy(S,[0]).ok,true);
+S=mk();S.supply=9;S.hand=[E.mkCard('destroyer','V'),E.mkCard('destroyer','R'),E.mkCard('croiseur','N')];check('3 navires : zone pleine',E.planDeploy(S,[0,1,2]).reason,'sea');
+S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['ito','silva']},()=>0.5);S.hand=[E.mkCard('destroyer','V'),E.mkCard('tireurs','J')];check('ito + silva : destroyer 2-1-1 = 0, tireurs 2',E.planDeploy(S,[0,1]).cost,2);
 // --- niveaux, jokers, butin, boutique, carte
 st=E.statsFor(T.tireurs,'',null,'me',3);check('tireurs niv3 = 16 hommes',st.men,16);
 const jb=(ids,t,c,lv,side='me')=>E.statsFor(E.TYPES[t],c,{officers:ids},side,lv);
