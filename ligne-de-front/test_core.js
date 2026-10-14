@@ -1,7 +1,7 @@
 // Vérifie le moteur : grille et terrains, déplacements payés en ravitaillement, portées, couverture, villages, fusions, règle des couleurs, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,terrainCost,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,bestMove,isLandCell};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,terrainCost,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,bestMove,isLandCell};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // terrain : propriétés
@@ -141,6 +141,12 @@ S=mk();S.units=[];sh=E.mkUnit(S,'me','destroyer','');E.placeUnit(S,sh,GH-1,S.sea
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];const bb=E.mkUnit(S,'me','bombardier','');bb.fresh=false;E.placeUnit(S,bb,3,3);
 const e1=E.mkUnit(S,'en','rifle');E.placeUnit(S,e1,2,2);const e2=E.mkUnit(S,'en','rifle');E.placeUnit(S,e2,4,4);const e3=E.mkUnit(S,'en','rifle');E.placeUnit(S,e3,1,3);
 st=[];S.phase='me';E.attackUnit(S,bb,st);check('bombe sur la diagonale',e1.hp,2);check('bombe 2e voisin',e2.hp,2);check('hors zone intact',e3.hp,6);
+// frappe aérienne : glisser le bombardier sur un ennemi
+S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];S.supply=10;
+{const x1=E.mkUnit(S,'en','rifle');E.placeUnit(S,x1,2,2);const x2=E.mkUnit(S,'en','rifle');E.placeUnit(S,x2,3,3);const x3=E.mkUnit(S,'en','rifle');E.placeUnit(S,x3,5,5);
+ S.hand=[E.mkCard('bombardier','')];const cells=E.deployCells(S,S.hand[0]);check('bombardier : cibles = ennemis + QG',cells.length,4);
+ const stb=E.airStrike(S,0,2,2);check('frappe réussie',!!stb,true);check('2 ennemis touchés dans la zone',x1.hp+'/'+x2.hp+'/'+x3.hp,'2/2/6');check('pas d\'unité posée',S.units.filter(u=>u.side==='me').length,0);check('coût payé',S.supply,7);check('carte défaussée',S.hand.length,0);
+ S.hand=[E.mkCard('bombardier','')];S.supply=10;const h0=S.hq.en;E.airStrike(S,0,S.hqPos.en[0],S.hqPos.en[1]);check('frappe sur le QG',h0-S.hq.en,4);}
 // croiseur : portée 2-5
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];const cr=E.mkUnit(S,'me','croiseur','');E.placeUnit(S,cr,5,0);const et=E.mkUnit(S,'en','panzer');E.placeUnit(S,et,2,1);
 check('croiseur : cible à 4',E.targetsFrom(S,cr,5,0).length,1);et.r=5;et.c=1;check('croiseur : trop près',E.targetsFrom(S,cr,5,0).length,0);

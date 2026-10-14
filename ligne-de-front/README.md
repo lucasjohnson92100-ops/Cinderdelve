@@ -15,7 +15,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Un tour** : on **glisse une carte de la main sur une case bleue** de la carte pour la déployer (les 2 lignes du bas, un village tenu ; navires en mer près du QG ; avions partout). Toucher une carte puis une autre du même type les **fusionne** aussitôt. On déplace ensuite les unités en les touchant. Pour attaquer, on touche une unité puis l'ennemi cerclé de rouge à portée (ou le QG ennemi si on en est assez proche) : une **scène de combat** montre les attaquants à gauche, les défenseurs à droite et leurs pertes. Une unité attaque une fois par tour et ne bouge plus après. « Fin du tour » : l'ennemi avance et attaque à son tour (même scène).
 - **Chaque carte est un groupe** : par exemple 10 soldats (10 tirs de 1), 4 jeeps mitrailleuses (4 tirs de 2) ou 1 char (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs. Les cartes affichent l'effectif (soldats, jeeps, avions…) ; le détail est dans la fiche « i ».
 - **Riposte** (comme dans Advance Wars) : un défenseur terrestre qui survit et peut atteindre l'attaquant tire aussitôt avec les hommes qui lui restent. Pas de riposte contre les navires, les avions, les bombes ni sur le QG. Vos unités ripostent aussi aux attaques ennemies.
-- **Navires et avions** ne peuvent pas être touchés et restent quelques tours ; ils ont une longue portée (croiseur : 2 à 5 cases, chasseur : 3, bombardier : zone de 3 × 3).
+- **Navires et avions** ne peuvent pas être touchés et restent quelques tours ; ils ont une longue portée (croiseur : 2 à 5 cases, chasseur : 3, bombardier : frappe aérienne immédiate, on glisse la carte sur un ennemi ou le QG ennemi et la zone 3 × 3 est bombardée).
 - **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
 - **Fusion illimitée** : on fusionne autant de cartes du même type qu'on veut, de couleurs différentes ou non (jaune + rouge = orange ; 3 couleurs = tricolore ; 4 = arc-en-ciel), en main ou, sur la carte, entre groupes voisins dès le tour suivant leur arrivée. Les **soldats et les PV s'additionnent** (10 + 10 + 15 tireurs = 35) et les bonus de couleur valent pour tout le groupe. Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion.
 - **Règle des couleurs** : dans un même tour, on ne déploie que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge).
@@ -30,6 +30,8 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Carte de campagne** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
 ## Graphismes et animations
+
+- Sprites dessinés façon dessin animé avec ombres et reflets : soldats de profil (casque rond pour vous, évasé pour l'ennemi, écharpe à la couleur de la carte), chars avec chenilles, chef de char et fanion, jeep avec mitrailleur, navires avec fumée de cheminée, avions avec hélices qui tournent, parachute qui se balance. L'ennemi regarde vers la gauche.
 
 - Tuiles raccordées : les routes, rivières et ponts se relient à leurs voisins ; plages et écume le long de la mer.
 - Curseur animé sur l'unité choisie, cases de déplacement en bleu, portée d'attaque en rouge ; toucher un ennemi montre sa zone de menace.

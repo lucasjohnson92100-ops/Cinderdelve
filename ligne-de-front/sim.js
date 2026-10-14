@@ -2,7 +2,7 @@
 // Simulation d'une campagne : un bot déploie, déplace, fusionne et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,bestMove,targetsFrom,distMap,terrainCost,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
+const E=new Function(core+';return {airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,bestMove,targetsFrom,distMap,terrainCost,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
 function evalGroups(S,budget){
@@ -43,7 +43,7 @@ function botTurn(S,reserve){
   if(A.value>B.value){fuseAllHand(S);sel=evalGroups(S,budget);}else sel=B;
   if(sel.idxs.length){
     const cards=sel.idxs.map(i=>S.hand[i]).sort((a,b)=>E.TYPES[b.t].cost-E.TYPES[a.t].cost);
-    for(const card of cards){const hi=S.hand.indexOf(card);if(hi<0)continue;const cell=chooseCell(S,card);if(!cell)continue;E.placeCard(S,hi,cell.r,cell.c);}
+    for(const card of cards){const hi=S.hand.indexOf(card);if(hi<0)continue;const cell=chooseCell(S,card);if(!cell)continue;if(card.t==='bombardier')E.airStrike(S,hi,cell.r,cell.c);else E.placeCard(S,hi,cell.r,cell.c);}
   }
   // déplacements, unités les plus avancées d'abord
   const mine=E.units(S,'me').sort((a,b)=>a.r-b.r);

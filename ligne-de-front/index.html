@@ -741,6 +741,15 @@ body:has(.btl) .sky-fx { display: none; }
 @keyframes ripo { 0% { transform: translate(-50%, -50%) scale(0) rotate(-12deg); } 25% { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -70%) scale(1); } }
 .sp.att.dead .fig { opacity: 0; transition: opacity .4s .3s; }
 .grip { position: absolute; right: 1px; top: 1px; z-index: 8; font-size: .7rem; font-weight: 800; line-height: 1; color: #fff; background: var(--red-d); border: 1.5px solid var(--ink); border-radius: 50%; width: 15px; height: 15px; display: grid; place-items: center; animation: swd 1s ease-in-out infinite alternate; pointer-events: none; }
+
+/* sprites animés */
+.spr .prop { animation: prop .12s linear infinite; transform-box: view-box; } @keyframes prop { 0% { transform: scaleX(1); } 50% { transform: scaleX(.15); } 100% { transform: scaleX(1); } }
+.spr .smk { animation: smoke 2.4s ease-out infinite; transform-box: fill-box; transform-origin: 50% 100%; opacity: 0; } .spr .smk.b { animation-delay: -1.2s; }
+.spr .flag { transform-box: fill-box; transform-origin: 0 50%; animation: flagwave .6s ease-in-out infinite alternate; }
+.spr .wavefx { animation: wavebob 1.6s ease-in-out infinite alternate; } @keyframes wavebob { to { transform: translateX(-4px); } }
+.spr .canopy { transform-box: fill-box; transform-origin: 50% 100%; animation: canopy2 2s ease-in-out infinite alternate; } @keyframes canopy2 { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.gu.walking .spr .treads, .travel .spr .treads { animation: treads .25s linear infinite; } @keyframes treads { to { stroke-dashoffset: -5.6; } }
+.flyover { position: absolute; left: 0; z-index: 12; pointer-events: none; filter: drop-shadow(0 18px 4px rgba(27, 37, 64, .35)); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -771,7 +780,7 @@ const TYPES = {
   croiseur: { cls: 'ship', mv: 2, rng: [2, 5], fam: 'mer', name: 'Croiseur', cost: 3, men: 1, dmg: 7, ttl: 3, pierce: 9, rar: 3, txt: '1 gros obus de 7, ignore le blindage. Reste 3 tours.' },
   sousmarin: { cls: 'ship', mv: 3, rng: [1, 2], fam: 'mer', name: 'Sous-marin', cost: 2, men: 1, dmg: 5, ttl: 3, pierce: 2, kw: ['heavy'], rar: 2, txt: "1 torpille de 5 sur l'ennemi le plus solide de sa ligne. Reste 3 tours." },
   chasseur: { cls: 'air', mv: 5, rng: [1, 3], fam: 'air', name: 'Chasseur', cost: 2, men: 2, dmg: 2, ttl: 2, kw: ['hunt', 'cover'], rar: 1, txt: "2 tirs de 2 sur les ennemis les plus faibles. Annule l'obus visant sa ligne. 2 tours." },
-  bombardier: { cls: 'air', mv: 4, rng: [1, 1], fam: 'air', name: 'Bombardier', cost: 3, men: 1, dmg: 4, ttl: 1, kw: ['bomb'], rar: 3, txt: '4 dégâts à chaque ennemi de sa ligne. 1 tour.' },
+  bombardier: { cls: 'air', mv: 4, rng: [1, 1], fam: 'air', name: 'Bombardier', cost: 3, men: 1, dmg: 4, ttl: 1, kw: ['bomb'], rar: 3, txt: 'Frappe aérienne : glissez la carte sur un ennemi (ou sur le QG ennemi). Bombardement immédiat : 4 dégâts à chaque ennemi de la zone 3 × 3.' },
   paras: { cls: 'foot', mv: 2, rng: [1, 1], fam: 'air', land: true, name: 'Parachutistes', cost: 2, men: 6, dmg: 1, hpm: 1, armor: 0, kw: ['raid'], rar: 2, txt: "6 parachutistes. Attaquent dès l'arrivée." },
 };
 const TYPE_KEYS = Object.keys(TYPES);
@@ -1095,14 +1104,26 @@ function cardCost(S, card) {
 function deployCells(S, card) {
   const def = TYPES[card.t], out = [];
   for (let r = 0; r < GH; r++) for (let c = 0; c < GW; c++) {
-    if (unitAt(S, r, c)) continue;
     const t = S.grid[r][c];
+    if (card.t !== 'bombardier' && unitAt(S, r, c)) continue;
     if (def.fam === 'mer') { if (t === 'mer' && r >= GH - 3) out.push([r, c]); }
+    else if (card.t === 'bombardier') { const e = unitAt(S, r, c); if ((e && e.side === 'en') || (S.hqPos && S.hqPos.en[0] === r && S.hqPos.en[1] === c)) out.push([r, c]); }
     else if (def.fam === 'air' && !def.land) { if (t !== 'qg') out.push([r, c]); }
     else if (def.fam === 'air') { if (isLandCell(S, r, c) && t !== 'riviere' && r >= 2) out.push([r, c]); }
     else if (terrainCost(def.cls, t) && (r >= GH - 2 || (t === 'village' && S.owner[r + ',' + c] === 'me'))) out.push([r, c]);
   }
   return out;
+}
+// Frappe aérienne du bombardier : la carte est lâchée sur un ennemi (ou le QG ennemi) et bombarde aussitôt la zone 3 × 3
+function airStrike(S, hi, r, c) {
+  const card = S.hand[hi];
+  if (!card || card.t !== 'bombardier' || S.over || !canDeployNow(S, card).ok || !deployCells(S, card).some(x => x[0] === r && x[1] === c)) return null;
+  S.supply -= cardCost(S, card); S.flags.used = true; (S.flags.deployed = S.flags.deployed || []).push({ t: card.t, c: card.c, parts: card.parts ? card.parts.length : 0 });
+  S.hand.splice(hi, 1); discardCard(S, card);
+  const u = mkUnit(S, 'me', card.t, card.c, card.lv, card.parts); u.r = r; u.c = c; u.fresh = false; u.born = S.turn;
+  const isHQ = S.hqPos.en[0] === r && S.hqPos.en[1] === c, steps = []; S.phase = 'me';
+  attackUnit(S, u, steps, isHQ ? { hq: true } : {});
+  return steps[0] || null;
 }
 // Peut-on déployer cette carte maintenant ? (ravitaillement, place, et règle des couleurs sur les cartes déjà posées ce tour)
 function canDeployNow(S, card) {
@@ -1117,7 +1138,7 @@ const isPlayable = (S, hi) => !S.over && !!S.hand[hi] && cardCost(S, S.hand[hi])
 // Pose une carte de la main sur une case
 function placeCard(S, hi, r, c) {
   const card = S.hand[hi];
-  if (!card || S.over || !canDeployNow(S, card).ok || !deployCells(S, card).some(x => x[0] === r && x[1] === c)) return null;
+  if (!card || card.t === 'bombardier' || S.over || !canDeployNow(S, card).ok || !deployCells(S, card).some(x => x[0] === r && x[1] === c)) return null;
   S.supply -= cardCost(S, card); S.flags.used = true; (S.flags.deployed = S.flags.deployed || []).push({ t: card.t, c: card.c, parts: card.parts ? card.parts.length : 0 });
   S.hand.splice(hi, 1); discardCard(S, card);
   const u = mkUnit(S, 'me', card.t, card.c, card.lv, card.parts); u.born = S.turn; u.mvLeft = u.mv;
@@ -1457,121 +1478,152 @@ const SKIN = '#f6c99b', BOOT = '#4a3322', STEEL = '#aab4bf', STEEL_D = '#626e7b'
 const sw = 'stroke="' + INK + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
 const shadow = '<ellipse cx="32" cy="58" rx="17" ry="4.2" fill="rgba(20,40,10,.28)"/>';
 
-function soldierBody(t, o = {}) {
-  const helm = o.helm || t.acc || t.dark;
-  return `
-  <rect x="22" y="44" width="8" height="12" rx="3" fill="${t.dark}" ${sw}/><rect x="34" y="44" width="8" height="12" rx="3" fill="${t.dark}" ${sw}/>
-  <rect x="20.5" y="52" width="10.5" height="6" rx="2.6" fill="${BOOT}" ${sw}/><rect x="33" y="52" width="10.5" height="6" rx="2.6" fill="${BOOT}" ${sw}/>
-  <rect x="18" y="29" width="28" height="19" rx="7" fill="${t.main}" ${sw}/>
-  <rect x="18.5" y="41" width="27" height="4" fill="${t.dark}" opacity=".55"/>${t.acc2 ? `<rect x="18.5" y="32" width="27" height="5" fill="${t.acc2}" stroke="${INK}" stroke-width="1.4"/>` : ''}
-  <rect x="29" y="40" width="6" height="6" rx="1" fill="${o.buckle || '#f2c14e'}" ${sw} stroke-width="1.6"/>
-  <ellipse cx="14.5" cy="38" rx="4.6" ry="8" fill="${t.main}" ${sw}/><ellipse cx="49.5" cy="38" rx="4.6" ry="8" fill="${t.main}" ${sw}/>
-  <circle cx="14.5" cy="46" r="3.6" fill="${SKIN}" ${sw}/><circle cx="49.5" cy="46" r="3.6" fill="${SKIN}" ${sw}/>
-  <circle cx="32" cy="21" r="11.5" fill="${SKIN}" ${sw}/>
-  <circle cx="27.5" cy="23" r="1.9" fill="${INK}"/><circle cx="36.5" cy="23" r="1.9" fill="${INK}"/>
-  <path d="M29.5 28 q2.5 2 5 0" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/>
-  ${o.noHelm ? '' : `<path d="M19.5 20 Q19.5 6.5 32 6.5 Q44.5 6.5 44.5 20 Z" fill="${helm}" ${sw}/><rect x="18.5" y="17.5" width="27" height="5" rx="2.5" fill="${helm}" ${sw}/><path d="M25 10.5 q4 -2.5 9 -1.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>`}`;
+// Ombres et reflets façon dessin animé (cel shading)
+const OUT = `stroke="${INK}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"`;
+const DK = 'rgba(16,24,48,.22)', LT = 'rgba(255,255,255,.55)';
+const thick = (d, col, w) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 3.2}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const STAR = (x, y, r, col = '#fff') => { let p = ''; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r * 0.45 : r; p += `${k ? 'L' : 'M'}${(x + Math.cos(a) * rr).toFixed(1)} ${(y + Math.sin(a) * rr).toFixed(1)} `; } return `<path d="${p}Z" fill="${col}" stroke="${INK}" stroke-width=".9"/>`; };
+// Casque : rond pour vous, évasé pour l'ennemi ; bande à la couleur de la carte
+function helmetArt(t, x = 33, y = 3) {
+  const h = t.helm || t.dark, band = t.acc || (t.side === 'en' ? '#2f3542' : '#d8c38f');
+  const shape = t.side === 'en'
+    ? `<path d="M${x - 12} ${y + 12} Q${x - 12} ${y + 0.5} ${x} ${y + 0.5} Q${x + 12} ${y + 0.5} ${x + 12} ${y + 10} L${x + 15} ${y + 15.5} L${x + 11} ${y + 16} L${x + 10} ${y + 13} H${x - 10} L${x - 11} ${y + 16} L${x - 15} ${y + 15.5} Z" fill="${h}" ${OUT}/>`
+    : `<path d="M${x - 12.5} ${y + 12} Q${x - 12} ${y} ${x} ${y} Q${x + 12} ${y} ${x + 12.5} ${y + 12} Z" fill="${h}" ${OUT}/><path d="M${x - 15} ${y + 12.5} H${x + 15} Q${x + 15} ${y + 15} ${x + 12} ${y + 15} H${x - 12} Q${x - 15} ${y + 15} ${x - 15} ${y + 12.5} Z" fill="${h}" ${OUT}/>`;
+  return `${shape}<path d="M${x - 11} ${y + 9.5} H${x + 11}" stroke="${band}" stroke-width="2.8"/><path d="M${x - 7} ${y + 4} Q${x - 2} ${y + 1.5} ${x + 3} ${y + 2.5}" fill="none" stroke="${LT}" stroke-width="2" stroke-linecap="round"/>
+  <path d="M${x + 4} ${y + 1} Q${x + 11} ${y + 3} ${x + 11.5} ${y + 11} H${x + 5} Z" fill="${DK}"/>`;
 }
-const rifle = `<g transform="translate(46 8)"><rect x="0" y="6" width="4.6" height="38" rx="1.6" fill="${STEEL_D}" ${sw}/><rect x="-0.8" y="30" width="6.2" height="16" rx="2.4" fill="${WOOD}" ${sw}/></g><circle cx="49.5" cy="45" r="3.8" fill="${SKIN}" ${sw}/>`;
-
+function headArt(t, x = 33, y = 17.5, r = 11.5) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${SKIN}" ${OUT}/><path d="M${x + 5} ${y - 9} A${r} ${r} 0 0 1 ${x + 3} ${y + 11}" fill="none" stroke="rgba(190,120,80,.35)" stroke-width="3"/>
+  <ellipse cx="${x - 2.6}" cy="${y + 1.6}" rx="2" ry="2.6" fill="#fff" stroke="${INK}" stroke-width="1"/><ellipse cx="${x + 4.8}" cy="${y + 1.6}" rx="2" ry="2.6" fill="#fff" stroke="${INK}" stroke-width="1"/>
+  <circle cx="${x - 2}" cy="${y + 2.2}" r="1.3" fill="${INK}"/><circle cx="${x + 5.4}" cy="${y + 2.2}" r="1.3" fill="${INK}"/><circle cx="${x - 2.4}" cy="${y + 1.6}" r=".45" fill="#fff"/><circle cx="${x + 5}" cy="${y + 1.6}" r=".45" fill="#fff"/>
+  <path d="M${x - 5.6} ${y - 2} l4.6 1.4 M${x + 8} ${y - 2} l-4.6 1.4" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="${x - 6}" cy="${y + 5.6}" r="1.9" fill="#f29a8a" opacity=".65"/><circle cx="${x + 8.2}" cy="${y + 5.6}" r="1.9" fill="#f29a8a" opacity=".65"/>
+  <path d="M${x - 0.6} ${y + 7.4} q2.1 1.4 4.2 0" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M${x - 10} ${y - 1} Q${x - 9} ${y + 9} ${x - 1} ${y + 10.5}" fill="none" stroke="#6b4a26" stroke-width="1.3"/>`;
+}
+// Soldat de profil (tourné vers la droite), arme en diagonale
+function trooper(t, o = {}) {
+  const band = t.acc || (t.side === 'en' ? '#2f3542' : '#e9d8a6');
+  const gun = o.gun === false ? '' : o.gun || `${thick('M13 48 L57 22', INK, 2.4)}<path d="M13 48 L32 37" stroke="#9b6532" stroke-width="4" stroke-linecap="round"/><path d="M32 37 L57 22" stroke="#626e7b" stroke-width="2.6" stroke-linecap="round"/><path d="M56 22.6 L62.5 18.8" stroke="#dfe5ea" stroke-width="1.8" stroke-linecap="round"/><rect x="27" y="38.5" width="4" height="3.5" rx="1" fill="#3b4350" transform="rotate(-30 29 40)"/>`;
+  return `${o.pack === false ? '' : `<rect x="10.5" y="27" width="11" height="17" rx="4" fill="#6f6448" ${OUT}/><rect x="9.5" y="23.5" width="13" height="5.5" rx="2.75" fill="#9a8a62" ${OUT}/><path d="M12 31 h8" stroke="${DK}" stroke-width="2"/>`}
+  ${o.legs === false ? '' : `${thick('M25 45 L22.5 54', t.dark, 5.4)}${thick('M37.5 45 L41.5 53', t.dark, 5.4)}
+  <path d="M15.5 57 h10.5 a2.6 2.6 0 0 0 0 -5.2 h-6 q-4.5 0 -4.5 5.2z" fill="#4a3322" ${OUT} stroke-width="1.8"/><path d="M37 56 h10.5 q2.7 0 2.7 -2.6 q0 -2.6 -2.7 -2.6 h-7.5 z" fill="#4a3322" ${OUT} stroke-width="1.8"/>`}
+  <path d="M19 32 Q19 27 25 27 H39 Q45 27 45 32 V45 Q45 47.5 42.5 47.5 H21.5 Q19 47.5 19 45 Z" fill="${t.main}" ${OUT}/>
+  <path d="M35 27.6 H39 Q44.5 27.5 44.5 32 V45 Q44.5 47 42.5 47 H36 Z" fill="${DK}"/><path d="M22 31 V42" stroke="${LT}" stroke-width="2" stroke-linecap="round"/>
+  <rect x="19.6" y="40.2" width="24.8" height="4" fill="#6b4a26" stroke="${INK}" stroke-width="1.3"/><rect x="29.6" y="39.4" width="5" height="5.6" rx="1" fill="#f2c14e" stroke="${INK}" stroke-width="1.3"/>
+  <rect x="21.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/><rect x="37.4" y="35.2" width="5.4" height="4.8" rx="1.2" fill="#9a8a62" stroke="${INK}" stroke-width="1.2"/>
+  <path d="M23.5 29.5 Q32 34.5 40.5 29.5" fill="none" stroke="${INK}" stroke-width="5.2" stroke-linecap="round"/><path d="M23.5 29.5 Q32 34.5 40.5 29.5" fill="none" stroke="${band}" stroke-width="3" stroke-linecap="round"/>
+  ${gun}
+  <circle cx="24.5" cy="42.5" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>${o.hand2 === false ? '' : `<circle cx="${o.hx || 43}" cy="${o.hy || 31.5}" r="3.5" fill="${SKIN}" ${OUT} stroke-width="1.8"/>`}
+  ${headArt(t)}${o.helm === false ? '' : helmetArt(t)}${o.extra || ''}`;
+}
 const SPRITES = {
-  // ---- Alliés / ennemis : infanterie ----
-  inf: t => soldierBody(t) + rifle,
-  rifle: t => soldierBody(t) + rifle,
-  mg: t => `
-    <path d="M40 58 L47 45 M54 58 L47 45 M47 58 L47 45" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-    <g transform="translate(-5 2)">${soldierBody(t)}</g>
-    <g transform="translate(0 0)"><rect x="40" y="30" width="19" height="11" rx="3.5" fill="${STEEL_D}" ${sw}/><rect x="55" y="19" width="4.8" height="16" rx="1.8" fill="${STEEL}" ${sw}/><rect x="42" y="41" width="13" height="5" rx="2" fill="#d9a441" ${sw}/><circle cx="41" cy="36" r="3" fill="${STEEL}" ${sw}/></g>`,
-  mgnest: t => `
-    ${soldierBody(t, {}).replace(/<rect x="20.5"[^>]*\/><rect x="33"[^>]*\/>/, '')}
-    <rect x="46" y="22" width="5" height="14" rx="2" fill="${STEEL}" ${sw}/><rect x="40" y="32" width="18" height="9" rx="3" fill="${STEEL_D}" ${sw}/>
-    <g>${[0, 1, 2, 3].map(i => `<rect x="${3 + i * 14.5}" y="${i % 2 ? 44 : 46}" width="18" height="11" rx="5.5" fill="#d2b27a" ${sw}/>`).join('')}</g>
-    <g>${[0, 1, 2].map(i => `<rect x="${9 + i * 16}" y="35.5" width="18" height="11" rx="5.5" fill="#dcc08a" ${sw}/>`).join('')}</g>`,
-  medic: t => soldierBody(t, { helm: '#fff', noHelm: false }).replace(/<path d="M19.5 20[^>]*\/>/, m => m) + `
-    <rect x="28.5" y="9" width="7" height="2.4" fill="#e23b3b"/><rect x="30.8" y="6.7" width="2.4" height="7" fill="#e23b3b"/>
-    <rect x="3" y="36" width="15" height="14" rx="3" fill="#fff" ${sw}/><rect x="9" y="39" width="3" height="8" fill="#e23b3b"/><rect x="6.5" y="41.5" width="8" height="3" fill="#e23b3b"/>
-    <rect x="44" y="30" width="8" height="5" rx="2" fill="#fff" ${sw} stroke-width="1.8"/>`,
-  sniper: t => soldierBody(t, { noHelm: true }) + `
-    <path d="M17 18 Q32 2 47 18 L52 20 Q32 24 12 20 Z" fill="#5b7a3a" ${sw}/><circle cx="25" cy="13" r="1.8" fill="#8fb05b"/><circle cx="36" cy="11" r="1.8" fill="#8fb05b"/><circle cx="31" cy="16" r="1.6" fill="#3d5528"/>
-    <g transform="translate(45 2)"><rect x="0" y="2" width="4" height="48" rx="1.6" fill="${STEEL_D}" ${sw}/><rect x="-5" y="14" width="14" height="5" rx="2" fill="${STEEL}" ${sw}/><rect x="-1" y="36" width="6" height="14" rx="2.4" fill="${WOOD}" ${sw}/></g><circle cx="49.5" cy="46" r="3.8" fill="${SKIN}" ${sw}/>`,
-  bazooka: t => soldierBody(t) + `
-    <g transform="rotate(-18 40 30)"><rect x="37" y="3" width="9" height="39" rx="3.6" fill="#7d8a52" ${sw}/><path d="M37 3 h9 l-1.5 -6 h-6 z" fill="#d6483a" ${sw}/><rect x="35.6" y="34" width="11.8" height="5" rx="2" fill="${STEEL_D}" ${sw}/></g>
-    <circle cx="14.5" cy="46" r="3.8" fill="${SKIN}" ${sw}/>`,
-  para: t => `
-    <path d="M6 20 Q6 -2 32 -2 Q58 -2 58 20 Q51 14 45 20 Q38 13 32 20 Q26 13 19 20 Q12 14 6 20Z" fill="${t.light}" ${sw}/>
-    <path d="M32 -2 Q24 8 19 20 M32 -2 Q40 8 45 20 M32 -2 L32 20" fill="none" stroke="${INK}" stroke-width="1.6"/>
-    <g transform="translate(0 6) scale(1 .9)">${soldierBody(t)}</g><path d="M19 22 L24 36 M45 22 L40 36" stroke="${INK}" stroke-width="1.5" fill="none"/>` + `<g transform="translate(0 4)">${rifle.replace('translate(46 8)', 'translate(46 14) scale(1 .8)')}</g>`,
-  gren: t => soldierBody(t) + `
-    <path d="M18 31 L46 45" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/><path d="M18 31 L46 45" stroke="#b58a3c" stroke-width="2.2" stroke-linecap="round"/>
-    <g transform="translate(44 18)"><ellipse cx="5" cy="9" rx="6.4" ry="7.6" fill="#4d6b2f" ${sw}/><rect x="2.6" y="0" width="5.6" height="4.4" rx="1.4" fill="${STEEL}" ${sw}/><circle cx="10.5" cy="2.5" r="2.4" fill="none" stroke="${INK}" stroke-width="1.6"/></g>
-    <circle cx="49.5" cy="45" r="3.8" fill="${SKIN}" ${sw}/>`,
-  // ---- Blindés ----
-  tank: (t, o = {}) => {
-    const up = o.dir !== 'down', rot = up ? '' : ' transform="rotate(180 32 32)"';
-    return `<g${rot}>
-    <rect x="3" y="38" width="58" height="17" rx="8.5" fill="#3b4350" ${sw}/>
-    ${[0, 1, 2, 3, 4].map(i => `<circle cx="${12 + i * 10}" cy="46.5" r="4.4" fill="#8d97a3" ${sw} stroke-width="1.8"/>`).join('')}
-    <path d="M8 38 L12 24 H52 L56 38 Z" fill="${t.main}" ${sw}/>
-    <rect x="14" y="26" width="36" height="5" fill="${t.acc2 || t.dark}" opacity="${t.acc2 ? 1 : .5}"/>
-    <rect x="28.5" y="2" width="7" height="22" rx="2.6" fill="${STEEL}" ${sw}/><rect x="27" y="2" width="10" height="5" rx="1.8" fill="${STEEL_D}" ${sw}/>
-    <rect x="19" y="17" width="26" height="16" rx="7" fill="${t.acc || t.main}" ${sw}/><circle cx="32" cy="25" r="5.2" fill="${t.dark}" ${sw}/>
-    <path d="M32 22 l1.4 2.8 3 .4 -2.2 2.1 .6 3 -2.8 -1.5 -2.8 1.5 .6 -3 -2.2 -2.1 3 -.4z" fill="#ffe27a" stroke="none" transform="translate(0 -.5) scale(.9) translate(3.2 2.4)"/></g>`;
-  },
-  panzer: t => SPRITES.tank({ main: '#c4483a', dark: '#8f2a1e', light: t.light }, { dir: 'down' }).replace('</g>', `<rect x="5" y="14" width="54" height="4" fill="#d9d2c0" stroke="${INK}" stroke-width="1.6"/></g>`),
-  heavy: t => `<g transform="translate(-4.5 -5) scale(1.14)">${SPRITES.tank({ main: '#9c2f22', dark: '#6b1d14', light: t.light }, { dir: 'down' })}
-    <rect x="9" y="30" width="46" height="5" fill="#d9d2c0" stroke="${INK}" stroke-width="1.6"/>
-    ${[12, 24, 36, 48].map(x => `<path d="M${x} 24 l3 -5 l3 5z" fill="${STEEL}" stroke="${INK}" stroke-width="1.5"/>`).join('')}</g>`,
+  inf: t => trooper(t),
+  rifle: t => trooper(t),
+  gren: t => trooper(t, { gun: `${thick('M14 47 L50 27', INK, 2.2)}<path d="M14 47 L50 27" stroke="#626e7b" stroke-width="2.4" stroke-linecap="round"/>`, hx: 47, hy: 12,
+    extra: `<g transform="rotate(25 50 9)"><rect x="48.6" y="9" width="3" height="11" rx="1.2" fill="#9b6532" ${OUT} stroke-width="1.5"/><rect x="46" y="2" width="8" height="8" rx="2" fill="#5f6b3c" ${OUT} stroke-width="1.6"/><path d="M47.5 4 h4" stroke="${LT}" stroke-width="1.3"/></g>` }),
+  sniper: t => trooper({ ...t, helm: '#5b7a3a' }, { gun: `${thick('M11 47 L61 18', INK, 2)}<path d="M11 47 L28 37.5" stroke="#7a4a22" stroke-width="4" stroke-linecap="round"/><path d="M28 37.5 L61 18" stroke="#3b4350" stroke-width="2.2" stroke-linecap="round"/><rect x="33" y="29" width="11" height="4" rx="2" fill="#2f3542" stroke="${INK}" stroke-width="1.2" transform="rotate(-30 38 31)"/>`,
+    extra: `${[[22, 5], [27, 2], [33, 1.5], [39, 2.5], [44, 6], [25, 9], [41, 9]].map(([x, y]) => `<path d="M${x} ${y + 4} l-2 -5 l2 2 l1 -4 l1 4 l2 -2 z" fill="#6f9a3e" stroke="${INK}" stroke-width=".8"/>`).join('')}` }),
+  mgnest: t => `${trooper(t, { legs: false, pack: false, gun: false, hx: 40, hy: 33 })}
+    ${thick('M40 31 L62 27', INK, 3)}<path d="M40 31 L62 27" stroke="#3b4350" stroke-width="3.4" stroke-linecap="round"/><rect x="36" y="28" width="12" height="7" rx="2" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M47 35 L44 44 M47 35 L52 44" stroke="${INK}" stroke-width="1.8"/>
+    <path d="M38 35 q-4 6 2 9 q5 2 3 7" fill="none" stroke="#d9a441" stroke-width="2.4" stroke-dasharray="1.6 1.2"/>
+    ${[0, 1, 2, 3].map(i => `<rect x="${1 + i * 15}" y="${i % 2 ? 47 : 48.5}" width="19" height="10" rx="5" fill="#d2b27a" ${OUT}/><path d="M${5 + i * 15} ${i % 2 ? 52 : 53.5} h10" stroke="${DK}" stroke-width="1.6"/>`).join('')}
+    ${[0, 1, 2].map(i => `<rect x="${8 + i * 16}" y="39" width="18" height="10" rx="5" fill="#e0c690" ${OUT}/>`).join('')}`,
+  para: t => `<g class="canopy"><path d="M5 22 Q5 -1 32 -1 Q59 -1 59 22 Q52 16 45.5 22 Q39 15 32 22 Q25 15 18.5 22 Q12 16 5 22Z" fill="#f4f1e8" ${OUT}/>
+    <path d="M18.5 22 Q22 4 32 -1 Q42 4 45.5 22 Q39 15 32 22 Q25 15 18.5 22Z" fill="${t.light}" stroke="${INK}" stroke-width="1.4"/><path d="M12 6 Q20 0 28 0" fill="none" stroke="${LT}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M5 22 L22 40 M18.5 22 L26 38 M45.5 22 L38 38 M59 22 L43 40" stroke="${INK}" stroke-width="1.1" fill="none"/></g>
+    <g transform="translate(9 21) scale(.72)">${trooper(t, { pack: false })}</g>`,
+  // ---- Véhicules (de profil, tournés vers la droite) ----
+  tank: (t, o = {}) => tankArt(t, o),
+  panzer: t => tankArt({ ...t, main: '#8e8b78', dark: '#5f5d4f', acc: t.main }, { cross: true }),
+  heavy: t => `<g transform="translate(-4 -6) scale(1.13)">${tankArt({ ...t, main: '#6f6a5a', dark: '#4a4639', acc: t.main }, { cross: true, skirts: true, big: true })}</g>`,
 };
-
+function tankArt(t, o = {}) {
+  const acc = t.acc || '#d8c38f';
+  return `<rect x="3.5" y="40" width="55" height="15.5" rx="7.75" fill="#3b4350" ${OUT}/><path class="treads" d="M10 41.2 H52 M10 54.3 H52" stroke="#7d8794" stroke-width="1.8" stroke-dasharray="3 2.6"/>
+  ${[11.5, 21.5, 31.5, 41.5, 51].map(x => `<circle cx="${x}" cy="47.8" r="4.4" fill="#9aa4b0" ${OUT} stroke-width="1.6"/><circle cx="${x}" cy="47.8" r="1.5" fill="${INK}"/>`).join('')}
+  ${o.skirts ? `<rect x="6" y="38" width="50" height="7" rx="1.5" fill="${t.dark}" ${OUT} stroke-width="1.6"/>${[12, 22, 32, 42].map(x => `<path d="M${x} 38.5 v6" stroke="${INK}" stroke-width="1"/>`).join('')}` : ''}
+  <path d="M5 41 L10 30.5 H51 L59.5 38 L58.5 41 Z" fill="${t.main}" ${OUT}/><path d="M5.5 40.5 L7.8 36 H59 L58.5 40.5 Z" fill="${DK}"/><path d="M12 32.8 H49" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M12 35 H50" stroke="${INK}" stroke-width="4.4"/><path d="M12 35 H50" stroke="${acc}" stroke-width="2.6"/>
+  ${[14, 24, 34, 44].map(x => `<circle cx="${x}" cy="38.6" r=".9" fill="${INK}"/>`).join('')}
+  <circle class="smk" cx="6" cy="28" r="2.6" fill="#cfd6dc" opacity=".8"/>
+  <path d="M17.5 30.5 L20.5 20 Q21.5 16.5 25.5 16.5 H39.5 Q43.5 16.5 44.5 20 L47 30.5 Z" fill="${t.main}" ${OUT}/><path d="M37 16.8 H39.5 Q43.5 16.5 44.5 20 L47 30.3 H39 Z" fill="${DK}"/><path d="M22.5 22 Q23.5 19 27 19" fill="none" stroke="${LT}" stroke-width="1.8" stroke-linecap="round"/>
+  <rect x="44" y="20.5" width="6.5" height="8.5" rx="2" fill="${t.dark}" ${OUT} stroke-width="1.8"/>
+  <rect x="49.5" y="22.6" width="${o.big ? 15 : 12.5}" height="4.2" rx="1.6" fill="#626e7b" ${OUT} stroke-width="1.8"/><rect x="${o.big ? 62.5 : 60}" y="21.4" width="3.6" height="6.6" rx="1" fill="#3b4350" ${OUT} stroke-width="1.6"/>
+  ${o.cross ? `<path d="M29 21 h6 v3 h3 v6 h-3 v-0 h-6 v-6 h-3 v-3z" fill="none"/><circle cx="32.5" cy="24.5" r="4.4" fill="${acc}" stroke="${INK}" stroke-width="1.2"/><path d="M29.6 23 L32.5 26.2 L35.4 23" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<circle cx="32" cy="24" r="4.6" fill="#fff6dc" stroke="${INK}" stroke-width="1.3"/>${STAR(32, 24, 3.4, t.main)}`}
+  <ellipse cx="29.5" cy="16.6" rx="6" ry="2" fill="${t.dark}" ${OUT} stroke-width="1.6"/>
+  <circle cx="29.5" cy="12" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.8"/><circle cx="31" cy="12" r=".9" fill="${INK}"/><path d="M25 11.8 Q25.2 6.6 29.5 6.6 Q33.8 6.6 34 11.8Z" fill="#3b4350" ${OUT} stroke-width="1.6"/>
+  <path d="M21 18 L18.5 2.5" stroke="${INK}" stroke-width="1.3"/><path class="flag" d="M18.5 2.5 L26 4.2 L18.9 6.3Z" fill="${t.side === 'en' ? t.main : acc}" stroke="${INK}" stroke-width="1"/>`;
+}
 SPRITES.jeep = t => {
-  const acc = t.acc || t.dark;
-  return `<rect x="4" y="34" width="56" height="16" rx="6" fill="${t.main}" ${sw}/><rect x="4" y="40" width="56" height="4" fill="${t.acc2 || t.dark}" opacity="${t.acc2 ? 1 : .5}"/>
-  <path d="M14 34 L20 22 H40 L44 34 Z" fill="${acc}" ${sw}/><rect x="22" y="24" width="14" height="8" rx="1.5" fill="#bfe3f5" ${sw} stroke-width="1.6"/>
-  <rect x="38" y="14" width="5" height="14" rx="1.6" fill="${STEEL_D}" ${sw}/><rect x="36" y="9" width="16" height="5" rx="2" fill="${STEEL}" ${sw}/><rect x="49" y="7" width="12" height="3.4" rx="1.4" fill="${INK}"/>
-  <circle cx="16" cy="51" r="7" fill="#3b4350" ${sw}/><circle cx="16" cy="51" r="2.8" fill="#8d97a3"/><circle cx="48" cy="51" r="7" fill="#3b4350" ${sw}/><circle cx="48" cy="51" r="2.8" fill="#8d97a3"/>`;
+  const acc = t.acc || '#d8c38f';
+  return `<circle cx="6" cy="37" r="5" fill="#3b4350" ${OUT} stroke-width="1.8"/><circle cx="6" cy="37" r="2" fill="#8d97a3"/>
+  <path d="M7 45 V36 Q7 32.5 10.5 32.5 H24 L27.5 26.5 H35 L37 32.5 H55 Q59 32.5 59 36.5 V45 Z" fill="${t.main}" ${OUT}/>
+  <path d="M7.5 41 H58.5 V44.5 H7.5 Z" fill="${DK}"/><path d="M11 35.5 H54" stroke="${INK}" stroke-width="4.2"/><path d="M11 35.5 H54" stroke="${acc}" stroke-width="2.4"/><path d="M40 34 H55" stroke="${LT}" stroke-width="1.5" stroke-linecap="round"/>
+  ${STAR(48, 39.6, 3, '#fff6dc')}
+  <path d="M36.5 32.5 L39.5 21.5" stroke="${INK}" stroke-width="2"/><rect x="38" y="21" width="2.2" height="10" fill="#bfe3f5" stroke="${INK}" stroke-width="1"/>
+  <circle cx="33" cy="25" r="4.2" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="34.6" cy="25" r=".9" fill="${INK}"/><path d="M28.6 24.5 Q29 19.6 33 19.6 Q37 19.6 37.4 24.5Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>
+  <rect x="18.6" y="15" width="2.4" height="14" fill="#3b4350" stroke="${INK}" stroke-width="1"/>
+  <circle cx="15.5" cy="15.5" r="4.4" fill="${SKIN}" ${OUT} stroke-width="1.7"/><circle cx="17.2" cy="15.5" r=".9" fill="${INK}"/><path d="M11 15 Q11.4 9.8 15.5 9.8 Q19.6 9.8 20 15Z" fill="${t.dark}" ${OUT} stroke-width="1.5"/>
+  ${thick('M16 13.5 L33 11.5', INK, 2)}<path d="M16 13.5 L33 11.5" stroke="#3b4350" stroke-width="3.2" stroke-linecap="round"/><rect x="15" y="11.5" width="9" height="5" rx="1.5" fill="#626e7b" stroke="${INK}" stroke-width="1.2"/>
+  ${[17, 49].map(x => `<path d="M${x - 9} 45 A9 9 0 0 1 ${x + 9} 45" fill="${t.dark}" ${OUT} stroke-width="1.8"/><circle cx="${x}" cy="47" r="7.4" fill="#3b4350" ${OUT}/><circle cx="${x}" cy="47" r="3" fill="#9aa4b0" stroke="${INK}" stroke-width="1.2"/><path d="M${x - 4} 43.5 a5 5 0 0 1 4 -1.5" fill="none" stroke="${LT}" stroke-width="1.4"/>`).join('')}`;
 };
-const WAVE = `<path d="M0 54 q4 -5 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v10 h-64z" fill="#4aa8e8" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
-const hullStripe = t => `<rect x="9" y="43" width="46" height="4.4" fill="${t.acc || t.main}" stroke="${INK}" stroke-width="1.4"/>`;
-SPRITES.destroyer = t => `
-  <path d="M3 38 L61 38 L54 53 L10 53 Z" fill="#aeb9c6" ${sw}/>${hullStripe(t)}
-  <rect x="22" y="26" width="20" height="13" rx="2" fill="#dde3e9" ${sw}/><rect x="28" y="19" width="9" height="8" rx="1.6" fill="#c9d1da" ${sw}/><rect x="39" y="17" width="5.5" height="11" rx="1.6" fill="${t.dark}" ${sw}/>
-  <circle cx="14" cy="36.5" r="4.6" fill="${STEEL_D}" ${sw}/><path d="M14 36 L5 31" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/><circle cx="52" cy="36.5" r="4.6" fill="${STEEL_D}" ${sw}/><path d="M52 36 L60 31" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/>
-  <path d="M32 19 V8" stroke="${INK}" stroke-width="2.4"/><path d="M32 8 H42 L39 12 L42 16 H32z" fill="${t.main}" ${sw} stroke-width="1.6"/>${WAVE}`;
-SPRITES.croiseur = t => `
-  <path d="M1 35 L63 35 L56 53 L8 53 Z" fill="#9eacbb" ${sw}/>${hullStripe(t)}
-  <rect x="20" y="22" width="24" height="14" rx="2" fill="#dde3e9" ${sw}/><rect x="26" y="14" width="12" height="9" rx="1.6" fill="#c9d1da" ${sw}/>
-  <rect x="17" y="9" width="6" height="14" rx="1.6" fill="${t.dark}" ${sw}/><rect x="41" y="9" width="6" height="14" rx="1.6" fill="${t.dark}" ${sw}/>
-  ${[10, 32, 54].map(x => `<rect x="${x - 6}" y="28" width="12" height="8" rx="3.4" fill="${STEEL_D}" ${sw}/><path d="M${x} 31 L${x + (x < 20 ? -9 : 9)} 26" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>`).join('')}${WAVE}`;
-SPRITES.sousmarin = t => `
-  <ellipse cx="32" cy="42" rx="29" ry="11" fill="#7d8f86" ${sw}/><rect x="25" y="25" width="14" height="19" rx="4.6" fill="#92a49b" ${sw}/><path d="M32 25 V12 H40" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/><path d="M32 25 V12 H40" fill="none" stroke="${STEEL}" stroke-width="1.4" stroke-linecap="round"/>
-  <rect x="9" y="41" width="46" height="4.4" fill="${t.acc || t.main}" stroke="${INK}" stroke-width="1.4"/><circle cx="32" cy="32" r="3" fill="#ffe27a" ${sw} stroke-width="1.6"/>
-  <path d="M3 56 L11 49 L15 56z" fill="#7d8f86" ${sw}/><path d="M0 50 q4 -5 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v14 h-64z" fill="#4aa8e8" opacity=".9" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>`;
-const roundel = (x, y, t) => `<circle cx="${x}" cy="${y}" r="4.2" fill="#fff" ${sw} stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="1.8" fill="${t.main}"/>`;
-SPRITES.chasseur = t => `
-  <path d="M27 36 L2 46 L2 51 L27 46Z" fill="#c9d3dd" ${sw}/><path d="M37 36 L62 46 L62 51 L37 46Z" fill="#c9d3dd" ${sw}/>
-  <path d="M26 53 L18 59 L18 62 L28 59Z" fill="#c9d3dd" ${sw}/><path d="M38 53 L46 59 L46 62 L36 59Z" fill="#c9d3dd" ${sw}/>
-  <path d="M27 28 L27 52 Q32 60 37 52 L37 28 Q32 10 27 28Z" fill="${t.main}" ${sw}/><ellipse cx="32" cy="27" rx="4" ry="6" fill="#bfe8fb" ${sw} stroke-width="1.8"/>
-  <path d="M27 14 Q32 4 37 14 Q32 18 27 14Z" fill="${t.acc || t.dark}" ${sw}/><path d="M32 3 V13" stroke="${INK}" stroke-width="3"/>${roundel(11, 47, t)}${roundel(53, 47, t)}`;
-SPRITES.bombardier = t => `
-  <path d="M30 32 L1 44 L1 52 L30 47Z" fill="#c9d3dd" ${sw}/><path d="M34 32 L63 44 L63 52 L34 47Z" fill="#c9d3dd" ${sw}/>
-  <rect x="11" y="37" width="7" height="12" rx="3" fill="${STEEL_D}" ${sw}/><rect x="46" y="37" width="7" height="12" rx="3" fill="${STEEL_D}" ${sw}/>
-  <path d="M26 56 L18 62 L46 62 L38 56Z" fill="#c9d3dd" ${sw}/><path d="M27 20 L27 54 Q32 62 37 54 L37 20 Q32 2 27 20Z" fill="${t.main}" ${sw}/>
-  <ellipse cx="32" cy="22" rx="4.2" ry="6" fill="#bfe8fb" ${sw} stroke-width="1.8"/><rect x="27" y="41" width="10" height="5" fill="${t.acc || t.dark}" stroke="${INK}" stroke-width="1.4"/>${roundel(8, 49, t)}${roundel(56, 49, t)}`;
+// ---- Navires (de profil) ----
+const SEA = `<path class="wavefx" d="M-2 52 q4 -4 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0 v12 h-72z" fill="#4aa8e8" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path class="wavefx" d="M4 57 q3 -2 6 0 M24 59 q3 -2 6 0 M44 57 q3 -2 6 0" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>`;
+const smokePuffs = (x, y) => `<circle class="smk" cx="${x}" cy="${y}" r="3.2" fill="#dfe5ea" stroke="${INK}" stroke-width=".8"/><circle class="smk b" cx="${x + 1}" cy="${y - 1}" r="2.6" fill="#eef2f5" stroke="${INK}" stroke-width=".8"/>`;
+SPRITES.destroyer = t => { const acc = t.acc || '#d8c38f'; return `
+  <path d="M2 40 H62 L55.5 53 H9 Z" fill="#8b98a8" ${OUT}/><path d="M6.5 48.5 H57.6 L55.5 53 H9 Z" fill="#b3351f"/><path d="M8 43.6 H58" stroke="${INK}" stroke-width="4.2"/><path d="M8 43.6 H58" stroke="${acc}" stroke-width="2.4"/><path d="M8 41.5 H40" stroke="${LT}" stroke-width="1.4"/>
+  <rect x="21" y="26" width="7" height="14.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/><path d="M21.5 29 h6" stroke="${acc}" stroke-width="2"/>${smokePuffs(24.5, 22)}
+  <rect x="31" y="28" width="14" height="12.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/>${[33, 37, 41].map(x => `<rect x="${x}" y="31" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}<path d="M38 28 V11" stroke="${INK}" stroke-width="1.8"/><path class="flag" d="M38 11 H46 L43.5 14 L46 17 H38z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
+  <rect x="48" y="35" width="9" height="5.5" rx="2.5" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M56 36.8 L63 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  <rect x="8" y="35" width="9" height="5.5" rx="2.5" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M9 36.8 L2 34.5" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>${SEA}`; };
+SPRITES.croiseur = t => { const acc = t.acc || '#d8c38f'; return `
+  <path d="M0 37 H64 L57 53 H8 Z" fill="#7f8c9c" ${OUT}/><path d="M4.5 48 H59.2 L57 53 H8 Z" fill="#b3351f"/><path d="M6 41.5 H59" stroke="${INK}" stroke-width="4.2"/><path d="M6 41.5 H59" stroke="${acc}" stroke-width="2.4"/>
+  ${[17, 25].map(x => `<rect x="${x}" y="22" width="6" height="15.5" rx="1.6" fill="${t.dark}" ${OUT} stroke-width="1.8"/>${smokePuffs(x + 3, 18)}`).join('')}
+  <rect x="31" y="24" width="15" height="13.5" rx="1.6" fill="#dde3e9" ${OUT} stroke-width="1.8"/><rect x="34" y="17" width="9" height="7.5" rx="1.4" fill="#c9d1da" ${OUT} stroke-width="1.6"/>${[33.5, 37.5, 41.5].map(x => `<rect x="${x}" y="27" width="2.6" height="2.4" fill="#2f3542"/>`).join('')}
+  <path d="M38.5 17 V5" stroke="${INK}" stroke-width="1.8"/><path class="flag" d="M38.5 5 H47 L44.5 8 L47 11 H38.5z" fill="${t.main}" stroke="${INK}" stroke-width="1.2"/>
+  ${[[51, 1], [6, -1], [12, -1]].map(([x, d]) => `<rect x="${x - 4}" y="31.5" width="10" height="6" rx="3" fill="#626e7b" ${OUT} stroke-width="1.6"/><path d="M${x + (d > 0 ? 5 : -3)} 33 L${x + (d > 0 ? 14 : -11)} 30" stroke="${INK}" stroke-width="3.2" stroke-linecap="round"/>`).join('')}${SEA}`; };
+SPRITES.sousmarin = t => { const acc = t.acc || '#d8c38f'; return `
+  <path d="M3 44 Q3 36 14 36 H52 Q62 36 62 44 Q62 50 52 50 H14 Q3 50 3 44Z" fill="#6f8178" ${OUT}/><path d="M5 46 H60 Q58 50 52 50 H14 Q6 50 5 46Z" fill="${DK}"/><path d="M12 39.5 H48" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M10 42.5 H54" stroke="${INK}" stroke-width="3.6"/><path d="M10 42.5 H54" stroke="${acc}" stroke-width="2"/>
+  <path d="M24 37 L27 25 H39 L41 37 Z" fill="#83968c" ${OUT}/><path d="M33 25 V12 H39" fill="none" stroke="${INK}" stroke-width="3.4" stroke-linecap="round"/><path d="M33 25 V12 H39" fill="none" stroke="#aab4bf" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="30" cy="30" r="1.8" fill="#ffe27a" stroke="${INK}" stroke-width="1"/><path class="flag" d="M27 25 V19 L32 21 L27 23" fill="${t.main}" stroke="${INK}" stroke-width="1"/>
+  <circle class="smk" cx="58" cy="40" r="1.8" fill="#fff" stroke="${INK}" stroke-width=".7"/><circle class="smk b" cx="60" cy="38" r="1.4" fill="#fff" stroke="${INK}" stroke-width=".7"/>${SEA}`; };
+// ---- Avions (vus de dessus, nez vers le haut), hélices qui tournent ----
+const roundel = (x, y, t) => `<circle cx="${x}" cy="${y}" r="4.4" fill="#fff" stroke="${INK}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="2.6" fill="${t.main}"/><circle cx="${x}" cy="${y}" r="1" fill="#fff"/>`;
+const prop = (x, y, w = 11) => `<g class="prop" style="transform-origin:${x}px ${y}px"><ellipse cx="${x}" cy="${y}" rx="${w}" ry="1.8" fill="rgba(40,48,64,.5)"/></g><circle cx="${x}" cy="${y}" r="2.4" fill="#3b4350" stroke="${INK}" stroke-width="1.2"/>`;
+SPRITES.chasseur = t => { const acc = t.acc || '#d8c38f'; return `
+  <path d="M5 33 Q32 26 59 33 L59 40 Q32 36.5 5 40Z" fill="#d7dee6" ${OUT}/><path d="M5 37.5 Q32 34 59 37.5 L59 40 Q32 36.5 5 40Z" fill="${DK}"/><path d="M5 33 L11 32 L11 39.5 L5 40Z M59 33 L53 32 L53 39.5 L59 40Z" fill="${acc}" stroke="${INK}" stroke-width="1.2"/>
+  ${roundel(17, 35.5, t)}${roundel(47, 35.5, t)}
+  <path d="M22 52 Q32 48.5 42 52 L42 57 Q32 55 22 57Z" fill="#d7dee6" ${OUT}/>
+  <path d="M28 13 Q32 3 36 13 L37.5 50 Q32 59 26.5 50 Z" fill="${t.main}" ${OUT}/><path d="M32.5 7 Q35 9 36 13 L37.5 50 Q34 56 32.5 56 Z" fill="${DK}"/><path d="M29.5 17 V46" stroke="${LT}" stroke-width="1.6" stroke-linecap="round"/>
+  <ellipse cx="32" cy="24" rx="3.6" ry="6.4" fill="#8fd2f6" ${OUT} stroke-width="1.6"/><path d="M30.6 20.5 Q31 19 32.2 18.6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M28.5 44 H35.5" stroke="${acc}" stroke-width="2.4"/>${prop(32, 6)}`; };
+SPRITES.bombardier = t => { const acc = t.acc || '#d8c38f'; return `
+  <path d="M1 32 Q32 24 63 32 L63 41 Q32 36 1 41Z" fill="#cfd8e2" ${OUT}/><path d="M1 37.5 Q32 32 63 37.5 L63 41 Q32 36 1 41Z" fill="${DK}"/>
+  ${[13, 51].map(x => `<rect x="${x - 3.6}" y="26" width="7.2" height="16" rx="3.4" fill="#626e7b" ${OUT} stroke-width="1.8"/>${prop(x, 25, 9)}`).join('')}
+  ${roundel(6, 36, t)}${roundel(58, 36, t)}
+  <path d="M20 53 Q32 49 44 53 L44 59 Q32 57 20 59Z" fill="#cfd8e2" ${OUT}/>
+  <path d="M27.5 15 Q32 3 36.5 15 L38 51 Q32 61 26 51 Z" fill="${t.main}" ${OUT}/><path d="M32.5 6 Q35.5 9 36.5 15 L38 51 Q34.5 58 32.5 58 Z" fill="${DK}"/>
+  <ellipse cx="32" cy="17" rx="3.4" ry="5" fill="#8fd2f6" ${OUT} stroke-width="1.5"/><rect x="28" y="37" width="8" height="10" rx="1.5" fill="#2f3542" stroke="${INK}" stroke-width="1.3"/><path d="M28 40 h8 M28 43.5 h8" stroke="${acc}" stroke-width="1.4"/>
+  <path d="M29.5 28 H34.5" stroke="${acc}" stroke-width="2.6"/>`; };
 SPRITES.tireursX = SPRITES.inf;
-
 SPRITES.tank0 = SPRITES.tank;
+
 const TANK_KEYS = ['tank', 'panzer', 'heavy'];
 // Couleurs d'une carte (ex. 'J' ou 'JR') -> accents appliqués aux sprites
 function teamFor(side, cols) {
-  const t = { ...TEAM[side] };
+  const t = { ...TEAM[side], side };
   if (cols) { t.acc = colorHexLite(cols[0]); if (cols[1]) t.acc2 = colorHexLite(cols[1]); }
   return t;
 }
 const COLOR_HEX = { J: '#ffd24a', R: '#e5543f', V: '#52b34f', N: '#39404f' };
 const colorHexLite = ch => COLOR_HEX[ch];
+// L'ennemi regarde vers la gauche (miroir), sauf les avions vus de dessus
+const mirror = (side, key, svg) => (side === 'en' && !['chasseur', 'bombardier'].includes(key) ? `<g transform="translate(64 0) scale(-1 1)">${svg}</g>` : svg);
 function spriteSVG(key, side, size, cols) {
   const t = teamFor(side, cols), f = SPRITES[key];
-  const inner = key === 'tank' ? f(t, { dir: side === 'me' ? 'up' : 'down' }) : f(t);
+  const inner = mirror(side, key, f(t));
   const flat = ['destroyer', 'croiseur', 'sousmarin'].includes(key);
   return `<svg viewBox="-4 -4 72 68" width="${size || 56}" height="${size || 56}" class="spr" aria-hidden="true">${flat ? '' : shadow}${inner}</svg>`;
 }
@@ -1582,7 +1634,7 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), f = SPRITES[key], max = FIGS[key] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
-  const one = key === 'tank' ? f(t, { dir: side === 'me' ? 'up' : 'down' }) : f(t);
+  const one = mirror(side, key, f(t));
   if (k === 1) return spriteSVG(key, side, size, cols);
   const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : 0.58, fig = 64 * sc;
   let g = '';
@@ -2055,6 +2107,7 @@ function hintText() {
     const what = `${d.name} ${colorName(k.c).toLowerCase()}${k.parts ? ` ×${k.parts.length}` : ''} (${st.men} ${noun(k.t, st.men)})`;
     if (tut && mates) return `2. Touchez l'autre carte ${d.name} : les deux fusionnent et leurs soldats s'additionnent.`;
     if (!dn.ok) return `${what} : ${WHY[dn.reason] || 'impossible à déployer.'}${mates ? ` Touchez une autre carte ${d.name} pour fusionner.` : ''}`;
+    if (k.t === 'bombardier') return `${what} : glissez-le sur un ennemi (ou le QG ennemi) : il bombarde aussitôt la zone 3 × 3${mates ? ', ou touchez un autre bombardier pour fusionner' : ''}.`;
     return (tut ? '3. ' : '') + `${what} : glissez-la sur une case bleue${mates ? `, ou touchez une autre carte ${d.name} pour fusionner` : ''}.`;
   }
   if (pickFuse().length) { const g = pickFuse()[0]; return (tut ? '2. ' : '') + (selectionValid(picked) ? `Ces ${g.length} cartes ${TYPES[g[0].t].name} peuvent fusionner : leurs soldats s'additionnent.` : `Ces ${g.length} cartes de couleurs différentes doivent fusionner pour partir ensemble : leurs soldats s'additionnent.`); }
@@ -2160,7 +2213,8 @@ function onCard(i) {
 function deployCardAt(card, r, c) {
   const dn = canDeployNow(S, card);
   if (!dn.ok) { SFX.play('deny'); toast(WHY_DEP(dn.reason)); return false; }
-  if (!deployCells(S, card).some(x => x[0] === r && x[1] === c)) { SFX.play('deny'); toast('Déposez la carte sur une case bleue.'); return false; }
+  if (!deployCells(S, card).some(x => x[0] === r && x[1] === c)) { SFX.play('deny'); toast(card.t === 'bombardier' ? 'Lâchez le bombardier sur un ennemi ou sur le QG ennemi.' : 'Déposez la carte sur une case bleue.'); return false; }
+  if (card.t === 'bombardier') { doAirStrike(card, r, c); return true; }
   undo.push(snapshotState(S));
   const u = placeCard(S, S.hand.indexOf(card), r, c);
   if (!u) { undo.pop(); SFX.play('deny'); toast('Impossible ici.'); return false; }
@@ -2168,6 +2222,27 @@ function deployCardAt(card, r, c) {
   const d = TYPES[card.t]; SFX.play(d.fam === 'mer' ? 'sea' : d.fam === 'air' ? 'air' : 'land');
   renderBattle(); showHits([{ uid: u.uid, spawn: true }]); dustAt(cellEl(r, c), 1);
   return true;
+}
+// Frappe aérienne : l'avion traverse la carte, les bombes tombent sur la zone, puis la scène de combat
+async function doAirStrike(card, r, c) {
+  const st = airStrike(S, S.hand.indexOf(card), r, c); if (!st) { SFX.play('deny'); return; }
+  busy = true; fast = false; window.__noFastUntil = Date.now() + 500; picked = []; selU = null; undo = [];
+  renderBattle();
+  const grid = document.getElementById('bgrid'), target = cellEl(r, c);
+  if (grid && target) {
+    const g = grid.getBoundingClientRect(), b = target.getBoundingClientRect(), y = b.top - g.top + b.height / 2 - 30;
+    const pl = document.createElement('div'); pl.className = 'flyover'; pl.innerHTML = `<div style="transform:rotate(90deg)">${spriteSVG('bombardier', 'me', 64, card.c)}</div>`; pl.style.top = y + 'px'; grid.appendChild(pl);
+    SFX.play('air');
+    pl.animate([{ transform: 'translateX(-90px)' }, { transform: `translateX(${g.width + 30}px)` }], { duration: fast ? 200 : 1100, easing: 'linear', fill: 'forwards' });
+    await sleep(fast ? 80 : 420);
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const ce = cellEl(r + dr, c + dc); if (!ce) continue; setTimeout(() => { const bm = document.createElement('span'); bm.className = 'boom'; ce.appendChild(bm); ce.classList.add('impact'); setTimeout(() => bm.remove(), 600); }, (fast ? 10 : 70) * ((dr + 1) * 3 + dc + 1)); }
+    SFX.play('bomb');
+    await sleep(fast ? 100 : 800); pl.remove();
+  }
+  await playScene(st, 1);
+  busy = false; renderBattle();
+  for (const h of st.hits) { const u = h.hq ? null : st.scene.defs.find(d => d.uid === h.uid), rc = h.hq ? S.hqPos[h.hq] : u ? [u.r, u.c] : null, el = rc && cellEl(rc[0], rc[1]); if (el && h.dmg) popAt(el, '−' + h.dmg); }
+  if (S.over) return finishBattle();
 }
 // Glisser-déposer des cartes de la main vers la carte
 let drag = null;
@@ -2189,7 +2264,7 @@ document.addEventListener('pointermove', e => {
     drag.cells = drag.ok.ok ? deployCells(S, drag.card) : [];
     document.querySelectorAll('.gc.dep').forEach(c => c.classList.remove('dep'));
     drag.cells.forEach(([r2, c2]) => cellEl(r2, c2)?.classList.add('dep'));
-    $('#hint').querySelector('.ht').textContent = drag.ok.ok ? 'Déposez la carte sur une case bleue.' : WHY_DEP(drag.ok.reason);
+    $('#hint').querySelector('.ht').textContent = drag.ok.ok ? (drag.card.t === 'bombardier' ? 'Lâchez le bombardier sur un ennemi ou le QG ennemi.' : 'Déposez la carte sur une case bleue.') : WHY_DEP(drag.ok.reason);
     SFX.play('select');
   }
   drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.75}px) rotate(${Math.max(-12, Math.min(12, (e.clientX - drag.x) / 12))}deg) scale(.82)`;
@@ -2256,7 +2331,7 @@ function placeAt(r, c) {
 function onCell(r, c) {
   if (busy || S.over) return;
   if (placing) return placeAt(r, c);
-  if (picked.length === 1 && !unitAt(S, r, c) && canDeployNow(S, picked[0]).ok && deployCells(S, picked[0]).some(x => x[0] === r && x[1] === c)) return deployCardAt(picked[0], r, c);
+  if (picked.length === 1 && (picked[0].t === 'bombardier' || !unitAt(S, r, c)) && canDeployNow(S, picked[0]).ok && deployCells(S, picked[0]).some(x => x[0] === r && x[1] === c)) return deployCardAt(picked[0], r, c);
   const u = unitAt(S, r, c);
   if (u) return onUnit(u.uid);
   if (selU !== null) {
@@ -2620,7 +2695,7 @@ function helpModal(first) {
     <li><b>La carte :</b> une grille façon Advance Wars. Votre QG est en bas, celui de l'ennemi en haut. Les <b>routes</b> accélèrent, les <b>champs</b> ralentissent les véhicules, la <b>forêt</b> et les <b>villages</b> protègent (−30 % de dégâts), la <b>rivière</b> ne se franchit que par les <b>ponts</b> (l'infanterie peut la traverser à gué), la <b>mer</b> est réservée aux navires.</li>
     <li><b>Riposte :</b> comme dans Advance Wars, un défenseur qui survit à une attaque riposte aussitôt avec les hommes qui lui restent, s'il peut atteindre l'attaquant (portée). Pas de riposte contre les navires, les avions et les bombes. Frapper fort d'un coup, ou de loin, évite la riposte.</li>
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Les unités <b>attaquent seules</b> en fin de tour, sur la cible la plus proche à portée ; si rien n'est à portée mais que le QG ennemi l'est, elles le frappent.</li>
-    <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les avions n'importe où. Ils ne peuvent pas être touchés et restent quelques tours.</li>
+    <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les chasseurs n'importe où. Le <b>bombardier</b> est une frappe aérienne : glissez sa carte directement sur un ennemi (ou sur le QG ennemi) et il bombarde aussitôt la zone 3 × 3. Navires et avions ne peuvent pas être touchés.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
     <li><b>Fusionner :</b> autant de groupes du même type qu'on veut (même de la même couleur) se fondent en un seul, qui réunit leurs couleurs : leurs <b>soldats et leurs PV s'additionnent</b> (10 tireurs jaunes + 15 tireurs rouges = 25 tireurs orange), et les bonus de couleur s'appliquent à tout le groupe. En main, une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion (3 tireurs : 2 + 2 + 2 − 2 = 4). Soit <b>en main</b> (touchez une carte, puis une autre du même type : elles fusionnent aussitôt), soit <b>sur la carte</b> : deux groupes <b>côte à côte</b> peuvent fusionner dès <b>le tour suivant</b> leur arrivée (touchez-le, puis « Fusionner » quand un groupe voisin brille ⇄).</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3). Vous pouvez aussi acheter <b>+1 ravitaillement par tour</b> (définitif, jusqu'à +3) ; vaincre un <b>boss</b> en offre un.</li>
