@@ -198,7 +198,7 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 .end .big { font-family: var(--font-display); font-weight: 700; font-size: 3.4rem; line-height: 1; text-transform: uppercase; color: var(--yellow); text-shadow: 3px 3px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 5px 0 var(--ink); }
 .end .big.lose { color: var(--red); }
 /* Carte */
-.map { position: relative; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); overflow: hidden; background-color: #97d764; background-image: conic-gradient(rgba(255, 255, 255, .14) 25%, transparent 0 50%, rgba(255, 255, 255, .14) 0 75%, transparent 0); background-size: 48px 48px; }
+.map { container-type: inline-size; position: relative; border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); overflow: hidden; background-color: #97d764; background-image: conic-gradient(rgba(255, 255, 255, .14) 25%, transparent 0 50%, rgba(255, 255, 255, .14) 0 75%, transparent 0); background-size: 48px 48px; }
 .mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .road-o { stroke: var(--ink); stroke-width: 12px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .road-i { stroke: var(--dirt); stroke-width: 7px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -207,7 +207,7 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 .start { position: absolute; transform: translate(-50%, -100%); font-family: var(--font-display); background: var(--ink); color: var(--cream); border-radius: 8px; padding: 1px 12px; font-size: .85rem; }
 .node { position: absolute; transform: translate(-50%, -50%); width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--ink); background: #e9eef5; box-shadow: 0 4px 0 var(--ink); display: grid; place-items: center; padding: 0; z-index: 2; filter: brightness(.86) saturate(.65); }
 .node .ic { display: grid; place-items: center; }
-.node .lb { position: absolute; top: 100%; margin-top: 5px; left: 50%; transform: translateX(-50%); font-size: .68rem; font-weight: 800; line-height: 1.05; background: var(--cream); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; text-align: center; width: max-content; max-width: 92px; color: var(--ink); }
+.node .lb { position: absolute; top: 100%; margin-top: 5px; left: 50%; transform: translateX(-50%); font-size: .68rem; font-weight: 800; line-height: 1.05; background: var(--cream); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; text-align: center; width: max-content; max-width: min(92px, 21cqw); color: var(--ink); overflow-wrap: anywhere; hyphens: auto; }
 .node .otag { position: absolute; top: -9px; right: -14px; font-family: var(--font-display); font-size: .7rem; background: var(--yellow); border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; color: var(--ink); }
 .node .otag.el { background: var(--red); color: #fff; }
 .node.battle { background: #ffc9c0; } .node.elite { background: #ff9d8a; } .node.boss { background: #ff7b66; width: 68px; height: 68px; }
@@ -215,7 +215,7 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 .node.reach { filter: none; cursor: pointer; animation: bob .9s ease-in-out infinite alternate; box-shadow: 0 4px 0 var(--ink), 0 0 0 5px var(--yellow); }
 @keyframes bob { to { transform: translate(-50%, -58%); } }
 .node.done { filter: grayscale(.7) brightness(.92); }
-.node.done::after { content: "✓"; position: absolute; right: -4px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; border: 2px solid var(--ink); display: grid; place-items: center; font-size: .8rem; }
+.node.done::after { content: "✓"; position: absolute; left: -6px; right: auto; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; border: 2px solid var(--ink); display: grid; place-items: center; font-size: .8rem; }
 .node.cur { filter: none; box-shadow: 0 4px 0 var(--ink), 0 0 0 5px var(--blue); }
 .chip { display: inline-block; }
 .nodeart { flex: none; width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; }
@@ -342,11 +342,11 @@ h2 { font-weight: 600; letter-spacing: 0; }
 .u.ghost.pv { border: 2px dashed var(--blue-d); background: rgba(61, 134, 232, .12); opacity: .85; }
 .u.ghost.pv .nm { color: var(--blue-d); text-shadow: none; }
 /* ===== Écran de combat : tient dans l'écran en portrait, main en éventail (façon Balatro) ===== */
-body:has(.battle) { padding: 0; overflow: hidden; background-attachment: scroll; }
-body:has(.battle) .topbar { display: none; }
-body:has(.battle) .toast { bottom: 84px; }
-#app:has(.battle) { max-width: 560px; padding-bottom: 0; height: 100dvh; }
-.battle { height: 100dvh; display: flex; flex-direction: column; gap: 5px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); position: relative; }
+body:has(.btl) { padding: 0; overflow: hidden; background-attachment: scroll; }
+body:has(.btl) .topbar { display: none; }
+body:has(.btl) .toast { bottom: 84px; }
+#app:has(.btl) { max-width: 560px; padding-bottom: 0; height: 100dvh; }
+.btl { height: 100dvh; display: flex; flex-direction: column; gap: 5px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); position: relative; }
 .bt-head { display: flex; align-items: center; gap: 5px; flex: none; }
 .bt-head .sp { flex: 1; }
 .ribbon.sm { font-size: .82rem; padding: 1px 10px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); max-width: 44%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -354,9 +354,9 @@ body:has(.battle) .toast { bottom: 84px; }
 .pill.sm { font-size: .76rem; padding: 0 9px; min-height: 26px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); white-space: nowrap; }
 .bt-info { display: flex; gap: 6px; align-items: center; flex: none; }
 .objline.sm { flex: 1; font-size: .68rem; padding: 2px 6px; border-width: 2px; line-height: 1.1; border-radius: 8px; }
-.battle .jbar { gap: 3px; flex: none; }
-.battle .jk { width: 28px; height: 28px; border-width: 2px; box-shadow: none; }
-.battle .jk .spr { width: 22px; height: 22px; }
+.btl .jbar { gap: 3px; flex: none; }
+.btl .jk { width: 28px; height: 28px; border-width: 2px; box-shadow: none; }
+.btl .jk .spr { width: 22px; height: 22px; }
 .board { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
 .hqbar.compact { display: flex; align-items: center; gap: 6px; padding: 1px 8px; border-width: 2px; box-shadow: none; border-radius: 8px; flex: none; }
 .hqbar.compact .hl { font-family: var(--font-display); font-weight: 600; font-size: .76rem; white-space: nowrap; text-transform: uppercase; }
@@ -384,13 +384,13 @@ body:has(.battle) .toast { bottom: 84px; }
 .u .armor, .u .zz, .u .fz { top: 13px; font-size: .58rem; padding: 0 3px; border-width: 1.5px; }
 .u .fz { top: 12px; right: 2px; width: 17px; height: 17px; display: grid; place-items: center; padding: 0; border-radius: 50%; font-size: .72rem; font-weight: 800; }
 .u.ghost { inset: 2px; }
-.battle .u.atk .art { animation: lunge2 .35s; }
-.battle .me .u.atk .art { animation-name: lunge2u; }
+.btl .u.atk .art { animation: lunge2 .35s; }
+.btl .me .u.atk .art { animation-name: lunge2u; }
 @keyframes lunge2 { 40% { transform: translateY(12px) scale(1.12); } }
 @keyframes lunge2u { 40% { transform: translateY(-12px) scale(1.12); } }
-.battle .u.spawn .art { animation: spawn2 .45s; }
+.btl .u.spawn .art { animation: spawn2 .45s; }
 @keyframes spawn2 { from { opacity: 0; transform: translateY(-16px) scale(.7); } }
-.battle .phase { position: absolute; left: 0; right: 0; top: 33%; z-index: 15; pointer-events: none; min-height: 0; display: flex; justify-content: center; }
+.btl .phase { position: absolute; left: 0; right: 0; top: 33%; z-index: 15; pointer-events: none; min-height: 0; display: flex; justify-content: center; }
 .bt-hint { flex: none; display: flex; align-items: center; gap: 6px; min-height: 36px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 10px; padding: 3px 8px; font-weight: 800; font-size: .76rem; line-height: 1.15; }
 .bt-hint .ht { flex: 1; }
 .btn.sm { padding: 4px 12px; font-size: .9rem; border-width: 2px; box-shadow: 0 3px 0 var(--ink); white-space: nowrap; }
@@ -411,13 +411,13 @@ body:has(.battle) .toast { bottom: 84px; }
 .hc.fusible { animation: glowfz .7s infinite alternate; box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--yellow), 0 3px 0 6px var(--ink); }
 @keyframes glowfz { to { box-shadow: 0 0 0 3px #fff, 0 0 0 9px var(--yellow), 0 3px 0 9px var(--ink); } }
 .hc.off { opacity: 1; filter: grayscale(.9) brightness(.78); }
-.battle .dock { position: static; flex: none; z-index: 1; border: 3px solid var(--ink); border-radius: 12px; box-shadow: none; padding: 4px 8px; gap: 8px; }
-.battle .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
-.battle .dock .supply span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
-.battle .dock .pips { display: flex; gap: 3px; flex-wrap: wrap; }
-.battle .dock .pip { width: 12px; height: 12px; border-width: 1.5px; }
-.battle .dock .btn { padding: 8px 14px; font-size: 1rem; }
-.battle .dock .pill { min-height: 32px; }
+.btl .dock { position: static; flex: none; z-index: 1; border: 3px solid var(--ink); border-radius: 12px; box-shadow: none; padding: 4px 8px; gap: 8px; }
+.btl .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
+.btl .dock .supply span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
+.btl .dock .pips { display: flex; gap: 3px; flex-wrap: wrap; }
+.btl .dock .pip { width: 12px; height: 12px; border-width: 1.5px; }
+.btl .dock .btn { padding: 8px 14px; font-size: 1rem; }
+.btl .dock .pill { min-height: 32px; }
 .toast { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -1216,8 +1216,8 @@ function mapReach() {
   return { layer: C.pos.layer + 1, idx: cur.next };
 }
 function toMap() {
-  const L = C.map, H = 122, total = L.length * H, reach = mapReach();
-  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: (L.length - 1 - n.layer) * H + H / 2 });
+  const L = C.map, H = 122, total = L.length * H + 44, reach = mapReach();
+  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: (L.length - 1 - n.layer) * H + H / 2 + 10 });
   C.trail = C.trail || {};
   let edges = '';
   L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
@@ -1429,7 +1429,7 @@ function renderBattle() {
   }).join('');
   const hint = hintText(), fz = pickFuse(), hasFused = picked.some(c => c.parts), one = picked.length === 1 ? picked[0] : null;
   const colorBlock = idxs.length && !plan.ok && plan.reason === 'colors';
-  app.innerHTML = `<div class="battle">
+  app.innerHTML = `<div class="btl">
     <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><span class="sp"></span>
       <button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="deck">Paquet</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
     <div class="bt-info"><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}</div>
@@ -1732,7 +1732,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
 
-window.addEventListener('resize', () => { if (S && document.querySelector('.battle') && !busy) renderBattle(); });
+window.addEventListener('resize', () => { if (S && document.querySelector('.btl') && !busy) renderBattle(); });
 function renderSoundButton() {
   let b = document.getElementById('snd');
   if (!b) {
