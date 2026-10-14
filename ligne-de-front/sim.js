@@ -1,7 +1,7 @@
 // Simulation d'une campagne avec un bot qui respecte la règle des couleurs, fusionne et achète en boutique : node sim.js [nombre de parties]
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,planDeploy,deployAll,snapshotState,restoreState,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
+const E=new Function(core+';return {addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,playCard,endTurn,targetsFor,isPlayable,planDeploy,deployAll,snapshotState,restoreState,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
 function evalGroups(S){
   const groups=new Map();S.hand.forEach(c=>{if(!groups.has(c.c))groups.set(c.c,[]);});for(const k of groups.keys())S.hand.forEach((c,i)=>{if(c.c===k||(k.length>1&&c.c.length===1&&k.includes(c.c)))groups.get(k).push(i);});
@@ -29,11 +29,12 @@ for(let r=0;r<N;r++){
   for(let i=0;i<PATH.length;i++){
     const [type,lv]=PATH[i];reach[i].n++;
     const f=fight(C,{type,levelIdx:lv,layer:Math.max(1,i),obj:{type:'hq'}});if(!f.win){ok=false;break;}reach[i].w++;
-    C.hq=Math.min(C.hqMax,f.S.hq.me+12);C.loot+=E.lootFor(f.S,C,type).total;
+    C.hq=Math.min(C.hqMax,f.S.hq.me+12);if(type==='boss'&&i<PATH.length-1)E.addSupplyBonus(C);C.loot+=E.lootFor(f.S,C,type).total;
     let shop=E.genShop(C,Math.random,type!=='battle');
     for(let tries=0;tries<6;tries++){
       const cheapJ=shop.jokers.filter(j=>j.price<=C.loot).sort((a,b)=>b.price-a.price)[0];
       if(cheapJ&&C.officers.length<E.MAX_JOKERS){C.loot-=cheapJ.price;C.officers.push(cheapJ.id);if(cheapJ.id==='brandt'){C.hqMax+=20;C.hq+=20;}shop.jokers=shop.jokers.filter(j=>j!==cheapJ);continue;}
+      if((C.supplyBonus||0)<E.MAX_SUPPLY_BONUS&&C.loot>=E.supplyBonusCost(C)){C.loot-=E.supplyBonusCost(C);E.addSupplyBonus(C);continue;}
       const up=C.deck.filter(E.canUpgrade).sort((a,b)=>(a.lv||1)-(b.lv||1));
       if(up.length&&E.upgradeCost(up[0])<=C.loot&&C.loot>=6){const t=up.find(c=>c.t==='tireurs'||c.t==='blinde'||c.t==='croiseur')||up[0];C.loot-=E.upgradeCost(t);t.lv=(t.lv||1)+1;continue;}
       const cc=shop.cards.filter(c=>c.price<=C.loot)[0];if(cc){C.loot-=cc.price;C.deck.push({...cc.card});shop.cards=shop.cards.filter(c=>c!==cc);continue;}

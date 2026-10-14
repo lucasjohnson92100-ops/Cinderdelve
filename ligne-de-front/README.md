@@ -52,3 +52,6 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - **Mer (11)** : 5 destroyers, 3 croiseurs, 3 sous-marins.
 - **Air (7)** : 3 chasseurs, 2 bombardiers, 2 parachutistes.
 - Couleurs : 10 jaunes, 11 rouges, 10 verts, 9 noires (détail dans `DECK_PLAN`, `index.html`).
+
+## Ravitaillement en fin de bataille
+Le ravitaillement de base est de 5 points par tour. On gagne **+1 par tour, définitivement** (jusqu'à +3) en battant un boss, ou en l'achetant à l'intendance ($14, puis $26, puis $38).

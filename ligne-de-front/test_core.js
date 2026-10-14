@@ -1,7 +1,7 @@
 // Vérifie le moteur : front unique, mer et air, couleurs, règle des couleurs au déploiement (couleur d'une fusion incluse), fusions, niveaux, jokers, butin, boutique, carte (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,planDeploy,deployAll,colorsReachable,selectionValid,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,planDeploy,deployAll,colorsReachable,selectionValid,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const mk=(o={})=>E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],...o},()=>0.5);
 const T=E.TYPES;
@@ -36,6 +36,9 @@ E.endTurn(S);check('soldats ennemis détruits (6 PV)',E.units(S,'en').filter(x=>
 // jeep contournent : visent le dernier ennemi de la ligne
 S=mk();S.plan=[];S.hand=[];E.TYPES.jeep.kw=['flank'];const sp=E.deploy(S,'me','jeep','');sp.fresh=false;const e1=E.deploy(S,'en','rifle'),e2=E.deploy(S,'en','gren');e1.fresh=e2.fresh=true;
 E.endTurn(S);check('les jeep ont frappé le dernier (grenadiers)',E.units(S,'en').some(x=>x.key==='gren'),false);check('le surplus de tirs va au suivant',e1.hp,4);delete E.TYPES.jeep.kw;
+// bonus de ravitaillement permanent
+{const Cc={supplyBonus:0};check('coût 1er bonus',E.supplyBonusCost(Cc),14);check('gain 1',E.addSupplyBonus(Cc),true);check('coût 2e bonus',E.supplyBonusCost(Cc),26);E.addSupplyBonus(Cc);E.addSupplyBonus(Cc);check('plafond',E.addSupplyBonus(Cc),false);check('bonus 3',Cc.supplyBonus,3);
+const Sb=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],supplyBonus:2},()=>0.5);check('ravitaillement 5+2',Sb.supply,7);}
 // blindage 2
 S=mk();S.plan=[];S.hand=[];const pz=E.deploy(S,'en','panzer');pz.fresh=true;
 for(const c of ['','J','JN']){S.front.me=[];const a=E.deploy(S,'me','tireurs',c);a.fresh=false;const hp0=pz.hp;E.endTurn(S);check('panzer contre tireurs '+(c||'bleus'),pz.hp<hp0,c==='JN');pz.hp=pz.hpMax;pz.fresh=true;S.plan=[];}

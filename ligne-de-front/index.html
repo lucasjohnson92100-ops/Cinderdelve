@@ -410,6 +410,7 @@ body:has(.btl) .toast { bottom: 84px; }
 .btl .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: none; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
 .btl .dock .supply > span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
 .btl .dock .pips { display: flex; gap: 2px; flex-wrap: nowrap; }
+.btl .dock .pips.two { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 10px); gap: 2px; }
 .btl .dock .pip { flex: none; width: 10px; height: 10px; border-width: 1.5px; }
 .btl .dock .btn { padding: 8px 10px; font-size: .95rem; }
 .btl .dock .pill { min-height: 32px; }
@@ -475,13 +476,13 @@ const ENEMIES = {
 };
 const LEVELS = [
   { name: "Plage d'assaut", hq: 55, budget: 2.6 },
-  { name: 'Bocage', hq: 87, budget: 11.5 },
-  { name: 'Village fortifié', hq: 108, budget: 13.4 },
-  { name: 'Le pont (boss)', hq: 138, budget: 8.3, boss: 'heavy' },
-  { name: 'Forêt des Ardennes', hq: 155, budget: 14.5 },
-  { name: 'Ville en ruines', hq: 178, budget: 16 },
-  { name: 'Ligne de défense', hq: 201, budget: 18 },
-  { name: 'Quartier général (boss)', hq: 230, budget: 9.9, boss: 'heavy2' },
+  { name: 'Bocage', hq: 96, budget: 13.6 },
+  { name: 'Village fortifié', hq: 119, budget: 15.8 },
+  { name: 'Le pont (boss)', hq: 175, budget: 11.5, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 170, budget: 17.1 },
+  { name: 'Ville en ruines', hq: 196, budget: 18.9 },
+  { name: 'Ligne de défense', hq: 221, budget: 21.2 },
+  { name: 'Quartier général (boss)', hq: 290, budget: 14, boss: 'heavy2' },
 ];
 // Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
 const JOKERS = [
@@ -505,6 +506,10 @@ const JOKERS = [
 const OFFICERS = JOKERS;
 const MAX_JOKERS = 5;
 const HQ_START = 60;
+// Bonus permanent de ravitaillement : gagné en battant un boss, ou acheté à l'intendance (jusqu'à +3 par tour)
+const MAX_SUPPLY_BONUS = 3;
+const supplyBonusCost = C => 14 + 12 * (C.supplyBonus || 0);
+function addSupplyBonus(C) { if ((C.supplyBonus || 0) >= MAX_SUPPLY_BONUS) return false; C.supplyBonus = (C.supplyBonus || 0) + 1; return true; }
 
 function shuffle(a, rng = Math.random) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
@@ -552,7 +557,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
   const lvl = cfg || LEVELS[C.level];
   const S = {
     level: lvl.levelIdx !== undefined ? lvl.levelIdx : C.level, lvl, rng, obj: lvl.obj || { type: 'hq' }, kills: 0, uid: 1, turn: 1, over: null,
-    officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax,
+    officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax, supplyBonus: C.supplyBonus || 0,
     front: { me: [], en: [] }, sea: [], air: [],
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], supply: 0, flags: {}, plan: [],
   };
@@ -564,7 +569,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
   return S;
 }
 function startTurn(S) {
-  S.supply = 5 + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
+  S.supply = 5 + (S.supplyBonus || 0) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
   S.flags = { used: false };
   drawCards(S, 6 + (has(S, 'ashby') ? 1 : 0));
 }
@@ -1443,7 +1448,7 @@ function renderBattle() {
     <div class="board" id="board">${boardHTML({ front: S.front, sea: S.sea, air: S.air, hq: S.hq }, true)}</div>
     <div class="bt-hint" id="hint"><span class="ht">${hint}</span>${fz.length ? '<button class="btn go sm" data-act="fusepick">Fusionner</button>' : hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : ''}</div>
     <div class="hand fan" id="hand" style="height:${ch + 34}px">${hand}</div>
-    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${Math.min(reserved, total)}/${total}</span><span class="pips">${pips}</span></div>
+    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${Math.min(reserved, total)}/${total}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
       <button class="pill" data-act="undo" ${undo.length ? '' : 'disabled'}>Annuler</button><button class="btn" data-act="deploy" id="bend" ${colorBlock ? 'disabled' : ''}>${picked.length ? 'Déployer (' + picked.length + ')' : 'Passer le tour'}</button></div>
   </div>`;
 }
@@ -1588,10 +1593,11 @@ function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 12);
   const n = C.node;
   if (n.type === 'boss' && n.layer === 8) return victory();
-  const lo = lootFor(S, C, n.type); C.loot += lo.total; C.phase = 'reward'; C.shop = null; setTimeout(() => SFX.play('coins'), 250);
+  const lo = lootFor(S, C, n.type); C.loot += lo.total; const gotSupply = n.type === 'boss' && addSupplyBonus(C); C.phase = 'reward'; C.shop = null; setTimeout(() => SFX.play('coins'), 250);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
     <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
       <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
+    ${gotSupply ? `<div class="panel lines"><div class="line"><span><b>Ravitaillement renforcé</b> : +1 point à chaque tour, pour toute la campagne</span><span class="num gold">+1</span></div></div>` : ''}
     <p class="small">Dépensez votre butin à l’intendance : jokers, nouvelles cartes et entraînement.</p>
     <button class="btn go" data-act="${n.type === 'boss' ? 'bossjoker' : 'toshop'}">${n.type === 'boss' ? 'Choisir un joker offert' : 'Aller à l’intendance'}</button></div>`;
 }
@@ -1632,6 +1638,7 @@ function renderShop() {
     <div class="eyebrow">Cartes en vente</div><div class="cardrow">${crows}</div>
     <div class="eyebrow">Atelier</div>
     <button class="off-item plain" data-act="train" ${canTrain ? '' : 'disabled'}><span class="tx"><b>Entraîner une carte</b><span class="small muted">Améliore une carte de votre paquet (jusqu'au niveau 3) : plus d'hommes ou plus de dégâts. À partir de $${Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99)}.</span></span></button>
+    <button class="off-item plain" data-act="supply" ${(C.supplyBonus || 0) >= MAX_SUPPLY_BONUS || C.loot < supplyBonusCost(C) ? 'disabled' : ''}><span class="tx"><b>Ravitaillement +1 par tour · ${(C.supplyBonus || 0) >= MAX_SUPPLY_BONUS ? 'maximum atteint' : '$' + supplyBonusCost(C)}</b><span class="small muted">Définitif : vous commencez chaque tour avec 1 point de ravitaillement en plus (actuellement +${C.supplyBonus || 0}, maximum +${MAX_SUPPLY_BONUS}).</span></span></button>
     <button class="off-item plain" data-act="reform" ${C.deck.length > 8 ? '' : 'disabled'}><span class="tx"><b>Réformer une carte · $${REFORM_COST}</b><span class="small muted">Retire une carte du paquet pour piocher plus souvent les autres.</span></span></button>
     <div class="row" style="justify-content:space-between"><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span>
       <button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''}>Relancer $${rc}</button></div>
@@ -1666,7 +1673,7 @@ function helpModal(first) {
     <li><b>Mer et air :</b> deux zones de 2 places. Navires et avions tirent de loin pendant quelques tours et ne peuvent pas être touchés.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
     <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur le front</b> : un groupe déployé peut fusionner dès <b>le tour suivant</b> (touchez-le, puis « Fusionner »).</li>
-    <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3).</li>
+    <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3). Vous pouvez aussi acheter <b>+1 ravitaillement par tour</b> (définitif, jusqu'à +3) ; vaincre un <b>boss</b> en offre un.</li>
     <li><b>Votre tour :</b> sélectionnez les cartes à déployer. Leur coût total ne doit pas dépasser votre ravitaillement, et elles doivent <b>toutes avoir la même couleur</b>. Si vous déployez une carte fusionnée (ex. orange), vous pouvez y joindre des cartes des couleurs qui la composent (jaune et rouge). Puis touchez <b>« Déployer »</b> : tout est posé en même temps et <b>le tour se termine</b>. Vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs. « Annuler » défait vos fusions et changements de place.</li>
     <li><b>L'ennemi se montre à l'avance :</b> silhouettes en pointillé pour les renforts, bandeau rouge pour les obus.</li>
     </ol>
@@ -1732,6 +1739,7 @@ document.addEventListener('click', e => {
   else if (a === 'toshop') toShop();
   else if (a === 'bossjoker') jokerStep();
   else if (a === 'train') deckModal('upgrade');
+  else if (a === 'supply') { const c = supplyBonusCost(C); if (C.loot < c || !addSupplyBonus(C)) return; C.loot -= c; SFX.play('jokerbuy'); renderShop(); }
   else if (a === 'reform') deckModal('remove');
   else if (a === 'leave') finishNode();
   else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; SFX.play('reroll'); const n = C.shop.rerolls + 1; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; renderShop(); }
