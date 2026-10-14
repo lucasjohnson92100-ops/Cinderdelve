@@ -1,7 +1,7 @@
 // Vérifie le moteur : grille et terrains, déplacements payés en ravitaillement, portées, couverture, villages, fusions, règle des couleurs, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,terrainCost,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,targetsFrom,hqInRange,bestMove,isLandCell};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,reachable,moveUnit,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,terrainCost,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,bestMove,isLandCell};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // terrain : propriétés
@@ -58,6 +58,19 @@ check('QG intact',S.hq.en,S.lvl.hq);
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);
 const hq0=S.hq.en;st=[];S.phase='me';E.attackUnit(S,a,st);check('QG touché (10)',hq0-S.hq.en,10);
 a.r=1;check('à 2 du QG : pas de portée',E.hqInRange(a,1),false);
+// attaque manuelle : le joueur choisit la cible
+S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
+a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,2,2);let e2b=E.mkUnit(S,'en','gren');E.placeUnit(S,e2b,3,3);
+check('2 cibles à portée',E.attackOptions(S,a).units.length,2);check('peut attaquer',E.canAttack(S,a),true);
+let stp=E.playerAttack(S,a.uid,e2b.uid);check('attaque réussie',!!stp,true);check('grenadiers détruits',E.units(S,'en').some(x=>x.key==='gren'),false);check('soldats intacts',e.hp,6);
+check('scène : défenseur',stp.scene.defs[0].menBefore===undefined&&stp.scene.defs[0].men===3&&stp.scene.defs[0].menAfter===0&&stp.scene.defs[0].dead,true);check('scène : attaquant',stp.scene.att.men,10);
+check('une attaque par tour',E.canAttack(S,a),false);check('plus de déplacement après attaque',E.moveUnit(S,a.uid,4,2),null);
+check('cible hors portée refusée',E.playerAttack(S,a.uid,e.uid),null);
+S.units=[];a=E.mkUnit(S,'me','tireurs','');E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,2,2);check('unité qui vient d\'arriver ne peut pas attaquer',E.canAttack(S,a),false);
+S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);const hq1=S.hq.en;stp=E.playerAttack(S,a.uid,'hq');check('attaque du QG',hq1-S.hq.en,10);check('scène QG',stp.scene.hq.before-stp.scene.hq.after,10);
+S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,4,2);check('QG hors de portée',E.playerAttack(S,a.uid,'hq'),null);
+S=mk();S.plan=[];S.units=[];a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,0,2);S.hand=[];E.endTurn(S);check('fin de tour : plus d\'attaque automatique du joueur',S.hq.en,S.lvl.hq);
+S.units=[];S.turn=2;a=E.mkUnit(S,'me','tireurs','');a.fresh=false;a.attacked=true;E.placeUnit(S,a,3,2);S.hand=[];S.plan=[];E.endTurn(S);check('attaque réarmée au tour suivant',a.attacked,false);
 // couverture forêt
 S=mk();S.plan=[];S.grid=Array.from({length:GH},()=>Array(GW).fill('champ'));S.units=[];
 a=E.mkUnit(S,'me','tireurs','');a.fresh=false;E.placeUnit(S,a,3,2);e=E.mkUnit(S,'en','gren');E.placeUnit(S,e,2,2);S.grid[2][2]='foret';
