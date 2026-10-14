@@ -1065,6 +1065,11 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #lvlup.lv-cards .shop-list .row .txt small { font-size: .68rem; line-height: 1.25; display: block; }
 #lvlup.lv-cards .shop-list .row.combo { border: 2px solid #ffc83a !important; margin-top: 8px !important; padding-top: 20px !important; box-shadow: 0 0 16px rgba(255,170,40,0.55), inset 0 0 20px rgba(255,170,40,0.12) !important; animation: shGlow 1.6s ease-in-out infinite; }
 #lvlup.lv-cards .sh-combo { position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: max-content; max-width: 94%; white-space: normal; line-height: 1.05; text-align: center; background: #ffe03a; color: #c81a12; border: 2px solid #111; padding: 1px 8px; font-family: Impact, 'Arial Black', sans-serif; font-style: italic; font-size: .66rem; text-transform: uppercase; box-shadow: 2px 2px 0 #111; }
+#lvlup.lv-cards .shop-list .row.k-act, #lvlup.lv-cards .shop-list .row.combo.k-act { border: 2px solid #e8493c !important; background: linear-gradient(rgba(232,73,60,0.20), rgba(90,10,10,0.18)) !important; box-shadow: 0 0 14px rgba(232,73,60,0.55), inset 0 0 18px rgba(232,73,60,0.14) !important; animation: none; }
+#lvlup.lv-cards .shop-list .row.k-pas, #lvlup.lv-cards .shop-list .row.combo.k-pas { border: 2px solid #4a96ee !important; background: linear-gradient(rgba(74,150,238,0.20), rgba(10,30,90,0.18)) !important; box-shadow: 0 0 14px rgba(74,150,238,0.55), inset 0 0 18px rgba(74,150,238,0.14) !important; animation: none; }
+#lvlup.lv-cards .shop-list .row.k-don, #lvlup.lv-cards .shop-list .row.legend.k-don { border: 2px solid #ffc83a !important; }
+#lvlup.lv-cards .shop-list .row.k-act .sh-combo { background: #e8493c; color: #fff; }
+#lvlup.lv-cards .shop-list .row.k-pas .sh-combo { background: #4a96ee; color: #fff; }
 @media (orientation: portrait) { #lvlup.lv-cards .shop-list { grid-template-columns: 1fr; } #lvlup.lv-cards .shop-list .row { flex-direction: row; text-align: left; min-height: 0; } #lvlup.lv-cards .shop-list .row canvas { width: 34px !important; height: 34px !important; flex: none; } }
 @media (orientation: landscape) and (max-height: 520px) { #lvlup.lv-cards .box { max-height: 96vh !important; overflow-y: auto !important; padding-top: 8px !important; } #lvlup.lv-cards h2 { margin: 0 0 4px !important; } #lvlup.lv-cards .shop-list .row { min-height: 104px; } }
 
@@ -12372,16 +12377,17 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     curLvlOpts.forEach(function (o) {
       var b = document.createElement("button");
       var ctg0 = comboTag(o), isEvo = o.evo && !(o.tag && state.survival); /* une carte « nouvelle attaque / nouveau passif » porte déjà son bandeau d'emplacement : pas de second bandeau « Évolution » par-dessus */
-      b.className = "row" + (isEvo ? " evo" : "") + ((ctg0 || isEvo) && state.survival ? " combo" : "") + (o.legend ? " legend" : ""); b.type = "button";
+      var kindC = !state.survival ? "" : o.legend ? " k-don" : /^(learn_|w_|wevo_|evo_|merge_|imb_|bw_|farm|hcombo|sp_)/.test(o.id) ? " k-act" : " k-pas", isNewA = /^(learn_|w_learn_)/.test(o.id);
+      b.className = "row" + kindC + (isEvo ? " evo" : "") + ((ctg0 || isEvo) && state.survival ? " combo" : "") + (o.legend ? " legend" : ""); b.type = "button";
       if (o.legend) { var lgb = document.createElement("span"); lgb.className = "sh-combo"; lgb.textContent = "✦ Don légendaire · " + o.tagTxt; b.appendChild(lgb); }
-      else if (o.tag && state.survival) { var slb = document.createElement("span"); slb.className = "sh-combo"; slb.textContent = "▣ " + o.tag; b.appendChild(slb); }
-      if (state.survival && (ctg0 || isEvo) && !(o.tag || o.legend)) { var rb0 = document.createElement("span"); rb0.className = "sh-combo"; rb0.textContent = isEvo ? "★ Évolution !" : "⚡ " + ctg0; b.appendChild(rb0); }
+      else if (o.tag && state.survival) { var slb = document.createElement("span"); slb.className = "sh-combo"; slb.textContent = (isNewA ? "★ " : "▣ ") + o.tag; b.appendChild(slb); }
+      if (state.survival && (ctg0 || isEvo) && !(o.tag || o.legend)) { var rb0 = document.createElement("span"); rb0.className = "sh-combo"; rb0.textContent = isEvo ? "⬆\uFE0E Évolution !" : "⚡ " + ctg0; b.appendChild(rb0); }
       var ic = mkCanvas(1, 1);
       paintIcon(ic, o.icon);
       var txt = document.createElement("span");
       txt.className = "txt";
       var ctg = comboTag(o);
-      txt.innerHTML = "<b>" + (isEvo ? "★ " : "") + o.name + (ctg && !state.survival && !/^(hcombo|w?evo_)/.test(o.id) ? ' <em style="font-style:normal;font-size:.68rem;background:#8a1c1c;border-radius:8px;padding:1px 6px;color:#ffe6b0">→ ' + ctg + "</em>" : "") + "</b><small>" + o.desc + "</small>";
+      txt.innerHTML = "<b>" + (isEvo ? "⬆\uFE0E " : isNewA ? "★ " : "") + o.name + (ctg && !state.survival && !/^(hcombo|w?evo_)/.test(o.id) ? ' <em style="font-style:normal;font-size:.68rem;background:#8a1c1c;border-radius:8px;padding:1px 6px;color:#ffe6b0">→ ' + ctg + "</em>" : "") + "</b><small>" + o.desc + "</small>";
       b.appendChild(ic); b.appendChild(txt);
       b.addEventListener("click", function () {
         if (lvlBanMode && state.survival && state.survBanLeft > 0) { state.survBan[o.id] = true; state.survBanLeft--; lvlBanMode = false; say(o.name + " est banni pour cette partie."); curLvlOpts = rollLevelOpts(); fillLevelList(); return; }
