@@ -1369,7 +1369,7 @@ function boardHTML(view, live) {
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
 function cardStats(card) {
   const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me', card.lv);
-  return { a: d.kw && d.kw.includes('bomb') ? `${st.men}×${st.dmg}` : `${st.men}×${st.dmg}`, h: d.land ? `${st.hp} PV` : `${st.ttl} tour${st.ttl > 1 ? 's' : ''}`, st };
+  return { a: d.kw && d.kw.includes('bomb') ? `${st.dmg} dég. ×tous` : `${st.men * st.dmg} dég.`, h: d.land ? `${st.hp} PV` : `${st.ttl} tour${st.ttl > 1 ? 's' : ''}`, st };
 }
 function cardHTML(card, extra = '', attrs = '') {
   const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : d.cost, cs = cardStats(card);
