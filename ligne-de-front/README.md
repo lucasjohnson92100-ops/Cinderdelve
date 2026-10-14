@@ -24,17 +24,22 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - L'ennemi annonce renforts et obus un tour à l'avance.
 - **Carte** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
+## Sons
+
+Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier audio : tirs (fusil, mitrailleuse, sniper), canons, obus et interception, bombes, explosions, coups au QG, déploiements terre, mer et air, fusion de cartes, butin, achats, entraînement, victoire et défaite. Le bouton « Son » en haut à droite coupe tout et mémorise le choix. Le son ne démarre qu'après le premier clic (règle des navigateurs).
+
 ## Structure
 
 - `index.html` : le jeu complet (HTML, CSS et JS dans un seul fichier).
   - bloc `// ==CORE==` : moteur (cartes, couleurs, fusion, combat, carte, équilibrage), sans accès au DOM ;
   - bloc `// ==SPRITES==` : personnages, navires, avions et icônes en SVG ;
+  - bloc `// ==AUDIO==` : les bruitages ;
   - reste du script : l'interface.
 - `test_core.js` : tests du moteur (`node test_core.js`).
 - `sim.js` : simulation d'une campagne avec un bot qui achète en boutique (`node sim.js 300`).
 
 ## Pistes
 
-- Sons et musique.
+- Musique d'ambiance.
 - Sauvegarde de la campagne en cours.
 - Plus de types d'unités, de couleurs mixtes aux effets propres, d'officiers et d'ennemis.

@@ -68,7 +68,7 @@ button:focus-visible { outline: 3px solid var(--blue-d); outline-offset: 2px; }
 .pill:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
 
 /* Titre */
-.title { margin-inline: -14px; margin-top: -12px; display: grid; gap: 14px; justify-items: center; align-content: start; text-align: center; padding: 7vh 18px 6vh; min-height: calc(100vh - 12px);
+.title { margin-inline: -14px; margin-top: -48px; display: grid; gap: 14px; justify-items: center; align-content: start; text-align: center; padding: calc(7vh + 40px) 18px 6vh; min-height: calc(100vh - 12px);
   background: linear-gradient(180deg, var(--sky) 0, var(--sky-2) 280px, var(--grass) 280.5px); }
 .title h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.6rem, 13vw, 4.8rem); line-height: .92; color: var(--yellow); text-transform: uppercase; text-wrap: balance;
   text-shadow: 3px 3px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 6px 0 var(--ink); }
@@ -263,6 +263,8 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 button.off-item:disabled { opacity: .5; cursor: not-allowed; }
 .lines { display: grid; gap: 6px; } .line { display: flex; justify-content: space-between; gap: 12px; } .line.total { border-top: 3px solid var(--ink); padding-top: 6px; font-weight: 800; }
 .gold { color: #9a6b00; }
+.topbar { max-width: 720px; margin: -4px auto 8px; display: flex; justify-content: flex-end; position: relative; z-index: 3; }
+.topbar .pill { font-size: .82rem; padding: 1px 11px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
@@ -862,6 +864,85 @@ function flagSVG(side, size) {
 }
 // ==/SPRITES==
 
+// ==AUDIO==
+// Bruitages synthétisés avec Web Audio : aucun fichier, aucun chargement.
+const SFX = (() => {
+  let ctx = null, master = null, noiseBuf = null, muted = false;
+  try { muted = localStorage.getItem('front-mute') === '1'; } catch (e) { /* stockage indisponible */ }
+  function use(c, dest) { ctx = c; master = c.createGain(); master.gain.value = 0.85; master.connect(dest || c.destination); noiseBuf = null; }
+  function init() {
+    if (ctx) return ctx;
+    try { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; use(new AC()); } catch (e) { ctx = null; }
+    return ctx;
+  }
+  function noiseBuffer() {
+    if (!noiseBuf) { noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    return noiseBuf;
+  }
+  // Un son pur : fréquence f (qui glisse vers `to`), durée d, enveloppe attaque/chute
+  function tone(f, d, o = {}) {
+    const t = ctx.currentTime + (o.at || 0), osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = o.type || 'square'; osc.frequency.setValueAtTime(f, t);
+    if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol || 0.2, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + d + 0.02);
+  }
+  // Un bruit filtré (tirs, explosions, souffle)
+  function noise(d, o = {}) {
+    const t = ctx.currentTime + (o.at || 0), src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuffer(); src.loop = true; fl.type = o.type || 'lowpass'; fl.Q.value = o.q || 0.8;
+    fl.frequency.setValueAtTime(o.f || 1200, t); if (o.to) fl.frequency.exponentialRampToValueAtTime(o.to, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.vol || 0.3, t + (o.att || 0.005)); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    src.connect(fl); fl.connect(g); g.connect(master); src.start(t, Math.random() * 0.5); src.stop(t + d + 0.02);
+  }
+  const pops = (n, gap, o) => { for (let i = 0; i < n; i++) noise(0.05, { f: o.f + Math.random() * 500, type: 'bandpass', q: 1.2, vol: o.vol * 2, at: i * gap + Math.random() * 0.012 }); };
+  const boom = (vol = 0.5, d = 0.55) => { noise(d, { f: 1800, to: 90, vol, att: 0.004 }); tone(120, d, { type: 'sine', to: 38, vol: vol * 0.9 }); };
+  const S = {
+    tap() { tone(520, 0.05, { type: 'triangle', vol: 0.2 }); },
+    select() { tone(720, 0.06, { type: 'triangle', vol: 0.16 }); tone(980, 0.05, { type: 'triangle', vol: 0.1, at: 0.05 }); },
+    deselect() { tone(560, 0.07, { type: 'triangle', vol: 0.12, to: 420 }); },
+    deny() { tone(150, 0.12, { vol: 0.16 }); tone(130, 0.14, { vol: 0.16, at: 0.13 }); },
+    fuse() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.16, { type: 'triangle', vol: 0.17, at: i * 0.055 })); noise(0.25, { type: 'highpass', f: 5000, vol: 0.06, at: 0.1 }); },
+    split() { tone(900, 0.12, { type: 'triangle', vol: 0.13, to: 400 }); },
+    land() { tone(90, 0.16, { type: 'sine', to: 50, vol: 0.4 }); noise(0.07, { f: 500, vol: 0.25 }); tone(300, 0.04, { vol: 0.08, at: 0.06 }); },
+    sea() { tone(98, 0.5, { type: 'sine', vol: 0.3, to: 80 }); noise(0.4, { f: 900, to: 300, vol: 0.14, att: 0.1 }); },
+    air() { noise(0.55, { type: 'bandpass', f: 400, to: 2400, q: 2, vol: 0.45, att: 0.15 }); tone(180, 0.5, { type: 'sawtooth', to: 360, vol: 0.1 }); },
+    endturn() { tone(110, 0.14, { type: 'sine', to: 70, vol: 0.45 }); noise(0.1, { f: 700, vol: 0.2 }); tone(110, 0.14, { type: 'sine', to: 70, vol: 0.45, at: 0.17 }); noise(0.1, { f: 700, vol: 0.2, at: 0.17 }); },
+    rifle(n = 4) { pops(Math.max(2, Math.min(7, Math.ceil(n / 2))), 0.07, { f: 1500, vol: 0.2 }); },
+    mg(n = 6) { pops(Math.max(4, Math.min(10, n)), 0.05, { f: 1100, vol: 0.18 }); },
+    sniper() { noise(0.18, { type: 'bandpass', f: 2500, to: 700, vol: 0.4 }); tone(900, 0.1, { type: 'sawtooth', to: 200, vol: 0.12 }); },
+    cannon() { boom(0.42, 0.4); },
+    bigcannon() { boom(0.65, 0.8); noise(0.3, { f: 500, vol: 0.2, at: 0.05 }); },
+    torpedo() { noise(0.6, { type: 'bandpass', f: 300, to: 900, q: 3, vol: 0.18, att: 0.1 }); tone(70, 0.45, { type: 'sine', vol: 0.3, at: 0.5 }); boom(0.5, 0.6); },
+    strafe(n = 2) { pops(Math.max(3, n * 2), 0.04, { f: 2000, vol: 0.16 }); noise(0.5, { type: 'bandpass', f: 600, to: 1800, q: 1.5, vol: 0.1, att: 0.1 }); },
+    bomb() { tone(1500, 0.5, { type: 'sine', to: 220, vol: 0.14 }); boom(0.65, 0.9); },
+    shell() { tone(1800, 0.55, { type: 'sine', to: 420, vol: 0.16 }); boom(0.6, 0.7); },
+    intercept() { tone(1568, 0.1, { type: 'triangle', vol: 0.2 }); tone(2093, 0.18, { type: 'triangle', vol: 0.18, at: 0.08 }); noise(0.2, { type: 'highpass', f: 4000, vol: 0.08, at: 0.08 }); },
+    boom() { boom(0.5, 0.55); },
+    hqhit() { tone(70, 0.4, { type: 'sine', to: 35, vol: 0.5 }); noise(0.3, { f: 900, to: 120, vol: 0.4 }); },
+    horn() { tone(147, 0.28, { type: 'sawtooth', vol: 0.11 }); tone(110, 0.32, { type: 'sawtooth', vol: 0.11, at: 0.02 }); },
+    enemyturn() { tone(65, 0.3, { type: 'sine', vol: 0.4 }); tone(98, 0.3, { type: 'triangle', vol: 0.12, at: 0.15 }); },
+    stamp() { tone(100, 0.12, { type: 'sine', to: 60, vol: 0.4 }); noise(0.05, { f: 1500, vol: 0.2 }); },
+    go() { [262, 330, 392].forEach((f, i) => tone(f, 0.12, { type: 'square', vol: 0.1, at: i * 0.08 })); },
+    coins() { [1318, 1568, 1760, 2093].forEach((f, i) => tone(f, 0.09, { type: 'triangle', vol: 0.17, at: i * 0.07 })); },
+    buy() { tone(1318, 0.07, { type: 'square', vol: 0.12 }); tone(1760, 0.2, { type: 'square', vol: 0.12, at: 0.07 }); },
+    sell() { tone(1760, 0.07, { type: 'square', vol: 0.11 }); tone(1175, 0.16, { type: 'square', vol: 0.11, at: 0.07 }); },
+    jokerbuy() { [392, 494, 587, 784].forEach((f, i) => tone(f, 0.2, { type: 'square', vol: 0.1, at: i * 0.07 })); tone(1568, 0.4, { type: 'triangle', vol: 0.12, at: 0.28 }); },
+    levelup() { [440, 554, 659, 880].forEach((f, i) => tone(f, 0.15, { type: 'triangle', vol: 0.18, at: i * 0.07 })); tone(1760, 0.3, { type: 'triangle', vol: 0.12, at: 0.3 }); },
+    reform() { noise(0.18, { type: 'bandpass', f: 3000, to: 800, q: 2, vol: 0.2 }); noise(0.12, { type: 'bandpass', f: 2500, to: 700, q: 2, vol: 0.18, at: 0.12 }); },
+    reroll() { for (let i = 0; i < 5; i++) tone(500 + i * 90, 0.04, { type: 'square', vol: 0.08, at: i * 0.045 }); },
+    win() { [262, 330, 392, 523].forEach((f, i) => tone(f, 0.22, { type: 'square', vol: 0.13, at: i * 0.13 })); [392, 523, 659].forEach(f => tone(f, 0.7, { type: 'triangle', vol: 0.13, at: 0.55 })); },
+    lose() { [392, 349, 311, 262].forEach((f, i) => tone(f, 0.3, { type: 'triangle', vol: 0.16, at: i * 0.2 })); tone(98, 0.9, { type: 'sine', vol: 0.3, at: 0.8 }); },
+  };
+  function play(name, ...a) {
+    if (muted || !S[name] || !init()) return;
+    try { if (ctx.state === 'suspended' && ctx.resume) { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } S[name](...a); } catch (e) { /* le son ne doit jamais bloquer le jeu */ }
+  }
+  function setMuted(m) { muted = m; try { localStorage.setItem('front-mute', m ? '1' : '0'); } catch (e) { /* stockage indisponible */ } }
+  return { play, use, names: Object.keys(S), isMuted: () => muted, setMuted };
+})();
+// ==/AUDIO==
+
 // ====== Interface ======
 const $ = s => document.querySelector(s);
 const app = $('#app');
@@ -1090,6 +1171,21 @@ function renderBattle() {
     <button class="btn" data-act="end" id="bend">Fin du tour</button></div>
   </div>`;
 }
+const SND_OF = { tireurs: 'rifle', paras: 'rifle', rifle: 'rifle', gren: 'rifle', sniper: 'sniper', spiders: 'mg', mgnest: 'mg', blinde: 'cannon', panzer: 'cannon', heavy: 'bigcannon',
+  destroyer: 'cannon', croiseur: 'bigcannon', sousmarin: 'torpedo', chasseur: 'strafe', bombardier: 'bomb' };
+function stepSound(st) {
+  if (st.msg) return SFX.play('enemyturn');
+  if (st.cancel !== undefined) return SFX.play('intercept');
+  if (st.shell !== undefined) { SFX.play('shell'); return; }
+  const all = st.snap.lanes.flatMap(l => [...l.me, ...l.en, l.sup]).filter(Boolean);
+  const u = st.from ? all.find(x => x.uid === st.from) : null;
+  if (u) { const men = u.land ? shotsOf(u) : u.menMax; SFX.play(SND_OF[u.key] || 'rifle', men); }
+  const hits = st.hits || [];
+  if (hits.some(h => h.spawn && h.side === 'en')) SFX.play('horn');
+  else if (hits.some(h => h.kill)) setTimeout(() => SFX.play('boom'), u ? 140 : 0);
+  if (hits.some(h => h.hq === 'me')) setTimeout(() => SFX.play('hqhit'), 120);
+  else if (hits.some(h => h.hq === 'en')) setTimeout(() => SFX.play('hqhit'), 120);
+}
 function popAt(el, text, bg) {
   if (!el) return;
   const p = document.createElement('span'); p.className = 'pop'; p.textContent = text; if (bg) p.style.webkitTextStroke = '4px ' + bg; el.appendChild(p);
@@ -1121,20 +1217,22 @@ function onCard(i) {
   if (busy || S.over) return;
   if (sel !== null && sel !== i && canFuse(S.hand[sel], S.hand[i])) {
     const card = fuseCards(S, sel, i);
-    sel = S.hand.indexOf(card); renderBattle(); toast(`Fusion : ${TYPES[card.t].name} ${colorName(card.c).toLowerCase()} !`); return;
+    sel = S.hand.indexOf(card); renderBattle(); SFX.play('fuse'); toast(`Fusion : ${TYPES[card.t].name} ${colorName(card.c).toLowerCase()} !`); return;
   }
-  if (!isPlayable(S, i)) return toast(why(i));
+  if (!isPlayable(S, i)) { SFX.play('deny'); return toast(why(i)); }
+  SFX.play(sel === i ? 'deselect' : 'select');
   sel = sel === i ? null : i; renderBattle();
 }
 function doPlay(i, tgt) {
-  const hits = playCard(S, i, tgt);
+  const card = S.hand[i], hits = playCard(S, i, tgt);
   if (!hits) return;
+  SFX.play(TYPES[card.t].land ? 'land' : TYPES[card.t].fam === 'mer' ? 'sea' : 'air');
   sel = null; renderBattle(); showHits(hits);
   if (S.over) finishBattle();
 }
 async function doEnd() {
   if (busy || S.over) return;
-  busy = true; fast = false; sel = null;
+  busy = true; fast = false; sel = null; SFX.play('endturn');
   const steps = endTurn(S);
   $('#bend').disabled = true; $('#hand').innerHTML = '<p class="muted" style="padding:24px 6px">Tour en cours…</p>';
   const ph = $('#phase'), board = $('#board');
@@ -1142,6 +1240,7 @@ async function doEnd() {
   for (const st of steps) {
     if (st.ph !== lastPh) { lastPh = st.ph; ph.innerHTML = st.ph === 'me' ? '<span class="ribbon">Vos unités attaquent</span>' : '<span class="ribbon red">Tour ennemi</span>'; await sleep(fast ? 50 : 380); }
     board.innerHTML = boardHTML(st.snap, false);
+    stepSound(st);
     showHits(st.hits, st.from, st);
     await sleep(st.msg ? (fast ? 30 : 250) : fast ? 70 : 520);
   }
@@ -1152,7 +1251,8 @@ async function doEnd() {
 function finishBattle() {
   busy = true;
   setTimeout(() => {
-    if (S.over === 'win') return toReward();
+    if (S.over === 'win') { SFX.play('win'); return toReward(); }
+    SFX.play('lose');
     app.innerHTML = `<div class="stack end"><div class="big lose">Défaite</div>${spriteSVG('inf', 'me', 90)}<h2>Le front a cédé : ${S.lvl.name}</h2>
       <p>Vous aviez atteint l’étape ${C.node.layer + 1} sur 9.</p>
       <button class="btn" data-act="new">Nouvelle campagne</button></div>`;
@@ -1164,7 +1264,7 @@ function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 12);
   const n = C.node;
   if (n.type === 'boss' && n.layer === 8) return victory();
-  const lo = lootFor(S, C, n.type); C.loot += lo.total; C.phase = 'reward'; C.shop = null;
+  const lo = lootFor(S, C, n.type); C.loot += lo.total; C.phase = 'reward'; C.shop = null; setTimeout(() => SFX.play('coins'), 250);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
     <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
       <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
@@ -1273,25 +1373,26 @@ function describeUnit(uid) {
 // ---- Événements ----
 document.addEventListener('click', e => {
   const t = e.target;
-  const nd = t.closest('[data-node]'); if (nd && nd.classList.contains('reach')) { const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
-  const go = t.closest('[data-go]'); if (go) { const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
-  const add = t.closest('[data-add]'); if (add) { C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
-  const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } toast('Joker acheté.'); return renderShop(); }
-  const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; toast('Carte ajoutée au paquet.'); return renderShop(); }
-  const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
+  const nd = t.closest('[data-node]'); if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
+  const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
+  const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
+  const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast('Joker acheté.'); return renderShop(); }
+  const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
+  const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
   const jk = t.closest('[data-joker]'); if (jk) return jokerModal(+jk.dataset.joker);
-  const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1); closeModal(); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
+  const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1); closeModal(); SFX.play('sell'); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
   const rem = t.closest('[data-remove]');
   if (rem) {
     const shop = C.phase === 'shop';
     if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); }
     if (shop && C.loot < REFORM_COST) { closeModal(); return toast('Pas assez de butin.'); }
     C.deck.splice(C.deck.findIndex(c => cardKey(c) === rem.dataset.remove), 1); closeModal();
+    SFX.play('reform');
     if (shop) { C.loot -= REFORM_COST; return renderShop(); }
     return finishNode();
   }
   const off = t.closest('[data-officer]');
-  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
+  if (off) { SFX.play('jokerbuy'); C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
   if (S && document.getElementById('hand')) {
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
     if (sel !== null && !busy) {
@@ -1302,11 +1403,12 @@ document.addEventListener('click', e => {
   }
   const b = t.closest('[data-act]'); if (!b || b.disabled) return;
   const a = b.dataset.act;
+  if (a !== 'end') SFX.play('tap');
   if (a === 'new') newCampaign();
   else if (a === 'help') helpModal(false);
   else if (a === 'close') closeModal();
   else if (a === 'end') doEnd();
-  else if (a === 'split') { if (sel !== null && splitCard(S, sel)) { sel = null; renderBattle(); } }
+  else if (a === 'split') { if (sel !== null && splitCard(S, sel)) { sel = null; SFX.play('split'); renderBattle(); } }
   else if (a === 'deck') deckModal(false);
   else if (a === 'skipcard') finishNode();
   else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 16); finishNode(); }
@@ -1316,11 +1418,23 @@ document.addEventListener('click', e => {
   else if (a === 'train') deckModal('upgrade');
   else if (a === 'reform') deckModal('remove');
   else if (a === 'leave') finishNode();
-  else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; const n = C.shop.rerolls + 1; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; renderShop(); }
+  else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; SFX.play('reroll'); const n = C.shop.rerolls + 1; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; renderShop(); }
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
 
+function renderSoundButton() {
+  let b = document.getElementById('snd');
+  if (!b) {
+    const bar = document.createElement('div'); bar.className = 'topbar';
+    bar.innerHTML = '<button class="pill" id="snd" aria-pressed="true"></button>';
+    document.body.insertBefore(bar, document.getElementById('app')); b = document.getElementById('snd');
+    b.addEventListener('click', () => { SFX.setMuted(!SFX.isMuted()); renderSoundButton(); if (!SFX.isMuted()) SFX.play('tap'); });
+  }
+  b.textContent = SFX.isMuted() ? 'Son : coupé' : 'Son : activé';
+  b.setAttribute('aria-pressed', String(!SFX.isMuted()));
+}
 function showTitle() {
+  renderSoundButton();
   const rec = load();
   const army = (side, keys) => keys.map(k => spriteSVG(k[0], side, 60, k[1])).join('');
   app.innerHTML = `<div class="title"><h1>Ligne de Front</h1>
