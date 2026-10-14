@@ -1,7 +1,7 @@
 # Ligne de Front
 
 Deckbuilder de guerre solo (1944), dans un style cartoon « Advance Wars ».
-Vous déployez des groupes d'unités sur trois lignes de front, vous les fusionnez par couleur et vous avancez sur une carte de campagne jusqu'au quartier général final.
+Vous déployez et déplacez des groupes d'unités sur une carte de bataille en grille, vous les fusionnez par couleur et vous avancez sur une carte de campagne jusqu'au quartier général final.
 
 ## Jouer
 
@@ -9,23 +9,24 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 
 ## Règles en bref
 
-- **Paquet de départ fixe : 11 cartes** = 6 armée de terre, 3 marine, 2 armée de l'air.
-- **Un seul front** de 4 places par camp. Le groupe de gauche (1re ligne) reçoit les tirs. Vous choisissez de poser un groupe en 1re ligne ou en renfort, et vous pouvez en passer un en 1re ligne plus tard.
-- **Deux zones de soutien** de 2 places : la mer et l'air. Navires et avions tirent de loin pendant quelques tours et ne peuvent pas être touchés.
-- **Chaque carte est un groupe** : par exemple 10 tireurs (10 tirs de 1), 4 jeeps mitrailleuses (4 tirs de 2) ou 1 blindé (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs.
+- **Paquet de départ fixe : 40 cartes** (13 tireurs, 5 jeeps mitrailleuses, 4 blindés, 5 destroyers, 3 croiseurs, 3 sous-marins, 3 chasseurs, 2 bombardiers, 2 parachutistes), en quatre couleurs.
+- **Une carte de bataille en grille** (6 × 7), façon Advance Wars : votre QG en bas, celui de l'ennemi en haut. Terrains : **route** (rapide), **champ** (ralentit les véhicules), **forêt** et **village** (−30 % de dégâts), **rivière** (infranchissable aux véhicules sauf par les **ponts**, à gué pour l'infanterie), **mer** (navires).
+- **Le ravitaillement paie tout** : 10 points par tour (+ bonus permanents, + 1 par village tenu). Déployer une carte coûte son prix ; déplacer une unité coûte 1 point par point de mouvement du terrain traversé.
+- **Un tour** : on choisit des cartes (règle des couleurs ci-dessous), « Déployer », puis on touche les cases bleues où les poser (les 2 lignes du bas, un village tenu ; navires en mer près du QG ; avions partout). On déplace ensuite les unités en les touchant. « Fin du tour » : les unités attaquent seules (cible la plus proche à portée, sinon le QG si elles en sont assez proches), puis l'ennemi avance.
+- **Chaque carte est un groupe** : par exemple 10 soldats (10 tirs de 1), 4 jeeps mitrailleuses (4 tirs de 2) ou 1 char (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs. Les cartes affichent l'effectif (soldats, jeeps, avions…) ; le détail est dans la fiche « i ».
+- **Navires et avions** ne peuvent pas être touchés et restent quelques tours ; ils ont une longue portée (croiseur : 2 à 5 cases, chasseur : 3, bombardier : zone de 3 × 3).
 - **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
-- **Fusion** : deux groupes du même type et de couleurs différentes forment un groupe à deux couleurs (jaune + rouge = orange, etc.).
-  - en main : deux cartes fusionnent et ne coûtent qu'une carte ;
-  - sur le front : un groupe déployé peut fusionner avec un autre dès le tour suivant son arrivée.
-- **Un tour = un déploiement groupé** : on sélectionne les cartes à déployer (6 cartes en main, 5 de ravitaillement), un aperçu bleu montre où elles iront, puis « Déployer » pose tout en même temps et termine le tour.
-- **Règle des couleurs** : on ne déploie ensemble que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge). Deux cartes de couleurs différentes du même type se fusionnent pour pouvoir partir ensemble.
-- **Écran de combat** : il tient entièrement dans l'écran en portrait. Les cartes de la main sont en éventail, toutes visibles sans défiler (façon Balatro) ; la carte sélectionnée se lève et un bouton « Détails » ouvre sa fiche.
-- **Annuler** : le bouton « Annuler » défait les fusions et changements de place avant le déploiement.
+- **Fusion** : deux groupes du même type et de couleurs différentes forment un groupe à deux couleurs (jaune + rouge = orange, etc.), en main ou, sur la carte, entre deux groupes voisins dès le tour suivant leur arrivée.
+- **Règle des couleurs** : on ne déploie ensemble que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge).
+- **Villages** : une unité de terre qui s'y arrête le capture ; chaque village tenu donne +1 ravitaillement par tour et sert de zone de déploiement avancée.
+- **L'ennemi se montre à l'avance** : silhouettes en haut de la carte pour les renforts, case cerclée de rouge pour les obus (on peut les esquiver en se déplaçant). Un chasseur intercepte un obus.
+- **Écran de combat** : il tient entièrement dans l'écran en portrait ; les cartes de la main sont en éventail, toutes visibles sans défiler.
+- **Annuler** : défait la dernière action (placement, déplacement, fusion).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
+- **Ravitaillement permanent** : +1 par tour (jusqu'à +3) en battant un boss ou à l'intendance ($14, puis $26, puis $38).
 - **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
-- L'ennemi annonce renforts et obus un tour à l'avance.
-- **Carte** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
+- **Carte de campagne** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
 ## Sons
 
@@ -46,12 +47,3 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Musique d'ambiance.
 - Sauvegarde de la campagne en cours.
 - Plus de types d'unités, de couleurs mixtes aux effets propres, d'officiers et d'ennemis.
-
-## Paquet de départ (40 cartes)
-- **Terre (22)** : 13 tireurs, 5 jeeps mitrailleuses, 4 blindés.
-- **Mer (11)** : 5 destroyers, 3 croiseurs, 3 sous-marins.
-- **Air (7)** : 3 chasseurs, 2 bombardiers, 2 parachutistes.
-- Couleurs : 10 jaunes, 11 rouges, 10 verts, 9 noires (détail dans `DECK_PLAN`, `index.html`).
-
-## Ravitaillement en fin de bataille
-Le ravitaillement de base est de 5 points par tour. On gagne **+1 par tour, définitivement** (jusqu'à +3) en battant un boss, ou en l'achetant à l'intendance ($14, puis $26, puis $38).
