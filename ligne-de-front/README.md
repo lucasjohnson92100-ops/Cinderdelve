@@ -16,7 +16,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Chaque carte est un groupe** : par exemple 10 soldats (10 tirs de 1), 4 jeeps mitrailleuses (4 tirs de 2) ou 1 char (1 tir de 6, blindage 2). Un groupe qui perd des PV perd des hommes, donc des tirs. Les cartes affichent l'effectif (soldats, jeeps, avions…) ; le détail est dans la fiche « i ».
 - **Navires et avions** ne peuvent pas être touchés et restent quelques tours ; ils ont une longue portée (croiseur : 2 à 5 cases, chasseur : 3, bombardier : zone de 3 × 3).
 - **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
-- **Fusion** : deux groupes du même type et de couleurs différentes forment un groupe à deux couleurs (jaune + rouge = orange, etc.), en main ou, sur la carte, entre deux groupes voisins dès le tour suivant leur arrivée. Les **soldats et les PV s'additionnent** (10 tireurs jaunes + 15 tireurs rouges = 25 tireurs orange) et les bonus de couleur valent pour tout le groupe. Une carte fusionnée en main coûte le prix des deux cartes moins 1.
+- **Fusion illimitée** : on fusionne autant de cartes du même type qu'on veut, de couleurs différentes ou non (jaune + rouge = orange ; 3 couleurs = tricolore ; 4 = arc-en-ciel), en main ou, sur la carte, entre groupes voisins dès le tour suivant leur arrivée. Les **soldats et les PV s'additionnent** (10 + 10 + 15 tireurs = 35) et les bonus de couleur valent pour tout le groupe. Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion.
 - **Règle des couleurs** : on ne déploie ensemble que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge).
 - **Villages** : une unité de terre qui s'y arrête le capture ; chaque village tenu donne +1 ravitaillement par tour et sert de zone de déploiement avancée.
 - **L'ennemi se montre à l'avance** : silhouettes en haut de la carte pour les renforts, case cerclée de rouge pour les obus (on peut les esquiver en se déplaçant). Un chasseur intercepte un obus.
@@ -34,7 +34,8 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - Curseur animé sur l'unité choisie, cases de déplacement en bleu, portée d'attaque en rouge ; toucher un ennemi montre sa zone de menace.
 - Les unités se déplacent case par case (les vôtres comme celles de l'ennemi), se grisent quand elles ont fini leur tour, et une bannière annonce chaque tour.
 - Scène de combat façon Advance Wars : écran coupé en deux, chaque camp sur le décor de sa case (champ, forêt, village, route, rivière, mer, ciel, QG) ; chaque figurine tire, et les pertes tombent une à une.
-- Ambiance : ombres de nuages sur la carte, arbres qui bougent, fumée des villages, drapeaux qui flottent, cartes qui se balancent en main.
+- Tirs visibles sur la carte avant la scène, arrivées propres à chaque type (parachute, avion qui plonge, navire et son sillage, renfort ennemi dans un nuage rouge), cartes inclinables au doigt avec reflet (façon Balatro), pile et compteur ×N sur les cartes fusionnées, jeep qui roule sur la carte de campagne, défilé sur l'écran titre, butin qui défile et pièces qui jaillissent.
+- Ambiance : oiseaux, ombres de nuages sur la carte, arbres qui bougent, fumée des villages, drapeaux qui flottent, cartes qui se balancent en main.
 
 ## Sons
 

@@ -91,6 +91,16 @@ const fu=E.fuseUnits(S,f1.uid,f2.uid);check('fusion',fu.cols,'JR');check('une se
  Sx.plan=[];Sx.supply=20;Sx.units=[];const [rr,cc]=E.deployCells(Sx,card)[0];const uu=E.placeCard(Sx,0,rr,cc);check('déployée : 25 hommes',uu.menMax,25);
  const c2=E.fuseCards(Object.assign(Sx,{hand:[E.mkCard('blinde','J'),E.mkCard('blinde','V')]}),0,1);const s2=E.cardStatsFor(c2,Sx);check('2 chars fusionnés',s2.men,2);check('PV chars : 16 + 24',s2.hp,40);check('coût fusion : 3 + 3 - 1',E.cardCost(Sx,c2),5);}
 S.units=[];f1=E.mkUnit(S,'me','tireurs','J');f1.born=3;f2=E.mkUnit(S,'me','tireurs','R');f2.born=1;E.placeUnit(S,f1,5,2);E.placeUnit(S,f2,5,3);check('trop récent',E.canFuseUnits(S,f1,f2),false);
+// fusions illimitées : autant de cartes du même type qu'on veut, même de la même couleur
+{const Sx=mk();Sx.hand=[E.mkCard('tireurs','J'),E.mkCard('tireurs','J'),E.mkCard('tireurs','R'),E.mkCard('blinde','J')];
+ check('même couleur fusionnable',E.canFuse(Sx.hand[0],Sx.hand[1]),true);check('types différents refusés',E.canFuse(Sx.hand[0],Sx.hand[3]),false);
+ let c=E.fuseCards(Sx,0,1);c=E.fuseCards(Sx,0,1);check('3 cartes fusionnées',c.parts.length,3);check('couleurs',c.c,'JR');
+ const st=E.cardStatsFor(c,Sx);check('10 + 10 + 15 soldats',st.men,35);check('2 dégâts',st.dmg,2);check('coût 2+2+2-2',E.cardCost(Sx,c),4);
+ check('main : 2 cartes',Sx.hand.length,2);E.splitCard(Sx,0);check('séparer rend les 3 cartes',Sx.hand.length,4);
+ const or={t:'tireurs',c:'JR',parts:[1,2]},vn={t:'jeep',c:'VN',parts:[1,2]};
+ check('deux fusions + jaune + vert',E.selectionValid([or,vn,{t:'blinde',c:'J'},{t:'blinde',c:'V'}]),true);check('noir hors fusion orange',E.selectionValid([or,{t:'blinde',c:'N'}]),false);
+ Sx.units=[];Sx.turn=3;const g1=E.mkUnit(Sx,'me','tireurs','J');g1.born=1;const g2=E.mkUnit(Sx,'me','tireurs','J');g2.born=1;E.placeUnit(Sx,g1,5,1);E.placeUnit(Sx,g2,5,2);
+ check('groupes de même couleur fusionnables',E.canFuseUnits(Sx,g1,g2),true);const gu=E.fuseUnits(Sx,g1.uid,g2.uid);check('20 soldats jaunes',gu.menMax+gu.cols,'20J');}
 // annuler
 S=mk();S.plan=[];S.supply=20;S.hand=[E.mkCard('tireurs','J')];const sn=E.snapshotState(S);const [dr,dc]=E.deployCells(S,S.hand[0])[0];E.placeCard(S,0,dr,dc);check('1 unité',S.units.length,1);E.restoreState(S,sn);check('annulé',S.units.length,0);check('carte revenue',S.hand.length,1);
 // règle des couleurs

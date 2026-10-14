@@ -666,6 +666,63 @@ body:has(.btl) .sky-fx { display: none; }
 .sc-half .sc-sky::before, .sc-half .sc-sky::after { content: ""; position: absolute; width: 70px; height: 20px; border-radius: 99px; background: rgba(255, 255, 255, .8); box-shadow: 18px -10px 0 4px rgba(255, 255, 255, .8); animation: sccloud 9s linear infinite; }
 .sc-half .sc-sky::before { top: 22%; left: -30%; } .sc-half .sc-sky::after { top: 40%; left: -60%; transform: scale(.7); animation-duration: 13s; animation-delay: -5s; }
 @keyframes sccloud { to { left: 120%; } }
+
+/* ===================== Animations, 3e passe ===================== */
+/* cartes fusionnées : pile et compteur */
+.card.fused { box-shadow: 3px 3px 0 -1px #fff6dc, 3px 3px 0 1px var(--ink), 6px 6px 0 -1px #fff6dc, 6px 6px 0 1px var(--ink), 0 4px 0 6px rgba(27, 37, 64, .0); }
+.hc.fused.sel { box-shadow: 0 0 0 3px var(--blue), 3px 3px 0 1px var(--ink), 6px 6px 0 1px var(--ink); }
+.fcount { position: absolute; right: -7px; bottom: -7px; z-index: 4; font-family: var(--font-display); font-weight: 700; font-size: .78rem; line-height: 1; padding: 3px 6px; color: #fff; background: linear-gradient(135deg, #ff9a2a, #e5543f 50%, #3d86e8); border: 2px solid var(--ink); border-radius: 99px; box-shadow: 0 2px 0 var(--ink); animation: fcount 1.2s ease-in-out infinite alternate; }
+@keyframes fcount { to { transform: scale(1.12) rotate(-6deg); } }
+/* reflet et inclinaison 3D */
+.hand.fan { perspective: 700px; }
+.hc .shine { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2; opacity: 0; background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, .7), transparent 45%); transition: opacity .15s; mix-blend-mode: soft-light; }
+.hc.tilt { transform: translateY(-10px) rotateX(var(--rx, 0)) rotateY(var(--ry, 0)) !important; z-index: 40 !important; transition: transform .06s; }
+.hc.tilt .shine { opacity: 1; }
+/* tir visible sur la carte */
+.shotfx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 9; pointer-events: none; overflow: visible; }
+.shotfx .sline { stroke: #ffd24a; stroke-width: 3; stroke-dasharray: 6 6; stroke-linecap: round; animation: sline .4s linear infinite; filter: drop-shadow(0 0 3px #ff8a2a); }
+@keyframes sline { to { stroke-dashoffset: -24; } }
+.shotfx .sball { fill: #fff; stroke: #ff8a2a; stroke-width: 3; filter: drop-shadow(0 0 6px #ffd24a); }
+.shotfx .sring { fill: none; stroke: var(--red); stroke-width: 3; animation: sring .45s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes sring { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+.gc.aim { animation: shake .3s 2; }
+.gc.impact .gu .gart { animation: hitshake .4s; }
+/* marche */
+.gu.walking .gart { animation: walk .14s ease-in-out infinite alternate; } @keyframes walk { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-3px) rotate(3deg); } }
+/* arrivées selon le type */
+.gu.spawn.sp-land .gart { animation: rise .5s cubic-bezier(.2, 1.4, .4, 1); } @keyframes rise { from { transform: translateY(14px) scale(.5); opacity: 0; } }
+.gu.spawn.sp-sea .gart { animation: sail .7s ease-out; } @keyframes sail { from { transform: translateY(26px); opacity: 0; } 60% { opacity: 1; } }
+.gu.spawn.sp-sea::after { content: ""; position: absolute; left: 10%; right: 10%; bottom: 8px; height: 10px; border-radius: 50%; border: 2px solid #fff; opacity: 0; animation: wake .8s ease-out; }
+@keyframes wake { 0% { opacity: .9; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.6); } }
+.gu.spawn.sp-air .gart { animation: flyin .6s cubic-bezier(.2, .9, .3, 1); } @keyframes flyin { from { transform: translate(-120px, -40px) rotate(-20deg) scale(.6); opacity: 0; } }
+.gu.spawn.sp-para .gart { animation: chute .9s cubic-bezier(.3, .7, .4, 1); } @keyframes chute { from { transform: translateY(-90px) scale(.8); } 85% { transform: translateY(2px); } }
+.gu.spawn.sp-para::after { content: ""; position: absolute; left: 22%; right: 22%; top: -6px; height: 14px; border-radius: 14px 14px 2px 2px; background: #fff; border: 2px solid var(--ink); animation: canopy .9s forwards; }
+@keyframes canopy { from { transform: translateY(-90px); } 80% { transform: translateY(0); opacity: 1; } to { transform: translateY(0) scaleY(.2); opacity: 0; } }
+.gu.spawn.sp-enemy .gart { animation: rise .5s cubic-bezier(.2, 1.4, .4, 1); }
+.gu.spawn.sp-enemy::after { content: ""; position: absolute; inset: 10%; border-radius: 50%; background: radial-gradient(circle, rgba(229, 84, 63, .55), transparent 70%); animation: redpuff .7s ease-out forwards; }
+@keyframes redpuff { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+/* oiseaux */
+.birds { position: absolute; top: 46px; left: -60px; z-index: 0; pointer-events: none; animation: birds 22s linear infinite; opacity: .7; }
+.birds svg { animation: flap .35s ease-in-out infinite alternate; } @keyframes flap { to { transform: scaleY(.55); } }
+@keyframes birds { 0% { transform: translate(0, 0); } 50% { transform: translate(60vw, 10px); } 100% { transform: translate(130vw, -4px); } }
+.btl > *:not(.birds):not(.scene-wrap):not(.tban) { position: relative; z-index: 1; }
+/* défilé sur le titre */
+.parade { width: 100%; overflow: hidden; height: 50px; margin-top: 4px; mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.ptrack { display: flex; gap: 18px; width: max-content; animation: parade 16s linear infinite; }
+.ptrack span { animation: march .45s ease-in-out infinite alternate; } .ptrack span:nth-child(2n) { animation-delay: -.22s; }
+@keyframes parade { from { transform: translateX(-60%); } to { transform: translateX(110vw); } }
+/* trajet sur la carte de campagne */
+.travel { position: absolute; left: 0; top: 0; margin: -23px 0 0 -23px; z-index: 6; pointer-events: none; filter: drop-shadow(0 4px 0 rgba(27, 37, 64, .3)); }
+.travel svg { animation: walk .14s ease-in-out infinite alternate; }
+/* butin */
+.coinburst { position: relative; height: 0; }
+.coinburst i { position: absolute; left: 50%; top: -120px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff6b8, #ffd24a 45%, #d79d1c); border: 2px solid var(--ink); opacity: 0; animation: coin .9s ease-out forwards; animation-delay: var(--d); }
+@keyframes coin { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(.5); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(-90px) scale(1.1); } }
+.lines .line { animation: linein .35s backwards; } .lines .line:nth-child(2) { animation-delay: .12s; } .lines .line:nth-child(3) { animation-delay: .24s; } .lines .line:nth-child(4) { animation-delay: .36s; } .lines .line:nth-child(5) { animation-delay: .48s; }
+@keyframes linein { from { opacity: 0; transform: translateX(-16px); } }
+/* boutons et pastilles : petit rebond au toucher */
+.btn:active:not(:disabled), .pill:active:not(:disabled) { animation: press .18s; } @keyframes press { 50% { transform: scale(.94); } }
+.pip.res { animation: pipres .5s ease-in-out infinite alternate; } @keyframes pipres { to { filter: brightness(1.3); } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -682,9 +739,9 @@ const COLORS = {
 };
 const MIXES = { JR: ['Orange', '#ff9a2a'], JV: ['Citron', '#c3e03a'], JN: ['Olive', '#8c8a2e'], RV: ['Brique', '#a8573a'], RN: ['Bordeaux', '#8a2347'], VN: ['Sapin', '#1f6a45'] };
 const COL_ORDER = 'JRVN';
-const normCols = s => [...s].sort((a, b) => COL_ORDER.indexOf(a) - COL_ORDER.indexOf(b)).join('');
-const colorName = c => (c.length === 1 ? COLORS[c].name : MIXES[c][0]);
-const colorHex = c => (c.length === 1 ? COLORS[c].hex : MIXES[c][1]);
+const normCols = s => [...new Set(s)].sort((a, b) => COL_ORDER.indexOf(a) - COL_ORDER.indexOf(b)).join('');
+const colorName = c => (c.length === 1 ? COLORS[c].name : c.length === 2 ? MIXES[c][0] : c.length === 3 ? 'Tricolore' : 'Arc-en-ciel');
+const colorHex = c => (c.length === 1 ? COLORS[c].hex : c.length === 2 ? MIXES[c][1] : '#b07ad8');
 
 // ---- Types de cartes. men = nombre d'hommes (= nombre de tirs), dmg = dégâts par tir, hpm = PV par homme ----
 const FAMILIES = { terre: 'Armée de terre', mer: 'Marine', air: "Armée de l'air" };
@@ -840,7 +897,7 @@ function statsFor(def, cols, S, side, lv) {
     if (ch === 'V') vert = true;
     if (ch === 'N') { pierce += 1 + (J('ombre') ? 1 : 0); raid = true; }
   }
-  if (J('peintre') && (cols || '').length === 2) dmg += 1;
+  if (J('peintre') && (cols || '').length >= 2) dmg += 1;
   let hp = hpm ? men * hpm : 0;
   if (vert) { hp = Math.ceil(hp * 1.5); if (J('mousse')) hp = Math.ceil(hp * 1.25); if (def.ttl) ttl += 1; }
   if (me && def.ttl && J('amiral')) ttl += 1;
@@ -854,8 +911,8 @@ function statsFor(def, cols, S, side, lv) {
 function cardStatsFor(card, S, side = 'me') {
   const def = TYPES[card.t];
   if (!card.parts) return statsFor(def, card.c, S, side, card.lv);
-  const [a, b] = card.parts, A = statsFor(def, a.c, S, side, a.lv), B = statsFor(def, b.c, S, side, b.lv), M = statsFor(def, card.c, S, side, Math.max(a.lv || 1, b.lv || 1));
-  return { ...M, men: A.men + B.men, hp: A.hp + B.hp, ttl: Math.max(A.ttl, B.ttl) };
+  const P = card.parts.map(p => statsFor(def, p.c, S, side, p.lv)), M = statsFor(def, card.c, S, side, Math.max(...card.parts.map(p => p.lv || 1)));
+  return { ...M, men: P.reduce((t, x) => t + x.men, 0), hp: P.reduce((t, x) => t + x.hp, 0), ttl: Math.max(...P.map(x => x.ttl)) };
 }
 function mkUnit(S, side, key, cols, lv, parts) {
   const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = parts ? cardStatsFor({ t: key, c: cols, lv, parts }, S, side) : statsFor(def, cols, S, side, lv);
@@ -1008,8 +1065,8 @@ function bestMove(S, u, budget) {
 }
 
 // ---- Coût d'une carte, emplacements de déploiement ----
-// Une carte fusionnée coûte le prix des deux cartes, moins 1
-const baseCost = card => (card.parts ? TYPES[card.t].cost * 2 - 1 : TYPES[card.t].cost);
+// Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion
+const baseCost = card => (card.parts ? TYPES[card.t].cost * card.parts.length - (card.parts.length - 1) : TYPES[card.t].cost);
 function cardCost(S, card) {
   const def = TYPES[card.t]; let cost = baseCost(card);
   if (has(S, 'silva') && def.fam !== 'terre') cost -= 1;
@@ -1041,14 +1098,13 @@ function placeCard(S, hi, r, c) {
 }
 // ---- Règle des couleurs au déploiement ----
 // - sans carte fusionnée : toutes les cartes déployées ensemble ont la même couleur ;
-// - avec une carte fusionnée (ex. orange = jaune + rouge) : on peut y ajouter toute carte dont la couleur appartient à la fusion
-//   (jaune ou rouge), et d'autres cartes fusionnées de la même couleur. On ne mélange pas deux fusions différentes.
+// - avec des cartes fusionnées : on peut y joindre toute carte dont les couleurs appartiennent à ces fusions
+//   (ex. une fusion orange = jaune + rouge permet d'ajouter du jaune et du rouge).
 function selectionValid(cards) {
-  const fused = cards.filter(c => c.c.length > 1);
+  const fused = cards.filter(c => c.parts);
   if (!fused.length) return new Set(cards.map(c => c.c)).size <= 1;
-  const mix = fused[0].c;
-  if (fused.some(c => c.c !== mix)) return false;
-  return cards.every(c => c.c === mix || (c.c.length === 1 && mix.includes(c.c)));
+  const allowed = new Set(fused.flatMap(c => [...c.c]));
+  return cards.every(c => [...c.c].every(ch => allowed.has(ch)));
 }
 // Vrai si la sélection est valide, ou le deviendrait en fusionnant des paires de cartes (même type, couleurs différentes).
 function colorsReachable(cards) {
@@ -1058,7 +1114,7 @@ function colorsReachable(cards) {
     for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
       if (canFuse(l[i], l[j])) {
         const next = l.filter((_, k) => k !== i && k !== j);
-        next.push({ t: l[i].t, c: normCols(l[i].c + l[j].c), parts: [1, 2] });
+        next.push({ t: l[i].t, c: normCols(l[i].c + l[j].c), parts: [...(l[i].parts || [l[i]]), ...(l[j].parts || [l[j]])] });
         if (search(next)) return true;
       }
     }
@@ -1086,12 +1142,13 @@ function planDeploy(S, idxs) {
 }
 function discardCard(S, card) { if (card.parts) S.discard.push(...card.parts); else S.discard.push(card); }
 
-// ---- Fusion de deux cartes en main ----
-const canFuse = (a, b) => !!a && !!b && a !== b && a.t === b.t && !a.parts && !b.parts && a.c.length === 1 && b.c.length === 1 && a.c !== b.c;
+// ---- Fusion de cartes en main : autant de cartes du même type qu'on veut ----
+const canFuse = (a, b) => !!a && !!b && a !== b && a.t === b.t;
 function fuseCards(S, i, j) {
   const a = S.hand[i], b = S.hand[j];
   if (S.over || !canFuse(a, b)) return null;
-  const card = { t: a.t, c: normCols(a.c + b.c), lv: Math.max(a.lv || 1, b.lv || 1), parts: [a, b] };
+  const parts = [...(a.parts || [a]), ...(b.parts || [b])];
+  const card = { t: a.t, c: normCols(a.c + b.c), lv: Math.max(...parts.map(p => p.lv || 1)), parts };
   S.hand.splice(Math.max(i, j), 1); S.hand.splice(Math.min(i, j), 1, card);
   return card;
 }
@@ -1101,9 +1158,9 @@ function splitCard(S, i) {
   S.hand.splice(i, 1, ...c.parts);
   return c.parts;
 }
-// ---- Fusion de deux groupes voisins déjà déployés : possible dès le tour suivant leur arrivée ----
+// ---- Fusion de deux groupes voisins du même type déjà déployés : possible dès le tour suivant leur arrivée ----
 const canFuseUnits = (S, a, b) => !!a && !!b && a !== b && a.side === 'me' && b.side === 'me' && a.land && b.land && a.key === b.key && dist(a.r, a.c, b.r, b.c) === 1 &&
-  a.cols.length === 1 && b.cols.length === 1 && a.cols !== b.cols && a.born < S.turn && b.born < S.turn && !S.over;
+  a.born < S.turn && b.born < S.turn && !S.over;
 function fuseUnits(S, uidA, uidB) {
   const a = findUnit(S, uidA), b = findUnit(S, uidB);
   if (!canFuseUnits(S, a, b)) return null;
@@ -1629,7 +1686,7 @@ const SHORT_TAG = { tireurs: 'Tirs nombreux', jeep: 'Mitrailleuses', blinde: 'Bl
 const SHORT_EFF = { J: '+1 dégât par tir', R: "+50 % d'hommes", V: '+50 % de PV', N: 'Perce 1 · agit de suite' };
 const FAM_SHORT = { terre: 'Terre', mer: 'Mer', air: 'Air' };
 const FAM_ORDER = { terre: 0, mer: 1, air: 2 };
-const chipBg = c => (c.length === 1 ? COLORS[c].hex : `linear-gradient(90deg, ${COLORS[c[0]].hex} 50%, ${COLORS[c[1]].hex} 50%)`);
+const chipBg = c => (c.length === 1 ? COLORS[c].hex : `linear-gradient(90deg, ${[...c].map((ch, k) => `${COLORS[ch].hex} ${(k * 100) / c.length}% ${((k + 1) * 100) / c.length}%`).join(', ')})`);
 let C = null, S = null, picked = [], placing = null, busy = false, fast = false, selU = null, undo = [];
 const CARD_REG = [];
 
@@ -1731,6 +1788,20 @@ function nodeModal(n) {
 }
 function enterNode(n) {
   closeModal();
+  const map = document.querySelector('.map'), tgt = map && map.querySelector(`[data-node="${n.layer}-${n.i}"]`);
+  if (map && tgt && !window.__travel) {
+    const cur = map.querySelector('.node.cur') || map.querySelector('.start'), m = map.getBoundingClientRect(), b = tgt.getBoundingClientRect(), a = cur ? cur.getBoundingClientRect() : { left: b.left, top: b.bottom + 90, width: b.width, height: 0 };
+    const mk = document.createElement('span'); mk.className = 'travel'; mk.innerHTML = spriteSVG('jeep', 'me', 46, 'J'); map.appendChild(mk);
+    const p = r => [r.left - m.left + r.width / 2, r.top - m.top + r.height / 2];
+    const [x1, y1] = p(a), [x2, y2] = p(b);
+    window.__travel = true; SFX.play('land');
+    mk.animate([{ transform: `translate(${x1}px, ${y1}px)` }, { transform: `translate(${x2}px, ${y2}px)` }], { duration: 650, easing: 'ease-in-out', fill: 'forwards' });
+    setTimeout(() => { window.__travel = false; enterNode2(n); }, 700);
+    return;
+  }
+  enterNode2(n);
+}
+function enterNode2(n) {
   C.trail = C.trail || {};
   if (C.pos) C.trail[C.pos.layer] = C.pos.i;
   C.pos = { layer: n.layer, i: n.i }; C.node = n; C.inNode = true; C.phase = 'node'; C.shop = null;
@@ -1754,8 +1825,9 @@ function startBattle(node) {
 }
 
 // ---- Affichage de la carte de bataille (grille façon Advance Wars) ----
-const pickFuse = () => picked.flatMap((a, i) => picked.slice(i + 1).filter(b => canFuse(a, b)).map(b => [a, b]));
-const handPartners = card => S.hand.filter(h => h !== card && canFuse(card, h));
+// Groupes de cartes choisies du même type (au moins 2) : elles peuvent fusionner
+const pickFuse = () => Object.values(picked.reduce((g, c) => ((g[c.t] = g[c.t] || []).push(c), g), {})).filter(g => g.length > 1);
+const handPartners = card => S.hand.filter(h => h !== card && canFuse(card, h) && !selectionValid([...picked.filter(p => p !== h), h]));
 const pickIdx = () => picked.map(c => S.hand.indexOf(c)).filter(i => i >= 0);
 const unitPartners = u => (u && u.side === 'me' ? S.units.filter(b => canFuseUnits(S, u, b)) : []);
 
@@ -1903,7 +1975,7 @@ function cardHTML(card, extra = '', attrs = '') {
 }
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>
     <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
@@ -1927,7 +1999,7 @@ function objLine() {
 }
 function hintText() {
   if (busy) return '';
-  const tut = S.lvl.tutorial && S.turn <= 2, anyHandPair = S.hand.some(a => S.hand.some(b => canFuse(a, b)));
+  const tut = S.lvl.tutorial && S.turn <= 2, anyHandPair = S.hand.some(a => S.hand.some(b => canFuse(a, b) && a.c !== b.c));
   if (placing) return placing.queue.length ? `Placez ${TYPES[placing.queue[0].t].name.toLowerCase()} ${colorName(placing.queue[0].c).toLowerCase()} (${placing.total - placing.queue.length + 1}/${placing.total}) : touchez une case bleue.` : '';
   if (selU !== null) {
     const u = findUnit(S, selU); if (!u) return '';
@@ -1937,8 +2009,8 @@ function hintText() {
     if (u.attacked) return `${u.name} a déjà attaqué ce tour.`;
     return `${u.name} : ${mv > 0 ? `déplacement jusqu'à ${mv} (1 ravitaillement par point)` : u.mvLeft > 0 ? 'plus de ravitaillement pour bouger' : 'a déjà bougé'}, ${RANGE_TXT(u.rng)}.`;
   }
-  if (pickFuse().length) return (tut ? '2. ' : '') + 'Ces 2 cartes de couleurs différentes doivent être fusionnées pour être déployées.';
-  if (picked.some(c => handPartners(c).length)) return 'Une carte brille : sélectionnez-la pour fusionner les deux.';
+  if (pickFuse().length) { const g = pickFuse()[0]; return (tut ? '2. ' : '') + (selectionValid(picked) ? `Ces ${g.length} cartes ${TYPES[g[0].t].name} peuvent fusionner : leurs soldats s'additionnent.` : `Ces ${g.length} cartes de couleurs différentes doivent fusionner pour partir ensemble : leurs soldats s'additionnent.`); }
+  if (picked.some(c => handPartners(c).length)) return 'Une carte du même type brille : touchez-la pour l’ajouter, puis « Fusionner ».';
   if (picked.length) {
     const pl = planDeploy(S, pickIdx());
     return (tut && picked.some(c => c.parts) ? '3. ' : '') + `Sélection : ${pl.ok ? pl.cost : '?'}/${S.supply} de ravitaillement. « Déployer » vous laisse choisir les cases.`;
@@ -1954,7 +2026,7 @@ function renderBattle() {
   const cw = Math.round(Math.max(66, Math.min(100, W * 0.27, H * 0.105))), ch = Math.round(cw * 1.28);
   const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
-    const on = picked.includes(k), partner = !on && !placing && picked.some(c => canFuse(c, k));
+    const on = picked.includes(k), partner = !on && !placing && picked.some(c => canFuse(c, k)) && !selectionValid([...picked, k]) && colorsReachable([...picked, k]);
     const t = planDeploy(S, idxs.concat(i)), off = placing || (!on && !(t.ok || (t.reason === 'colors' && colorsReachable([...picked, k]))));
     const mid = (n - 1) / 2, rot = on || partner ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : partner ? -12 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
     return handCardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (off ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round(22 + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
@@ -1963,10 +2035,11 @@ function renderBattle() {
   const hint = hintText(), fz = pickFuse(), hasFused = picked.some(c => c.parts), one = picked.length === 1 ? picked[0] : null;
   const colorBlock = idxs.length && !plan.ok && plan.reason === 'colors';
   const su = selU !== null ? findUnit(S, selU) : null, up = su ? unitPartners(su) : [];
-  const extra = placing ? '' : fz.length ? '<button class="btn go sm" data-act="fusepick">Fusionner</button>' : hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : su ? `${up.length ? '<button class="btn go sm" data-act="ufuse">Fusionner</button>' : ''}<button class="pill sm" data-act="usheet">Détails</button>` : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
+  const extra = placing ? '' : fz.length ? `<button class="btn go sm" data-act="fusepick">Fusionner (${fz.reduce((t, g) => t + g.length, 0)})</button>` : hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : su ? `${up.length ? '<button class="btn go sm" data-act="ufuse">Fusionner</button>' : ''}<button class="pill sm" data-act="usheet">Détails</button>` : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const ready = S.units.filter(u => u.side === 'me' && canAttack(S, u)).length;
   const endLabel = placing ? 'Placez…' : picked.length ? 'Déployer (' + picked.length + ')' : ready ? `Fin du tour · ${ready}⚔` : 'Fin du tour';
   app.innerHTML = `<div class="btl">
+    <div class="birds" aria-hidden="true"><svg viewBox="0 0 60 14" width="46"><path d="M2 8 q5 -6 10 0 q5 -6 10 0 M30 5 q4 -5 8 0 q4 -5 8 0" fill="none" stroke="#1b2540" stroke-width="1.8" stroke-linecap="round"/></svg></div>
     <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><span class="sp"></span>
       <button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="deck">Paquet</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
     <div class="bt-info"><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}</div>
@@ -2005,7 +2078,7 @@ function showHits(hits, from, st) {
   if (st && st.moved) document.querySelector(`.gu[data-uid="${st.moved}"]`)?.classList.add('stepin');
   if (st && st.shell && st.at) cellEl(st.at[0], st.at[1])?.classList.add('impact');
   for (const h of hits || []) {
-    if (h.spawn) { document.querySelector(`.gu[data-uid="${h.uid}"]`)?.classList.add('spawn'); continue; }
+    if (h.spawn) { const su = findUnit(S, h.uid), kind = !su ? 'land' : su.fam === 'mer' ? 'sea' : su.cls === 'air' ? 'air' : su.fam === 'air' ? 'para' : su.side === 'en' ? 'enemy' : 'land'; document.querySelector(`.gu[data-uid="${h.uid}"]`)?.classList.add('spawn', 'sp-' + kind); continue; }
     let el = null;
     if (h.hq) { el = document.querySelector(`.hq.${h.hq}`); el?.classList.add('hit'); }
     else el = document.querySelector(`.gu[data-uid="${h.uid}"]`)?.parentElement || (st && st.at && cellEl(st.at[0], st.at[1])) || document.getElementById('bgrid');
@@ -2028,11 +2101,16 @@ function onCard(i) {
   picked.push(card); SFX.play('select'); renderBattle();
 }
 function doFusePick() {
-  const pair = pickFuse()[0]; if (!pair || busy) return;
-  const [a, b] = pair; undo.push(snapshotState(S));
-  const card = fuseCards(S, S.hand.indexOf(a), S.hand.indexOf(b));
-  picked.splice(picked.indexOf(b), 1); picked[picked.indexOf(a)] = card;
-  SFX.play('fuse'); renderBattle(); toast(`Fusion : ${TYPES[card.t].name} ${colorName(card.c).toLowerCase()} !`);
+  const groups = pickFuse(); if (!groups.length || busy) return;
+  undo.push(snapshotState(S));
+  let last = null;
+  groups.forEach(g => {
+    let card = g[0];
+    for (const other of g.slice(1)) { const nc = fuseCards(S, S.hand.indexOf(card), S.hand.indexOf(other)); picked.splice(picked.indexOf(other), 1); picked[picked.indexOf(card)] = nc; card = nc; }
+    last = card;
+  });
+  const st = cardStatsFor(last, S);
+  SFX.play('fuse'); renderBattle(); toast(`Fusion : ${st.men} ${noun(last.t, st.men)} ${colorName(last.c).toLowerCase()} !`);
 }
 function doSplitPicked() {
   if (busy) return;
@@ -2101,14 +2179,16 @@ function onUnit(uid) {
 // Lancer une attaque : on joue la scène de combat, puis le plateau se met à jour
 async function doAttack(uid, tgt) {
   if (busy || S.over) return;
+  const from = cellEl(findUnit(S, uid)?.r, findUnit(S, uid)?.c), tu = tgt === 'hq' ? null : findUnit(S, tgt), to = tgt === 'hq' ? cellEl(S.hqPos.en[0], S.hqPos.en[1]) : cellEl(tu?.r, tu?.c);
   const st = playerAttack(S, uid, tgt);
   if (!st) { SFX.play('deny'); return toast('Attaque impossible.'); }
   busy = true; fast = false; window.__noFastUntil = Date.now() + 500; undo = []; selU = null; picked = [];
-  renderBattle();
+  await boardShot(from, to, st.scene.att);
   await playScene(st, 1);
   busy = false;
-  if (S.over) return finishBattle();
   renderBattle();
+  for (const h of st.hits) { const el = h.hq ? cellEl(S.hqPos[h.hq][0], S.hqPos[h.hq][1]) : to; if (el && h.dmg) { popAt(el, '−' + h.dmg); el.classList.add('impact'); if (h.kill) { const b = document.createElement('span'); b.className = 'boom'; el.appendChild(b); setTimeout(() => b.remove(), 600); } } }
+  if (S.over) return finishBattle();
 }
 function doUnitFuse() {
   const u = findUnit(S, selU), p = unitPartners(u)[0]; if (!u || !p) return;
@@ -2137,10 +2217,24 @@ function animatePath(uid, path, msPer = 120) {
   const el = document.querySelector(`.gu[data-uid="${uid}"]`); if (!el || !el.animate || !path || path.length < 2) return 0;
   const end = el.getBoundingClientRect(), pts = path.map(([r, c]) => { const ce = cellEl(r, c); if (!ce) return null; const b = ce.getBoundingClientRect(); return [b.left - end.left + 1, b.top - end.top + 1]; });
   if (pts.some(p => !p)) return 0;
-  el.style.zIndex = 9;
+  el.style.zIndex = 9; el.classList.add('walking');
   el.animate(pts.map(([x, y]) => ({ transform: `translate(${x}px, ${y}px)` })), { duration: msPer * (path.length - 1), easing: 'linear' });
-  setTimeout(() => { el.style.zIndex = ''; dustAt(el.parentElement, 1); }, msPer * (path.length - 1));
+  setTimeout(() => { el.style.zIndex = ''; el.classList.remove('walking'); dustAt(el.parentElement, 1); }, msPer * (path.length - 1));
   return msPer * (path.length - 1);
+}
+// Trait de tir sur la carte, de l'attaquant à sa cible (avant la scène de combat)
+function boardShot(from, to, att) {
+  const grid = document.getElementById('bgrid'); if (!grid || !from || !to) return Promise.resolve();
+  const g = grid.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const x1 = a.left - g.left + a.width / 2, y1 = a.top - g.top + a.height / 2, x2 = b.left - g.left + b.width / 2, y2 = b.top - g.top + b.height / 2;
+  const ov = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); ov.setAttribute('class', 'shotfx'); ov.setAttribute('viewBox', `0 0 ${g.width} ${g.height}`);
+  ov.innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="sline"/><circle class="sball" r="5" cx="${x1}" cy="${y1}"/><circle class="sring" cx="${x2}" cy="${y2}" r="6"/>`;
+  grid.appendChild(ov);
+  from.querySelector('.gu')?.classList.add('atk'); to.classList.add('aim');
+  const ball = ov.querySelector('.sball');
+  if (ball.animate) ball.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${x2 - x1}px, ${y2 - y1}px)` }], { duration: fast ? 60 : 380, easing: 'ease-in', fill: 'forwards' });
+  SFX.play('select');
+  return new Promise(res => setTimeout(() => { ov.remove(); to.classList.remove('aim'); res(); }, fast ? 80 : 480));
 }
 function dustAt(cell, dx) {
   if (!cell) return;
@@ -2305,7 +2399,12 @@ function toReward() {
       <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
     ${gotSupply ? `<div class="panel lines"><div class="line"><span><b>Ravitaillement renforcé</b> : +1 point à chaque tour, pour toute la campagne</span><span class="num gold">+1</span></div></div>` : ''}
     <p class="small">Dépensez votre butin à l’intendance : jokers, nouvelles cartes et entraînement.</p>
+    <div class="coinburst" aria-hidden="true">${Array.from({ length: 12 }, (_, k) => `<i style="--a:${k * 30}deg;--d:${k * 25}ms"></i>`).join('')}</div>
     <button class="btn go" data-act="${n.type === 'boss' ? 'bossjoker' : 'toshop'}">${n.type === 'boss' ? 'Choisir un joker offert' : 'Aller à l’intendance'}</button></div>`;
+  countUpAll(app);
+}
+function countUpAll(root) {
+  root.querySelectorAll('.lines .num.gold').forEach((el, k) => { const v = +el.textContent.replace(/[^0-9]/g, ''); el.textContent = '+$0'; for (let i = 1; i <= 10; i++) setTimeout(() => { el.textContent = '+$' + Math.round((v * i) / 10); }, 150 + k * 140 + i * 40); });
 }
 function cardStep(rareOnly) {
   window.__opts = rewardCards(Math.random, rareOnly ? 2 : 1);
@@ -2379,7 +2478,7 @@ function helpModal(first) {
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Les unités <b>attaquent seules</b> en fin de tour, sur la cible la plus proche à portée ; si rien n'est à portée mais que le QG ennemi l'est, elles le frappent.</li>
     <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les avions n'importe où. Ils ne peuvent pas être touchés et restent quelques tours.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
-    <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs : leurs <b>soldats et leurs PV s'additionnent</b> (10 tireurs jaunes + 15 tireurs rouges = 25 tireurs orange), et les bonus de couleur s'appliquent à tout le groupe. En main, une carte fusionnée coûte le prix des deux cartes moins 1. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur la carte</b> : deux groupes <b>côte à côte</b> peuvent fusionner dès <b>le tour suivant</b> leur arrivée (touchez-le, puis « Fusionner » quand un groupe voisin brille ⇄).</li>
+    <li><b>Fusionner :</b> autant de groupes du même type qu'on veut (même de la même couleur) se fondent en un seul, qui réunit leurs couleurs : leurs <b>soldats et leurs PV s'additionnent</b> (10 tireurs jaunes + 15 tireurs rouges = 25 tireurs orange), et les bonus de couleur s'appliquent à tout le groupe. En main, une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion (3 tireurs : 2 + 2 + 2 − 2 = 4). Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur la carte</b> : deux groupes <b>côte à côte</b> peuvent fusionner dès <b>le tour suivant</b> leur arrivée (touchez-le, puis « Fusionner » quand un groupe voisin brille ⇄).</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3). Vous pouvez aussi acheter <b>+1 ravitaillement par tour</b> (définitif, jusqu'à +3) ; vaincre un <b>boss</b> en offre un.</li>
     <li><b>Votre tour :</b> le ravitaillement paie <b>tout</b> : déployer une carte (son coût) <b>et</b> déplacer une unité (1 point par point de mouvement, selon le terrain). Sélectionnez des cartes (même couleur, ou celles d'une carte fusionnée, ex. orange = jaune + rouge), touchez <b>« Déployer »</b>, puis les cases bleues où les poser (vos deux lignes du bas, ou un village tenu). Touchez ensuite une unité pour la déplacer. <b>« Fin du tour »</b> : vos unités attaquent, puis l'ennemi avance. Un groupe qui vient d'arriver dort (zz) un tour avant de tirer, sauf les noirs. « Annuler » défait la dernière action.</li>
     <li><b>Villages :</b> en poser une unité dessus le capture. Chaque village tenu donne <b>+1 ravitaillement par tour</b>.</li>
@@ -2461,6 +2560,13 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]') && Date.now() > (window.__noFastUntil || 0)) fast = true; });
 
+document.addEventListener('pointermove', e => {
+  const c = e.target.closest && e.target.closest('#hand .hc'); if (!c || busy) return;
+  const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+  c.style.setProperty('--rx', (-y * 16).toFixed(1) + 'deg'); c.style.setProperty('--ry', (x * 18).toFixed(1) + 'deg');
+  c.style.setProperty('--mx', ((x + 0.5) * 100).toFixed(0) + '%'); c.style.setProperty('--my', ((y + 0.5) * 100).toFixed(0) + '%'); c.classList.add('tilt');
+});
+document.addEventListener('pointerout', e => { const c = e.target.closest && e.target.closest('#hand .hc'); if (c && !c.contains(e.relatedTarget)) c.classList.remove('tilt'); });
 window.addEventListener('resize', () => { if (S && document.querySelector('.btl') && !busy) renderBattle(); });
 function renderSoundButton() {
   let b = document.getElementById('snd');
@@ -2481,6 +2587,7 @@ function showTitle() {
     <div class="tag">1944. Terre, mer et air : déployez, déplacez et fusionnez vos groupes sur la carte pour briser le front ennemi.</div>
     <div class="armies">${army('me', [['inf', 'J'], ['jeep', 'V'], ['tank', 'R'], ['chasseur', 'N']])}${army('en', [['panzer', ''], ['gren', ''], ['rifle', '']])}</div>
     <div class="row" style="justify-content:center"><button class="btn go" data-act="new">Nouvelle campagne</button><button class="btn ghost" data-act="help">Comment jouer</button></div>
+    <div class="parade" aria-hidden="true"><div class="ptrack">${[['inf', 'J'], ['inf', 'R'], ['jeep', 'V'], ['inf', 'N'], ['tank', 'J'], ['inf', 'V'], ['jeep', 'R'], ['inf', 'J']].map(k => `<span>${spriteSVG(k[0], 'me', 40, k[1])}</span>`).join('')}</div></div>
     <div class="record">${rec.level ? `Meilleure progression : étape ${Math.min(9, rec.level)} sur 9` : 'Aucune campagne jouée pour le moment.'}</div></div>`;
 }
 showTitle();
