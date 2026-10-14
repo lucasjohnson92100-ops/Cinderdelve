@@ -727,13 +727,13 @@ const ENEMIES = {
 };
 const LEVELS = [
   { name: "Plage d'assaut", hq: 22, budget: 4.0 },
-  { name: 'Bocage', hq: 38, budget: 10.0 },
-  { name: 'Village fortifié', hq: 48, budget: 13.0 },
-  { name: 'Le pont (boss)', hq: 70, budget: 10.0, boss: 'heavy' },
-  { name: 'Forêt des Ardennes', hq: 68, budget: 16.0 },
-  { name: 'Ville en ruines', hq: 78, budget: 19.0 },
-  { name: 'Ligne de défense', hq: 88, budget: 22.0 },
-  { name: 'Quartier général (boss)', hq: 116, budget: 16.0, boss: 'heavy2' },
+  { name: 'Bocage', hq: 38, budget: 11.2 },
+  { name: 'Village fortifié', hq: 48, budget: 14.6 },
+  { name: 'Le pont (boss)', hq: 70, budget: 11.2, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 68, budget: 17.9 },
+  { name: 'Ville en ruines', hq: 78, budget: 21.3 },
+  { name: 'Ligne de défense', hq: 88, budget: 24.6 },
+  { name: 'Quartier général (boss)', hq: 116, budget: 17.9, boss: 'heavy2' },
 ];
 // Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
 const JOKERS = [
@@ -850,8 +850,15 @@ function statsFor(def, cols, S, side, lv) {
   }
   return { men, dmg, hp, ttl, pierce, raid };
 }
-function mkUnit(S, side, key, cols, lv) {
-  const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = statsFor(def, cols, S, side, lv);
+// Carte fusionnée : les effectifs et les PV des deux cartes s'additionnent ; les bonus de couleur (dégâts, perçage…) s'appliquent au groupe entier
+function cardStatsFor(card, S, side = 'me') {
+  const def = TYPES[card.t];
+  if (!card.parts) return statsFor(def, card.c, S, side, card.lv);
+  const [a, b] = card.parts, A = statsFor(def, a.c, S, side, a.lv), B = statsFor(def, b.c, S, side, b.lv), M = statsFor(def, card.c, S, side, Math.max(a.lv || 1, b.lv || 1));
+  return { ...M, men: A.men + B.men, hp: A.hp + B.hp, ttl: Math.max(A.ttl, B.ttl) };
+}
+function mkUnit(S, side, key, cols, lv, parts) {
+  const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = parts ? cardStatsFor({ t: key, c: cols, lv, parts }, S, side) : statsFor(def, cols, S, side, lv);
   return {
     uid: S.uid++, side, key, cols: cols || '', name: def.name, lv: lv || 1, men: st.men, menMax: st.men, dmg: st.dmg, hp: st.hp, hpMax: st.hp,
     armor: def.armor || 0, pierce: st.pierce, ttl: st.ttl, kw: def.kw || [], land: side === 'en' || !!def.land, fam: def.fam || 'terre',
@@ -1001,8 +1008,10 @@ function bestMove(S, u, budget) {
 }
 
 // ---- Coût d'une carte, emplacements de déploiement ----
+// Une carte fusionnée coûte le prix des deux cartes, moins 1
+const baseCost = card => (card.parts ? TYPES[card.t].cost * 2 - 1 : TYPES[card.t].cost);
 function cardCost(S, card) {
-  const def = TYPES[card.t]; let cost = def.cost;
+  const def = TYPES[card.t]; let cost = baseCost(card);
   if (has(S, 'silva') && def.fam !== 'terre') cost -= 1;
   if (has(S, 'ito') && !S.flags.used) cost -= 1;
   return Math.max(0, cost);
@@ -1027,7 +1036,7 @@ function placeCard(S, hi, r, c) {
   if (!card || S.over || cardCost(S, card) > S.supply || !deployCells(S, card).some(x => x[0] === r && x[1] === c)) return null;
   S.supply -= cardCost(S, card); S.flags.used = true;
   S.hand.splice(hi, 1); discardCard(S, card);
-  const u = mkUnit(S, 'me', card.t, card.c, card.lv); u.born = S.turn; u.mvLeft = u.mv;
+  const u = mkUnit(S, 'me', card.t, card.c, card.lv, card.parts); u.born = S.turn; u.mvLeft = u.mv;
   return placeUnit(S, u, r, c);
 }
 // ---- Règle des couleurs au déploiement ----
@@ -1063,7 +1072,7 @@ function planDeploy(S, idxs) {
   const seaFree = deployCells(S, { t: 'destroyer' }).length;
   for (const i of idxs) {
     const card = S.hand[i]; if (!card) return { ok: false, reason: 'card' };
-    const def = TYPES[card.t]; let cost = def.cost;
+    const def = TYPES[card.t]; let cost = baseCost(card);
     if (has(S, 'silva') && def.fam !== 'terre') cost -= 1;
     if (has(S, 'ito') && !used) cost -= 1;
     cost = Math.max(0, cost);
@@ -1098,9 +1107,10 @@ const canFuseUnits = (S, a, b) => !!a && !!b && a !== b && a.side === 'me' && b.
 function fuseUnits(S, uidA, uidB) {
   const a = findUnit(S, uidA), b = findUnit(S, uidB);
   if (!canFuseUnits(S, a, b)) return null;
+  // les deux groupes s'additionnent (hommes et PV) ; les couleurs réunies donnent leurs bonus à tout le groupe
   const u = mkUnit(S, 'me', a.key, normCols(a.cols + b.cols), Math.max(a.lv, b.lv));
   u.uid = a.uid; u.r = a.r; u.c = a.c; u.born = Math.min(a.born, b.born); u.fresh = false; u.mvLeft = Math.min(a.mvLeft, b.mvLeft);
-  u.hp = Math.min(u.hpMax, a.hp + b.hp);
+  u.menMax = a.menMax + b.menMax; u.men = u.menMax; u.hpMax = a.hpMax + b.hpMax; u.hp = a.hp + b.hp; u.ttl = Math.max(a.ttl, b.ttl);
   S.units = S.units.filter(x => x !== a && x !== b); S.units.push(u);
   return u;
 }
@@ -1876,11 +1886,11 @@ const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C 
 const COUNT_LABEL = { tireurs: ['soldat', 'soldats'], jeep: ['jeep', 'jeeps'], blinde: ['char', 'chars'], destroyer: ['navire', 'navires'], croiseur: ['navire', 'navires'], sousmarin: ['sous-marin', 'sous-marins'],
   chasseur: ['avion', 'avions'], bombardier: ['avion', 'avions'], paras: ['para', 'paras'] };
 function cardStats(card) {
-  const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me', card.lv), n = ['destroyer', 'croiseur', 'sousmarin', 'bombardier'].includes(card.t) ? 1 : st.men, lab = COUNT_LABEL[card.t] || ['unité', 'unités'];
+  const d = TYPES[card.t], st = cardStatsFor(card, cardCtx()), n = ['destroyer', 'croiseur', 'sousmarin', 'bombardier'].includes(card.t) ? 1 : st.men, lab = COUNT_LABEL[card.t] || ['unité', 'unités'];
   return { a: `${n} ${lab[n > 1 ? 1 : 0]}`, h: d.land ? `${st.hp} PV` : `${st.ttl} tour${st.ttl > 1 ? 's' : ''}`, st };
 }
 function cardHTML(card, extra = '', attrs = '') {
-  const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : d.cost, cs = cardStats(card);
+  const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : baseCost(card), cs = cardStats(card);
   const reg = CARD_REG.push(card) - 1;
   const tags = [SHORT_TAG[card.t]].filter(Boolean).join(' · ');
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
@@ -1937,7 +1947,7 @@ function hintText() {
   return `Choisissez des cartes à déployer, ou touchez une unité pour la déplacer : ${S.supply} de ravitaillement.`;
 }
 function renderBattle() {
-  const idxs = pickIdx(), plan = idxs.length ? planDeploy(S, idxs) : { ok: true, cost: 0 }, reserved = plan.ok || plan.reason === 'colors' ? idxs.reduce((s, i) => s + Math.max(0, TYPES[S.hand[i].t].cost - (has(S, 'silva') && TYPES[S.hand[i].t].fam !== 'terre' ? 1 : 0)), 0) : 0;
+  const idxs = pickIdx(), plan = idxs.length ? planDeploy(S, idxs) : { ok: true, cost: 0 }, reserved = plan.ok || plan.reason === 'colors' ? idxs.reduce((s, i) => s + Math.max(0, baseCost(S.hand[i]) - (has(S, 'silva') && TYPES[S.hand[i].t].fam !== 'terre' ? 1 : 0)), 0) : 0;
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
   // main en éventail : toutes les cartes sont visibles sans défiler
   const W = Math.min(window.innerWidth, 560) - 28, H = window.innerHeight, n = S.hand.length;
@@ -2369,7 +2379,7 @@ function helpModal(first) {
     <li><b>Chaque carte est un groupe</b> : « 10 soldats » = 10 tirs. Un groupe qui perd des PV perd des hommes, donc des tirs. Un blindage arrête les petits tirs. Les unités <b>attaquent seules</b> en fin de tour, sur la cible la plus proche à portée ; si rien n'est à portée mais que le QG ennemi l'est, elles le frappent.</li>
     <li><b>Mer et air :</b> les navires se posent en mer près de votre QG, les avions n'importe où. Ils ne peuvent pas être touchés et restent quelques tours.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
-    <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur la carte</b> : deux groupes <b>côte à côte</b> peuvent fusionner dès <b>le tour suivant</b> leur arrivée (touchez-le, puis « Fusionner » quand un groupe voisin brille ⇄).</li>
+    <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs : leurs <b>soldats et leurs PV s'additionnent</b> (10 tireurs jaunes + 15 tireurs rouges = 25 tireurs orange), et les bonus de couleur s'appliquent à tout le groupe. En main, une carte fusionnée coûte le prix des deux cartes moins 1. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur la carte</b> : deux groupes <b>côte à côte</b> peuvent fusionner dès <b>le tour suivant</b> leur arrivée (touchez-le, puis « Fusionner » quand un groupe voisin brille ⇄).</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3). Vous pouvez aussi acheter <b>+1 ravitaillement par tour</b> (définitif, jusqu'à +3) ; vaincre un <b>boss</b> en offre un.</li>
     <li><b>Votre tour :</b> le ravitaillement paie <b>tout</b> : déployer une carte (son coût) <b>et</b> déplacer une unité (1 point par point de mouvement, selon le terrain). Sélectionnez des cartes (même couleur, ou celles d'une carte fusionnée, ex. orange = jaune + rouge), touchez <b>« Déployer »</b>, puis les cases bleues où les poser (vos deux lignes du bas, ou un village tenu). Touchez ensuite une unité pour la déplacer. <b>« Fin du tour »</b> : vos unités attaquent, puis l'ennemi avance. Un groupe qui vient d'arriver dort (zz) un tour avant de tirer, sauf les noirs. « Annuler » défait la dernière action.</li>
     <li><b>Villages :</b> en poser une unité dessus le capture. Chaque village tenu donne <b>+1 ravitaillement par tour</b>.</li>
