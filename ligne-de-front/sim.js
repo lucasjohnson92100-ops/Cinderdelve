@@ -1,20 +1,25 @@
-// Simulation d'une campagne avec un bot qui fusionne et achète en boutique : node sim.js [nombre de parties]
+// Simulation d'une campagne avec un bot qui respecte la règle des couleurs, fusionne et achète en boutique : node sim.js [nombre de parties]
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
+const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,planDeploy,deployAll,snapshotState,restoreState,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
+function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
+function evalGroups(S){
+  const groups=new Map();S.hand.forEach((c,i)=>{if(!groups.has(c.c))groups.set(c.c,[]);groups.get(c.c).push(i);});
+  let best={value:-1,idxs:[]};
+  for(const idxs of groups.values()){const n=idxs.length;for(let m=1;m<(1<<n);m++){const sel=idxs.filter((_,b)=>m>>b&1);if(!E.planDeploy(S,sel).ok)continue;
+    let v=0;for(const i of sel){const c=S.hand[i],d=E.TYPES[c.t];v+=d.cost+(c.c.length>1?2:0)+((c.lv||1)-1)*0.5;if(!d.land&&S.front.en.length===0)v-=1.5;}
+    if(v>best.value)best={value:v,idxs:sel};}}
+  return best;
+}
 function botTurn(S){
-  let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}
   // fusion de groupes déjà déployés
-  again=true;while(again){again=false;const r=S.front.me;outer2:for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++)if(E.canFuseUnits(S,r[i],r[j])){E.fuseUnits(S,r[i].uid,r[j].uid);again=true;break outer2;}}
-  for(let g=0;g<20&&!S.over;g++){let best=null;
-    for(let hi=0;hi<S.hand.length;hi++){if(!E.isPlayable(S,hi))continue;const c=S.hand[hi],def=E.TYPES[c.t];
-      for(const t of E.targetsFor(S,c)){
-        const foes=S.front.en.length, threat=S.front.en.reduce((s,u)=>s+u.dmg*u.menMax,0);
-        let sc=(def.cost+(c.c.length>1?2:0))+threat*0.1+foes*0.8-E.cardCost(S,c)*0.3;
-        if(!def.land&&foes===0)sc-=1.5;
-        if(def.land&&t.pos==='front'&&(def.armor||def.hpm>=3))sc+=0.3; if(def.land&&t.pos==='front'&&!(def.armor||def.hpm>=3))sc-=0.3;
-        if(!best||sc>best.sc)best={sc,hi,t};}}
-    if(!best)break;E.playCard(S,best.hi,best.t);}
+  let again=true;while(again){again=false;const r=S.front.me;outer2:for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++)if(E.canFuseUnits(S,r[i],r[j])){E.fuseUnits(S,r[i].uid,r[j].uid);again=true;break outer2;}}
+  // deux stratégies : tout fusionner, ou ne rien fusionner ; on garde la meilleure sélection de même couleur
+  const snap=E.snapshotState(S);
+  fuseAllHand(S);const A=evalGroups(S);E.restoreState(S,snap);
+  const B=evalGroups(S);
+  if(A.value>B.value){fuseAllHand(S);const A2=evalGroups(S);if(A2.idxs.length){E.deployAll(S,A2.idxs,'back');}}
+  else if(B.idxs.length){const heavy=B.idxs.some(i=>E.TYPES[S.hand[i].t].armor);E.deployAll(S,B.idxs,heavy&&S.front.me.length?'front':'back');}
 }
 function fight(C,node){const S=E.newBattle(C,Math.random,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S);if(S.over)break;E.endTurn(S);}return{S,win:S.over==='win'};}
 const PATH=[['battle',0],['battle',1],['elite',1],['battle',2],['boss',3],['battle',4],['elite',4],['battle',5],['battle',6],['boss',7]];

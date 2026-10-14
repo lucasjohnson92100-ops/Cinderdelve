@@ -341,6 +341,84 @@ h2 { font-weight: 600; letter-spacing: 0; }
 .seg.on { background: var(--blue); color: #fff; box-shadow: 0 3px 0 var(--ink); }
 .u.ghost.pv { border: 2px dashed var(--blue-d); background: rgba(61, 134, 232, .12); opacity: .85; }
 .u.ghost.pv .nm { color: var(--blue-d); text-shadow: none; }
+/* ===== Écran de combat : tient dans l'écran en portrait, main en éventail (façon Balatro) ===== */
+body:has(.battle) { padding: 0; overflow: hidden; background-attachment: scroll; }
+body:has(.battle) .topbar { display: none; }
+body:has(.battle) .toast { bottom: 84px; }
+#app:has(.battle) { max-width: 560px; padding-bottom: 0; height: 100dvh; }
+.battle { height: 100dvh; display: flex; flex-direction: column; gap: 5px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); position: relative; }
+.bt-head { display: flex; align-items: center; gap: 5px; flex: none; }
+.bt-head .sp { flex: 1; }
+.ribbon.sm { font-size: .82rem; padding: 1px 10px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); max-width: 44%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tour { font-size: .82rem; white-space: nowrap; }
+.pill.sm { font-size: .76rem; padding: 0 9px; min-height: 26px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); white-space: nowrap; }
+.bt-info { display: flex; gap: 6px; align-items: center; flex: none; }
+.objline.sm { flex: 1; font-size: .68rem; padding: 2px 6px; border-width: 2px; line-height: 1.1; border-radius: 8px; }
+.battle .jbar { gap: 3px; flex: none; }
+.battle .jk { width: 28px; height: 28px; border-width: 2px; box-shadow: none; }
+.battle .jk .spr { width: 22px; height: 22px; }
+.board { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+.hqbar.compact { display: flex; align-items: center; gap: 6px; padding: 1px 8px; border-width: 2px; box-shadow: none; border-radius: 8px; flex: none; }
+.hqbar.compact .hl { font-family: var(--font-display); font-weight: 600; font-size: .76rem; white-space: nowrap; text-transform: uppercase; }
+.hqbar.compact .bar { flex: 1; height: 9px; border-width: 2px; }
+.hqbar.compact .num { font-size: .78rem; white-space: nowrap; }
+.bfront { flex: 1.7; min-height: 150px; display: flex; flex-direction: column; border-width: 2px; box-shadow: none; }
+.frow { flex: 1; min-height: 0; grid-auto-rows: minmax(0, 1fr); }
+.cell { height: auto; min-height: 0; }
+.road { flex: none; min-height: 22px; padding: 1px 6px; border-width: 2px 0; }
+.rlab { font-size: .68rem; }
+.seg2 { display: flex; align-items: center; gap: 4px; font-size: .68rem; font-weight: 800; }
+.seg2 .seg { padding: 0 8px; font-size: .68rem; border-width: 2px; }
+.shell { font-size: .68rem; padding: 0 6px; }
+.zones { flex: 1; min-height: 64px; }
+.zone { display: flex; flex-direction: column; border-width: 2px; box-shadow: none; }
+.zone .zl { font-size: .66rem; }
+.zone .zrow { flex: 1; min-height: 0; grid-auto-rows: minmax(0, 1fr); }
+.zone .cell { height: auto; }
+.u .art { position: absolute; left: 0; right: 0; top: 13px; bottom: 19px; transform: none; display: flex; justify-content: center; align-items: center; }
+.u .art svg { height: 100%; width: auto; max-width: 100%; }
+.u .nm { font-size: .6rem; top: 1px; padding-inline: 12px 2px; }
+.cchip { width: 10px; height: 10px; border-width: 1.5px; top: 2px; left: 2px; }
+.u .st { bottom: 1px; left: 2px; right: 2px; }
+.u .st i { font-size: .72rem; min-width: 0; padding: 0 4px; border-width: 1.5px; }
+.u .armor, .u .zz, .u .fz { top: 13px; font-size: .58rem; padding: 0 3px; border-width: 1.5px; }
+.u .fz { top: 12px; right: 2px; width: 17px; height: 17px; display: grid; place-items: center; padding: 0; border-radius: 50%; font-size: .72rem; font-weight: 800; }
+.u.ghost { inset: 2px; }
+.battle .u.atk .art { animation: lunge2 .35s; }
+.battle .me .u.atk .art { animation-name: lunge2u; }
+@keyframes lunge2 { 40% { transform: translateY(12px) scale(1.12); } }
+@keyframes lunge2u { 40% { transform: translateY(-12px) scale(1.12); } }
+.battle .u.spawn .art { animation: spawn2 .45s; }
+@keyframes spawn2 { from { opacity: 0; transform: translateY(-16px) scale(.7); } }
+.battle .phase { position: absolute; left: 0; right: 0; top: 33%; z-index: 15; pointer-events: none; min-height: 0; display: flex; justify-content: center; }
+.bt-hint { flex: none; display: flex; align-items: center; gap: 6px; min-height: 36px; background: var(--yellow); border: 2px solid var(--ink); border-radius: 10px; padding: 3px 8px; font-weight: 800; font-size: .76rem; line-height: 1.15; }
+.bt-hint .ht { flex: 1; }
+.btn.sm { padding: 4px 12px; font-size: .9rem; border-width: 2px; box-shadow: 0 3px 0 var(--ink); white-space: nowrap; }
+.hand.fan { flex: none; position: relative; overflow: visible; padding: 0; display: block; }
+.hc { position: absolute; display: block; padding: 0; border-width: 2px; border-radius: 9px; box-shadow: 0 2px 0 var(--ink); container-type: inline-size; transition: transform .15s, top .15s; text-align: left; }
+.hc .cost { top: -8px; left: -7px; width: 25cqw; height: 25cqw; font-size: 14cqw; border-width: 2px; box-shadow: 0 2px 0 var(--ink); }
+.hc .ord { top: -8px; right: auto; left: 20cqw; width: 23cqw; height: 23cqw; font-size: 13cqw; border-width: 2px; }
+.hc .cband { position: absolute; left: 0; right: 0; top: 0; height: 15cqw; margin: 0; padding: 0; border: 0; border-bottom: 2px solid var(--ink); border-radius: 7px 7px 0 0; display: flex; align-items: center; font-size: 11cqw; }
+.hc .cband b { font-size: 11cqw; }
+.hc .cn { position: absolute; left: 4cqw; right: 2cqw; top: 19.5cqw; font-size: 12.5cqw; line-height: 1; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hc .art { position: absolute; left: 4cqw; right: 4cqw; top: 33cqw; height: 40cqw; border: 2px solid var(--ink); border-radius: 6px; display: flex; justify-content: center; align-items: center; background: var(--grass); }
+.hc .art svg { height: 100%; width: auto; max-width: 100%; }
+.hc.mer .art { background: #7cc3ee; } .hc.air .art { background: #bfe8fb; }
+.hc .cbig { position: absolute; left: 4cqw; top: 76cqw; display: flex; }
+.hc .cbig i { font-size: 14cqw; padding: 0 3cqw; border-width: 2px; line-height: 1.25; }
+.hc .chp { position: absolute; left: 5cqw; top: 99cqw; font-size: 11.5cqw; font-weight: 800; color: var(--red-d); white-space: nowrap; }
+.hc.sel { box-shadow: 0 0 0 3px var(--blue), 0 3px 0 3px var(--ink); }
+.hc.fusible { animation: glowfz .7s infinite alternate; box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--yellow), 0 3px 0 6px var(--ink); }
+@keyframes glowfz { to { box-shadow: 0 0 0 3px #fff, 0 0 0 9px var(--yellow), 0 3px 0 9px var(--ink); } }
+.hc.off { opacity: 1; filter: grayscale(.9) brightness(.78); }
+.battle .dock { position: static; flex: none; z-index: 1; border: 3px solid var(--ink); border-radius: 12px; box-shadow: none; padding: 4px 8px; gap: 8px; }
+.battle .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
+.battle .dock .supply span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
+.battle .dock .pips { display: flex; gap: 3px; flex-wrap: wrap; }
+.battle .dock .pip { width: 12px; height: 12px; border-width: 1.5px; }
+.battle .dock .btn { padding: 8px 14px; font-size: 1rem; }
+.battle .dock .pill { min-height: 32px; }
+.toast { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
@@ -405,7 +483,7 @@ const LEVELS = [
   { name: "Plage d'assaut", hq: 55, budget: 2.6 },
   { name: 'Bocage', hq: 76, budget: 6.4 },
   { name: 'Village fortifié', hq: 94, budget: 7.4 },
-  { name: 'Le pont (boss)', hq: 120, budget: 5.2, boss: 'heavy' },
+  { name: 'Le pont (boss)', hq: 120, budget: 5.8, boss: 'heavy' },
   { name: 'Forêt des Ardennes', hq: 135, budget: 7.8 },
   { name: 'Ville en ruines', hq: 155, budget: 8.8 },
   { name: 'Ligne de défense', hq: 175, budget: 9.8 },
@@ -492,9 +570,9 @@ function newBattle(C, rng = Math.random, cfg = null) {
   return S;
 }
 function startTurn(S) {
-  S.supply = 4 + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
+  S.supply = 5 + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
   S.flags = { used: false };
-  drawCards(S, 5 + (has(S, 'ashby') ? 1 : 0));
+  drawCards(S, 6 + (has(S, 'ashby') ? 1 : 0));
 }
 function drawCards(S, n) {
   for (let i = 0; i < n; i++) {
@@ -540,6 +618,18 @@ function playCard(S, hi, tgt) {
   const u = deploy(S, 'me', card.t, card.c, card.lv, tgt.pos);
   return [{ uid: u.uid, spawn: true, side: 'me' }];
 }
+// ---- Règle des couleurs : on ne déploie ensemble que des cartes de même couleur, sauf deux cartes du même type qu'on fusionne ----
+// Vrai si, une fois fusionnées toutes les paires possibles (même type, couleurs différentes), il ne reste qu'une couleur.
+function colorsReachable(cards) {
+  const list = cards.map(c => ({ t: c.t, c: c.c, parts: c.parts }));
+  for (let changed = true; changed;) {
+    changed = false;
+    outer: for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      if (canFuse(list[i], list[j])) { list[i] = { t: list[i].t, c: normCols(list[i].c + list[j].c), parts: [1, 2] }; list.splice(j, 1); changed = true; break outer; }
+    }
+  }
+  return new Set(list.map(c => c.c)).size <= 1;
+}
 // ---- Déploiement groupé : on choisit plusieurs cartes, puis on les pose toutes d'un coup ----
 // idxs : indices dans la main, dans l'ordre de sélection. Renvoie {ok, cost} ou {ok:false, reason}.
 function planDeploy(S, idxs) {
@@ -556,6 +646,7 @@ function planDeploy(S, idxs) {
     else if (def.fam === 'mer') { if (++sea > ZONE_CAP) return { ok: false, reason: 'sea' }; }
     else if (++air > ZONE_CAP) return { ok: false, reason: 'air' };
   }
+  if (new Set(idxs.map(i => S.hand[i].c)).size > 1) return { ok: false, reason: 'colors' };
   return { ok: true, cost: S.supply - supply };
 }
 // pos : 'front' (les nouveaux groupes passent devant ceux qui sont déjà là) ou 'back' (en renfort)
@@ -1226,19 +1317,23 @@ function unitHTML(u, cls = '') {
   return `<button class="u ${u.side} ${u.fresh ? 'wait' : ''} ${cls}" data-uid="${u.uid}" aria-label="${u.name}">
     <span class="nm">${u.name}${u.lv > 1 ? ' <b class="star">' + '★'.repeat(u.lv - 1) + '</b>' : ''}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}" title="${colorName(u.cols)}"></span>` : ''}
     <span class="art">${squadSVG(key, u.side, men, u.menMax, 44, u.cols)}</span>
-    ${u.armor ? `<span class="armor" title="Blindage">▣${u.armor}</span>` : ''}${u.fresh ? '<span class="zz">zz</span>' : canF ? '<span class="fz">Fusion</span>' : ''}
+    ${u.armor ? `<span class="armor" title="Blindage">▣${u.armor}</span>` : ''}${u.fresh ? '<span class="zz">zz</span>' : canF ? '<span class="fz" title="Peut fusionner">⇄</span>' : ''}
     <span class="st"><i class="a">${men}×${u.dmg}</i><i class="h ${low} ${u.land ? '' : 'tt'}">${right}</i></span></button>`;
 }
 function ghostHTML(key) {
   const d = ENEMIES[key];
   return `<div class="u en ghost"><span class="nm">Arrive</span><span class="art">${squadSVG(key, 'en', d.men, d.men, 40)}</span><span class="st"><i class="a">${d.men}×${d.dmg}</i><i class="h">${d.men * d.hpm}</i></span></div>`;
 }
+function hqBar(side, label, cur, max, extra) {
+  const pct = Math.max(0, Math.min(100, (cur / max) * 100));
+  return `<div class="hq ${side} hqbar compact">${flagSVG(side, 16)}<span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
+}
 function boardHTML(view, live) {
   const pv = live ? previewOf() : { land: [], sea: [], air: [] };
   const ghosts = live ? S.plan.filter(p => p.k === 'deploy').map(p => p.key) : [];
   const fuseSel = live && selUnit !== null ? findUnit(S, selUnit) : null;
   const meRow = deployPos === 'front' ? [...pv.land, ...view.front.me] : [...view.front.me, ...pv.land];
-  const cells = (arr, n, side, ghostList) => {
+  const cells = (arr, n, ghostList) => {
     let h = '';
     for (let i = 0; i < n; i++) {
       const x = arr[i];
@@ -1252,17 +1347,17 @@ function boardHTML(view, live) {
   };
   const gl = ghosts.slice(0, Math.max(0, FRONT_CAP - view.front.en.length));
   const shells = live ? S.plan.filter(p => p.k === 'shell').map(p => `<span class="shell" title="${S.front.me.length ? 'Vise votre première ligne' : 'Vise votre QG'}">Obus −${p.dmg}</span>`).join('') : '';
-  const zone = (id, name, arr) => `<div class="zone ${id}"><div class="zl">${name}</div><div class="zrow">${cells(arr, ZONE_CAP, 'me')}</div></div>`;
-  const max = { en: S.lvl.hq, me: C.hqMax };
-  const meHQ = `<div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${Math.max(0, view.hq.me)} / ${C.hqMax}</span></div><div class="bar"><i style="width:${Math.max(0, view.hq.me) / C.hqMax * 100}%"></i></div></div>`;
-  const enHQ = S.obj.type === 'hold'
-    ? `<div class="hq en hqbar"><div class="lbl"><span>${flagSVG('en', 20)} Position à tenir</span><span class="num">Tour ${Math.min(S.obj.n, S.turn)} / ${S.obj.n}</span></div><div class="bar"><i style="width:${Math.min(100, ((S.turn - 1) / S.obj.n) * 100)}%"></i></div></div>`
-    : `<div class="hq en hqbar"><div class="lbl"><span>${flagSVG('en', 20)} QG ennemi</span><span class="num">${Math.max(0, view.hq.en)} / ${max.en}</span></div><div class="bar"><i style="width:${Math.max(0, view.hq.en) / max.en * 100}%"></i></div></div>`;
+  const hasLand = live && picked.some(c => TYPES[c.t].land);
+  const left = hasLand && view.front.me.length
+    ? `<span class="seg2">Poser <button class="seg ${deployPos === 'back' ? 'on' : ''}" data-pos="back">en renfort</button><button class="seg ${deployPos === 'front' ? 'on' : ''}" data-pos="front">en 1re ligne</button></span>`
+    : '<span class="rlab">◀ 1re ligne : reçoit les tirs</span>';
+  const zone = (id, name, arr) => `<div class="zone ${id}"><div class="zl">${name}</div><div class="zrow">${cells(arr, ZONE_CAP)}</div></div>`;
+  const enHQ = S.obj.type === 'hold' ? hqBar('en', 'À tenir', Math.min(S.obj.n, S.turn) - 1, S.obj.n, `Tour ${Math.min(S.obj.n, S.turn)}/${S.obj.n}`) : hqBar('en', 'QG ennemi', view.hq.en, S.lvl.hq);
   return `${enHQ}<div class="bfront">
-      <div class="frow en" id="row-en">${cells(view.front.en, FRONT_CAP, 'en', gl)}</div>
-      <div class="road"><span class="rlab">◀ 1re ligne : reçoit les tirs</span><span class="chips">${shells}</span></div>
-      <div class="frow me" id="row-me">${cells(meRow, FRONT_CAP, 'me')}</div></div>
-    <div class="zones">${zone('sea', 'Mer', [...view.sea, ...pv.sea])}${zone('air', 'Air', [...view.air, ...pv.air])}</div>${meHQ}`;
+      <div class="frow en" id="row-en">${cells(view.front.en, FRONT_CAP, gl)}</div>
+      <div class="road">${left}<span class="chips">${shells}</span></div>
+      <div class="frow me" id="row-me">${cells(meRow, FRONT_CAP)}</div></div>
+    <div class="zones">${zone('sea', 'Mer', [...view.sea, ...pv.sea])}${zone('air', 'Air', [...view.air, ...pv.air])}</div>${hqBar('me', 'Votre QG', view.hq.me, C.hqMax)}`;
 }
 
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
@@ -1282,6 +1377,14 @@ function cardHTML(card, extra = '', attrs = '') {
     <span class="art">${squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
     <span class="cbig"><i class="a">${cs.a}</i><i class="h">${cs.h}</i></span><span class="ctag">${tags}</span><span class="effs">${eff}</span></button>`;
 }
+function handCardHTML(card, extra, attrs, style) {
+  const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
+  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+    <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>
+    <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
+    <span class="art">${squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
+    <span class="cbig"><i class="a">${cs.a}</i></span><span class="chp">${cs.h}</span></button>`;
+}
 function cardModal(reg) {
   const card = CARD_REG[reg]; if (!card) return;
   const d = TYPES[card.t], cs = cardStats(card);
@@ -1300,38 +1403,42 @@ function objLine() {
 function hintText() {
   if (busy) return '';
   const tut = S.lvl.tutorial && S.turn <= 2, anyHandPair = S.hand.some(a => S.hand.some(b => canFuse(a, b)));
-  if (selUnit !== null) return 'Touchez le groupe qui brille pour les fusionner. Touchez le groupe choisi pour annuler.';
-  if (pickFuse().length) return (tut ? '2. ' : '') + 'Ces deux cartes peuvent fusionner : touchez « Fusionner » (vous ne payez qu’une carte).';
-  if (picked.some(c => handPartners(c).length)) return 'Une carte brille : sélectionnez-la aussi pour pouvoir fusionner les deux.';
+  if (selUnit !== null) return 'Touchez le groupe qui brille pour fusionner (ou le groupe choisi pour annuler).';
+  if (pickFuse().length) return (tut ? '2. ' : '') + 'Ces 2 cartes de couleurs différentes doivent être fusionnées pour être déployées.';
+  if (picked.some(c => handPartners(c).length)) return 'Une carte brille : sélectionnez-la pour fusionner les deux.';
   if (picked.length) {
     const pl = planDeploy(S, pickIdx());
-    return (tut && picked.some(c => c.parts) ? '3. ' : '') + `Sélection : ${pl.ok ? pl.cost : '?'} sur ${S.supply} de ravitaillement. Touchez « Déployer » : tout est posé en même temps et votre tour se termine.`;
+    return (tut && picked.some(c => c.parts) ? '3. ' : '') + `Sélection : ${pl.ok ? pl.cost : '?'}/${S.supply} de ravitaillement. « Déployer » termine le tour.`;
   }
-  if (tut && S.turn === 1 && anyHandPair) return '1. Touchez les deux cartes Tireurs (une jaune, une rouge) pour les sélectionner.';
+  if (tut && S.turn === 1 && anyHandPair) return '1. Touchez les deux cartes Tireurs (jaune et rouge).';
   const boardPair = S.front.me.some(a => S.front.me.some(b => canFuseUnits(S, a, b)));
-  return boardPair ? `Choisissez les cartes à déployer (jusqu’à ${S.supply} de ravitaillement), ou touchez un groupe marqué « Fusion ».` : `Choisissez les cartes à déployer : vous avez ${S.supply} de ravitaillement, et tout part en même temps.`;
+  return boardPair ? 'Choisissez vos cartes (même couleur), ou touchez un groupe ⇄.' : `Choisissez vos cartes, de même couleur : ${S.supply} de ravitaillement.`;
 }
 function renderBattle() {
-  const idxs = pickIdx(), plan = idxs.length ? planDeploy(S, idxs) : { ok: true, cost: 0 }, reserved = plan.ok ? plan.cost : 0;
-  const pips = Array.from({ length: S.supply }, (_, i) => `<span class="pip ${i < reserved ? 'res' : ''}"></span>`).join('');
+  const idxs = pickIdx(), plan = idxs.length ? planDeploy(S, idxs) : { ok: true, cost: 0 }, reserved = plan.ok || plan.reason === 'colors' ? idxs.reduce((s, i) => s + Math.max(0, TYPES[S.hand[i].t].cost - (has(S, 'silva') && TYPES[S.hand[i].t].fam !== 'terre' ? 1 : 0)), 0) : 0;
+  const total = S.supply, pips = Array.from({ length: total }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
+  // main en éventail : toutes les cartes sont visibles sans défiler
+  const W = Math.min(window.innerWidth, 560) - 28, H = window.innerHeight, n = S.hand.length;
+  const cw = Math.round(Math.max(66, Math.min(100, W * 0.27, H * 0.118))), ch = Math.round(cw * 1.28);
+  const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
     const on = picked.includes(k), partner = !on && picked.some(c => canFuse(c, k));
-    const off = !on && !planDeploy(S, idxs.concat(i)).ok;
-    return cardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (off ? 'off' : ''), `data-hi="${i}"`);
+    const t = planDeploy(S, idxs.concat(i)), off = !on && !(t.ok || (t.reason === 'colors' && colorsReachable([...picked, k])));
+    const mid = (n - 1) / 2, rot = on || partner ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : partner ? -12 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
+    return handCardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (off ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round(22 + dy)}px;transform:rotate(${rot}deg);z-index:${i}`);
   }).join('');
-  const hint = hintText(), fz = pickFuse(), hasLand = picked.some(c => TYPES[c.t].land), hasFused = picked.some(c => c.parts);
-  app.innerHTML = `<div class="stack">
-    <div class="hd"><span class="ribbon ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num">Tour ${S.turn}</span></div>
-    <div class="objline" id="obj">${objLine()}</div>${jokerBar()}
-    <div class="boardwrap"><div class="phase" id="phase"></div>
-    <div class="board" id="board">${boardHTML({ front: S.front, sea: S.sea, air: S.air, hq: S.hq }, true)}</div></div>
-    <div class="hint" id="hint">${hint}</div>
-    ${fz.length ? `<button class="btn go" data-act="fusepick">Fusionner : ${TYPES[fz[0][0].t].name} ${colorName(normCols(fz[0][0].c + fz[0][1].c)).toLowerCase()}</button>` : ''}
-    <div class="row" style="justify-content:space-between"><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet</button>${hasFused ? '<button class="pill" data-act="split">Séparer les fusions</button>' : ''}</span><span class="muted small num">Pioche ${S.draw.length} · Défausse ${S.discard.length}</span></div>
-    ${hasLand && S.front.me.length ? `<div class="posrow"><span>Nouveaux groupes :</span><button class="seg ${deployPos === 'back' ? 'on' : ''}" data-pos="back">En renfort</button><button class="seg ${deployPos === 'front' ? 'on' : ''}" data-pos="front">En 1re ligne</button></div>` : ''}
-    <div class="hand" id="hand">${hand}</div>
-    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravitaillement</span>${pips}</div>
-      <button class="pill" data-act="undo" ${undo.length ? '' : 'disabled'}>Annuler</button><button class="btn" data-act="deploy" id="bend">${picked.length ? 'Déployer (' + picked.length + ')' : 'Passer le tour'}</button></div>
+  const hint = hintText(), fz = pickFuse(), hasFused = picked.some(c => c.parts), one = picked.length === 1 ? picked[0] : null;
+  const colorBlock = idxs.length && !plan.ok && plan.reason === 'colors';
+  app.innerHTML = `<div class="battle">
+    <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><span class="sp"></span>
+      <button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="deck">Paquet</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
+    <div class="bt-info"><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}</div>
+    <div class="phase" id="phase"></div>
+    <div class="board" id="board">${boardHTML({ front: S.front, sea: S.sea, air: S.air, hq: S.hq }, true)}</div>
+    <div class="bt-hint" id="hint"><span class="ht">${hint}</span>${fz.length ? '<button class="btn go sm" data-act="fusepick">Fusionner</button>' : hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : ''}</div>
+    <div class="hand fan" id="hand" style="height:${ch + 34}px">${hand}</div>
+    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${Math.min(reserved, total)}/${total}</span><span class="pips">${pips}</span></div>
+      <button class="pill" data-act="undo" ${undo.length ? '' : 'disabled'}>Annuler</button><button class="btn" data-act="deploy" id="bend" ${colorBlock ? 'disabled' : ''}>${picked.length ? 'Déployer (' + picked.length + ')' : 'Passer le tour'}</button></div>
   </div>`;
 }
 
@@ -1369,7 +1476,7 @@ function showHits(hits, from, st) {
 }
 
 // ---- Actions ----
-const WHY = { supply: 'Pas assez de ravitaillement pour cette carte en plus.', front: 'La ligne de front est pleine (4 groupes).', sea: 'La zone Mer est pleine (2 navires).', air: "La zone Air est pleine (2 avions)." };
+const WHY = { supply: 'Pas assez de ravitaillement pour cette carte en plus.', front: 'La ligne de front est pleine (4 groupes).', sea: 'La zone Mer est pleine (2 navires).', air: "La zone Air est pleine (2 avions).", colors: 'Couleurs différentes : on ne déploie ensemble que des cartes de même couleur, sauf deux cartes du même type que l’on fusionne.' };
 function onCard(i) {
   if (busy || S.over) return;
   selUnit = null;
@@ -1377,7 +1484,7 @@ function onCard(i) {
   const at = picked.indexOf(card);
   if (at >= 0) { picked.splice(at, 1); SFX.play('deselect'); return renderBattle(); }
   const pl = planDeploy(S, pickIdx().concat(i));
-  if (!pl.ok) { SFX.play('deny'); return toast(WHY[pl.reason] || 'Impossible.'); }
+  if (!pl.ok && !(pl.reason === 'colors' && colorsReachable([...picked, card]))) { SFX.play('deny'); return toast(WHY[pl.reason] || 'Impossible.'); }
   picked.push(card); SFX.play('select'); renderBattle();
 }
 function doFusePick() {
@@ -1403,7 +1510,7 @@ async function doDeploy() {
   if (idxs.length) {
     const fams = new Set(idxs.map(i => (TYPES[S.hand[i].t].land ? 'land' : TYPES[S.hand[i].t].fam === 'mer' ? 'sea' : 'air')));
     const hits = deployAll(S, idxs, deployPos);
-    if (!hits) { SFX.play('deny'); return toast('Impossible de déployer cette sélection.'); }
+    if (!hits) { SFX.play('deny'); const pl = planDeploy(S, idxs); return toast(WHY[pl.reason] || 'Impossible de déployer cette sélection.'); }
     picked = []; undo = []; selUnit = null; renderBattle(); showHits(hits);
     [...fams].forEach((f, k) => setTimeout(() => SFX.play(f), k * 180));
     busy = true; await sleep(fast ? 100 : 800); busy = false;
@@ -1554,7 +1661,7 @@ function helpModal(first) {
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
     <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur le front</b> : un groupe déployé peut fusionner dès <b>le tour suivant</b> (touchez-le, puis « Fusionner »).</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3).</li>
-    <li><b>Votre tour :</b> sélectionnez toutes les cartes à déployer (leur coût total ne doit pas dépasser votre ravitaillement), puis touchez <b>« Déployer »</b> : tout est posé en même temps et <b>le tour se termine</b>. Vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs. « Annuler » défait vos fusions et changements de place.</li>
+    <li><b>Votre tour :</b> sélectionnez les cartes à déployer. Leur coût total ne doit pas dépasser votre ravitaillement, et elles doivent <b>toutes avoir la même couleur</b>, sauf deux cartes du même type que vous fusionnez. Puis touchez <b>« Déployer »</b> : tout est posé en même temps et <b>le tour se termine</b>. Vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs. « Annuler » défait vos fusions et changements de place.</li>
     <li><b>L'ennemi se montre à l'avance :</b> silhouettes en pointillé pour les renforts, bandeau rouge pour les obus.</li>
     </ol>
     <p class="small muted">Touchez un groupe pour voir ses détails, ou le « i » d'une carte.</p>`);
@@ -1608,6 +1715,8 @@ document.addEventListener('click', e => {
   else if (a === 'close') closeModal();
   else if (a === 'deploy') doDeploy();
   else if (a === 'fusepick') doFusePick();
+  else if (a === 'detail') { if (picked.length === 1) cardModal(CARD_REG.indexOf(picked[0])); }
+  else if (a === 'snd') { SFX.setMuted(!SFX.isMuted()); renderSoundButton(); const b2 = document.getElementById('snd2'); if (b2) b2.textContent = SFX.isMuted() ? 'Son : non' : 'Son : oui'; if (!SFX.isMuted()) SFX.play('tap'); }
   else if (a === 'undo') doUndo();
   else if (a === 'split') doSplitPicked();
   else if (a === 'deck') deckModal(false);
@@ -1623,6 +1732,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
 
+window.addEventListener('resize', () => { if (S && document.querySelector('.battle') && !busy) renderBattle(); });
 function renderSoundButton() {
   let b = document.getElementById('snd');
   if (!b) {
