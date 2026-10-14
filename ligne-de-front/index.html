@@ -400,7 +400,7 @@ body:has(.btl) .toast { bottom: 84px; }
 .hc .art svg { height: 100%; width: auto; max-width: 100%; }
 .hc.mer .art { background: #7cc3ee; } .hc.air .art { background: #bfe8fb; }
 .hc .cbig { position: absolute; left: 4cqw; top: 76cqw; display: flex; }
-.hc .cbig i { font-size: 14cqw; padding: 0 3cqw; border-width: 2px; line-height: 1.25; }
+.hc .cbig i { font-size: 12cqw; padding: 0 3cqw; border-width: 2px; line-height: 1.25; }
 .hc .chp { position: absolute; left: 5cqw; top: 99cqw; font-size: 11.5cqw; font-weight: 800; color: var(--red-d); white-space: nowrap; }
 .hc.sel { box-shadow: 0 0 0 3px var(--blue), 0 3px 0 3px var(--ink); }
 .hc.fusible { animation: glowfz .7s infinite alternate; box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--yellow), 0 3px 0 6px var(--ink); }
@@ -1372,9 +1372,12 @@ function boardHTML(view, live) {
 }
 
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
+// Effectif affiché sur la carte : nombre de soldats, de véhicules, d'avions… (le détail des dégâts est dans la fiche « i »)
+const COUNT_LABEL = { tireurs: ['soldat', 'soldats'], jeep: ['jeep', 'jeeps'], blinde: ['char', 'chars'], destroyer: ['navire', 'navires'], croiseur: ['navire', 'navires'], sousmarin: ['sous-marin', 'sous-marins'],
+  chasseur: ['avion', 'avions'], bombardier: ['avion', 'avions'], paras: ['para', 'paras'] };
 function cardStats(card) {
-  const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me', card.lv);
-  return { a: d.kw && d.kw.includes('bomb') ? `${st.dmg} dég. ×tous` : `${st.men * st.dmg} dég.`, h: d.land ? `${st.hp} PV` : `${st.ttl} tour${st.ttl > 1 ? 's' : ''}`, st };
+  const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me', card.lv), n = ['destroyer', 'croiseur', 'sousmarin', 'bombardier'].includes(card.t) ? 1 : st.men, lab = COUNT_LABEL[card.t] || ['unité', 'unités'];
+  return { a: `${n} ${lab[n > 1 ? 1 : 0]}`, h: d.land ? `${st.hp} PV` : `${st.ttl} tour${st.ttl > 1 ? 's' : ''}`, st };
 }
 function cardHTML(card, extra = '', attrs = '') {
   const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : d.cost, cs = cardStats(card);
