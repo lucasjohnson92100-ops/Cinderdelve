@@ -1,10 +1,9 @@
 // Simulation d'une campagne avec un bot qui respecte la règle des couleurs, fusionne et achète en boutique : node sim.js [nombre de parties]
-const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,planDeploy,deployAll,snapshotState,restoreState,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,moveToFront,battleCfg,rewardCards,cardCost,shuffle,LEVELS,mkCard,lootFor,genShop,upgradeCost,canUpgrade,JOKERS,MAX_JOKERS,HQ_START,genMap};')();
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])){E.fuseCards(S,i,j);again=true;break outer;}}}
 function evalGroups(S){
-  const groups=new Map();S.hand.forEach((c,i)=>{if(!groups.has(c.c))groups.set(c.c,[]);groups.get(c.c).push(i);});
+  const groups=new Map();S.hand.forEach(c=>{if(!groups.has(c.c))groups.set(c.c,[]);});for(const k of groups.keys())S.hand.forEach((c,i)=>{if(c.c===k||(k.length>1&&c.c.length===1&&k.includes(c.c)))groups.get(k).push(i);});
   let best={value:-1,idxs:[]};
   for(const idxs of groups.values()){const n=idxs.length;for(let m=1;m<(1<<n);m++){const sel=idxs.filter((_,b)=>m>>b&1);if(!E.planDeploy(S,sel).ok)continue;
     let v=0;for(const i of sel){const c=S.hand[i],d=E.TYPES[c.t];v+=d.cost+(c.c.length>1?2:0)+((c.lv||1)-1)*0.5;if(!d.land&&S.front.en.length===0)v-=1.5;}

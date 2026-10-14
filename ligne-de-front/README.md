@@ -18,7 +18,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
   - en main : deux cartes fusionnent et ne coûtent qu'une carte ;
   - sur le front : un groupe déployé peut fusionner avec un autre dès le tour suivant son arrivée.
 - **Un tour = un déploiement groupé** : on sélectionne les cartes à déployer (6 cartes en main, 5 de ravitaillement), un aperçu bleu montre où elles iront, puis « Déployer » pose tout en même temps et termine le tour.
-- **Règle des couleurs** : on ne déploie ensemble que des cartes de **même couleur**, sauf deux cartes du même type (et de couleurs différentes) que l'on **fusionne**. Deux fusions de même couleur peuvent partir ensemble.
+- **Règle des couleurs** : on ne déploie ensemble que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge). Deux cartes de couleurs différentes du même type se fusionnent pour pouvoir partir ensemble.
 - **Écran de combat** : il tient entièrement dans l'écran en portrait. Les cartes de la main sont en éventail, toutes visibles sans défiler (façon Balatro) ; la carte sélectionnée se lève et un bouton « Détails » ouvre sa fiche.
 - **Annuler** : le bouton « Annuler » défait les fusions et changements de place avant le déploiement.
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.

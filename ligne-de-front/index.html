@@ -1,8 +1,3 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ligne de Front</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -422,8 +417,6 @@ body:has(.btl) .toast { bottom: 84px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
-</head>
-<body>
 <div id="app"></div>
 
 <script>
@@ -481,13 +474,13 @@ const ENEMIES = {
 };
 const LEVELS = [
   { name: "Plage d'assaut", hq: 55, budget: 2.6 },
-  { name: 'Bocage', hq: 76, budget: 6.4 },
-  { name: 'Village fortifié', hq: 94, budget: 7.4 },
-  { name: 'Le pont (boss)', hq: 120, budget: 5.8, boss: 'heavy' },
-  { name: 'Forêt des Ardennes', hq: 135, budget: 7.8 },
-  { name: 'Ville en ruines', hq: 155, budget: 8.8 },
-  { name: 'Ligne de défense', hq: 175, budget: 9.8 },
-  { name: 'Quartier général (boss)', hq: 200, budget: 6.8, boss: 'heavy2' },
+  { name: 'Bocage', hq: 76, budget: 8.6 },
+  { name: 'Village fortifié', hq: 94, budget: 10 },
+  { name: 'Le pont (boss)', hq: 120, budget: 7.4, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 135, budget: 10.8 },
+  { name: 'Ville en ruines', hq: 155, budget: 12 },
+  { name: 'Ligne de défense', hq: 175, budget: 13.4 },
+  { name: 'Quartier général (boss)', hq: 200, budget: 8.8, boss: 'heavy2' },
 ];
 // Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
 const JOKERS = [
@@ -618,17 +611,32 @@ function playCard(S, hi, tgt) {
   const u = deploy(S, 'me', card.t, card.c, card.lv, tgt.pos);
   return [{ uid: u.uid, spawn: true, side: 'me' }];
 }
-// ---- Règle des couleurs : on ne déploie ensemble que des cartes de même couleur, sauf deux cartes du même type qu'on fusionne ----
-// Vrai si, une fois fusionnées toutes les paires possibles (même type, couleurs différentes), il ne reste qu'une couleur.
+// ---- Règle des couleurs au déploiement ----
+// - sans carte fusionnée : toutes les cartes déployées ensemble ont la même couleur ;
+// - avec une carte fusionnée (ex. orange = jaune + rouge) : on peut y ajouter toute carte dont la couleur appartient à la fusion
+//   (jaune ou rouge), et d'autres cartes fusionnées de la même couleur. On ne mélange pas deux fusions différentes.
+function selectionValid(cards) {
+  const fused = cards.filter(c => c.c.length > 1);
+  if (!fused.length) return new Set(cards.map(c => c.c)).size <= 1;
+  const mix = fused[0].c;
+  if (fused.some(c => c.c !== mix)) return false;
+  return cards.every(c => c.c === mix || (c.c.length === 1 && mix.includes(c.c)));
+}
+// Vrai si la sélection est valide, ou le deviendrait en fusionnant des paires de cartes (même type, couleurs différentes).
 function colorsReachable(cards) {
   const list = cards.map(c => ({ t: c.t, c: c.c, parts: c.parts }));
-  for (let changed = true; changed;) {
-    changed = false;
-    outer: for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
-      if (canFuse(list[i], list[j])) { list[i] = { t: list[i].t, c: normCols(list[i].c + list[j].c), parts: [1, 2] }; list.splice(j, 1); changed = true; break outer; }
+  const search = l => {
+    if (selectionValid(l)) return true;
+    for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
+      if (canFuse(l[i], l[j])) {
+        const next = l.filter((_, k) => k !== i && k !== j);
+        next.push({ t: l[i].t, c: normCols(l[i].c + l[j].c), parts: [1, 2] });
+        if (search(next)) return true;
+      }
     }
-  }
-  return new Set(list.map(c => c.c)).size <= 1;
+    return false;
+  };
+  return search(list);
 }
 // ---- Déploiement groupé : on choisit plusieurs cartes, puis on les pose toutes d'un coup ----
 // idxs : indices dans la main, dans l'ordre de sélection. Renvoie {ok, cost} ou {ok:false, reason}.
@@ -646,7 +654,7 @@ function planDeploy(S, idxs) {
     else if (def.fam === 'mer') { if (++sea > ZONE_CAP) return { ok: false, reason: 'sea' }; }
     else if (++air > ZONE_CAP) return { ok: false, reason: 'air' };
   }
-  if (new Set(idxs.map(i => S.hand[i].c)).size > 1) return { ok: false, reason: 'colors' };
+  if (!selectionValid(idxs.map(i => S.hand[i]))) return { ok: false, reason: 'colors' };
   return { ok: true, cost: S.supply - supply };
 }
 // pos : 'front' (les nouveaux groupes passent devant ceux qui sont déjà là) ou 'back' (en renfort)
@@ -886,7 +894,6 @@ function genShop(C, rng = Math.random, rare = false) {
   return { jokers, cards, rerolls: 0 };
 }
 // ==/CORE==
-
 // ==SPRITES==
 // Personnages dessinés en SVG (style cartoon à gros contours). Chaque sprite tient dans une boîte de 64×64.
 const INK = '#1b2540';
@@ -1412,7 +1419,7 @@ function hintText() {
   }
   if (tut && S.turn === 1 && anyHandPair) return '1. Touchez les deux cartes Tireurs (jaune et rouge).';
   const boardPair = S.front.me.some(a => S.front.me.some(b => canFuseUnits(S, a, b)));
-  return boardPair ? 'Choisissez vos cartes (même couleur), ou touchez un groupe ⇄.' : `Choisissez vos cartes, de même couleur : ${S.supply} de ravitaillement.`;
+  return boardPair ? 'Choisissez vos cartes (même couleur ou couleurs d’une carte fusionnée), ou touchez un groupe ⇄.' : `Choisissez vos cartes (même couleur, ou celles d’une carte fusionnée) : ${S.supply} de ravitaillement.`;
 }
 function renderBattle() {
   const idxs = pickIdx(), plan = idxs.length ? planDeploy(S, idxs) : { ok: true, cost: 0 }, reserved = plan.ok || plan.reason === 'colors' ? idxs.reduce((s, i) => s + Math.max(0, TYPES[S.hand[i].t].cost - (has(S, 'silva') && TYPES[S.hand[i].t].fam !== 'terre' ? 1 : 0)), 0) : 0;
@@ -1476,7 +1483,7 @@ function showHits(hits, from, st) {
 }
 
 // ---- Actions ----
-const WHY = { supply: 'Pas assez de ravitaillement pour cette carte en plus.', front: 'La ligne de front est pleine (4 groupes).', sea: 'La zone Mer est pleine (2 navires).', air: "La zone Air est pleine (2 avions).", colors: 'Couleurs différentes : on ne déploie ensemble que des cartes de même couleur, sauf deux cartes du même type que l’on fusionne.' };
+const WHY = { supply: 'Pas assez de ravitaillement pour cette carte en plus.', front: 'La ligne de front est pleine (4 groupes).', sea: 'La zone Mer est pleine (2 navires).', air: "La zone Air est pleine (2 avions).", colors: 'Couleurs incompatibles : déployez des cartes de même couleur, ou avec une carte fusionnée, les couleurs qui la composent (orange = jaune + rouge).' };
 function onCard(i) {
   if (busy || S.over) return;
   selUnit = null;
@@ -1661,7 +1668,7 @@ function helpModal(first) {
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
     <li><b>Fusionner :</b> deux groupes du même type et de couleurs différentes se fondent en un seul, aux deux couleurs. Soit <b>en main</b> (sélectionnez les deux cartes, puis « Fusionner »), soit <b>sur le front</b> : un groupe déployé peut fusionner dès <b>le tour suivant</b> (touchez-le, puis « Fusionner »).</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b> (effets permanents, 5 au maximum), des cartes, ou <b>entraînez</b> une carte (niveaux 2 et 3).</li>
-    <li><b>Votre tour :</b> sélectionnez les cartes à déployer. Leur coût total ne doit pas dépasser votre ravitaillement, et elles doivent <b>toutes avoir la même couleur</b>, sauf deux cartes du même type que vous fusionnez. Puis touchez <b>« Déployer »</b> : tout est posé en même temps et <b>le tour se termine</b>. Vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs. « Annuler » défait vos fusions et changements de place.</li>
+    <li><b>Votre tour :</b> sélectionnez les cartes à déployer. Leur coût total ne doit pas dépasser votre ravitaillement, et elles doivent <b>toutes avoir la même couleur</b>. Si vous déployez une carte fusionnée (ex. orange), vous pouvez y joindre des cartes des couleurs qui la composent (jaune et rouge). Puis touchez <b>« Déployer »</b> : tout est posé en même temps et <b>le tour se termine</b>. Vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs. « Annuler » défait vos fusions et changements de place.</li>
     <li><b>L'ennemi se montre à l'avance :</b> silhouettes en pointillé pour les renforts, bandeau rouge pour les obus.</li>
     </ol>
     <p class="small muted">Touchez un groupe pour voir ses détails, ou le « i » d'une carte.</p>`);
@@ -1756,5 +1763,3 @@ function showTitle() {
 }
 showTitle();
 </script>
-</body>
-</html>

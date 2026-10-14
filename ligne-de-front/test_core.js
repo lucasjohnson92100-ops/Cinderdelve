@@ -1,7 +1,7 @@
-// Vérifie le moteur : front unique, mer et air, couleurs, règle des couleurs au déploiement, fusions, niveaux, jokers, butin, boutique, carte (node test_core.js)
+// Vérifie le moteur : front unique, mer et air, couleurs, règle des couleurs au déploiement (couleur d'une fusion incluse), fusions, niveaux, jokers, butin, boutique, carte (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,planDeploy,deployAll,colorsReachable,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,moveToFront,snapshotState,restoreState,planDeploy,deployAll,colorsReachable,selectionValid,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,FRONT_CAP,ZONE_CAP,findUnit};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const mk=(o={})=>E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],...o},()=>0.5);
 const T=E.TYPES;
@@ -83,11 +83,26 @@ check('couleurs différentes de types différents : refusé',E.planDeploy(S,[0,3
 check('même type, couleurs différentes, non fusionnées : refusé',E.planDeploy(S,[0,2]).reason,'colors');
 check('atteignable : jaune + rouge du même type',E.colorsReachable([S.hand[0],S.hand[2]]),true);
 check('inatteignable : jaune + rouge de types différents',E.colorsReachable([S.hand[0],S.hand[3]]),false);
-check('inatteignable : fusion + une carte jaune en plus',E.colorsReachable([S.hand[0],S.hand[2],S.hand[1]]),false);
+check('atteignable : fusion jaune+rouge + une carte jaune en plus',E.colorsReachable([S.hand[0],S.hand[2],S.hand[1]]),true);
 const fz=E.fuseCards(S,0,2);check('fusionnées : déploiement possible',E.planDeploy(S,[S.hand.indexOf(fz)]).ok,true);
-check('fusion orange + carte jaune : refusé',E.planDeploy(S,[S.hand.indexOf(fz),S.hand.findIndex(c=>c.t==='blinde')]).reason,'colors');
+check('fusion orange + carte jaune : autorisé',E.planDeploy(S,[S.hand.indexOf(fz),S.hand.findIndex(c=>c.t==='blinde')]).ok,true);
 let S2=mk();S2.supply=9;S2.hand=[E.mkCard('tireurs','J'),E.mkCard('tireurs','R'),E.mkCard('spiders','J'),E.mkCard('spiders','R')];E.fuseCards(S2,0,1);E.fuseCards(S2,1,2);
 check('deux fusions de même couleur ensemble : possible',E.planDeploy(S2,[0,1]).ok,true);
+// --- couleurs appartenant à une fusion
+const mkc=(t,c)=>E.mkCard(t,c);const orange=(t)=>({t,c:'JR',lv:1,parts:[mkc(t,'J'),mkc(t,'R')]});
+check('orange + jaune : valide',E.selectionValid([orange('tireurs'),mkc('blinde','J')]),true);
+check('orange + rouge : valide',E.selectionValid([orange('tireurs'),mkc('croiseur','R')]),true);
+check('orange + jaune + rouge : valide',E.selectionValid([orange('tireurs'),mkc('blinde','J'),mkc('destroyer','R')]),true);
+check('orange + vert : refusé',E.selectionValid([orange('tireurs'),mkc('blinde','V')]),false);
+check('orange + noir : refusé',E.selectionValid([orange('tireurs'),mkc('blinde','N')]),false);
+check('orange + orange : valide',E.selectionValid([orange('tireurs'),orange('spiders')]),true);
+check('orange + sapin : refusé',E.selectionValid([orange('tireurs'),{t:'blinde',c:'VN',lv:1,parts:[1,2]}]),false);
+check('jaune + rouge sans fusion : refusé',E.selectionValid([mkc('tireurs','J'),mkc('blinde','R')]),false);
+check('orange + jaune + rouge du même type non fusionnés : valide',E.selectionValid([orange('spiders'),mkc('tireurs','J'),mkc('tireurs','R')]),true);
+check('atteignable : jaune + rouge (même type) + jaune',E.colorsReachable([mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','J')]),true);
+check('atteignable : fusion possible puis vert non couvert',E.colorsReachable([mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','V')]),false);
+S=mk();S.plan=[];S.supply=20;S.hand=[mkc('tireurs','J'),mkc('tireurs','R'),mkc('blinde','J'),mkc('destroyer','R'),mkc('spiders','V')];E.fuseCards(S,0,1);
+check('déploiement : orange + jaune + rouge',E.planDeploy(S,[0,1,2]).ok,true);check('déploiement : orange + vert refusé',E.planDeploy(S,[0,3]).reason,'colors');
 // --- niveaux, jokers, butin, boutique, carte
 st=E.statsFor(T.tireurs,'',null,'me',3);check('tireurs niv3 = 16 hommes',st.men,16);
 const jb=(ids,t,c,lv,side='me')=>E.statsFor(E.TYPES[t],c,{officers:ids},side,lv);
