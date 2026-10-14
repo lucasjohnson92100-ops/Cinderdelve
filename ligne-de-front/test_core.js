@@ -1,7 +1,7 @@
-// Vérifie le moteur de combat, les couleurs, la fusion et la carte : node test_core.js
+// Vérifie le moteur : combat, couleurs, fusion, niveaux, jokers, butin, boutique et carte (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,genMap,battleCfg,mkCard,statsFor,TYPES,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,OFFICERS};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,playCard,endTurn,targetsFor,isPlayable,units,supports,TYPES,START_DECK,deploy,fuseCards,splitCard,canFuse,genMap,battleCfg,mkCard,statsFor,TYPES,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,OFFICERS};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const mk=(o={})=>E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],...o},()=>0.5);
 // stats de base et couleurs
@@ -44,4 +44,28 @@ E.playCard(S,0,{lane:0});E.endTurn(S);check('bombardier rouge : 8 dégâts tuent
 // objectifs et carte
 for(let k=0;k<400;k++){const L=E.genMap();L.forEach((layer,l)=>layer.forEach((n,j)=>{if(l<L.length-1&&!n.next.length)check('suite '+n.id,1,0);if(l>0&&!L[l-1].some(p=>p.next.includes(j)))check('accès '+n.id,1,0);}));}
 const rc=E.rewardCards();check('3 récompenses',rc.length,3);
+// niveaux (entraînement)
+st=E.statsFor(T.tireurs,'',null,'me',1);check('tireurs niv1',st.men,10);
+st=E.statsFor(T.tireurs,'',null,'me',3);check('tireurs niv3 = 16 hommes',st.men,16);
+st=E.statsFor(T.blinde,'',null,'me',3);check('blindé niv3: dégâts 7',st.dmg,7);check('blindé niv3: PV 20',st.hp,20);
+check('texte entraînement',E.upText('tireurs',2),'+3 hommes');
+check('coût niv1->2',E.upgradeCost({t:'tireurs',c:'J'}),6);check('coût niv2->3',E.upgradeCost({t:'tireurs',c:'J',lv:2}),10);check('niv3 non améliorable',E.canUpgrade({t:'tireurs',c:'J',lv:3}),false);
+let f2=E.fuseCards((S=mk(),S.hand=[{t:'tireurs',c:'J',lv:2},E.mkCard('tireurs','R')],S),0,1);check('fusion garde le meilleur niveau',f2.lv,2);
+// jokers
+const jb=(ids,t,c,lv,side='me')=>E.statsFor(E.TYPES[t],c,{officers:ids},side,lv);
+check('soleil: jaune +2 dégâts',jb(['soleil'],'tireurs','J').dmg,3);
+check('braise: rouge +7 hommes (50 % + 25 %)',jb(['braise'],'tireurs','R').men,17);
+check('mousse: vert PV ×1,5×1,25',jb(['mousse'],'spiders','V').hp,Math.ceil(Math.ceil(9*1.5)*1.25));
+check('ombre: noir perce 2',jb(['ombre'],'tireurs','N').pierce,2);
+check('peintre: fusion +1 dégât',jb(['peintre'],'tireurs','JR').dmg,3);
+check('amiral: destroyer reste 4 tours',jb(['amiral'],'destroyer','').ttl,4);
+check('sans joker: ennemis non affectés',E.statsFor({men:6,dmg:1,hpm:1,id:'x'},'',{officers:['dubois','soleil']},'en',1).dmg,1);
+S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['fort','kowalski']},()=>0.5);check('fort + kowalski: 4+1+2',S.supply,7);
+// butin
+S=mk();S.turn=3;S.hq.me=60;let lo=E.lootFor(S,{loot:10},'battle');check('butin: 4 + 2 + 1 + 1 = 8',lo.total,8);
+S.turn=9;S.hq.me=10;lo=E.lootFor(S,{loot:0},'boss');check('butin boss lent: 9',lo.total,9);
+S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['quartier']},()=>0.5);S.turn=9;S.hq.me=10;lo=E.lootFor(S,{loot:0},'battle');check('quartier-maître: 4 +50 % = 6',lo.total,6);
+// boutique
+const sh=E.genShop({officers:['ashby'],deck:E.START_DECK},undefined,false);check('2 jokers',sh.jokers.length,2);check('2 cartes',sh.cards.length,2);
+check('pas de joker déjà possédé',sh.jokers.some(j=>j.id==='ashby'),false);
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);

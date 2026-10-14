@@ -18,6 +18,9 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
   - Vert : +50 % de PV (marine et air : +1 tour).
   - Noir : perce 1 de blindage et agit dès l'arrivée.
 - **Fusion** : deux cartes du même type et de couleurs différentes se fusionnent en une carte à deux couleurs (jaune + rouge = orange, etc.) qui cumule les deux avantages et ne coûte qu'une carte. Les deux cartes reviennent séparées dans la défausse.
+- **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
+- **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne. Exemples : Capitaine Soleil (jaune +1 dégât), Peintre de guerre (les fusions font +1 dégât), Quartier-maître (+50 % de butin).
+- **Entraînement** : améliorer une carte du paquet jusqu'au niveau 3 (plus d'hommes ou de dégâts). On peut aussi acheter de nouvelles cartes ou en retirer.
 - L'ennemi annonce renforts et obus un tour à l'avance.
 - **Carte** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
@@ -28,7 +31,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
   - bloc `// ==SPRITES==` : personnages, navires, avions et icônes en SVG ;
   - reste du script : l'interface.
 - `test_core.js` : tests du moteur (`node test_core.js`).
-- `sim.js` : simulation d'équilibrage avec un bot (`node sim.js 300`).
+- `sim.js` : simulation d'une campagne avec un bot qui achète en boutique (`node sim.js 300`).
 
 ## Pistes
 

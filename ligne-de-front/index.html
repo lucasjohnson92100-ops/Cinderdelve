@@ -247,6 +247,22 @@ button.off-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--i
 .card.sel.fused { box-shadow: 0 0 0 4px var(--yellow), 0 4px 0 4px var(--ink); }
 .dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--ink); vertical-align: -1px; }
 .cardrow .card { width: calc((100% - 28px) / 3); min-width: 120px; }
+/* Butin de guerre, jokers, intendance */
+.coin { display: inline-block; background: var(--yellow); border: 3px solid var(--ink); border-radius: 99px; padding: 0 12px; box-shadow: 0 3px 0 var(--ink); font-size: 1.05rem; }
+.jbar { display: flex; gap: 6px; }
+.jk { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--ink); background: var(--cream); padding: 0; display: grid; place-items: center; box-shadow: 0 3px 0 var(--ink); }
+.jk.empty { background: rgba(255, 255, 255, .35); border-style: dashed; box-shadow: none; }
+.jk .spr { width: 34px; height: 34px; }
+.shopj { grid-template-columns: auto minmax(0, 1fr) auto; }
+.btn.buy { padding: 8px 14px; font-size: 1.05rem; box-shadow: 0 4px 0 var(--ink); }
+.cardrow .shopcard { width: calc((100% - 14px) / 2); min-width: 140px; display: grid; gap: 10px; justify-items: center; }
+.cardrow .shopcard .card { width: 100%; }
+.shopcard .btn { width: 100%; }
+.sold { opacity: .45; }
+.star { color: #d79d1c; text-shadow: -1px -1px 0 var(--ink), 1px -1px 0 var(--ink), -1px 1px 0 var(--ink), 1px 1px 0 var(--ink); font-weight: 400; letter-spacing: -1px; }
+button.off-item:disabled { opacity: .5; cursor: not-allowed; }
+.lines { display: grid; gap: 6px; } .line { display: flex; justify-content: space-between; gap: 12px; } .line.total { border-top: 3px solid var(--ink); padding-top: 6px; font-weight: 800; }
+.gold { color: #9a6b00; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
@@ -283,11 +299,21 @@ const TYPES = {
   paras: { fam: 'air', land: true, name: 'Parachutistes', cost: 2, men: 6, dmg: 1, hpm: 1, armor: 0, kw: ['raid'], rar: 2, txt: "6 parachutistes. Attaquent dès l'arrivée." },
 };
 const TYPE_KEYS = Object.keys(TYPES);
+TYPE_KEYS.forEach(k => { TYPES[k].id = k; });
+// Entraînement : bonus gagnés au niveau 2, puis au niveau 3
+const UP = {
+  tireurs: [{ men: 3 }, { men: 3 }], spiders: [{ men: 1 }, { men: 1 }], blinde: [{ dmg: 1 }, { hpm: 4 }], destroyer: [{ men: 2 }, { men: 2 }],
+  croiseur: [{ dmg: 2 }, { dmg: 2 }], sousmarin: [{ dmg: 2 }, { dmg: 2 }], chasseur: [{ men: 1 }, { men: 1 }], bombardier: [{ dmg: 2 }, { dmg: 2 }], paras: [{ men: 3 }, { men: 3 }],
+};
+function upText(t, lvl) {
+  const u = (UP[t] || [])[lvl - 2] || {};
+  return [u.men ? `+${u.men} homme${u.men > 1 ? 's' : ''}` : '', u.dmg ? `+${u.dmg} dégât${u.dmg > 1 ? 's' : ''} par tir` : '', u.hpm ? `+${u.hpm} PV par homme` : ''].filter(Boolean).join(', ');
+}
 // ---- Cartes : {t: type, c: couleurs}. Une carte fusionnée a des parts ----
 const mkCard = (t, c) => ({ t, c });
 const START_DECK = [mkCard('tireurs', 'J'), mkCard('tireurs', 'R'), mkCard('spiders', 'V'), mkCard('spiders', 'N'), mkCard('blinde', 'J'), mkCard('blinde', 'V'),
   mkCard('destroyer', 'V'), mkCard('destroyer', 'R'), mkCard('croiseur', 'N'), mkCard('chasseur', 'J'), mkCard('chasseur', 'N')];
-const cardKey = c => c.t + ':' + c.c;
+const cardKey = c => c.t + ':' + c.c + ':' + (c.lv || 1);
 
 const ENEMIES = {
   rifle: { name: 'Soldats', men: 6, dmg: 1, hpm: 1, armor: 0, val: 1 },
@@ -301,22 +327,33 @@ const LEVELS = [
   { name: "Plage d'assaut", hq: 50, budget: 2.4 },
   { name: 'Bocage', hq: 64, budget: 4.7 },
   { name: 'Village fortifié', hq: 76, budget: 5.3 },
-  { name: 'Le pont (boss)', hq: 92, budget: 4.0, boss: 'heavy' },
-  { name: 'Forêt des Ardennes', hq: 104, budget: 5.4 },
-  { name: 'Ville en ruines', hq: 120, budget: 6.0 },
-  { name: 'Ligne de défense', hq: 136, budget: 6.6 },
-  { name: 'Quartier général (boss)', hq: 150, budget: 4.6, boss: 'heavy2' },
+  { name: 'Le pont (boss)', hq: 100, budget: 4.6, boss: 'heavy' },
+  { name: 'Forêt des Ardennes', hq: 112, budget: 6.2 },
+  { name: 'Ville en ruines', hq: 130, budget: 7.0 },
+  { name: 'Ligne de défense', hq: 148, budget: 7.8 },
+  { name: 'Quartier général (boss)', hq: 165, budget: 5.2, boss: 'heavy2' },
 ];
-const OFFICERS = [
-  { id: 'moreau', name: 'Capitaine Moreau', desc: 'Vos unités terrestres ont +25 % de PV.' },
-  { id: 'dubois', name: 'Lieutenant Dubois', desc: 'Vos unités terrestres font +1 dégât par tir.' },
-  { id: 'ashby', name: 'Colonel Ashby', desc: 'Vous piochez 1 carte de plus par tour.' },
-  { id: 'kowalski', name: 'Major Kowalski', desc: '+1 ravitaillement par tour.' },
-  { id: 'meyer', name: 'Docteur Meyer', desc: 'Fin du tour : vos unités terrestres regagnent 20 % de PV.' },
-  { id: 'ito', name: 'Sergent Ito', desc: 'La première carte jouée chaque tour coûte 1 de moins.' },
-  { id: 'silva', name: 'Commandant Silva', desc: "Les cartes de marine et d'air coûtent 1 de moins." },
-  { id: 'brandt', name: 'Général Brandt', desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
+// Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
+const JOKERS = [
+  { id: 'moreau', name: 'Capitaine Moreau', cost: 8, desc: 'Vos unités terrestres ont +25 % de PV.' },
+  { id: 'dubois', name: 'Lieutenant Dubois', cost: 9, desc: 'Vos unités terrestres font +1 dégât par tir.' },
+  { id: 'ashby', name: 'Colonel Ashby', cost: 9, desc: 'Vous piochez 1 carte de plus par tour.' },
+  { id: 'kowalski', name: 'Major Kowalski', cost: 11, desc: '+1 ravitaillement par tour.' },
+  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Fin du tour : vos unités terrestres regagnent 20 % de PV.' },
+  { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'La première carte jouée chaque tour coûte 1 de moins.' },
+  { id: 'silva', name: 'Commandant Silva', cost: 7, desc: "Les cartes de marine et d'air coûtent 1 de moins." },
+  { id: 'brandt', name: 'Général Brandt', cost: 9, desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
+  { id: 'peintre', name: 'Peintre de guerre', cost: 9, desc: 'Les cartes fusionnées font +1 dégât par tir.' },
+  { id: 'soleil', name: 'Capitaine Soleil', cost: 8, desc: 'Les cartes jaunes ont +1 dégât par tir de plus.' },
+  { id: 'braise', name: 'Commandant Braise', cost: 8, desc: "Les cartes rouges ont +25 % d'effectif de plus." },
+  { id: 'mousse', name: 'Docteur Mousse', cost: 8, desc: 'Les cartes vertes ont +25 % de PV de plus.' },
+  { id: 'ombre', name: 'Agent Ombre', cost: 8, desc: 'Les cartes noires percent 1 blindage de plus.' },
+  { id: 'amiral', name: 'Amiral Vague', cost: 7, desc: "La marine et l'air restent 1 tour de plus." },
+  { id: 'fort', name: 'Intendant Fort', cost: 7, desc: 'Premier tour de chaque bataille : +2 ravitaillement.' },
+  { id: 'quartier', name: 'Quartier-maître', cost: 11, desc: 'Le butin de guerre gagne +50 %.' },
 ];
+const OFFICERS = JOKERS;
+const MAX_JOKERS = 5;
 const HQ_START = 60;
 
 function shuffle(a, rng = Math.random) {
@@ -326,27 +363,32 @@ function shuffle(a, rng = Math.random) {
 const clone = o => JSON.parse(JSON.stringify(o));
 const has = (S, id) => S.officers.includes(id);
 
-// ---- Calcul des caractéristiques d'une unité selon sa carte (type + couleurs) ----
-function statsFor(def, cols, S, side) {
-  let men = def.men, dmg = def.dmg, ttl = def.ttl || 0, pierce = def.pierce || 0, raid = (def.kw || []).includes('raid'), vert = false;
+// ---- Calcul des caractéristiques d'une unité selon sa carte (type, couleurs, niveau) et les jokers ----
+function statsFor(def, cols, S, side, lv) {
+  let men = def.men, dmg = def.dmg, hpm = def.hpm || 0, ttl = def.ttl || 0, pierce = def.pierce || 0, raid = (def.kw || []).includes('raid'), vert = false;
+  const me = side === 'me', J = k => me && S && has(S, k);
+  for (let i = 0; i < (lv || 1) - 1; i++) { const u = (UP[def.id] || [])[i] || {}; men += u.men || 0; dmg += u.dmg || 0; hpm += u.hpm || 0; }
+  const baseMen = men;
   for (const ch of cols || '') {
-    if (ch === 'J') dmg += 1;
-    if (ch === 'R') men += Math.max(1, Math.floor(def.men * 0.5));
+    if (ch === 'J') dmg += 1 + (J('soleil') ? 1 : 0);
+    if (ch === 'R') men += Math.max(1, Math.floor(baseMen * 0.5)) + (J('braise') ? Math.max(1, Math.floor(baseMen * 0.25)) : 0);
     if (ch === 'V') vert = true;
-    if (ch === 'N') { pierce += 1; raid = true; }
+    if (ch === 'N') { pierce += 1 + (J('ombre') ? 1 : 0); raid = true; }
   }
-  let hp = def.hpm ? men * def.hpm : 0;
-  if (vert) { hp = Math.ceil(hp * 1.5); if (def.ttl) ttl += 1; }
-  if (side === 'me' && def.land) {
-    if (S && has(S, 'dubois')) dmg += 1;
-    if (S && has(S, 'moreau')) hp = Math.ceil(hp * 1.25);
+  if (J('peintre') && (cols || '').length === 2) dmg += 1;
+  let hp = hpm ? men * hpm : 0;
+  if (vert) { hp = Math.ceil(hp * 1.5); if (J('mousse')) hp = Math.ceil(hp * 1.25); if (def.ttl) ttl += 1; }
+  if (me && def.ttl && J('amiral')) ttl += 1;
+  if (me && def.land) {
+    if (J('dubois')) dmg += 1;
+    if (J('moreau')) hp = Math.ceil(hp * 1.25);
   }
   return { men, dmg, hp, ttl, pierce, raid };
 }
-function mkUnit(S, side, key, cols) {
-  const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = statsFor(def, cols, S, side);
+function mkUnit(S, side, key, cols, lv) {
+  const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = statsFor(def, cols, S, side, lv);
   return {
-    uid: S.uid++, side, key, cols: cols || '', name: def.name, men: st.men, menMax: st.men, dmg: st.dmg, hp: st.hp, hpMax: st.hp,
+    uid: S.uid++, side, key, cols: cols || '', name: def.name, lv: lv || 1, men: st.men, menMax: st.men, dmg: st.dmg, hp: st.hp, hpMax: st.hp,
     armor: def.armor || 0, pierce: st.pierce, ttl: st.ttl, kw: def.kw || [], land: side === 'en' || !!def.land, fam: def.fam || 'terre',
     fresh: (side === 'en' || !!def.land) && !st.raid,
   };
@@ -370,7 +412,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
   return S;
 }
 function startTurn(S) {
-  S.supply = 4 + (has(S, 'kowalski') ? 1 : 0);
+  S.supply = 4 + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
   S.flags = { used: false };
   drawCards(S, 5 + (has(S, 'ashby') ? 1 : 0));
 }
@@ -380,8 +422,8 @@ function drawCards(S, n) {
     S.hand.push(S.draw.pop());
   }
 }
-function deploy(S, side, lane, key, cols) {
-  const u = mkUnit(S, side, key, cols); u.lane = lane;
+function deploy(S, side, lane, key, cols, lv) {
+  const u = mkUnit(S, side, key, cols, lv); u.lane = lane;
   if (side === 'me' && !u.land) { if (S.lanes[lane].sup) return null; S.lanes[lane].sup = u; return u; }
   const slots = S.lanes[lane][side], i = slots[0] ? (slots[1] ? -1 : 1) : 0;
   if (i < 0) return null;
@@ -409,7 +451,7 @@ function playCard(S, hi, tgt) {
   if (!card || S.over || !isPlayable(S, hi) || !targetsFor(S, card).some(t => t.lane === tgt.lane)) return null;
   S.supply -= cardCost(S, card); S.flags.used = true;
   S.hand.splice(hi, 1); discardCard(S, card);
-  const u = deploy(S, 'me', tgt.lane, card.t, card.c);
+  const u = deploy(S, 'me', tgt.lane, card.t, card.c, card.lv);
   return [{ uid: u.uid, spawn: true, lane: u.lane, side: 'me' }];
 }
 function discardCard(S, card) { if (card.parts) S.discard.push(...card.parts); else S.discard.push(card); }
@@ -419,7 +461,7 @@ const canFuse = (a, b) => !!a && !!b && a !== b && a.t === b.t && !a.parts && !b
 function fuseCards(S, i, j) {
   const a = S.hand[i], b = S.hand[j];
   if (S.over || !canFuse(a, b)) return null;
-  const card = { t: a.t, c: normCols(a.c + b.c), parts: [a, b] };
+  const card = { t: a.t, c: normCols(a.c + b.c), lv: Math.max(a.lv || 1, b.lv || 1), parts: [a, b] };
   S.hand.splice(Math.max(i, j), 1); S.hand.splice(Math.min(i, j), 1, card);
   return card;
 }
@@ -602,6 +644,27 @@ function rewardCards(rng = Math.random, minRar = 1) {
   }
   return out;
 }
+
+// ---- Butin de guerre et intendance ----
+function lootFor(S, C, nodeType) {
+  const base = { battle: 4, elite: 6, boss: 9 }[nodeType] || 4, lines = [['Victoire', base]];
+  const speed = Math.max(0, Math.min(2, 6 - S.turn)); if (speed) lines.push(['Victoire rapide', speed]);
+  if (S.hq.me >= S.hqMax * 0.8) lines.push(['QG intact', 1]);
+  const interest = Math.min(1, Math.floor((C.loot || 0) / 5)); if (interest) lines.push(['Intérêts', interest]);
+  let total = lines.reduce((t, l) => t + l[1], 0);
+  if (has(S, 'quartier')) { const b = Math.ceil(total * 0.5); lines.push(['Quartier-maître', b]); total += b; }
+  return { lines, total };
+}
+const cardPrice = c => [0, 4, 5, 6][TYPES[c.t].rar] + ((c.lv || 1) > 1 ? 2 : 0);
+const upgradeCost = card => ((card.lv || 1) === 1 ? 6 : 10);
+const canUpgrade = card => (card.lv || 1) < 3;
+const REFORM_COST = 3;
+function genShop(C, rng = Math.random, rare = false) {
+  const owned = new Set(C.officers);
+  const jokers = shuffle(JOKERS.filter(j => !owned.has(j.id)), rng).slice(0, 2).map(j => ({ id: j.id, price: j.cost }));
+  const cards = rewardCards(rng, rare ? 2 : 1).slice(0, 2).map(c => ({ card: c, price: cardPrice(c) }));
+  return { jokers, cards, rerolls: 0 };
+}
 // ==/CORE==
 
 // ==SPRITES==
@@ -773,6 +836,8 @@ const OFFICER_LOOK = {
   moreau: { cap: '#3d86e8', stache: 1 }, dubois: { cap: '#3aa655', glasses: 1 }, ashby: { cap: '#8a5ad6', stache: 1, big: 1 },
   kowalski: { cap: '#ee9a2a', scar: 1 }, meyer: { cap: '#ffffff', glasses: 1, cross: 1 }, ito: { cap: '#e5543f', band: 1 },
   silva: { cap: '#2f3542', stache: 1, mono: 1 }, brandt: { cap: '#e2b324', star: 1, stache: 1 },
+  peintre: { cap: '#8a5ad6', stache: 1, band: 1 }, soleil: { cap: '#ffd24a', glasses: 1 }, braise: { cap: '#e5543f', scar: 1, stache: 1 }, mousse: { cap: '#52b34f', glasses: 1, cross: 1 },
+  ombre: { cap: '#262b36', mono: 1 }, amiral: { cap: '#ffffff', band: 1, stache: 1 }, fort: { cap: '#c9a15b', stache: 1 }, quartier: { cap: '#7a5a33', glasses: 1, star: 1 },
 };
 function officerSVG(id, size) {
   const o = OFFICER_LOOK[id] || OFFICER_LOOK.moreau;
@@ -818,11 +883,22 @@ function toast(msg) {
 
 // ---- Campagne et carte ----
 function newCampaign() {
-  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], map: genMap(), pos: null, node: null, decor: null };
+  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), pos: null, node: null, decor: null };
   toMap();
 }
 function officerItem(o, tag, attrs) {
   return `<${tag} class="off-item" ${attrs || ''}>${officerSVG(o.id, 48)}<span class="tx"><b>${o.name}</b><span class="small muted">${o.desc}</span></span></${tag}>`;
+}
+function jokerBar() {
+  const slots = Array.from({ length: MAX_JOKERS }, (_, i) => (C.officers[i] ? `<button class="jk" data-joker="${i}" aria-label="${JOKERS.find(j => j.id === C.officers[i]).name}">${officerSVG(C.officers[i], 38)}</button>` : '<span class="jk empty"></span>')).join('');
+  return `<div class="jbar" title="Cartes joker">${slots}</div>`;
+}
+function jokerModal(i) {
+  const j = JOKERS.find(x => x.id === C.officers[i]); if (!j) return;
+  const inBattle = S && document.getElementById('hand');
+  openModal(`<div class="hd"><span class="ribbon">Joker</span><button class="pill" data-act="close">Fermer</button></div>
+    <div class="off-item">${officerSVG(j.id, 56)}<span class="tx"><b>${j.name}</b><span>${j.desc}</span></span></div>
+    ${inBattle ? '<p class="small muted">Vous pourrez vendre ce joker entre deux batailles.</p>' : `<button class="btn" data-sell="${i}">Vendre pour $${Math.floor(j.cost / 2)}</button>`}`);
 }
 const OBJ_SHORT = { hold: 'Tenir', kills: 'Éliminer' };
 function nodeIcon(n) {
@@ -860,11 +936,12 @@ function toMap() {
     const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
     return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}%;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
   })).join('');
-  const offs = C.officers.map(id => `<span class="chip" title="${OFFICERS.find(x => x.id === id).name}">${officerSVG(id, 34)}</span>`).join('') || '<span class="muted small">Aucun officier</span>';
+  
   app.innerHTML = `<div class="stack">
     <div class="hd"><span class="ribbon">Carte du front</span><span class="num">Étape ${C.pos ? Math.min(9, C.pos.layer + 2) : 1} / 9</span></div>
     <div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${C.hq} / ${C.hqMax}</span></div><div class="bar"><i style="width:${(C.hq / C.hqMax) * 100}%"></i></div></div>
-    <div class="row" style="justify-content:space-between"><span class="row">${offs}</span><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span></div>
+    <div class="row" style="justify-content:space-between"><span class="coin num" title="Butin de guerre">$${C.loot}</span><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span></div>
+    <div class="ribbon" style="justify-self:start">Jokers</div>${jokerBar()}
     <div class="panel small">Choisissez votre prochaine étape : touchez un point qui clignote. Les routes montrent où vous pouvez aller.</div>
     <div class="map" style="height:${total}px"><svg class="mapsvg" viewBox="0 0 100 ${total}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${decor}${nodes}
       ${C.pos ? '' : `<span class="start" style="left:50%;top:${total - 6}px">Départ</span>`}</div>
@@ -872,12 +949,12 @@ function toMap() {
   setTimeout(() => { const t = document.querySelector('.node.reach'); if (t) t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 60);
 }
 const NODE_DESC = {
-  battle: 'Une bataille classique. Récompense : 1 carte au choix.',
-  elite: 'Ennemis plus nombreux. Récompense : 1 carte rare au choix.',
-  boss: 'Un chef de guerre vous attend. Récompense : un officier et une carte rare.',
+  battle: 'Une bataille. Récompense : du butin de guerre à dépenser à l’intendance.',
+  elite: 'Ennemis plus nombreux. Plus de butin, et des cartes rares à l’intendance.',
+  boss: 'Un chef de guerre vous attend. Gros butin et un joker offert.',
   camp: 'Un moment de répit : soignez votre QG de 16 PV, ou retirez une carte du paquet.',
   depot: 'Choisissez 1 carte parmi 3, sans combat.',
-  staff: 'Recrutez un officier dont l’effet dure toute la campagne.',
+  staff: 'Choisissez 1 carte joker parmi 3, gratuitement.',
 };
 function objectiveText(o, hq) {
   if (o.type === 'hold') return `Tenez la position pendant ${o.n} tours. Le QG ennemi est hors d’atteinte.`;
@@ -896,12 +973,12 @@ function enterNode(n) {
   closeModal();
   C.trail = C.trail || {};
   if (C.pos) C.trail[C.pos.layer] = C.pos.i;
-  C.pos = { layer: n.layer, i: n.i }; C.node = n; C.inNode = true;
+  C.pos = { layer: n.layer, i: n.i }; C.node = n; C.inNode = true; C.phase = 'node'; C.shop = null;
   const rec = load(); rec.level = Math.max(rec.level || 0, n.layer + 1); save(rec);
   if (['battle', 'elite', 'boss'].includes(n.type)) startBattle(n);
   else if (n.type === 'camp') toCamp();
   else if (n.type === 'depot') cardStep(false);
-  else officerStep();
+  else jokerStep();
 }
 function finishNode() {
   const n = C.node; C.inNode = false;
@@ -921,7 +998,7 @@ function unitHTML(u, cls = '') {
   const low = u.land && u.hp <= u.hpMax / 2 ? 'low' : '';
   const right = u.land ? u.hp : u.ttl + ' t';
   return `<div class="u ${u.side} ${u.fresh ? 'wait' : ''} ${cls}" data-uid="${u.uid}">
-    <span class="nm">${u.name}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}" title="${colorName(u.cols)}"></span>` : ''}
+    <span class="nm">${u.name}${u.lv > 1 ? ' <b class="star">' + '★'.repeat(u.lv - 1) + '</b>' : ''}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}" title="${colorName(u.cols)}"></span>` : ''}
     <span class="art">${squadSVG(key, u.side, men, u.menMax, 46, u.cols)}</span>
     ${u.armor ? `<span class="armor" title="Blindage">▣${u.armor}</span>` : ''}${u.fresh ? '<span class="zz">zz</span>' : ''}
     <span class="st"><i class="a">${men}×${u.dmg}</i><i class="h ${low}">${right}</i></span></div>`;
@@ -966,18 +1043,18 @@ function boardHTML(view, live) {
 }
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
 function cardStats(card) {
-  const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me');
-  const s = d.land ? `${st.men} tirs × ${st.dmg} · ${st.hp} PV${d.armor ? ' · blindage ' + d.armor : ''}`
+  const d = TYPES[card.t], st = statsFor(d, card.c, cardCtx(), 'me', card.lv);
+  const s = d.land ? `${st.men} tir${st.men > 1 ? 's' : ''} × ${st.dmg} · ${st.hp} PV${d.armor ? ' · blindage ' + d.armor : ''}`
     : d.kw && d.kw.includes('bomb') ? `${st.men} bombe${st.men > 1 ? 's' : ''} de ${st.dmg} · ${st.ttl} tour`
       : `${st.men} tir${st.men > 1 ? 's' : ''} × ${st.dmg} · ${st.ttl} tours`;
   return s;
 }
 function cardHTML(card, extra = '', attrs = '') {
-  const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : d.cost, st = statsFor(d, card.c, cardCtx(), 'me');
+  const d = TYPES[card.t], inB = S && document.getElementById('hand'), cost = inB ? cardCost(S, card) : d.cost, st = statsFor(d, card.c, cardCtx(), 'me', card.lv);
   const cols = card.c, eff = [...cols].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${COLORS[ch].txt}</span>`).join('');
   return `<button class="card ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>
     <span class="cband" style="background:${chipBg(cols)}"><b>${colorName(cols)}</b><small>${card.parts ? 'Fusion' : FAM_SHORT[d.fam]}</small></span>
-    <span class="cn">${d.name}</span><span class="art">${squadSVG(SPR_OF[card.t], 'me', st.men, st.men, 52, cols)}</span>
+    <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span><span class="art">${squadSVG(SPR_OF[card.t], 'me', st.men, st.men, 52, cols)}</span>
     <span class="cst">${cardStats(card)}</span><span class="ct">${d.txt}</span><span class="effs">${eff}</span></button>`;
 }
 function objLine() {
@@ -1003,7 +1080,7 @@ function renderBattle() {
   const hint = hintText(), selCard = sel !== null ? S.hand[sel] : null;
   app.innerHTML = `<div class="stack">
     <div class="hd"><span class="ribbon ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num">Tour ${S.turn}</span></div>
-    <div class="objline" id="obj">${objLine()}</div>
+    <div class="objline" id="obj">${objLine()}</div>${jokerBar()}
     <div class="phase" id="phase"></div>
     <div class="board" id="board">${boardHTML({ lanes: S.lanes, hq: S.hq }, true)}</div>
     ${hint ? `<div class="hint">${hint}</div>` : ''}
@@ -1087,32 +1164,64 @@ function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 12);
   const n = C.node;
   if (n.type === 'boss' && n.layer === 8) return victory();
-  if (n.type === 'boss') return officerStep();
-  cardStep(n.type === 'elite');
+  const lo = lootFor(S, C, n.type); C.loot += lo.total; C.phase = 'reward'; C.shop = null;
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
+    <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
+      <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
+    <p class="small">Dépensez votre butin à l’intendance : jokers, nouvelles cartes et entraînement.</p>
+    <button class="btn go" data-act="${n.type === 'boss' ? 'bossjoker' : 'toshop'}">${n.type === 'boss' ? 'Choisir un joker offert' : 'Aller à l’intendance'}</button></div>`;
 }
 function cardStep(rareOnly) {
   window.__opts = rewardCards(Math.random, rareOnly ? 2 : 1);
-  const title = C.node.type === 'depot' ? 'Dépôt de ravitaillement' : 'Front libéré !';
-  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">${title}</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div>
-    <div class="panel">Choisissez une carte pour renforcer votre paquet${rareOnly ? ' (cartes rares)' : ''}. Chaque couleur donne un avantage, et deux cartes du même type de couleurs différentes peuvent fusionner.</div>
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Dépôt de ravitaillement</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div>
+    <div class="panel">Choisissez une carte pour renforcer votre paquet. Chaque couleur donne un avantage, et deux cartes du même type de couleurs différentes peuvent fusionner.</div>
     <div class="cardrow">${window.__opts.map((c, i) => cardHTML(c, 'pick', `data-add="${i}"`)).join('')}</div>
     <button class="btn ghost" data-act="skipcard">Ne rien prendre</button></div>`;
 }
-function officerStep() {
-  const left = OFFICERS.filter(o => !C.officers.includes(o.id));
-  if (C.officers.length >= 3 || !left.length) { toast('Votre état-major est au complet : des renforts arrivent à la place.'); return cardStep(true); }
+function jokerStep() {
+  const left = JOKERS.filter(o => !C.officers.includes(o.id));
+  if (C.officers.length >= MAX_JOKERS || !left.length) { C.loot += 6; toast('Vos 5 emplacements de joker sont pleins : +$6 de butin à la place.'); return afterJoker(); }
   const opts = shuffle(left).slice(0, 3);
-  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Un officier se présente</span></div><div class="panel">Choisissez-en un. Son effet dure toute la campagne (3 officiers au maximum).</div>
-    <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div></div>`;
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Choisissez un joker</span><span class="coin num">$${C.loot}</span></div><div class="panel">Un joker est une carte à effet permanent. Vous pouvez en garder 5 au maximum.</div>
+    <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div>${jokerBar()}</div>`;
+}
+const afterJoker = () => (C.phase === 'reward' ? toShop() : finishNode());
+
+// ---- Intendance : on dépense le butin de guerre ----
+function toShop() {
+  C.phase = 'shop';
+  if (!C.shop) C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type));
+  renderShop();
+}
+function renderShop() {
+  const sh = C.shop, full = C.officers.length >= MAX_JOKERS, rc = 2 + sh.rerolls;
+  const jrows = sh.jokers.map((j, i) => {
+    const d = JOKERS.find(x => x.id === j.id);
+    return `<div class="off-item shopj ${j.sold ? 'sold' : ''}">${officerSVG(j.id, 48)}<span class="tx"><b>${d.name}</b><span class="small muted">${d.desc}</span></span>
+      <button class="btn buy" data-buyj="${i}" ${j.sold || full || C.loot < j.price ? 'disabled' : ''}>${j.sold ? 'Vendu' : '$' + j.price}</button></div>`;
+  }).join('');
+  const crows = sh.cards.map((c, i) => `<div class="shopcard ${c.sold ? 'sold' : ''}">${cardHTML(c.card, 'pick')}<button class="btn buy" data-buyc="${i}" ${c.sold || C.loot < c.price ? 'disabled' : ''}>${c.sold ? 'Vendu' : '$' + c.price}</button></div>`).join('');
+  const canTrain = C.deck.some(canUpgrade);
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Intendance</span><span class="coin num">$${C.loot}</span></div>
+    <div class="eyebrow">Vos jokers (${C.officers.length}/${MAX_JOKERS})</div>${jokerBar()}
+    <div class="eyebrow">Jokers en vente</div><div class="officers">${jrows}</div>
+    <div class="eyebrow">Cartes en vente</div><div class="cardrow">${crows}</div>
+    <div class="eyebrow">Atelier</div>
+    <button class="off-item plain" data-act="train" ${canTrain ? '' : 'disabled'}><span class="tx"><b>Entraîner une carte</b><span class="small muted">Améliore une carte de votre paquet (jusqu'au niveau 3) : plus d'hommes ou plus de dégâts. À partir de $${Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99)}.</span></span></button>
+    <button class="off-item plain" data-act="reform" ${C.deck.length > 8 ? '' : 'disabled'}><span class="tx"><b>Réformer une carte · $${REFORM_COST}</b><span class="small muted">Retire une carte du paquet pour piocher plus souvent les autres.</span></span></button>
+    <div class="row" style="justify-content:space-between"><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span>
+      <button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''}>Relancer $${rc}</button></div>
+    <button class="btn go" data-act="leave" style="padding-block:15px">Quitter l'intendance</button></div>`;
 }
 function toCamp() {
+  C.phase = 'camp';
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Camp de base</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div><div class="panel">Un seul choix avant de reprendre la route.</div>
     <button class="off-item plain" data-act="heal"><span class="tx"><b>Soigner le QG</b><span class="small muted">+16 PV (jusqu'au maximum).</span></span></button>
     <button class="off-item plain" data-act="removecard"><span class="tx"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></span></button></div>`;
 }
 function victory() {
   app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'spider', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>Le dernier quartier général est tombé</h2>
-    <p>Campagne gagnée avec ${C.deck.length} cartes et ${C.officers.length} officiers.</p>
+    <p>Campagne gagnée avec ${C.deck.length} cartes et ${C.officers.length} jokers.</p>
     <button class="btn" data-act="new">Rejouer</button></div>`;
 }
 
@@ -1133,17 +1242,21 @@ function helpModal(first) {
     <li><b>Marine et armée de l'air</b> se posent dans la bande bleue sous la ligne. Elles tirent de loin, restent quelques tours, et ne peuvent pas être touchées.</li>
     <li><b>Les couleurs</b> : <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'effectif · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et attaque dès l'arrivée.</li>
     <li><b>Fusion :</b> deux cartes du même type et de couleurs différentes se fusionnent (touchez la première, puis celle qui brille). Le groupe obtenu cumule les deux couleurs et ne coûte qu'une carte. Jaune + rouge = orange, par exemple. Les deux cartes reviennent séparées dans la défausse.</li>
+    <li><b>Butin de guerre :</b> après chaque bataille, vous gagnez du butin ($). À l'intendance, achetez des <b>jokers</b> (cartes à effet permanent, 5 au maximum), de nouvelles cartes, ou <b>entraînez</b> une carte (niveau 2 puis 3 : plus d'hommes ou de dégâts).</li>
     <li>Touchez <b>« Fin du tour »</b> : vos groupes attaquent, puis l'ennemi. Un groupe qui vient d'arriver dort (zz) un tour, sauf les noirs.</li>
     <li><b>L'ennemi se montre à l'avance :</b> silhouettes en pointillé pour les renforts, bandeaux rouges pour les obus.</li>
     </ol>
-    <p class="small muted">Touchez un groupe sur le terrain pour lire ses capacités. Sur la carte, vous choisissez votre route. Après chaque étape, vous renforcez votre paquet ou vos officiers.</p>`);
+    <p class="small muted">Touchez un groupe sur le terrain pour lire ses capacités. Sur la carte, vous choisissez votre route. Les étapes sans combat vous offrent une carte, un joker ou du repos.</p>`);
 }
-function deckModal(pickMode) {
+function deckModal(mode) {
   const groups = new Map();
-  C.deck.forEach(c => { const k = cardKey(c); if (!groups.has(k)) groups.set(k, { c, n: 0 }); groups.get(k).n++; });
-  const list = [...groups.values()].sort((a, b) => FAM_ORDER[TYPES[a.c.t].fam] - FAM_ORDER[TYPES[b.c.t].fam] || a.c.t.localeCompare(b.c.t) || a.c.c.localeCompare(b.c.c));
-  openModal(`<div class="hd"><span class="ribbon">${pickMode ? 'Retirer quelle carte ?' : `Votre paquet (${C.deck.length})`}</span><button class="pill" data-act="close">${pickMode ? 'Annuler' : 'Fermer'}</button></div>
-    <div class="deckgrid">${list.map(g => `<div>${cardHTML(g.c, pickMode ? 'pick' : '', pickMode ? `data-remove="${cardKey(g.c)}"` : '')}<div class="small" style="text-align:center;margin-top:5px">× ${g.n}</div></div>`).join('')}</div>`);
+  C.deck.forEach(c => { if (mode === 'upgrade' && !canUpgrade(c)) return; const k = cardKey(c); if (!groups.has(k)) groups.set(k, { c, n: 0 }); groups.get(k).n++; });
+  const list = [...groups.values()].sort((a, b) => FAM_ORDER[TYPES[a.c.t].fam] - FAM_ORDER[TYPES[b.c.t].fam] || a.c.t.localeCompare(b.c.t) || a.c.c.localeCompare(b.c.c) || (a.c.lv || 1) - (b.c.lv || 1));
+  const title = mode === 'remove' ? 'Retirer quelle carte ?' : mode === 'upgrade' ? 'Entraîner quelle carte ?' : `Votre paquet (${C.deck.length})`;
+  const attr = c => (mode === 'remove' ? `data-remove="${cardKey(c)}"` : mode === 'upgrade' ? `data-train="${cardKey(c)}"` : '');
+  const note = c => (mode === 'upgrade' ? `<div class="small" style="text-align:center;margin-top:4px"><b>Niv. ${c.lv || 1} → ${(c.lv || 1) + 1}</b> : ${upText(c.t, (c.lv || 1) + 1)}<br><span class="coin num">$${upgradeCost(c)}</span></div>` : '');
+  openModal(`<div class="hd"><span class="ribbon">${title}</span><button class="pill" data-act="close">${mode ? 'Annuler' : 'Fermer'}</button></div>
+    <div class="deckgrid">${list.map(g => `<div>${cardHTML(g.c, mode ? 'pick' : '', attr(g.c))}${note(g.c)}<div class="small" style="text-align:center;margin-top:5px">× ${g.n}</div></div>`).join('')}</div>`);
 }
 function describeUnit(uid) {
   const u = findUnit(S, uid); if (!u) return;
@@ -1163,10 +1276,22 @@ document.addEventListener('click', e => {
   const nd = t.closest('[data-node]'); if (nd && nd.classList.contains('reach')) { const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const add = t.closest('[data-add]'); if (add) { C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
+  const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } toast('Joker acheté.'); return renderShop(); }
+  const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; toast('Carte ajoutée au paquet.'); return renderShop(); }
+  const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
+  const jk = t.closest('[data-joker]'); if (jk) return jokerModal(+jk.dataset.joker);
+  const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1); closeModal(); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
   const rem = t.closest('[data-remove]');
-  if (rem) { if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); } C.deck.splice(C.deck.findIndex(c => cardKey(c) === rem.dataset.remove), 1); closeModal(); return finishNode(); }
+  if (rem) {
+    const shop = C.phase === 'shop';
+    if (C.deck.length <= 8) { closeModal(); return toast('Gardez au moins 8 cartes.'); }
+    if (shop && C.loot < REFORM_COST) { closeModal(); return toast('Pas assez de butin.'); }
+    C.deck.splice(C.deck.findIndex(c => cardKey(c) === rem.dataset.remove), 1); closeModal();
+    if (shop) { C.loot -= REFORM_COST; return renderShop(); }
+    return finishNode();
+  }
   const off = t.closest('[data-officer]');
-  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return C.node.type === 'boss' ? cardStep(true) : finishNode(); }
+  if (off) { C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
   if (S && document.getElementById('hand')) {
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
     if (sel !== null && !busy) {
@@ -1185,7 +1310,13 @@ document.addEventListener('click', e => {
   else if (a === 'deck') deckModal(false);
   else if (a === 'skipcard') finishNode();
   else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 16); finishNode(); }
-  else if (a === 'removecard') deckModal(true);
+  else if (a === 'removecard') deckModal('remove');
+  else if (a === 'toshop') toShop();
+  else if (a === 'bossjoker') jokerStep();
+  else if (a === 'train') deckModal('upgrade');
+  else if (a === 'reform') deckModal('remove');
+  else if (a === 'leave') finishNode();
+  else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; const n = C.shop.rerolls + 1; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; renderShop(); }
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]')) fast = true; });
 
