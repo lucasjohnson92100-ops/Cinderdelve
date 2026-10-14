@@ -304,7 +304,7 @@ h2 { font-weight: 600; letter-spacing: 0; }
 .dock .pill { white-space: nowrap; }
 .u .st i.tt { font-size: .74rem; min-width: 0; white-space: nowrap; padding: 3px 6px 2px; }
 .dock .supply { flex-wrap: wrap; border: 0; background: transparent; padding: 0; gap: 4px; font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; max-width: 104px; }
-.dock .supply span:first-child { width: 100%; }
+.dock .supply > span:first-child { width: 100%; }
 #app:has(.dock) { padding-bottom: 96px; }
 /* cartes plus lisibles */
 .card { width: 128px; gap: 4px; padding: 8px 7px 9px; }
@@ -391,11 +391,11 @@ body:has(.btl) .toast { bottom: 84px; }
 .btn.sm { padding: 4px 12px; font-size: .9rem; border-width: 2px; box-shadow: 0 3px 0 var(--ink); white-space: nowrap; }
 .hand.fan { flex: none; position: relative; overflow: visible; padding: 0; display: block; }
 .hc { position: absolute; display: block; padding: 0; border-width: 2px; border-radius: 9px; box-shadow: 0 2px 0 var(--ink); container-type: inline-size; transition: transform .15s, top .15s; text-align: left; }
-.hc .cost { top: -8px; left: -7px; width: 25cqw; height: 25cqw; font-size: 14cqw; border-width: 2px; box-shadow: 0 2px 0 var(--ink); }
-.hc .ord { top: -8px; right: auto; left: 20cqw; width: 23cqw; height: 23cqw; font-size: 13cqw; border-width: 2px; }
+.hc .cost { top: -10px; left: -8px; width: 31cqw; height: 31cqw; font-size: 20cqw; line-height: 1; background: var(--ink); color: #ffe27a; border: 2.5px solid #ffe27a; box-shadow: 0 0 0 2px var(--ink), 0 3px 0 2px var(--ink); z-index: 3; }
+.hc .ord { top: -8px; right: -6px; left: auto; width: 23cqw; height: 23cqw; font-size: 13cqw; border-width: 2px; }
 .hc .cband { position: absolute; left: 0; right: 0; top: 0; height: 15cqw; margin: 0; padding: 0; border: 0; border-bottom: 2px solid var(--ink); border-radius: 7px 7px 0 0; display: flex; align-items: center; font-size: 11cqw; }
 .hc .cband b { font-size: 11cqw; }
-.hc .cn { position: absolute; left: 4cqw; right: 2cqw; top: 19.5cqw; font-size: 12.5cqw; line-height: 1; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hc .cn { position: absolute; left: 4cqw; padding-left: 0; right: 2cqw; top: 19.5cqw; font-size: 12.5cqw; line-height: 1; padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hc .art { position: absolute; left: 4cqw; right: 4cqw; top: 33cqw; height: 40cqw; border: 2px solid var(--ink); border-radius: 6px; display: flex; justify-content: center; align-items: center; background: var(--grass); }
 .hc .art svg { height: 100%; width: auto; max-width: 100%; }
 .hc.mer .art { background: #7cc3ee; } .hc.air .art { background: #bfe8fb; }
@@ -406,12 +406,12 @@ body:has(.btl) .toast { bottom: 84px; }
 .hc.fusible { animation: glowfz .7s infinite alternate; box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--yellow), 0 3px 0 6px var(--ink); }
 @keyframes glowfz { to { box-shadow: 0 0 0 3px #fff, 0 0 0 9px var(--yellow), 0 3px 0 9px var(--ink); } }
 .hc.off { opacity: 1; filter: grayscale(.9) brightness(.78); }
-.btl .dock { position: static; flex: none; z-index: 1; border: 3px solid var(--ink); border-radius: 12px; box-shadow: none; padding: 4px 8px; gap: 8px; }
-.btl .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
-.btl .dock .supply span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
-.btl .dock .pips { display: flex; gap: 3px; flex-wrap: wrap; }
-.btl .dock .pip { width: 12px; height: 12px; border-width: 1.5px; }
-.btl .dock .btn { padding: 8px 14px; font-size: 1rem; }
+.btl .dock { position: static; flex: none; z-index: 1; border: 3px solid var(--ink); border-radius: 12px; box-shadow: none; padding: 4px 8px; gap: 6px; }
+.btl .dock .supply { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: none; max-width: none; font-size: .68rem; text-transform: none; padding: 0; }
+.btl .dock .supply > span:first-child { width: auto; font-family: var(--font-display); font-weight: 600; }
+.btl .dock .pips { display: flex; gap: 2px; flex-wrap: nowrap; }
+.btl .dock .pip { flex: none; width: 10px; height: 10px; border-width: 1.5px; }
+.btl .dock .btn { padding: 8px 10px; font-size: .95rem; }
 .btl .dock .pill { min-height: 32px; }
 .toast { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
