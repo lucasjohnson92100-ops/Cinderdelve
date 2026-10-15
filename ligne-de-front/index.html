@@ -686,7 +686,7 @@ body:has(.btl) .sky-fx { display: none; }
 .fig.flinch { animation: flinch .35s; } @keyframes flinch { 30% { transform: translateX(5px); filter: brightness(1.8); } }
 .sp.hit .sp-fig { animation: none; }
 .hqbig { width: 100%; height: 100%; overflow: visible; }
-.sp.hqp.hit .hqbig { animation: hitshake .4s; }
+.sp.hqp.hit .hqbig, .sp.hqp.en.hit .sp-art { animation: hitshake .4s; }
 .sc-half .sc-sky::before, .sc-half .sc-sky::after { content: ""; position: absolute; width: 70px; height: 20px; border-radius: 99px; background: rgba(255, 255, 255, .8); box-shadow: 18px -10px 0 4px rgba(255, 255, 255, .8); animation: sccloud 9s linear infinite; }
 .sc-half .sc-sky::before { top: 22%; left: -30%; } .sc-half .sc-sky::after { top: 40%; left: -60%; transform: scale(.7); animation-duration: 13s; animation-delay: -5s; }
 @keyframes sccloud { to { left: 120%; } }
@@ -3440,7 +3440,7 @@ async function playScene(st, speed) {
   });
   if (sc.hq) {
     const el = q('.sp.hqp'), lost = sc.hq.before - sc.hq.after; el.classList.add('hit'); el.querySelector('.sp-hp i').style.width = Math.max(0, (sc.hq.after / sc.hq.max) * 100) + '%';
-    el.querySelector('.hqbig').innerHTML = hqArt(sc.hq.side, sc.hq.after / sc.hq.max);
+    const hb = el.querySelector('.hqbig'); if (hb) hb.innerHTML = hqArt(sc.hq.side, sc.hq.after / sc.hq.max); // le QG ennemi peint n'a pas de fort dessiné
     const x = document.createElement('span'); x.className = 'sp-boom'; el.querySelector('.sp-art').appendChild(x);
     countDown(el.querySelector('.cnt'), Math.max(0, sc.hq.before), Math.max(0, sc.hq.after)); popAt(el.querySelector('.sp-art'), '−' + lost); rows.push(`${sc.hq.side === 'en' ? 'QG ennemi' : 'Votre QG'} : −${lost} PV`);
     setTimeout(() => SFX.play('hqhit'), 60);
