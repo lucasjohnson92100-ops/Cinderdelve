@@ -876,8 +876,8 @@ body { background-color: var(--slate); background-image: radial-gradient(ellipse
 .cbar.big { background: rgba(14, 20, 32, .82); border: 3px solid var(--ink); border-radius: 14px; padding: 6px 10px; box-shadow: 0 4px 0 var(--ink); }
 .cbar.big .cchips, .cbar.big .cmult { font-size: 1.6rem; min-width: 54px; } .cbar.big .cx { font-size: 1.3rem; color: #fff; } .cbar.big .ceq { font-size: 1.7rem; }
 .cbar .bump { animation: cbump .28s cubic-bezier(.2, 1.8, .4, 1); } @keyframes cbump { 0% { transform: scale(1.45) rotate(-4deg); } 100% { transform: none; } }
-.ctag { font-family: var(--font-display); font-weight: 700; font-size: .95rem; color: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 1px 9px; box-shadow: 0 2px 0 var(--ink); background: #2f3542; }
-.ctag:empty { display: none; } .ctag.p { background: #2f7de1; } .ctag.m, .ctag.x { background: #e5543f; } .ctag.t { background: #ffd24a; color: #1b2540; }
+.sc-combo .ctag { font-family: var(--font-display); font-weight: 700; font-size: .95rem; color: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 1px 9px; box-shadow: 0 2px 0 var(--ink); background: #2f3542; }
+.sc-combo .ctag:empty { display: none; } .sc-combo .ctag.p { background: #2f7de1; } .sc-combo .ctag.m, .sc-combo .ctag.x { background: #e5543f; } .sc-combo .ctag.t { background: #ffd24a; color: #1b2540; }
 .sc-col.att.n2 .sp-art, .sc-col.att.n3 .sp-art { height: 62px; } .sc-col.att.n3 .sp-art { height: 48px; } .sc-col.att:is(.n2,.n3) .sp-name { font-size: .7rem; } .sc-col.att:is(.n2,.n3) .sp-sub { font-size: .7rem; }
 .dmgprev { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); z-index: 7; font-family: var(--font-display); font-weight: 700; font-size: .74rem; color: #fff; background: #2559b5; border: 2px solid var(--ink); border-radius: 99px; padding: 0 6px; line-height: 1.3; pointer-events: none; white-space: nowrap; }
 .dmgprev.kill { background: #e5543f; animation: aimpulse 1s ease-in-out infinite; }
@@ -996,9 +996,15 @@ body:has(.briefing) { background: linear-gradient(180deg, rgba(14, 20, 32, .45),
 .shelf::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .07) 0 2px, transparent 2px 9px); pointer-events: none; }
 .shelf h3 { margin: 0 0 6px; font-family: var(--font-stencil, var(--font-display)); font-weight: 400; font-size: .92rem; letter-spacing: .08em; text-transform: uppercase; color: #ffe08a; text-shadow: 0 2px 0 #2b1a0b; }
 .shelf h3 small { font-family: inherit; color: #f2e6c6; font-size: .7rem; }
-.shelf-row { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; width: 100%; padding: 4px 2px 6px; scroll-snap-type: x mandatory; }
-.shelf-row .shopcard { flex: 0 0 132px; scroll-snap-align: start; display: grid; gap: 6px; justify-items: center; }
-.shelf-row .shopcard .card { width: 132px; }
+/* Recrues et ordres : grille de 2 colonnes, sans défilement ; les cartes suivent la largeur disponible */
+.shelf-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; width: 100%; padding: 6px 2px 6px; }
+.shelf-row .shopcard { min-width: 0; display: grid; gap: 6px; justify-items: center; align-content: start; }
+.shelf-row .shopcard .card { width: 100%; max-width: 172px; min-width: 0; }
+.shelf-row .card > * { min-width: 0; max-width: 100%; }
+.shelf-row .card .cband { margin: 0; } .shelf-row .card .cband small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf-row .card .art { width: 100%; } .shelf-row .card .art svg { max-width: 100%; }
+.shelf-row .card .cbig { flex-wrap: wrap; gap: 4px; }
+@media (max-width: 360px) { .shelf-row .card .cn { font-size: .84rem; letter-spacing: -.01em; } }
 .shopcard.sold .card, .crate.sold, .sjok.sold { filter: grayscale(.9) brightness(.7); }
 .tag { font-family: var(--font-display); font-weight: 800; font-size: .95rem; color: #3b2a0d; background: linear-gradient(180deg, #fff3c2, #f2d27a); border: 2px solid #2b2116; border-radius: 6px 6px 6px 6px; padding: 3px 12px; box-shadow: 0 2px 0 #2b2116; position: relative; }
 .tag::before { content: ""; position: absolute; left: 5px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%; background: #2b2116; }
