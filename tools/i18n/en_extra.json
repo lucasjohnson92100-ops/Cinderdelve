@@ -490,7 +490,7 @@
  "Transcender": "Transcend",
  "Don · ": "Gift · ",
  " (niveau max, évolué) devient un don permanent : il se lance tout seul toutes les ": " (max level, evolved) becomes a permanent gift: it casts itself every ",
- " s à 60 % de sa puissance, et son emplacement est libéré.": " s at 60% of its power, and its slot is freed.",
+ " s à 45 % de sa puissance, et son emplacement est libéré.": " s at 45% of its power, and its slot is freed.",
  " se transcende en don permanent.": " transcends into a permanent gift.",
  "Fusion d'armes": "Weapon merge",
  "Fusion : ": "Merge: ",
@@ -503,5 +503,8 @@
  " fusionne : rang ": " merges: rank ",
  " (+45 % de dégâts par rang).": " (+45% damage per rank).",
  "Rang max": "Max rank",
- "2 offres verrouillées au maximum.": "2 locked offers maximum."
+ "2 offres verrouillées au maximum.": "2 locked offers maximum.",
+ "Fusion d'armes : une 2e copie de ton arme au niveau 3 ou plus fusionne avec elle : +45 % de dégâts par rang, 3 rangs au maximum. Le rang s'affiche sur l'arme (×2, ×3), en haut à droite.": "Weapon fusion: a 2nd copy of your weapon at level 3 or higher merges with it: +45% damage per rank, 3 ranks at most. The rank shows on the weapon (×2, ×3), top right.",
+ "Don légendaire : un pouvoir rare et permanent qui s'ajoute à toutes tes attaques. Il apparaît dans la rangée dorée, en haut à droite. Certains se combinent entre eux (⚡ Synergie).": "Legendary gift: a rare, permanent power on top of all your attacks. It appears in the golden row, top right. Some combine with each other (⚡ Synergy).",
+ "Transcendance : un sort au niveau maximum et évolué devient un don qui se lance tout seul, et libère son emplacement. Il apparaît dans la rangée dorée, en haut à droite.": "Transcendence: a max-level, evolved spell becomes a gift that casts by itself and frees its slot. It appears in the golden row, top right."
 }
