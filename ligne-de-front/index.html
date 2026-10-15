@@ -169,6 +169,15 @@ button:focus-visible { outline: 3px solid var(--blue-d); outline-offset: 2px; }
 .cardrow { display: flex; gap: 14px; padding-inline: 4px; flex-wrap: wrap; justify-content: center; padding-block: 16px; }
 .cardrow .card { cursor: pointer; width: calc((100% - 28px) / 3); min-width: 108px; }
 .cardrow .card:hover { transform: translateY(-5px); }
+.card.isnew::after { content: "Nouveau"; position: absolute; top: -11px; right: -4px; transform: rotate(4deg); background: #ffd24a; color: #1b2540; border: 2px solid #1b2540; border-radius: 8px; padding: 1px 7px; font: 700 11px/1.3 var(--font-display); letter-spacing: .04em; text-transform: uppercase; z-index: 3; box-shadow: 0 2px 0 #1b2540; }
+.doctrine { display: grid; gap: 4px; text-align: left; cursor: pointer; font: inherit; color: inherit; width: 100%; }
+.doctrine:hover { transform: translateY(-2px); }
+.dchips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.dchip { display: grid; justify-items: center; gap: 2px; background: rgba(27, 37, 64, .07); border-radius: 10px; padding: 4px 2px 6px; min-width: 0; }
+.dchip .dart { height: 34px; display: grid; place-items: center; }
+.dchip .dtx { display: grid; justify-items: center; gap: 2px; min-width: 0; text-align: center; }
+.dchip b { font-size: 12px; line-height: 1.1; overflow-wrap: anywhere; }
+.dchip i { font-style: normal; font-size: 10px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.35); border-radius: 6px; padding: 0 6px; }
 
 .officers { display: grid; gap: 8px; }
 .off-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); box-shadow: 0 3px 0 var(--ink); text-align: left; }
@@ -1089,10 +1098,20 @@ function upText(t, lvl) {
 }
 // ---- Cartes : {t: type, c: couleurs}. Une carte fusionnée a des parts ----
 const mkCard = (t, c) => ({ t, c });
-const DECK_PLAN = [['tireurs', 'JJJRRRVVVNN'], ['jeep', 'JRV'], ['blinde', 'RVN'], ['destroyer', 'JRV'], ['croiseur', 'VN'], ['sousmarin', 'RN'],
-  ['chasseur', 'JN'], ['bombardier', 'J'], ['paras', 'RV'], ['observateur', 'JV'], ['infirmiers', 'RV'], ['genie', 'JN'], ['artillerie', 'R'],
-  ['barrage', ''], ['fumigenes', ''], ['ravitaillement', '..']];
+// Paquet de départ volontairement court (15 cartes) : le reste se gagne en campagne
+const DECK_PLAN = [['tireurs', 'JJRRVN'], ['jeep', 'JV'], ['blinde', 'R'], ['destroyer', 'JN'], ['chasseur', 'V'],
+  ['barrage', ''], ['fumigenes', ''], ['ravitaillement', '.']];
 const START_DECK = DECK_PLAN.flatMap(([t, cs]) => (TYPES[t].order ? Array.from({ length: Math.max(1, cs.length) }, () => mkCard(t, '')) : [...cs].map(c => mkCard(t, c))));
+// Doctrines : choisies au début de la campagne, elles ajoutent 3 cartes qui orientent le paquet
+const DOCTRINES = {
+  blitz: { name: 'Doctrine Blitz', tip: 'Véhicules à élan : plus vous en posez, plus ils frappent.', cards: [['halftrack', 'J'], ['jeep', 'N'], ['assaut', '']] },
+  artillerie: { name: 'Doctrine Artillerie', tip: 'Marquer l’ennemi, puis le pilonner de loin.', cards: [['artillerie', 'R'], ['observateur', 'J'], ['reco', 'V']] },
+  defense: { name: 'Doctrine Défense', tip: 'Tenir le front et laisser l’ennemi s’user.', cards: [['mitrailleuse', 'V'], ['genie', 'N'], ['infirmiers', 'R']] },
+  commandos: { name: 'Doctrine Commandos', tip: 'Sauter derrière les lignes et saboter le QG.', cards: [['paras', 'R'], ['paras', 'V'], ['sabotage', '']] },
+  marine: { name: 'Doctrine Marine', tip: 'Une flotte qui pilonne la côte et débarque.', cards: [['croiseur', 'V'], ['sousmarin', 'R'], ['debarquement', '']] },
+};
+const doctrineCards = id => DOCTRINES[id].cards.map(([t, c]) => mkCard(t, c));
+function pickDoctrines(rng = Math.random) { return shuffle(Object.keys(DOCTRINES), rng).slice(0, 3); }
 const isOrder = card => !!(card && TYPES[card.t] && TYPES[card.t].order);
 const cardKey = c => c.t + ':' + c.c + ':' + (c.lv || 1);
 
@@ -1102,31 +1121,31 @@ const ENEMIES = {
   mgnest: { cls: 'foot', mv: 1, rng: [1, 2], name: 'Mitrailleuse', men: 4, dmg: 2, hpm: 3, armor: 0, val: 2 },
   sniper: { cls: 'foot', mv: 2, rng: [2, 3], name: 'Snipers', men: 2, dmg: 3, hpm: 2, armor: 0, kw: ['weak'], val: 2 },
   panzer: { cls: 'track', mv: 3, rng: [1, 2], name: 'Panzer', men: 1, dmg: 6, hpm: 16, armor: 2, val: 4 },
-  heavy: { cls: 'track', mv: 2, rng: [1, 2], name: 'Char lourd', men: 1, dmg: 8, hpm: 30, armor: 3, val: 99 },
+  heavy: { cls: 'track', mv: 2, rng: [1, 2], name: 'Char lourd', men: 1, dmg: 8, hpm: 26, armor: 3, val: 99 },
   train: { cls: 'track', rng: [1, 2], name: 'Train blindé', men: 2, dmg: 5, hpm: 22, armor: 2, kw: ['rolling'], val: 99 },
-  battery: { cls: 'foot', rng: [2, 3], name: 'Batterie côtière', men: 3, dmg: 4, hpm: 16, armor: 2, kw: ['fort', 'rearOnly', 'shield'], val: 99 },
+  battery: { cls: 'foot', rng: [2, 3], name: 'Batterie côtière', men: 2, dmg: 4, hpm: 13, armor: 1, kw: ['fort', 'rearOnly', 'shield'], val: 99 },
   howitzer: { cls: 'wheel', rng: [2, 3], name: 'Obusiers', men: 2, dmg: 4, hpm: 4, armor: 0, kw: ['rearOnly'], val: 2.5 },
   bunker: { cls: 'foot', rng: [1, 2], name: 'Bunker', men: 3, dmg: 2, hpm: 10, armor: 2, kw: ['fort'], val: 3 },
 };
 const LEVELS = [
   { name: "Plage d'assaut", hq: 22, budget: 4.0 },
-  { name: 'Bocage', hq: 42, budget: 12.9 },
-  { name: 'Village fortifié', hq: 53, budget: 16.8 },
-  { name: 'Le pont (boss)', hq: 54, budget: 10.5, boss: 'tank' },
+  { name: 'Bocage', hq: 42, budget: 14.0 },
+  { name: 'Village fortifié', hq: 53, budget: 18.0 },
+  { name: 'Le pont (boss)', hq: 38, budget: 9.0, boss: 'tank' },
   { name: 'Forêt des Ardennes', hq: 75, budget: 20.6 },
   { name: 'Ville en ruines', hq: 86, budget: 24.5 },
   { name: 'Ligne de défense', hq: 97, budget: 28.3 },
-  { name: 'Quartier général (boss)', hq: 92, budget: 20.6, boss: 'tank', final: true },
+  { name: 'Quartier général (boss)', hq: 70, budget: 20.6, boss: 'tank', final: true },
 ];
 // Cartes joker : effets permanents (5 au maximum), achetés avec le butin de guerre ou gagnés en campagne.
 const JOKERS = [
-  { id: 'moreau', name: 'Capitaine Moreau', cost: 8, desc: 'Vos unités terrestres ont +25 % de PV.' },
-  { id: 'dubois', name: 'Lieutenant Dubois', cost: 9, desc: 'Vos unités terrestres font +1 dégât par tir.' },
+  { id: 'moreau', name: 'Capitaine Moreau', cost: 8, desc: 'Votre infanterie a +25 % de PV.' },
+  { id: 'dubois', name: 'Lieutenant Dubois', cost: 12, desc: 'Vos unités terrestres font +1 dégât par tir.' },
   { id: 'ashby', name: 'Colonel Ashby', cost: 9, desc: 'Vous piochez 1 carte de plus par tour.' },
   { id: 'kowalski', name: 'Major Kowalski', cost: 11, desc: '+1 ravitaillement par tour.' },
-  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Fin du tour : vos unités terrestres regagnent 20 % de PV.' },
-  { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'La première carte jouée chaque tour coûte 1 de moins.' },
-  { id: 'silva', name: 'Commandant Silva', cost: 7, desc: "Les cartes de marine et d'air coûtent 1 de moins." },
+  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Fin du tour : vos unités terrestres regagnent 10 % de PV, et vos infirmiers soignent le double.' },
+  { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'Les ordres coûtent 1 de moins, et votre premier ordre de chaque tour pioche 1 carte.' },
+  { id: 'silva', name: 'Commandant Silva', cost: 8, desc: 'Vos navires coûtent 1 de moins.' },
   { id: 'brandt', name: 'Général Brandt', cost: 9, desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
   { id: 'peintre', name: 'Peintre de guerre', cost: 9, desc: 'Les cartes fusionnées font +1 dégât par tir.' },
   { id: 'soleil', name: 'Capitaine Soleil', cost: 8, desc: 'Les cartes jaunes ont +1 dégât par tir de plus.' },
@@ -1136,10 +1155,10 @@ const JOKERS = [
   { id: 'amiral', name: 'Amiral Vague', cost: 7, desc: "La marine et l'air restent 1 tour de plus." },
   { id: 'fort', name: 'Intendant Fort', cost: 7, desc: 'Premier tour de chaque bataille : +2 ravitaillement.' },
   { id: 'quartier', name: 'Quartier-maître', cost: 11, desc: 'Le butin de guerre gagne +50 %.' },
-  { id: 'intendant', name: 'Sergent Intendant', cost: 7, desc: '+1 défausse par bataille.' },
-  { id: 'blitz', name: 'Général Éclair', cost: 9, desc: 'Élan : +2 dégâts par véhicule déjà posé au lieu de +1.' },
-  { id: 'radio', name: 'Major Radio', cost: 8, desc: 'Les cibles marquées prennent +3 par tir au lieu de +2.' },
-  { id: 'sapeur', name: 'Capitaine Sapeur', cost: 8, desc: 'Vos mines et embuscades font +4 dégâts. Le génie coûte 1 de moins.' },
+  { id: 'intendant', name: 'Sergent Intendant', cost: 7, desc: '+2 défausses par bataille, et chaque défausse donne +1 ravitaillement de plus.' },
+  { id: 'blitz', name: 'Général Éclair', cost: 8, desc: 'Élan : +2 dégâts par véhicule déjà posé au lieu de +1.' },
+  { id: 'radio', name: 'Major Radio', cost: 7, desc: 'Les cibles marquées prennent +4 par tir au lieu de +2.' },
+  { id: 'sapeur', name: 'Capitaine Sapeur', cost: 7, desc: 'Vos mines et embuscades font +4 dégâts. Le génie coûte 1 de moins.' },
   { id: 'lebrun', name: 'Amiral Lebrun', cost: 8, desc: "Vos navires font +1 dégât par tir pour chaque autre navire en mer." },
   { id: 'faucon', name: 'Major Faucon', cost: 8, desc: 'Les parachutistes coûtent 1 de moins ; le sabotage fait +6 dégâts.' },
   { id: 'fer', name: 'Général de Fer', cost: 9, desc: 'Armes combinées : +2 dégâts par tir au lieu de +1.' },
@@ -1161,7 +1180,7 @@ const has = (S, id) => S.officers.includes(id);
 
 // ---- Le plateau : 5 secteurs (colonnes) au terrain fixe, sans déplacement ----
 // Ligne 0 = arrière ennemi, 1 = front ennemi, 2 = votre front, 3 = votre arrière. Chaque QG est derrière son camp.
-const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, ENEMY_GROWTH = 0.06;
+const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, ENEMY_GROWTH = 0.06, BOSS_DOWN = 0.5;
 const ME_ROWS = [2, 3], FRONT = { en: 1, me: 2 }, REAR = { en: 0, me: 3 };
 const TERRAIN = {
   route: { name: 'Route', cover: 0, txt: 'Terrain dégagé : toutes les unités y passent.' },
@@ -1219,9 +1238,9 @@ function statsFor(def, cols, S, side, lv) {
   let hp = hpm ? men * hpm : 0;
   if (vert) { hp = Math.ceil(hp * 1.5); if (J('mousse')) hp = Math.ceil(hp * 1.25); if (def.ttl) ttl += 1; }
   if (me && def.ttl && J('amiral')) ttl += 1;
+  if (me && def.land && def.cls === 'foot' && J('moreau')) hp = Math.ceil(hp * 1.25);
   if (me && def.land) {
     if (J('dubois')) dmg += 1;
-    if (J('moreau')) hp = Math.ceil(hp * 1.25);
   }
   return { men, dmg, hp, ttl, pierce, raid };
 }
@@ -1254,7 +1273,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
     officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax, supplyBonus: C.supplyBonus || 0,
     grid: T.grid, lanes: T.lanes, owner: T.owner, seaCol: T.seaCol, hqPos: T.hq, units: [],
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], supply: 0, flags: {}, plan: [],
-    smoke: [], counterCols: [], traps: {}, enemyMines: {}, discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 1 : 0),
+    smoke: [], counterCols: [], traps: {}, enemyMines: {}, discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 2 : 0),
   };
   if (lvl.tutorial) ['tireurs:R:1', 'tireurs:J:1'].forEach(k => { const i = S.draw.findIndex(c => cardKey(c) === k); if (i >= 0) S.draw.push(S.draw.splice(i, 1)[0]); });
   if (lvl.boss) spawnBoss(S, lvl.boss);
@@ -1338,8 +1357,8 @@ function hqInRange(S, u, r, c) {
 const baseCost = card => (card.parts ? TYPES[card.t].cost * card.parts.length - (card.parts.length - 1) : TYPES[card.t].cost);
 function cardCost(S, card) {
   const def = TYPES[card.t]; let cost = baseCost(card);
-  if (has(S, 'silva') && (def.fam === 'mer' || def.fam === 'air')) cost -= 1;
-  if (has(S, 'ito') && !S.flags.used) cost -= 1;
+  if (has(S, 'silva') && def.fam === 'mer') cost -= 1;
+  if (has(S, 'ito') && def.order) cost -= 1;
   if ((has(S, 'faucon') && card.t === 'paras') || (has(S, 'sapeur') && card.t === 'genie')) cost -= 1;
   return Math.max(0, cost);
 }
@@ -1444,6 +1463,7 @@ function playOrder(S, hi, r, c) {
   if (!def || !def.order || S.over || !canDeployNow(S, card).ok || !deployCells(S, card).some(x => x[0] === r && x[1] === c)) return null;
   S.supply -= cardCost(S, card); S.flags.used = true;
   S.hand.splice(hi, 1); discardCard(S, card);
+  if (has(S, 'ito') && !S.flags.itoDraw) { S.flags.itoDraw = true; drawCards(S, 1); }
   const res = { order: card.t, r, c, hits: [] }, mine = x => x.side === 'me' && x.c === c;
   if (card.t === 'barrage') S.units.filter(t => t.side === 'en' && t.c === c && t.land).forEach(t => res.hits.push(applyDamage(S, t, Math.max(1, Math.ceil(6 * ((t.kw || []).includes('fort') ? 2 : 1) * (1 - coverOf(S, t)))))));
   else if (card.t === 'sabotage') { const d = Math.ceil((12 + (has(S, 'faucon') ? 6 : 0)) / (hqShielded(S) ? 2 : 1)); S.hq.en -= d; res.hits.push({ hq: 'en', dmg: d }); }
@@ -1460,7 +1480,7 @@ function playOrder(S, hi, r, c) {
   else if (card.t === 'contreattaque') { if (!S.counterCols.includes(c)) S.counterCols.push(c); }
   else if (card.t === 'assaut') S.units.filter(x => mine(x) && x.attacked && !x.fresh).forEach(x => { x.attacked = false; res.hits.push({ uid: x.uid, buff: true }); });
   else if (card.t === 'embuscade') { S.traps[c] = S.traps[c] || {}; S.traps[c].half = true; }
-  else if (card.t === 'ravitaillement') { S.supply += 2; drawCards(S, 1); }
+  else if (card.t === 'ravitaillement') { S.supply += 2; S.discard.pop(); drawCards(S, 1); S.discard.push(card); } // la carte ne peut pas se repiocher elle-même
   else if (card.t === 'retranchement' || card.t === 'repli') {
     const u = unitAt(S, r, c); if (!u) return res;
     if (card.t === 'retranchement') u.dig = Math.min(0.6, (u.dig || 0) + 0.3);
@@ -1481,6 +1501,7 @@ function discardHand(S, idxs) {
   const out = list.map(i => S.hand.splice(i, 1)[0]);
   out.forEach(c => discardCard(S, c));
   S.discards--;
+  S.supply += DISCARD_SUPPLY + (has(S, 'intendant') ? 1 : 0);
   drawCards(S, out.length);
   return out;
 }
@@ -1491,8 +1512,7 @@ function planDeploy(S, idxs) {
   for (const i of idxs) {
     const card = S.hand[i]; if (!card) return { ok: false, reason: 'card' };
     const def = TYPES[card.t]; let cost = baseCost(card);
-    if (has(S, 'silva') && (def.fam === 'mer' || def.fam === 'air')) cost -= 1;
-    if (has(S, 'ito') && !used) cost -= 1;
+    if (has(S, 'silva') && def.fam === 'mer') cost -= 1;
     cost = Math.max(0, cost);
     if (cost > supply) return { ok: false, reason: 'supply' };
     supply -= cost; used = true;
@@ -1540,7 +1560,11 @@ function restoreState(S, snap) { Object.assign(S, JSON.parse(snap)); }
 function applyDamage(S, u, dmg) {
   u.hp -= dmg;
   const hit = { uid: u.uid, dmg, kill: u.hp <= 0, side: u.side };
-  if (hit.kill) { S.units = S.units.filter(x => x !== u); if (u.side === 'en') S.kills++; }
+  if (hit.kill) {
+    S.units = S.units.filter(x => x !== u); if (u.side === 'en') S.kills++;
+    // abattre le boss ébranle le QG ennemi
+    if (u.side === 'en' && ENEMIES[u.key] && ENEMIES[u.key].val === 99 && S.hq.en < 9999) { hit.bossDown = Math.ceil(S.lvl.hq * BOSS_DOWN); S.hq.en -= hit.bossDown; S.bossDown = true; }
+  }
   return hit;
 }
 function checkOver(S) {
@@ -1554,8 +1578,10 @@ function genPlan(S) {
   let budget = (L.budget + S.turn * 0.35) * (S.mods && S.mods.harder ? 1.25 : 1), room = Math.max(0, MAX_EN_UNITS - units(S, 'en').length);
   const plan = [], pool = [['rifle', 1, 4], ['gren', 1.5, 3]], taken = new Set();
   if (lv >= 1) pool.push(['mgnest', 2, 2]);
-  if (lv >= 2) pool.push(['sniper', 2, 1.5], ['shell', 2, 1.5]);
-  if (lv >= 3) pool.push(['panzer', 4, 1.2]);
+  // les menaces arrivent tôt : snipers dès la 2e bataille, obus, panzers et obusiers dès la 3e
+  if (lv >= 1) pool.push(['sniper', 2, 1.5]);
+  if (lv >= 2) pool.push(['shell', 2, 1.5]);
+  if (lv >= 2) pool.push(['panzer', 4, lv >= 3 ? 1.2 : 0.7]);
   if (lv >= 1) pool.push(['mines', 1.5, 0.8]);
   if (lv >= 2) pool.push(['howitzer', 2.5, 1.1]);
   if (lv >= 3) pool.push(['bunker', 3, 0.9]);
@@ -1608,7 +1634,7 @@ const combinedBonus = (S, u) => (u.side === 'me' && u.land && S.units.some(x => 
 function shotDmg(S, u, t) {
   let d = Math.max(0, u.dmg + combinedBonus(S, u) - Math.max(0, (t.armor || 0) - (u.pierce || 0)));
   if (d <= 0) return 0;
-  if (t.marked && u.side === 'me') d += has(S, 'radio') ? 3 : 2;
+  if (t.marked && u.side === 'me') d += has(S, 'radio') ? 4 : 2;
   if (u.side === 'me' && u.cls === 'ship' && has(S, 'lebrun')) d += S.units.filter(x => x !== u && x.side === 'me' && x.cls === 'ship').length;
   if (u.kw.includes('mines') && (t.kw || []).includes('fort')) d *= 3;
   if (u.kw.includes('antitank')) d *= t.cls === 'track' ? 2 : t.cls === 'foot' ? 0.5 : 1;
@@ -1705,8 +1731,8 @@ function endTurn(S) {
   units(S, 'me').forEach(u => { u.fresh = false; });
   advance(S, 'me', steps);
   // Soutien des infirmiers : 4 PV pour eux et leurs voisins
-  units(S, 'me').filter(m => m.kw.includes('heal')).forEach(m => units(S, 'me').filter(a => a.land && dist(a.r, a.c, m.r, m.c) <= 1).forEach(a => { a.hp = Math.min(a.hpMax, a.hp + 4); }));
-  if (has(S, 'meyer')) units(S, 'me').filter(a => a.land).forEach(a => { a.hp = Math.min(a.hpMax, a.hp + Math.ceil(a.hpMax * 0.2)); });
+  units(S, 'me').filter(m => m.kw.includes('heal')).forEach(m => units(S, 'me').filter(a => a.land && dist(a.r, a.c, m.r, m.c) <= 1).forEach(a => { a.hp = Math.min(a.hpMax, a.hp + (has(S, 'meyer') ? 8 : 4)); }));
+  if (has(S, 'meyer')) units(S, 'me').filter(a => a.land).forEach(a => { a.hp = Math.min(a.hpMax, a.hp + Math.ceil(a.hpMax * 0.1)); });
   S.units = S.units.filter(u => !(u.side === 'me' && u.ttl && --u.ttl <= 0));
   S.phase = 'en';
   steps.push({ ph: 'en', msg: 'Tour ennemi', snap: snap(S) });
@@ -1843,10 +1869,10 @@ function battleCfg(node) {
     levelIdx: node.levelIdx, obj: node.obj || { type: 'hq' }, elite, tutorial: node.layer === 0 };
 }
 // Cartes proposées en récompense : type et couleur tirés au hasard
-function rewardCards(rng = Math.random, minRar = 1) {
-  const keys = TYPE_KEYS.filter(k => TYPES[k].rar >= minRar), out = [];
+function rewardCards(rng = Math.random, minRar = 1, deck = null) {
+  const keys = TYPE_KEYS.filter(k => TYPES[k].rar >= minRar), out = [], owned = new Set((deck || []).map(c => c.t));
   while (out.length < 3) {
-    const w = k => [0, 4, 3, 1.5][TYPES[k].rar];
+    const w = k => [0, 4, 3, 1.5][TYPES[k].rar] * (deck && !owned.has(k) ? 2 : 1);
     let x = rng() * keys.reduce((s, k) => s + w(k), 0), t = keys[0];
     for (const k of keys) { if (x < w(k)) { t = k; break; } x -= w(k); }
     const c = TYPES[t].order ? '' : 'JRVN'[Math.floor(rng() * 4)];
@@ -1891,7 +1917,7 @@ function genShop(C, rng = Math.random, rare = false) {
   const owned = new Set(C.officers);
   const jokers = shuffle(JOKERS.filter(j => !owned.has(j.id)), rng).slice(0, 2).map(j => ({ id: j.id, price: j.cost }));
   const units = [], orders = TYPE_KEYS.filter(k => TYPES[k].order && TYPES[k].rar >= (rare ? 2 : 1));
-  while (units.length < 3) { const c = rewardCards(rng, rare ? 2 : 1).find(x => !isOrder(x) && !units.some(u => u.t === x.t)); if (c) units.push(c); }
+  while (units.length < 3) { const c = rewardCards(rng, rare ? 2 : 1, C.deck).find(x => !isOrder(x) && !units.some(u => u.t === x.t)); if (c) units.push(c); }
   const ord = mkCard(orders[Math.floor(rng() * orders.length)], '');
   const cards = [...units, ord].map(c => ({ card: c, price: cardPrice(c) }));
   const main = mainCompo(C.deck || []), ids = Object.keys(COMPOS);
@@ -2358,16 +2384,31 @@ function resumeRun() {
   picked = []; placing = null; busy = false; selU = null; undo = []; discardSel = null;
   if (r.screen === 'battle' && r.S) { S = r.S; S.rng = Math.random; S.finished = false; renderBattle(); return turnBanner(`Tour ${S.turn}`, 'me'); }
   if (r.screen === 'battle') return startBattle(C.node);
+  if (r.screen === 'reward' && C.spoils) return spoilsStep();
   if (r.screen === 'shop' || (r.screen === 'reward' && C.node.type !== 'boss')) return toShop();
   if (r.screen === 'reward' || r.screen === 'joker') return jokerStep();
   if (r.screen === 'camp') return toCamp();
+  if (r.screen === 'doctrine' && C.docOpts) return doctrineStep();
+  if (r.screen === 'spoils') return spoilsStep();
   if (r.screen === 'depot') return cardStep(C.node && C.node.type === 'elite');
   if (r.screen === 'event' && typeof eventStep === 'function') return eventStep();
   toMap();
 }
 function newCampaign() {
-  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), pos: null, node: null, decor: null };
-  toMap();
+  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), pos: null, node: null, decor: null, docOpts: pickDoctrines() };
+  doctrineStep();
+}
+// Choix d'une doctrine : 3 cartes qui orientent le paquet de départ
+function doctrineStep() {
+  saveRun('doctrine');
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${C.deck.length} cartes</span></div>
+    <div class="panel">Votre paquet de départ est court : tireurs, jeeps, un blindé, deux destroyers, un chasseur et trois ordres. Une doctrine y ajoute 3 cartes et oriente votre campagne. Les autres unités se gagnent après chaque victoire.</div>
+    ${C.docOpts.map(id => { const d = DOCTRINES[id]; return `<button class="panel doctrine" data-doctrine="${id}"><b>${d.name}</b><span class="small muted">${d.tip}</span><span class="dchips">${doctrineCards(id).map(c => `<span class="dchip"><span class="dart">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 30) : spriteSVG(SPR_OF[c.t], 'me', 34, c.c)}</span><span class="dtx"><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span></span>`).join('')}</span></button>`; }).join('')}</div>`;
+}
+function chooseDoctrine(id) {
+  if (!C.docOpts || !C.docOpts.includes(id)) return;
+  C.deck.push(...doctrineCards(id)); C.doctrine = id; delete C.docOpts;
+  SFX.play('buy'); toMap();
 }
 function officerItem(o, tag, attrs) {
   return `<${tag} class="off-item" ${attrs || ''}>${officerSVG(o.id, 48)}<span class="tx"><b>${o.name}</b><span class="small muted">${o.desc}</span></span></${tag}>`;
@@ -2511,7 +2552,7 @@ function nodeModal(n) {
   const cfg = fight ? battleCfg(n) : null;
   openModal(`<div class="hd"><span class="ribbon ${fight ? 'red' : ''}">${n.name}</span><button class="pill" data-act="close">Retour</button></div>
     <div class="row" style="gap:14px;flex-wrap:nowrap"><span class="nodeart">${nodeIcon(n)}</span><div class="stack" style="gap:4px"><b>${NODE_LABEL[n.type]}</b>
-    ${fight ? `<span>${objectiveText(cfg.obj, cfg.hq)}</span>` : ''}${n.type === 'boss' && BOSSES[n.boss] ? `<span><b>${BOSSES[n.boss].name}</b> : ${BOSSES[n.boss].desc}</span>` : ''}<span class="small muted">${NODE_DESC[n.type]}</span></div></div>
+    ${fight ? `<span>${objectiveText(cfg.obj, cfg.hq)}</span>` : ''}${n.type === 'boss' && BOSSES[n.boss] ? `<span><b>${BOSSES[n.boss].name}</b> : ${BOSSES[n.boss].desc} Abattez-le : le QG ennemi perd ${Math.round(BOSS_DOWN * 100)} % de ses PV.</span>` : ''}<span class="small muted">${NODE_DESC[n.type]}</span></div></div>
     <button class="btn go" data-go="${n.layer}-${n.i}">En avant !</button>`);
 }
 function enterNode(n) {
@@ -2566,7 +2607,7 @@ const TUTO = [
   { id: 'fuse', stage: 1, sel: '#hand', when: () => S.hand.some(a => S.hand.some(b => canFuse(a, b))), done: () => S.hand.some(c => c.parts), text: 'Deux cartes du même type ? Touchez l’une puis l’autre : elles fusionnent, leurs soldats et leurs PV s’additionnent.' },
   { id: 'terrain', stage: 2, info: true, sel: '.gc .ltag', text: 'Chaque couleur a un terrain fort (▲ +50 % de dégâts) et un terrain faible (▼ −25 %). Les pastilles en bas de chaque secteur le rappellent, et les cases l’affichent quand vous glissez une carte.' },
   { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes beiges sont des ordres : barrage, fumigènes, ravitaillement… Glissez-les sur leur cible, en plus de vos unités.' },
-  { id: 'discard', stage: 2, info: true, sel: '[data-act=discard]', text: 'Main mal fichue ? Le bouton ⟲ remplace jusqu’à 5 cartes, 3 fois par bataille.' },
+  { id: 'discard', stage: 2, info: true, sel: '[data-act=discard]', text: 'Main mal fichue ? Le bouton ⟲ remplace jusqu’à 5 cartes et donne +1 ravitaillement ce tour, 3 fois par bataille.' },
   { id: 'synergy', stage: 2, info: true, sel: '.gu .gmk, .gu .gac', when: () => S.units.some(u => u.marked) || myUnits().some(u => combinedBonus(S, u)), text: 'Synergies : ◎ une cible marquée prend +2 par tir ; AC (armes combinées) : infanterie et véhicule dans le même secteur ont +1 chacun. Le « ? » en haut détaille tout.' },
 ];
 const tutoStage = () => (!C || !C.pos ? 0 : C.pos.layer === 0 ? 1 : C.pos.layer === 1 ? 2 : 0);
@@ -2795,7 +2836,7 @@ function hintText() {
     if (u.fresh) return `${u.name} vient d'arriver : il attaquera au prochain tour.`;
     return `${u.name} : aucune cible à portée (${RANGE_TXT(u.rng)}). Le QG ennemi se frappe quand le secteur d'en face est vide.`;
   }
-  if (discardSel) return `Défausse : touchez jusqu'à ${MAX_DISCARD} cartes à remplacer (${discardSel.length} choisie${discardSel.length > 1 ? 's' : ''}). Il vous reste ${S.discards} défausse${S.discards > 1 ? 's' : ''} pour cette bataille.`;
+  if (discardSel) return `Défausse : touchez jusqu'à ${MAX_DISCARD} cartes à remplacer (${discardSel.length} choisie${discardSel.length > 1 ? 's' : ''}). Chaque défausse donne +${DISCARD_SUPPLY + (has(S, 'intendant') ? 1 : 0)} ravitaillement ce tour. Il vous reste ${S.discards} défausse${S.discards > 1 ? 's' : ''} pour cette bataille.`;
   if (picked.length === 1 && isOrder(picked[0])) { const k = picked[0], d = TYPES[k.t], dn = canDeployNow(S, k); return dn.ok ? `${d.name} : glissez-la sur ${TGT_TXT[d.tgt]} (case bleue). ${d.txt}` : `${d.name} : ${WHY[dn.reason] || 'impossible maintenant.'}`; }
   if (picked.length === 1) {
     const k = picked[0], d = TYPES[k.t], st = cardStatsFor(k, S), dn = canDeployNow(S, k), mates = S.hand.filter(h => h !== k && canFuse(k, h)).length;
@@ -2849,6 +2890,7 @@ function renderBattle() {
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes">⟲ ${S.discards}</button><button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button><button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}</div>
   </div>`;
   if (!busy && !S.over) saveRun('battle');
+  if (S.bossDown && !S.bossToast) { S.bossToast = true; toast(`Le boss est abattu ! Le QG ennemi perd ${Math.round(BOSS_DOWN * 100)} % de ses PV.`); }
   showCoach();
 }
 
@@ -3345,16 +3387,27 @@ function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 12);
   const n = C.node;
   if (n.type === 'boss' && n.layer === 8) return victory();
-  const lo = lootFor(S, C, n.type); C.loot += lo.total; const gotSupply = n.type === 'boss' && addSupplyBonus(C); C.phase = 'reward'; C.shop = null; saveRun('reward'); setTimeout(() => SFX.play('coins'), 250);
+  const lo = lootFor(S, C, n.type); C.loot += lo.total; const gotSupply = n.type === 'boss' && addSupplyBonus(C); C.phase = 'reward'; C.shop = null; C.spoils = rewardCards(Math.random, n.type === 'battle' ? 1 : 2, C.deck); saveRun('reward'); setTimeout(() => SFX.play('coins'), 250);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
     <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
       <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
     ${gotSupply ? `<div class="panel lines"><div class="line"><span><b>Ravitaillement renforcé</b> : +1 point à chaque tour, pour toute la campagne</span><span class="num gold">+1</span></div></div>` : ''}
-    <p class="small">Dépensez votre butin à l’intendance : jokers, nouvelles cartes et entraînement.</p>
+    <p class="small">Choisissez maintenant une carte de renfort, puis dépensez votre butin à l’intendance.</p>
     <div class="coinburst" aria-hidden="true">${Array.from({ length: 12 }, (_, k) => `<i style="--a:${k * 30}deg;--d:${k * 25}ms"></i>`).join('')}</div>
-    <button class="btn go" data-act="${n.type === 'boss' ? 'bossjoker' : 'toshop'}">${n.type === 'boss' ? 'Choisir un joker offert' : 'Aller à l’intendance'}</button></div>`;
+    <button class="btn go" data-act="spoils">Choisir un renfort</button></div>`;
   countUpAll(app);
 }
+// Renfort : une carte parmi 3 (les types absents du paquet sont signalés « Nouveau »)
+function spoilsStep() {
+  if (!C.spoils) return afterSpoils();
+  saveRun('spoils');
+  const own = new Set(C.deck.map(c => c.t));
+  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Renforts</span><span class="num">${C.deck.length} cartes</span></div>
+    <div class="panel">Ajoutez une carte à votre paquet, ou passez pour le garder court : un petit paquet ressort plus souvent vos meilleures cartes.</div>
+    <div class="cardrow">${C.spoils.map((c, i) => cardHTML(c, 'pick' + (own.has(c.t) ? '' : ' isnew'), `data-spoil="${i}"`)).join('')}</div>
+    <button class="btn ghost" data-act="skipspoil">Passer</button></div>`;
+}
+function afterSpoils() { delete C.spoils; return C.node && C.node.type === 'boss' ? jokerStep() : toShop(); }
 function countUpAll(root) {
   root.querySelectorAll('.lines .num.gold').forEach((el, k) => { const v = +el.textContent.replace(/[^0-9]/g, ''); el.textContent = '+$0'; for (let i = 1; i <= 10; i++) setTimeout(() => { el.textContent = '+$' + Math.round((v * i) / 10); }, 150 + k * 140 + i * 40); });
 }
@@ -3514,6 +3567,8 @@ document.addEventListener('click', e => {
   const t = e.target;
   const nd = t.closest('[data-node]'); if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
+  const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
+  const dc = t.closest('[data-doctrine]'); if (dc) return chooseDoctrine(dc.dataset.doctrine);
   const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
   const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast('Joker acheté.'); return renderShop(); }
   const crb = t.closest('[data-crate]'); if (crb && !crb.disabled) return openCrateModal(+crb.dataset.crate);
@@ -3573,6 +3628,8 @@ document.addEventListener('click', e => {
   else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 16); finishNode(); }
   else if (a === 'removecard') deckModal('remove');
   else if (a === 'toshop') toShop();
+  else if (a === 'spoils') spoilsStep();
+  else if (a === 'skipspoil') afterSpoils();
   else if (a === 'bossjoker') jokerStep();
   else if (a === 'train') deckModal('upgrade');
   else if (a === 'supply') { const c = supplyBonusCost(C); if (C.loot < c || !addSupplyBonus(C)) return; C.loot -= c; SFX.play('jokerbuy'); renderShop(); }

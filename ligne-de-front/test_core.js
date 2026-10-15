@@ -1,7 +1,7 @@
 // Vérifie le moteur : secteurs et terrains, terrains forts/faibles des couleurs, portées, QG, avance, couverture, villages, fusions, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
+const E=new Function(core+';return {DOCTRINES,doctrineCards,pickDoctrines,BOSS_DOWN,DISCARD_SUPPLY,applyDamage,lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // plateau : 4 lignes x 5 secteurs, terrain fixe par secteur
@@ -110,9 +110,10 @@ S=mk();S.plan=[];S.supply=5;S.hand=[E.mkCard('tireurs','J'),E.mkCard('blinde','J
 // niveaux, boutique, carte, jokers
 S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['kowalski']},()=>0.5);check('kowalski +1',S.supply,E.BASE_SUPPLY+1);
 S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[],supplyBonus:2},()=>0.5);check('bonus permanent',S.supply,E.BASE_SUPPLY+2);
-check('coût de carte ito',(()=>{const Q=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['ito']},()=>0.5);return E.cardCost(Q,E.mkCard('blinde','J'));})(),2);
+check('ito : les unités gardent leur coût',(()=>{const Q=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['ito']},()=>0.5);return E.cardCost(Q,E.mkCard('blinde','J'));})(),3);
+check('ito : ordres −1',(()=>{const Q=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:['ito']},()=>0.5);return E.cardCost(Q,E.mkCard('barrage',''));})(),2);
 const map=E.genMap();check('9 couches',map.length,9);
-check('deck 40',E.START_DECK.length,40);
+check('paquet de départ 15',E.START_DECK.length,15);
 const sh2=E.genShop({officers:['ashby'],deck:E.START_DECK},undefined,false);check('2 jokers',sh2.jokers.length,2);
 const Cc={supplyBonus:0};check('coût 1er bonus',E.supplyBonusCost(Cc),14);E.addSupplyBonus(Cc);E.addSupplyBonus(Cc);E.addSupplyBonus(Cc);check('plafond',E.addSupplyBonus(Cc),false);
 // boss
@@ -198,9 +199,9 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  for(let k=0;k<100;k++){const Q=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},Math.random,E.battleCfg({type:'battle',levelIdx:2+k%6,layer:3,obj:{type:'hq'}}));
    check('plan : obusiers à l\'arrière',Q.plan.filter(p=>p.key==='howitzer').every(p=>p.r===0),true);check('plan : mines hors mer',Q.plan.filter(p=>p.k==='mines').every(p=>Q.grid[0][p.c]!=='mer'),true);}
  // jokers de composition
- S=B(['intendant']);check('intendant : +1 défausse',S.discards,E.BASE_DISCARDS+1);
+ S=B(['intendant']);check('intendant : +2 défausses',S.discards,E.BASE_DISCARDS+2);
  S=B(['blitz']);S.hand=[E.mkCard('jeep','J'),E.mkCard('jeep','J')];E.placeCard(S,0,2,0);const jb=E.placeCard(S,0,2,1);check('blitz : élan ×2',jb.elan,2);
- S=B(['radio']);const rt=me(S,'tireurs',2,1),rpz=en(S,'panzer',1,1);rpz.armor=0;rpz.marked=true;check('radio : +3 sur cible marquée',E.shotDmg(S,rt,rpz),4);
+ S=B(['radio']);const rt=me(S,'tireurs',2,1),rpz=en(S,'panzer',1,1);rpz.armor=0;rpz.marked=true;check('radio : +4 sur cible marquée',E.shotDmg(S,rt,rpz),5);
  S=B(['fer']);const ft=me(S,'tireurs',2,1);me(S,'blinde',3,1);check('fer : armes combinées +2',E.combinedBonus(S,ft),2);
  S=B(['lebrun']);const d1=me(S,'destroyer',2,4);me(S,'croiseur',3,4);const lt=en(S,'rifle',1,3);check('lebrun : +1 par autre navire',E.shotDmg(S,d1,lt),2);
  S=B(['sapeur']);S.hand=[E.mkCard('genie','J')];check('sapeur : génie à 1',E.cardCost(S,S.hand[0]),1);E.placeCard(S,0,2,1);S.plan=[{k:'deploy',key:'panzer',r:1,c:1}];S.hand=[];E.endTurn(S);check('sapeur : mines 6+4',E.units(S,'en')[0]?.hpMax-E.units(S,'en')[0]?.hp,10);
@@ -225,5 +226,19 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  E.applyEvent(Cc,'correspondant',0);check('correspondant : +$10 et bataille plus dure',Cc.loot+'/'+Cc.mods.harder,'20/1');
  Cc.level=0;const Sx=E.newBattle(Cc,()=>0.5,E.battleCfg({type:'battle',levelIdx:3,layer:3,obj:{type:'hq'}}));check('mods consommés',JSON.stringify(Cc.mods),'{}');check('mod appliqué à la bataille',Sx.mods.harder,1);
  Cc.mods={intel:1,supply:2,discard:1};const Sy=E.newBattle(Cc,()=>0.5,E.battleCfg({type:'battle',levelIdx:3,layer:3,obj:{type:'hq'}}));check('espion/déserteurs',Sy.plan.length+'/'+Sy.supply+'/'+Sy.discards,'0/'+(E.BASE_SUPPLY+2)+'/'+(E.BASE_DISCARDS+1));
+}
+// paquet court, doctrines, renforts, boss abattu, défausse qui ravitaille
+{
+ check('5 doctrines de 3 cartes',Object.values(E.DOCTRINES).every(d=>d.cards.length===3&&d.cards.every(([t])=>E.TYPES[t]))+'/'+Object.keys(E.DOCTRINES).length,'true/5');
+ check('3 doctrines proposées, distinctes',new Set(E.pickDoctrines(Math.random)).size,3);
+ const deck=[...E.START_DECK,...E.doctrineCards('marine')];let fresh=0,n=0;
+ for(let k=0;k<400;k++)E.rewardCards(Math.random,1,deck).forEach(c=>{n++;if(!deck.some(d=>d.t===c.t))fresh++;});
+ check('renforts : surtout des types nouveaux',fresh/n>0.55,true);
+ const Q=E.newBattle({level:0,deck,hq:60,hqMax:60,officers:[]},Math.random,E.battleCfg({type:'boss',levelIdx:3,layer:4,boss:'tank',obj:{type:'hq'}}));
+ const boss=E.units(Q,'en').find(u=>u.key==='heavy'),hq0=Q.hq.en,h=E.applyDamage(Q,boss,999);
+ check('boss abattu : QG ébranlé',hq0-Q.hq.en,Math.ceil(Q.lvl.hq*E.BOSS_DOWN));check('boss abattu signalé',!!h.bossDown&&Q.bossDown,true);
+ const s0=Q.supply;E.discardHand(Q,[0]);check('défausse : +1 ravitaillement',Q.supply-s0,E.DISCARD_SUPPLY);
+ const Q2=E.newBattle({level:0,deck:[E.mkCard('ravitaillement','')],hq:60,hqMax:60,officers:[]},Math.random,E.battleCfg({type:'battle',levelIdx:0,layer:1,obj:{type:'hq'}}));
+ Q2.hand=[E.mkCard('ravitaillement','')];Q2.draw=[];Q2.discard=[];E.playOrder(Q2,0,2,0);check('ravitaillement ne se repioche pas',Q2.hand.length+'/'+Q2.discard.length,'0/1');
 }
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);
