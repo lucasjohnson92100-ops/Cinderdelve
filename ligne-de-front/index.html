@@ -918,6 +918,53 @@ body { background-color: var(--slate); background-image: radial-gradient(ellipse
 /* ---- Étape 2 ---- */
 .gc .emine { position: absolute; right: 3px; bottom: 3px; z-index: 6; font-size: .78rem; line-height: 1; padding: 2px 4px; border-radius: 6px; background: rgba(120, 20, 10, .88); color: #fff; border: 1.5px solid #0d1218; pointer-events: none; }
 .gc .emine.plan { background: rgba(120, 20, 10, .45); border-style: dashed; }
+
+/* ---- Intendance ---- */
+.shopscreen { gap: 12px; padding-bottom: 84px; min-width: 0; max-width: 100%; }
+.shopscreen > * { min-width: 0; max-width: 100%; }
+.shopscreen > .shopbar { max-width: none; }
+.shopbar { position: sticky; top: 0; z-index: 20; margin-inline: -14px; padding: 8px 12px; display: grid; gap: 6px; background: repeating-linear-gradient(90deg, #4f5b3a 0 18px, #5d6a45 18px 36px); border-bottom: 3px solid #2b2116; box-shadow: 0 6px 14px rgba(0, 0, 0, .4); }
+.shopbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px; background: radial-gradient(circle at 9px -2px, #4f5b3a 9px, transparent 10px) 0 0 / 18px 12px repeat-x; pointer-events: none; }
+.shopbar .sb1 { display: flex; align-items: center; gap: 8px; } .shopbar .sb2 { display: flex; align-items: center; gap: 8px; color: #f2e6c6; } .shopbar .sb2 > :last-child { transform: scale(.78); transform-origin: left center; }
+.shopbar .sb-hq { display: flex; align-items: center; gap: 2px; color: #f2e6c6; font-weight: 800; margin-left: auto; } .shopbar .hqmini { width: 24px; height: 28px; overflow: visible; }
+.coin.big { font-size: 1.35rem; padding: 2px 14px; color: #3b2a0d; background: linear-gradient(180deg, #ffe48a, #f2b62c); border-color: #2b2116; box-shadow: 0 3px 0 #2b2116, inset 0 2px 0 rgba(255, 255, 255, .6); }
+.qm { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-top: 6px; }
+.qm .bubble { position: relative; background: #fff8e2; color: #2b2116; border: 2px solid #2b2116; border-radius: 12px; padding: 7px 10px; display: grid; gap: 2px; font-size: .86rem; line-height: 1.3; box-shadow: 0 3px 0 rgba(43, 33, 22, .6); }
+.qm .bubble::before { content: ""; position: absolute; left: -9px; top: 22px; border: 8px solid transparent; border-right-color: #2b2116; border-left: 0; }
+.qm .bubble b { font-family: var(--font-stencil, var(--font-display)); font-weight: 400; color: #7a5230; letter-spacing: .04em; }
+.shelf { position: relative; background: linear-gradient(180deg, #6e4a2a, #5a3b20); border: 2px solid #2b1a0b; border-radius: 12px; padding: 8px 8px 12px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .12), 0 6px 0 #3a2614, 0 10px 18px rgba(0, 0, 0, .35); }
+.shelf::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .07) 0 2px, transparent 2px 9px); pointer-events: none; }
+.shelf h3 { margin: 0 0 6px; font-family: var(--font-stencil, var(--font-display)); font-weight: 400; font-size: .92rem; letter-spacing: .08em; text-transform: uppercase; color: #ffe08a; text-shadow: 0 2px 0 #2b1a0b; }
+.shelf h3 small { font-family: inherit; color: #f2e6c6; font-size: .7rem; }
+.shelf-row { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; width: 100%; padding: 4px 2px 6px; scroll-snap-type: x mandatory; }
+.shelf-row .shopcard { flex: 0 0 132px; scroll-snap-align: start; display: grid; gap: 6px; justify-items: center; }
+.shelf-row .shopcard .card { width: 132px; }
+.shopcard.sold .card, .crate.sold, .sjok.sold { filter: grayscale(.9) brightness(.7); }
+.tag { font-family: var(--font-display); font-weight: 800; font-size: .95rem; color: #3b2a0d; background: linear-gradient(180deg, #fff3c2, #f2d27a); border: 2px solid #2b2116; border-radius: 6px 6px 6px 6px; padding: 3px 12px; box-shadow: 0 2px 0 #2b2116; position: relative; }
+.tag::before { content: ""; position: absolute; left: 5px; top: 50%; width: 5px; height: 5px; margin-top: -2.5px; border-radius: 50%; background: #2b2116; }
+button.tag { cursor: pointer; padding-left: 16px; } button.tag:disabled { opacity: .55; cursor: default; }
+.crates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.crate { display: grid; justify-items: center; gap: 3px; text-align: center; background: none; border: 0; padding: 0; cursor: pointer; color: #f2e6c6; }
+.crate:disabled { cursor: default; }
+.cr-box { position: relative; width: 100%; height: 86px; border-radius: 6px; border: 2px solid #2b1a0b; background: repeating-linear-gradient(0deg, #b9864f 0 14px, #a8763f 14px 16px), #b9864f; box-shadow: inset 0 0 0 4px rgba(60, 35, 10, .35), 0 3px 0 #2b1a0b; display: grid; place-items: center; overflow: hidden; }
+.cr-box::before, .cr-box::after { content: ""; position: absolute; top: 0; bottom: 0; width: 6px; background: #7a5230; border-inline: 2px solid #2b1a0b; } .cr-box::before { left: 10px; } .cr-box::after { right: 10px; }
+.cr-art { position: relative; z-index: 1; margin-top: 10px; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, .4)); }
+.cr-stamp { position: absolute; z-index: 2; top: 5px; left: 22px; transform: rotate(-6deg); background: rgba(185, 134, 79, .9); font-family: var(--font-stencil, var(--font-display)); font-size: .72rem; letter-spacing: .12em; color: rgba(40, 20, 5, .8); border: 2px solid rgba(40, 20, 5, .7); padding: 0 5px; border-radius: 3px; }
+.crate:not(:disabled):hover .cr-box { transform: translateY(-2px) rotate(-1deg); }
+.cr-name { font-family: var(--font-display); font-weight: 800; font-size: .88rem; } .cr-tip { font-size: .68rem; opacity: .85; line-height: 1.15; }
+.sjoks { display: grid; gap: 8px; }
+.sjok { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; background: #fff8e2; color: #2b2116; border: 2px solid #2b2116; border-radius: 10px; padding: 6px 8px; }
+.sjok .tx { display: grid; gap: 1px; font-size: .78rem; line-height: 1.2; } .sjok .tx b { font-family: var(--font-display); font-size: .92rem; }
+.svcs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.svc { display: grid; justify-items: start; gap: 2px; text-align: left; background: #fff8e2; color: #2b2116; border: 2px solid #2b2116; border-radius: 10px; padding: 7px 8px; position: relative; cursor: pointer; box-shadow: 0 2px 0 #2b2116; }
+.svc:disabled { opacity: .55; cursor: default; }
+.svc .svc-ic { position: absolute; right: 7px; top: 5px; font-size: 1.1rem; color: #7a5230; }
+.svc b { font-family: var(--font-display); font-size: .92rem; } .svc > span:not(.svc-ic):not(.tag) { font-size: .72rem; line-height: 1.2; }
+.svc .tag { font-size: .8rem; padding: 1px 8px 1px 14px; margin-top: 3px; }
+.shopfoot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: flex; gap: 8px; align-items: center; justify-content: center; padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, rgba(22, 29, 40, .9), rgba(22, 29, 40, .98)); border-top: 2px solid #0d1218; }
+.shopfoot .btn.go { flex: 1; max-width: 220px; }
+.crateopen .card { animation: crateIn .45s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: calc(var(--k) * 110ms); }
+@keyframes crateIn { from { opacity: 0; transform: translateY(40px) scale(.7) rotate(-6deg); } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1758,12 +1805,36 @@ const cardPrice = c => [0, 4, 5, 6][TYPES[c.t].rar] + ((c.lv || 1) > 1 ? 2 : 0);
 const upgradeCost = card => ((card.lv || 1) === 1 ? 6 : 10);
 const canUpgrade = card => !isOrder(card) && (card.lv || 1) < 3;
 const REFORM_COST = 3;
+// Caisses de ravitaillement : une par composition ; on en ouvre une pour choisir 1 carte parmi 3
+const COMPOS = {
+  blitz: { name: 'Caisse Blitz', tip: 'véhicules à élan', cards: ['jeep', 'halftrack', 'blinde', 'antichar', 'assaut'] },
+  artillerie: { name: 'Caisse Artillerie', tip: 'marquer puis frapper de loin', cards: ['artillerie', 'observateur', 'reco', 'barrage', 'croiseur'] },
+  defense: { name: 'Caisse Défense', tip: 'tenir le front', cards: ['mitrailleuse', 'genie', 'infirmiers', 'retranchement', 'contreattaque', 'embuscade'] },
+  commandos: { name: 'Caisse Commandos', tip: 'frapper derrière les lignes', cards: ['paras', 'sabotage', 'fumigenes', 'bombardier', 'repli'] },
+  marine: { name: 'Caisse Marine', tip: 'flotte et débarquement', cards: ['destroyer', 'croiseur', 'sousmarin', 'debarquement', 'reco'] },
+};
+const CRATE_PRICE = 5;
+function openCrate(id, rng = Math.random) {
+  return shuffle(COMPOS[id].cards.slice(), rng).slice(0, 3).map(t => mkCard(t, TYPES[t].order ? '' : 'JRVN'[Math.floor(rng() * 4)]));
+}
+// Composition la plus présente dans le paquet (pour les conseils de l'intendant)
+function mainCompo(deck) {
+  let best = null, n = 0;
+  for (const [id, c] of Object.entries(COMPOS)) { const k = deck.filter(x => c.cards.includes(x.t) && x.t !== 'croiseur' && x.t !== 'reco').length; if (k > n) { n = k; best = id; } }
+  return best;
+}
 function genShop(C, rng = Math.random, rare = false) {
   const owned = new Set(C.officers);
   const jokers = shuffle(JOKERS.filter(j => !owned.has(j.id)), rng).slice(0, 2).map(j => ({ id: j.id, price: j.cost }));
-  const cards = rewardCards(rng, rare ? 2 : 1).slice(0, 2).map(c => ({ card: c, price: cardPrice(c) }));
-  return { jokers, cards, rerolls: 0 };
+  const units = [], orders = TYPE_KEYS.filter(k => TYPES[k].order && TYPES[k].rar >= (rare ? 2 : 1));
+  while (units.length < 3) { const c = rewardCards(rng, rare ? 2 : 1).find(x => !isOrder(x) && !units.some(u => u.t === x.t)); if (c) units.push(c); }
+  const ord = mkCard(orders[Math.floor(rng() * orders.length)], '');
+  const cards = [...units, ord].map(c => ({ card: c, price: cardPrice(c) }));
+  const main = mainCompo(C.deck || []), ids = Object.keys(COMPOS);
+  const crates = [...new Set([main || ids[Math.floor(rng() * ids.length)], ...shuffle(ids.slice(), rng)])].slice(0, 2).map(id => ({ id, price: CRATE_PRICE }));
+  return { jokers, cards, crates, rerolls: 0 };
 }
+const HEAL_COST = 4, HEAL_AMOUNT = 12;
 // ==/CORE==
 // ==SPRITES==
 // Personnages dessinés en SVG (style cartoon à gros contours). Chaque sprite tient dans une boîte de 64×64.
@@ -3159,26 +3230,56 @@ function toShop() {
   if (!C.shop) C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type));
   renderShop();
 }
+const CRATE_ART = { blitz: ['tank', 'J'], artillerie: ['arty', 'R'], defense: ['mgnest', 'V'], commandos: ['para', 'N'], marine: ['destroyer', 'J'] };
+function crateHTML(cr, i) {
+  const c = COMPOS[cr.id], [k, col] = CRATE_ART[cr.id];
+  return `<button class="crate ${cr.sold ? 'sold' : ''}" data-crate="${i}" ${cr.sold || C.loot < cr.price ? 'disabled' : ''}>
+    <span class="cr-box"><span class="cr-lid"></span><span class="cr-art">${spriteSVG(k, 'me', 50, col)}</span><span class="cr-stamp">${cr.id === 'artillerie' ? 'ARTI' : c.name.split(' ')[1].toUpperCase()}</span></span>
+    <span class="cr-name">${c.name}</span><span class="cr-tip">1 carte au choix parmi 3 · ${c.tip}</span>
+    <span class="tag">${cr.sold ? 'Ouverte' : '$' + cr.price}</span></button>`;
+}
+function quartermasterTip() {
+  const sh = C.shop, main = mainCompo(C.deck);
+  if (C.hq < C.hqMax * 0.6) return `Votre QG a pris des coups (${C.hq}/${C.hqMax}). L'infirmerie le remet d'aplomb pour $${HEAL_COST}.`;
+  if (main && sh.crates.some(c => c.id === main && !c.sold)) return `Votre paquet penche vers « ${COMPOS[main].tip} ». La ${COMPOS[main].name} renforcerait cette composition.`;
+  if (C.officers.length < 2 && sh.jokers.some(j => !j.sold && C.loot >= j.price)) return 'Un joker agit à chaque bataille : c’est souvent le meilleur achat au début.';
+  return 'Les ordres se jouent en plus de vos unités, sans règle de couleur : un bon complément à toute composition.';
+}
 function renderShop() {
   const sh = C.shop, full = C.officers.length >= MAX_JOKERS, rc = 2 + sh.rerolls;
+  if (!sh.crates) sh.crates = [];
+  const cards = sh.cards.map((c, i) => `<div class="shopcard ${c.sold ? 'sold' : ''}">${cardHTML(c.card, 'pick')}<button class="tag buy" data-buyc="${i}" ${c.sold || C.loot < c.price ? 'disabled' : ''}>${c.sold ? 'Vendu' : '$' + c.price}</button></div>`).join('');
   const jrows = sh.jokers.map((j, i) => {
     const d = JOKERS.find(x => x.id === j.id);
-    return `<div class="off-item shopj ${j.sold ? 'sold' : ''}">${officerSVG(j.id, 48)}<span class="tx"><b>${d.name}</b><span class="small muted">${d.desc}</span></span>
-      <button class="btn buy" data-buyj="${i}" ${j.sold || full || C.loot < j.price ? 'disabled' : ''}>${j.sold ? 'Vendu' : '$' + j.price}</button></div>`;
+    return `<div class="sjok ${j.sold ? 'sold' : ''}">${officerSVG(j.id, 46)}<span class="tx"><b>${d.name}</b><span>${d.desc}</span></span><button class="tag buy" data-buyj="${i}" ${j.sold || full || C.loot < j.price ? 'disabled' : ''}>${j.sold ? 'Vendu' : full ? 'Plein' : '$' + j.price}</button></div>`;
   }).join('');
-  const crows = sh.cards.map((c, i) => `<div class="shopcard ${c.sold ? 'sold' : ''}">${cardHTML(c.card, 'pick')}<button class="btn buy" data-buyc="${i}" ${c.sold || C.loot < c.price ? 'disabled' : ''}>${c.sold ? 'Vendu' : '$' + c.price}</button></div>`).join('');
-  const canTrain = C.deck.some(canUpgrade);
-  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Intendance</span><span class="coin num">$${C.loot}</span></div>
-    <div class="eyebrow">Vos jokers (${C.officers.length}/${MAX_JOKERS})</div>${jokerBar()}
-    <div class="eyebrow">Jokers en vente</div><div class="officers">${jrows}</div>
-    <div class="eyebrow">Cartes en vente</div><div class="cardrow">${crows}</div>
-    <div class="eyebrow">Atelier</div>
-    <button class="off-item plain" data-act="train" ${canTrain ? '' : 'disabled'}><span class="tx"><b>Entraîner une carte</b><span class="small muted">Améliore une carte de votre paquet (jusqu'au niveau 3) : plus d'hommes ou plus de dégâts. À partir de $${Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99)}.</span></span></button>
-    <button class="off-item plain" data-act="supply" ${(C.supplyBonus || 0) >= MAX_SUPPLY_BONUS || C.loot < supplyBonusCost(C) ? 'disabled' : ''}><span class="tx"><b>Ravitaillement +1 par tour · ${(C.supplyBonus || 0) >= MAX_SUPPLY_BONUS ? 'maximum atteint' : '$' + supplyBonusCost(C)}</b><span class="small muted">Définitif : vous commencez chaque tour avec 1 point de ravitaillement en plus (actuellement +${C.supplyBonus || 0}, maximum +${MAX_SUPPLY_BONUS}).</span></span></button>
-    <button class="off-item plain" data-act="reform" ${C.deck.length > 8 ? '' : 'disabled'}><span class="tx"><b>Réformer une carte · $${REFORM_COST}</b><span class="small muted">Retire une carte du paquet pour piocher plus souvent les autres.</span></span></button>
-    <div class="row" style="justify-content:space-between"><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span>
-      <button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''}>Relancer $${rc}</button></div>
-    <button class="btn go" data-act="leave" style="padding-block:15px">Quitter l'intendance</button></div>`;
+  const trainFrom = Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), supMax = (C.supplyBonus || 0) >= MAX_SUPPLY_BONUS;
+  const svc = (act, icon, title, sub, price, ok) => `<button class="svc" data-act="${act}" ${ok ? '' : 'disabled'}><span class="svc-ic">${icon}</span><b>${title}</b><span>${sub}</span><span class="tag">${price}</span></button>`;
+  app.innerHTML = `<div class="stack shopscreen">
+    <div class="shopbar"><div class="sb1"><span class="ribbon sm">Intendance</span><span class="sb-hq"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg>${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></div>
+      <div class="sb2"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div></div>
+    <div class="qm">${officerSVG('intendant', 58)}<div class="bubble"><b>L'intendant</b><span>${quartermasterTip()}</span></div></div>
+    <section class="shelf"><h3>Recrues et ordres</h3><div class="shelf-row">${cards}</div></section>
+    <section class="shelf"><h3>Caisses de ravitaillement</h3><div class="crates">${sh.crates.map(crateHTML).join('')}</div></section>
+    <section class="shelf"><h3>État-major ${full ? '<small>(emplacements pleins)</small>' : ''}</h3><div class="sjoks">${jrows}</div></section>
+    <section class="shelf"><h3>Services</h3><div class="svcs">
+      ${svc('train', '★', 'Entraîner', 'Une carte gagne un niveau', 'dès $' + trainFrom, C.deck.some(canUpgrade) && C.loot >= trainFrom)}
+      ${svc('supply', '⛽', 'Ravitaillement', supMax ? 'Maximum atteint (+3)' : `+1 par tour, définitif (+${C.supplyBonus || 0})`, supMax ? '—' : '$' + supplyBonusCost(C), !supMax && C.loot >= supplyBonusCost(C))}
+      ${svc('shopheal', '✚', 'Infirmerie', `QG +${HEAL_AMOUNT} PV`, '$' + HEAL_COST, C.hq < C.hqMax && C.loot >= HEAL_COST)}
+      ${svc('reform', '✂', 'Réformer', 'Retirer une carte', '$' + REFORM_COST, C.deck.length > 8 && C.loot >= REFORM_COST)}
+    </div></section>
+    <div class="shopfoot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouvelles recrues et nouveaux jokers">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></div>
+  </div>`;
+}
+// Ouvrir une caisse : 3 cartes de la composition, on en garde une
+function openCrateModal(i) {
+  const cr = C.shop.crates[i]; if (!cr || cr.sold || C.loot < cr.price) return;
+  C.loot -= cr.price; cr.sold = true; SFX.play('coins');
+  window.__crate = openCrate(cr.id);
+  openModal(`<div class="hd"><span class="ribbon">${COMPOS[cr.id].name}</span></div><p class="small">Gardez une carte : elle rejoint votre paquet.</p>
+    <div class="cardrow crateopen">${window.__crate.map((c, k) => cardHTML(c, 'pick', `data-cratepick="${k}" style="--k:${k}"`)).join('')}</div>
+    <button class="pill" data-act="cratenone" style="justify-self:center">Ne rien garder</button>`);
+  renderShop();
 }
 function toCamp() {
   C.phase = 'camp';
@@ -3241,6 +3342,8 @@ document.addEventListener('click', e => {
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
   const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast('Joker acheté.'); return renderShop(); }
+  const crb = t.closest('[data-crate]'); if (crb && !crb.disabled) return openCrateModal(+crb.dataset.crate);
+  const cp = t.closest('[data-cratepick]'); if (cp && window.__crate) { const c = window.__crate[+cp.dataset.cratepick]; C.deck.push({ ...c }); window.__crate = null; closeModal(); SFX.play('buy'); toast(`${TYPES[c.t].name} rejoint votre paquet.`); return renderShop(); }
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
   const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
   const jk = t.closest('[data-joker]'); if (jk) return jokerModal(+jk.dataset.joker);
@@ -3297,7 +3400,9 @@ document.addEventListener('click', e => {
   else if (a === 'supply') { const c = supplyBonusCost(C); if (C.loot < c || !addSupplyBonus(C)) return; C.loot -= c; SFX.play('jokerbuy'); renderShop(); }
   else if (a === 'reform') deckModal('remove');
   else if (a === 'leave') finishNode();
-  else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; SFX.play('reroll'); const n = C.shop.rerolls + 1; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; renderShop(); }
+  else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; SFX.play('reroll'); const n = C.shop.rerolls + 1, crates = C.shop.crates; C.shop = genShop(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.rerolls = n; C.shop.crates = crates; renderShop(); }
+  else if (a === 'shopheal') { if (C.loot < HEAL_COST || C.hq >= C.hqMax) return; C.loot -= HEAL_COST; C.hq = Math.min(C.hqMax, C.hq + HEAL_AMOUNT); SFX.play('heal'); toast(`QG soigné : ${C.hq}/${C.hqMax}.`); renderShop(); }
+  else if (a === 'cratenone') { window.__crate = null; closeModal(); }
 });
 document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]') && Date.now() > (window.__noFastUntil || 0)) fast = true; });
 
