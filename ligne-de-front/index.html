@@ -851,6 +851,23 @@ body { background-color: var(--slate); background-image: radial-gradient(ellipse
 .title::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 140px; background: linear-gradient(180deg, transparent, rgba(20, 30, 15, .45)); pointer-events: none; }
 
 /* ---- Plateau en secteurs ---- */
+.hc .kpin { position: absolute; left: -7px; bottom: 4px; z-index: 4; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: rgba(255, 255, 255, .85); border: 2px solid var(--ink); filter: grayscale(1); opacity: .55; cursor: pointer; }
+.hc .kpin.on { filter: none; opacity: 1; background: #ffd24a; box-shadow: 0 2px 0 var(--ink); }
+.hc.kept { outline: 3px solid #ffd24a; outline-offset: -2px; }
+.supply .carry { color: #ffd24a; font-weight: 800; }
+.aimsvg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; overflow: visible; }
+.aimsvg line { stroke: #e5543f; stroke-width: 3; stroke-dasharray: 7 5; stroke-linecap: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 0 rgba(27, 37, 64, .7)); animation: aimdash 1s linear infinite; }
+.aimsvg line.bait { stroke: #ffb23e; }
+.aimsvg line.miss { stroke: rgba(255, 255, 255, .7); stroke-dasharray: 3 6; animation: none; }
+.aimsvg circle { fill: #e5543f; stroke: #1b2540; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.aimsvg circle.miss { fill: rgba(255, 255, 255, .6); }
+@keyframes aimdash { to { stroke-dashoffset: -24; } }
+.aimm { position: absolute; right: 2px; bottom: 2px; z-index: 6; font-family: var(--font-display); font-weight: 700; font-size: .7rem; color: #fff; background: #e5543f; border: 2px solid var(--ink); border-radius: 99px; padding: 0 5px; line-height: 1.25; pointer-events: none; animation: aimpulse 1.2s ease-in-out infinite; }
+.aimsrc { position: absolute; left: 3px; top: 2px; z-index: 6; font-size: .8rem; color: #fff; background: #e5543f; border: 2px solid var(--ink); border-radius: 50%; width: 18px; height: 18px; display: grid; place-items: center; line-height: 1; pointer-events: none; }
+.gc.aimed { box-shadow: inset 0 0 0 3px rgba(229, 84, 63, .85); }
+.hqbar.aimed { box-shadow: 0 0 0 3px #e5543f; animation: aimpulse 1.2s ease-in-out infinite; }
+@keyframes aimpulse { 50% { filter: brightness(1.25); } }
+@media (prefers-reduced-motion: reduce) { .aimsvg line, .aimm, .hqbar.aimed { animation: none; } }
 .bgrid .nml { position: absolute; left: 0; right: 0; top: 50%; height: 0; border-top: 3px dashed rgba(60, 40, 20, .75); z-index: 4; pointer-events: none; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .35)); }
 .bgrid .nml::before { content: "No man's land"; position: absolute; right: 6px; top: -9px; font: 700 .55rem/1 var(--font-stencil, sans-serif); letter-spacing: .08em; color: #f2e6c6; background: rgba(43, 26, 11, .82); padding: 2px 5px; border-radius: 4px; text-transform: uppercase; }
 .gc.r0, .gc.r1 { filter: saturate(.9) brightness(.97); }
@@ -1180,7 +1197,7 @@ const has = (S, id) => S.officers.includes(id);
 
 // ---- Le plateau : 5 secteurs (colonnes) au terrain fixe, sans déplacement ----
 // Ligne 0 = arrière ennemi, 1 = front ennemi, 2 = votre front, 3 = votre arrière. Chaque QG est derrière son camp.
-const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, ENEMY_GROWTH = 0.06, BOSS_DOWN = 0.5;
+const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_KEEP = 2, MAX_CARRY = 3, ENEMY_GROWTH = 0.06, ENEMY_DMG = 1.5, ENEMY_DMG_GROWTH = 0.1, BOSS_DOWN = 0.5;
 const ME_ROWS = [2, 3], FRONT = { en: 1, me: 2 }, REAR = { en: 0, me: 3 };
 const TERRAIN = {
   route: { name: 'Route', cover: 0, txt: 'Terrain dégagé : toutes les unités y passent.' },
@@ -1200,7 +1217,9 @@ function terrainMult(cols, ter) {
   for (const ch of cols || '') { const t = COLOR_TERRAIN[ch]; if (!t) continue; if (t.fort === ter) m += 0.5; if (t.faible === ter) m -= 0.25; }
   return Math.max(0.5, Math.min(2, m));
 }
-const unitMult = (S, u) => (u.side === 'me' && u.land && u.cols && S.grid[u.r] ? terrainMult(u.cols, S.grid[u.r][u.c]) : 1);
+// Multiplicateur de dégâts : terrain fort/faible pour vous ; pour l'ennemi, puissance de feu qui croît avec le niveau
+const enemyPower = S => Math.min(ENEMY_DMG, 1 + 0.35 * (S.level || 0)) + ENEMY_DMG_GROWTH * (S.level || 0);
+const unitMult = (S, u) => (u.side === 'en' ? enemyPower(S) : u.side === 'me' && u.land && u.cols && S.grid[u.r] ? terrainMult(u.cols, S.grid[u.r][u.c]) : 1);
 const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const dist = (r1, c1, r2, c2) => Math.abs(r1 - r2) + Math.abs(c1 - c2);
 const coverOf = (S, u) => (u.land && S.grid[u.r] ? Math.min(0.75, (TERRAIN[S.grid[u.r][u.c]].cover || 0) + (u.dig || 0)) : 0);
@@ -1299,11 +1318,13 @@ function villageHolder(S, c, list = S.units) {
 }
 const villageIncome = S => S.grid[0].reduce((n, t, c) => n + (t === 'village' && villageHolder(S, c) === 'me' ? 1 : 0), 0);
 function startTurn(S) {
-  S.supply = BASE_SUPPLY + (S.supplyBonus || 0) + villageIncome(S) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0);
+  S.supply = BASE_SUPPLY + (S.supplyBonus || 0) + villageIncome(S) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0) + (S.carry || 0);
+  S.carried = S.carry || 0; S.carry = 0;
   S.flags = { used: false, deployed: [] }; S.smoke = []; S.counterCols = [];
   S.units.forEach(u => { u.attacked = false; });
   applyMarks(S);
   drawCards(S, 6 + (has(S, 'ashby') ? 1 : 0));
+  computeIntents(S);
 }
 function drawCards(S, n) {
   for (let i = 0; i < n; i++) {
@@ -1329,7 +1350,8 @@ function spawnEnemy(S, key, r, c) {
 }
 // Les unités au contact (portée 1) avancent d'elles-mêmes au front de leur secteur s'il est libre
 function advance(S, side, steps) {
-  for (const u of units(S, side).filter(u => u.land && u.r === REAR[side] && u.rng[1] <= 1 && u.dmg > 0)) {
+  // une unité repliée ce tour reste à l'arrière
+  for (const u of units(S, side).filter(u => u.land && u.r === REAR[side] && u.rng[1] <= 1 && u.dmg > 0 && u.hold !== S.turn)) {
     if (!S.units.includes(u) || unitAt(S, FRONT[side], u.c)) continue;
     const from = [u.r, u.c]; u.r = FRONT[side];
     if (steps) steps.push({ ph: S.phase, moved: u.uid, path: [from, [u.r, u.c]], hits: [], snap: snap(S) });
@@ -1485,7 +1507,7 @@ function playOrder(S, hi, r, c) {
     const u = unitAt(S, r, c); if (!u) return res;
     if (card.t === 'retranchement') u.dig = Math.min(0.6, (u.dig || 0) + 0.3);
     else {
-      if (u.r === FRONT.me && !unitAt(S, REAR.me, c) && canStand(u.cls, S.grid[REAR.me][c])) { res.from = [u.r, u.c]; u.r = REAR.me; }
+      if (u.r === FRONT.me && !unitAt(S, REAR.me, c) && canStand(u.cls, S.grid[REAR.me][c])) { res.from = [u.r, u.c]; u.r = REAR.me; u.hold = S.turn; }
       u.hp = Math.min(u.hpMax, u.hp + Math.ceil((u.hpMax - u.hp) / 2));
     }
     res.uid = u.uid;
@@ -1521,7 +1543,14 @@ function planDeploy(S, idxs) {
   }
   return { ok: true, cost: S.supply - supply };
 }
-function discardCard(S, card) { if (card.parts) S.discard.push(...card.parts); else S.discard.push(card); }
+function discardCard(S, card) { delete card.kept; if (card.parts) S.discard.push(...card.parts); else S.discard.push(card); }
+// Épingler une carte pour la garder au tour suivant (2 au maximum)
+function toggleKeep(S, hi) {
+  const c = S.hand[hi]; if (!c || S.over) return false;
+  if (c.kept) { c.kept = false; return true; }
+  if (S.hand.filter(x => x.kept).length >= MAX_KEEP) return false;
+  c.kept = true; return true;
+}
 
 // ---- Fusion de cartes en main : autant de cartes du même type qu'on veut ----
 const canFuse = (a, b) => !!a && !!b && a !== b && a.t === b.t && !isOrder(a);
@@ -1530,6 +1559,8 @@ function fuseCards(S, i, j) {
   if (S.over || !canFuse(a, b)) return null;
   const parts = [...(a.parts || [a]), ...(b.parts || [b])];
   const card = { t: a.t, c: normCols(a.c + b.c), lv: Math.max(...parts.map(p => p.lv || 1)), parts };
+  if (a.kept || b.kept) card.kept = true;
+  parts.forEach(p => { delete p.kept; });
   S.hand.splice(Math.max(i, j), 1); S.hand.splice(Math.min(i, j), 1, card);
   return card;
 }
@@ -1714,20 +1745,64 @@ function combat(S, side, steps) {
   }
 }
 // Tour ennemi : les unités au contact avancent, puis chacune tire sur la cible la plus proche (ou sur votre QG si son secteur est vide)
+// L'ennemi frappe d'abord la cible qu'il a annoncée, puis le train roule et l'infanterie avance
 function enemyMoves(S, steps) {
-  rollTrain(S, steps);
-  advance(S, 'en', steps);
   const order = units(S, 'en').filter(u => !u.fresh).sort((a, b) => b.r - a.r || a.c - b.c);
   for (const u of order) {
     if (S.over) return;
     if (!S.units.includes(u)) continue;
-    attackUnit(S, u, steps);
+    enemyStrike(S, u, steps);
   }
+  if (S.over) return;
+  rollTrain(S, steps);
+  advance(S, 'en', steps);
+}
+// ---- Intentions ennemies : chaque unité annonce sa cible un tour à l'avance ----
+// Visée sur une case : si votre unité n'y est plus (repli, fumée, unité abattue), le tir est perdu.
+// Visée sur votre QG : une unité terrestre posée dans le secteur sert d'appât et prend le tir à sa place.
+function strikeDmg(S, u, t) {
+  const sh = menNow(u);
+  if (!t) return Math.round(sh * (u.dmg + combinedBonus(S, u)) * unitMult(S, u));
+  return Math.min(t.hp, Math.ceil(sh * shotDmg(S, u, t) * unitMult(S, u) * (1 - coverOf(S, t))));
+}
+function chooseIntent(S, u) {
+  if (u.dmg <= 0) return null;
+  const ts = targetsFrom(S, u, u.r, u.c), hq = hqInRange(S, u, u.r, u.c);
+  const kills = ts.filter(t => strikeDmg(S, u, t) >= t.hp && shotDmg(S, u, t) > 0);
+  if (kills.length) { const t = kills.reduce((a, b) => (b.hpMax > a.hpMax ? b : a)); return { r: t.r, c: t.c }; }
+  // à la première bataille, l'ennemi vise vos unités avant votre QG
+  if (hq && S.level > 0) return { hq: true };
+  const hurt = ts.filter(t => shotDmg(S, u, t) > 0);
+  if (!hurt.length) return hq ? { hq: true } : null;
+  const t = u.kw.includes('weak') || u.kw.includes('heavy') ? pickTarget(S, u, hurt, 0) : hurt.reduce((a, b) => (strikeDmg(S, u, b) > strikeDmg(S, u, a) ? b : a));
+  return { r: t.r, c: t.c };
+}
+function computeIntents(S) { units(S, 'en').forEach(u => { u.intent = chooseIntent(S, u); }); }
+// Cible visée par une intention, telle qu'elle est maintenant : {t} (unité), {hq}, ou {miss}
+function intentTarget(S, u) {
+  const it = u.intent; if (!it) return null;
+  if (it.hq) {
+    if (hqInRange(S, u, u.r, u.c)) return { hq: true };
+    const bait = targetsFrom(S, u, u.r, u.c).filter(t => t.c === u.c);
+    return bait.length ? { t: bait.reduce((a, b) => (b.r < a.r ? b : a)), bait: true } : { miss: true };
+  }
+  const t = unitAt(S, it.r, it.c);
+  return t && t.side === 'me' && targetsFrom(S, u, u.r, u.c).includes(t) ? { t } : { miss: true };
+}
+function enemyStrike(S, u, steps) {
+  const tg = intentTarget(S, u);
+  if (!tg) return false;
+  if (tg.miss) { steps.push({ ph: 'en', whiff: u.uid, at: u.intent.hq ? null : [u.intent.r, u.intent.c], hits: [], snap: snap(S) }); return false; }
+  return tg.hq ? attackUnit(S, u, steps, { hq: true }) : attackUnit(S, u, steps, { target: tg.t });
 }
 function endTurn(S) {
   const steps = [];
   S.phase = 'me';
-  S.hand.splice(0).forEach(c => discardCard(S, c));
+  // réserve : jusqu'à 2 cartes épinglées restent en main, et jusqu'à 3 points de ravitaillement passent au tour suivant
+  S.carry = Math.min(MAX_CARRY, Math.max(0, S.supply));
+  const kept = S.hand.filter(c => c.kept).slice(0, MAX_KEEP);
+  S.hand.splice(0).forEach(c => { if (!kept.includes(c)) discardCard(S, c); });
+  S.hand = kept; kept.forEach(c => { c.kept = false; });
   units(S, 'me').forEach(u => { u.fresh = false; });
   advance(S, 'me', steps);
   // Soutien des infirmiers : 4 PV pour eux et leurs voisins
@@ -1768,7 +1843,7 @@ function endTurn(S) {
 // ---- Boss : chacun a sa mécanique ; deux sont tirés au sort à chaque campagne ----
 const BOSSES = {
   tank: { name: 'Le Mammouth', unit: 'heavy', desc: "Char lourd au blindage 3. Sa radio guide l'artillerie : chaque tour, un obus de 10 vise votre unité la plus solide." },
-  train: { name: 'Train blindé', unit: 'train', desc: "Il roule d'un secteur à l'autre à chaque tour ennemi et frappe le secteur qu'il atteint. Ni forêt ni rivière." },
+  train: { name: 'Train blindé', unit: 'train', desc: "Il frappe, puis roule vers le secteur suivant à chaque tour ennemi. Ni forêt ni rivière." },
   battery: { name: 'Batterie côtière', unit: 'battery', desc: "Fortin d'artillerie à l'arrière, portée 2 à 3. Tant qu'elle tient, le QG ennemi ne prend que la moitié des dégâts." },
 };
 function spawnBoss(S, kind) {
@@ -2600,6 +2675,7 @@ function startBattle(node) {
 const myUnits = () => S.units.filter(u => u.side === 'me');
 const TUTO = [
   { id: 'plan', stage: 1, info: true, sel: '.gu.ghost', text: "Les silhouettes en pointillé sont les renforts ennemis du prochain tour : l'ennemi annonce toujours ses coups." },
+  { id: 'aim', stage: 1, info: true, sel: '.aimm, .hqbar.aimed', when: () => units(S, 'en').some(u => u.intent), text: 'Les flèches rouges montrent ce que chaque ennemi frappera à son tour (⌖ −X : dégâts prévus). Pour l’en empêcher : abattez-le avant, repliez la cible, enfumez le secteur, ou posez une unité dans le secteur de votre QG pour servir d’appât.' },
   { id: 'deploy', stage: 1, sel: '#hand', when: () => !myUnits().length, done: () => myUnits().length > 0, text: 'Glissez une carte de votre main sur une case bleue de vos deux lignes (en bas) pour déployer vos troupes.' },
   { id: 'sleep', stage: 1, sel: '#bend', when: () => myUnits().some(u => u.fresh), done: () => S.turn >= 2, text: 'Une unité qui vient d’arriver dort un tour (zz). Posez d’autres cartes tant qu’il vous reste du ravitaillement, puis touchez « Fin du tour ».' },
   { id: 'attack', stage: 1, sel: '.gu.me', when: () => myUnits().some(u => canAttack(S, u) && attackOptions(S, u).units.length), done: () => myUnits().some(u => u.attacked) || S.kills > 0, text: 'À l’attaque ! Touchez une de vos unités, puis un ennemi cerclé de rouge. S’il survit, il riposte.' },
@@ -2608,6 +2684,7 @@ const TUTO = [
   { id: 'terrain', stage: 2, info: true, sel: '.gc .ltag', text: 'Chaque couleur a un terrain fort (▲ +50 % de dégâts) et un terrain faible (▼ −25 %). Les pastilles en bas de chaque secteur le rappellent, et les cases l’affichent quand vous glissez une carte.' },
   { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes beiges sont des ordres : barrage, fumigènes, ravitaillement… Glissez-les sur leur cible, en plus de vos unités.' },
   { id: 'discard', stage: 2, info: true, sel: '[data-act=discard]', text: 'Main mal fichue ? Le bouton ⟲ remplace jusqu’à 5 cartes et donne +1 ravitaillement ce tour, 3 fois par bataille.' },
+  { id: 'keep', stage: 2, info: true, sel: '#hand .kpin', text: 'Réserve : touchez l’épingle 📌 d’une carte pour la garder au tour suivant (2 au plus). Le ravitaillement non dépensé est aussi reporté, jusqu’à 3 points : de quoi préparer un gros coup.' },
   { id: 'synergy', stage: 2, info: true, sel: '.gu .gmk, .gu .gac', when: () => S.units.some(u => u.marked) || myUnits().some(u => combinedBonus(S, u)), text: 'Synergies : ◎ une cible marquée prend +2 par tir ; AC (armes combinées) : infanterie et véhicule dans le même secteur ont +1 chacun. Le « ? » en haut détaille tout.' },
 ];
 const tutoStage = () => (!C || !C.pos ? 0 : C.pos.layer === 0 ? 1 : C.pos.layer === 1 ? 2 : 0);
@@ -2721,9 +2798,9 @@ function unitCellHTML(u, sel, tgt) {
     ${u.marked ? '<span class="gmk" title="Marqué : +2 dégâts par tir">◎</span>' : ''}${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${u.side === 'me' && S && S.units.includes(u) && combinedBonus(S, u) ? '<span class="gac" title="Armes combinées : +1 dégât par tir">AC</span>' : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
     <span class="gst"><i class="n">${men}</i><i class="h ${low} ${u.land ? '' : 'tt'}">${hp}</i></span></button>`;
 }
-function hqBar(side, label, cur, max, extra, tgt) {
+function hqBar(side, label, cur, max, extra, tgt, aimed) {
   const pct = Math.max(0, Math.min(100, (cur / max) * 100));
-  return `<div class="hq ${side} hqbar compact fort ${tgt ? 'tgt' : ''}" ${tgt ? 'data-hqtgt="1"' : ''} ${side === 'en' ? 'data-hqdrop="1"' : ''}><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt(side, Math.max(0, cur) / max)}</svg><span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
+  return `<div class="hq ${side} hqbar compact fort ${tgt ? 'tgt' : ''} ${aimed ? 'aimed' : ''}" ${tgt ? 'data-hqtgt="1"' : ''} ${side === 'en' ? 'data-hqdrop="1"' : ''}><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt(side, Math.max(0, cur) / max)}</svg><span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
 }
 // Terrain fort (▲) ou faible (▼) d'une carte sur un secteur
 const tmodOf = (cols, ter) => { const m = terrainMult(cols, ter); return m > 1 ? 'up' : m < 1 ? 'dn' : ''; };
@@ -2753,17 +2830,28 @@ function boardHTML(view, live) {
   const ghosts = new Map(), shells = new Map();
   if (live) S.plan.forEach(p => { if (p.k === 'deploy') ghosts.set(p.r + ',' + p.c, p.key); else if (p.r !== null) shells.set(p.r + ',' + p.c, (shells.get(p.r + ',' + p.c) || 0) + p.dmg); });
   const hqShell = live ? S.plan.filter(p => p.k === 'shell' && p.r === null).reduce((s, p) => s + p.dmg, 0) : 0;
+  // intentions ennemies : dégâts prévus sur chaque case visée, et flèches de visée
+  const aims = new Map(), arrows = []; let hqAim = 0;
+  if (live && !S.over) units(S, 'en').forEach(u => {
+    const tg = intentTarget(S, u); if (!tg) return;
+    if (tg.t) { const k = tg.t.r + ',' + tg.t.c; aims.set(k, (aims.get(k) || 0) + strikeDmg(S, u, tg.t)); arrows.push({ u, to: [tg.t.r, tg.t.c], bait: tg.bait }); }
+    else if (tg.hq) { hqAim += strikeDmg(S, u, null); arrows.push({ u, to: null }); }
+    else arrows.push({ u, to: u.intent.hq ? null : [u.intent.r, u.intent.c], miss: true });
+  });
+  const aimSrc = new Set(arrows.map(a => a.u.r + ',' + a.u.c));
   let cells = '';
   for (let r = 0; r < GH; r++) for (let c = 0; c < GW; c++) {
     const k = r + ',' + c, t = S.grid[r][c], u = view.units.find(x => x.r === r && x.c === c);
     const tm = dep && dep.has(k) && TYPES[depCard.t].land ? tmodOf(depCard.c, t) : '';
     const smoked = live && r >= 2 && S.smoke.includes(c), ctr = live && r >= 2 && S.counterCols.includes(c);
-    const cls = ['gc', 't-' + t, 'r' + r, smoked ? 'smoked' : '', ctr ? 'ctr' : '', (r + c) % 2 ? 'alt' : '', rng && rng.has(k) ? 'inrng' : '', threat && threat.has(k) ? 'threat' : '', dep && dep.has(k) ? 'dep' : '', tm ? 'tm-' + tm : '', shells.has(k) ? 'shelled' : ''].filter(Boolean).join(' ');
+    const cls = ['gc', 't-' + t, 'r' + r, smoked ? 'smoked' : '', ctr ? 'ctr' : '', (r + c) % 2 ? 'alt' : '', rng && rng.has(k) ? 'inrng' : '', threat && threat.has(k) ? 'threat' : '', dep && dep.has(k) ? 'dep' : '', tm ? 'tm-' + tm : '', shells.has(k) ? 'shelled' : '', aims.has(k) ? 'aimed' : ''].filter(Boolean).join(' ');
     let inner = groundSVG(S.grid, r, c) + decoSVG(S.grid, r, c, t === 'village' ? villageHolder(S, c, view.units) : '', 1);
     if (u) { const tg = !!(opt && opt.units.includes(u)); inner += unitCellHTML(u, u.uid === selU, tg); if (tg && selected.land && !selected.kw.includes('bomb') && (d => d >= u.rng[0] && d <= u.rng[1])(dist(selected.r, selected.c, u.r, u.c))) inner += '<span class="grip" title="Peut riposter">↺</span>'; }
     else if (ghosts.has(k)) inner += ghostHTML(ghosts.get(k));
     if (u && u.uid === selU) inner += '<span class="cursor"><i></i><i></i><i></i><i></i></span>';
     if (shells.has(k)) inner += `<span class="shmark">−${shells.get(k)}</span>`;
+    if (aims.has(k)) inner += `<span class="aimm" title="Visé au prochain tour ennemi">⌖ −${aims.get(k)}</span>`;
+    if (aimSrc.has(k)) inner += '<span class="aimsrc" aria-hidden="true">⌖</span>';
     if (tm) inner += `<span class="tmod ${tm}">${tmodTxt(terrainMult(depCard.c, t))}</span>`;
     if (r === GH - 1) inner += laneTag(t);
     if (live && r === FRONT.en && S.traps[c]) inner += `<span class="trapm" title="${S.traps[c].mine ? 'Mines' : ''}${S.traps[c].mine && S.traps[c].half ? ' et ' : ''}${S.traps[c].half ? 'Embuscade' : ''}">${S.traps[c].mine ? '✹' : ''}${S.traps[c].half ? '⚑' : ''}</span>`;
@@ -2773,7 +2861,10 @@ function boardHTML(view, live) {
     cells += `<div class="${cls}" data-r="${r}" data-c="${c}">${inner}</div>`;
   }
   const enHQ = S.obj.type === 'hold' ? hqBar('en', 'À tenir', Math.min(S.obj.n, S.turn) - 1, S.obj.n, `Tour ${Math.min(S.obj.n, S.turn)}/${S.obj.n}`) : hqBar('en', hqShielded(S) ? 'QG ennemi · protégé' : 'QG ennemi', view.hq.en, S.lvl.hq, '', !!(opt && opt.hq));
-  return `${enHQ}<div class="bgrid" id="bgrid" style="grid-template-columns:repeat(${GW},minmax(0,1fr));grid-template-rows:repeat(${GH},minmax(0,1fr))">${cells}<span class="nml" aria-hidden="true"></span><span class="cloudsh" aria-hidden="true"></span></div>${hqBar('me', 'Votre QG' + (hqShell ? ` · obus −${hqShell}` : ''), view.hq.me, C.hqMax)}`;
+  const X = c => c * 100 + 50, Y = r => r * 100 + 50;
+  const aimSvg = arrows.length ? `<svg class="aimsvg" viewBox="0 0 ${GW * 100} ${GH * 100}" preserveAspectRatio="none" aria-hidden="true">${arrows.map(a => { const x1 = X(a.u.c), y1 = Y(a.u.r) + 22, x2 = a.to ? X(a.to[1]) : X(a.u.c), y2 = a.to ? Y(a.to[0]) - 26 : GH * 100 - 4; return `<line class="${a.miss ? 'miss' : a.bait ? 'bait' : ''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><circle class="${a.miss ? 'miss' : ''}" cx="${x2}" cy="${y2}" r="7"/>`; }).join('')}</svg>` : '';
+  const meLabel = ['Votre QG', hqAim ? `visé −${hqAim}` : '', hqShell ? `obus −${hqShell}` : ''].filter(Boolean).join(' · ');
+  return `${enHQ}<div class="bgrid" id="bgrid" style="grid-template-columns:repeat(${GW},minmax(0,1fr));grid-template-rows:repeat(${GH},minmax(0,1fr))">${cells}${aimSvg}<span class="nml" aria-hidden="true"></span><span class="cloudsh" aria-hidden="true"></span></div>${hqBar('me', meLabel, view.hq.me, C.hqMax, '', false, hqAim > 0)}`;
 }
 
 const cardCtx = () => (S && document.getElementById('hand') ? S : { officers: C ? C.officers : [] });
@@ -2799,7 +2890,7 @@ function cardHTML(card, extra = '', attrs = '') {
 }
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${card.kept ? 'kept' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span><span class="kpin ${card.kept ? 'on' : ''}" data-keep="1" role="button" aria-label="${card.kept ? 'Ne plus garder' : 'Garder pour le tour suivant'}">📌</span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>
     <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
@@ -2830,7 +2921,7 @@ function hintText() {
   if (placing) return placing.queue.length ? `Placez ${TYPES[placing.queue[0].t].name.toLowerCase()} ${colorName(placing.queue[0].c).toLowerCase()} (${placing.total - placing.queue.length + 1}/${placing.total}) : touchez une case bleue.` : '';
   if (selU !== null) {
     const u = findUnit(S, selU); if (!u) return '';
-    if (u.side === 'en') return `${u.name} (ennemi) : la zone rouge montre où ils peuvent frapper au prochain tour.`;
+    if (u.side === 'en') { const tg = intentTarget(S, u); return `${u.name} (ennemi) : ${!tg ? 'aucune cible pour l’instant.' : tg.miss ? 'sa cible n’est plus là, son tir sera perdu.' : tg.hq ? `vise votre QG (−${strikeDmg(S, u, null)}). Posez une unité terrestre dans ce secteur pour lui servir d’appât.` : `vise ${tg.t.name} (−${strikeDmg(S, u, tg.t)})${tg.bait ? ', l’appât' : ''}. Abattez-le, repliez la cible ou enfumez le secteur.`}`; }
     if (u.side === 'me' && canAttack(S, u)) { const o = attackOptions(S, u); return `${u.name} : touchez ${o.units.length ? 'un ennemi cerclé de rouge' : 'le QG ennemi'} pour attaquer.${o.units.length ? ' ↺ = il ripostera s\'il survit.' : ''}`; }
     if (u.attacked) return `${u.name} a déjà attaqué ce tour.`;
     if (u.fresh) return `${u.name} vient d'arriver : il attaquera au prochain tour.`;
@@ -2886,7 +2977,7 @@ function renderBattle() {
     <div class="board" id="board">${boardHTML({ units: S.units, owner: S.owner, hq: S.hq }, true)}</div>
     <div class="bt-hint" id="hint"><span class="ht">${hint}</span>${extra}</div>
     <div class="hand fan ${dealNow ? 'deal' : ''}" id="hand" style="height:${ch + 34}px">${hand}</div>
-    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
+    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried} réserve</b>` : ''}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes">⟲ ${S.discards}</button><button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button><button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}</div>
   </div>`;
   if (!busy && !S.over) saveRun('battle');
@@ -2898,7 +2989,7 @@ const SND_OF = { train: 'bigcannon', battery: 'bigcannon', howitzer: 'bigcannon'
   destroyer: 'cannon', croiseur: 'bigcannon', sousmarin: 'torpedo', chasseur: 'strafe', bombardier: 'bomb' };
 function stepSound(st) {
   if (st.msg) return SFX.play('enemyturn');
-  if (st.cancel) return SFX.play('intercept');
+  if (st.cancel || st.whiff) return SFX.play('intercept');
   if (st.shell) { SFX.play('shell'); if ((st.hits || []).some(h => h.kill)) setTimeout(() => SFX.play('boom'), 160); return; }
   if (st.moved) return;
   if (st.minesLaid !== undefined || st.minesCleared !== undefined) return SFX.play('stamp');
@@ -2919,6 +3010,7 @@ const cellEl = (r, c) => document.querySelector(`.gc[data-r="${r}"][data-c="${c}
 // Case du plateau, ou bandeau du QG (ligne −1 : QG ennemi, ligne GH : le vôtre)
 const spotEl = (r, c) => (r < 0 ? document.querySelector('.hq.en') : r >= GH ? document.querySelector('.hq.me') : cellEl(r, c));
 function showHits(hits, from, st) {
+  if (st && st.whiff) popAt(st.at ? cellEl(st.at[0], st.at[1]) : document.getElementById('bgrid'), 'Raté !', '#2559b5');
   if (st && st.cancel) popAt(st.at ? cellEl(st.at[0], st.at[1]) : document.getElementById('bgrid'), 'Intercepté !', '#2559b5');
   if (from) document.querySelector(`.gu[data-uid="${from}"]`)?.classList.add('atk');
   if (st && st.moved) document.querySelector(`.gu[data-uid="${st.moved}"]`)?.classList.add('stepin');
@@ -3034,6 +3126,7 @@ function doDiscard() {
 let drag = null;
 document.addEventListener('pointerdown', e => {
   const el = e.target.closest && e.target.closest('#hand .hc');
+  if (e.target.closest && e.target.closest('[data-keep]')) return;
   if (!el || busy || !S || S.over || e.button > 0 || discardSel) return;
   drag = { el, card: S.hand[+el.dataset.hi], x: e.clientX, y: e.clientY, on: false };
 });
@@ -3543,11 +3636,13 @@ function helpModal(first) {
     <li><b>Synergies :</b> <b>◎ Marqué</b> : un observateur ou un avion de reconnaissance marque l'ennemi, vos tirs sur lui font +2 (l'artillerie double ses dégâts). <b>AC Armes combinées</b> : infanterie et véhicule dans le même secteur ont chacun +1 dégât par tir. <b>» Élan</b> : jeeps, half-tracks, blindés et chasseurs de chars gagnent +1 dégât par véhicule à élan déjà posé ce tour. <b>Soutien</b> : les infirmiers soignent leurs voisins. <b>Transport</b> : l'infanterie posée dans le secteur d'un half-track tire tout de suite. <b>✹ Mines</b> du génie et <b>⚑ embuscade</b> frappent le premier ennemi qui entre au front.</li>
     <li><b>Débarquement et commandos :</b> l'ordre Débarquement pose aussitôt au front la première carte d'infanterie de votre pioche (elle tire de suite si un navire est en mer). Les parachutistes peuvent sauter <b>derrière les lignes ennemies</b> : de là, ils frappent le QG même si le secteur est gardé, et l'ordre <b>Sabotage</b> inflige 12 dégâts au QG.</li>
     <li><b>Ennemis :</b> les <b>obusiers</b> tirent de loin depuis l'arrière ; les <b>bunkers</b> sont retranchés (le génie fait ×3 et le barrage ×2 contre eux) ; l'ennemi peut <b>miner</b> un de vos secteurs (☠) : la prochaine unité posée là perd 6 PV, sauf le génie qui désamorce.</li>
-    <li><b>Défausse (⟲)</b> : 3 fois par bataille, choisissez jusqu'à 5 cartes de votre main et remplacez-les par de nouvelles.</li>
+    <li><b>Défausse (⟲)</b> : 3 fois par bataille, choisissez jusqu'à 5 cartes de votre main et remplacez-les par de nouvelles ; chaque défausse donne +1 ravitaillement ce tour.</li>
     <li><b>Les couleurs :</b> <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât par tir · <i class="dot" style="background:#e5543f"></i> rouge +50 % d'hommes · <i class="dot" style="background:#52b34f"></i> vert +50 % de PV · <i class="dot" style="background:#39404f"></i> noir perce 1 blindage et agit de suite.</li>
     <li><b>Fusionner :</b> autant de cartes du même type qu'on veut : touchez une carte, puis une autre du même type. Leurs <b>soldats et PV s'additionnent</b> et les couleurs se cumulent (bonus et terrains). Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion. Deux groupes voisins du même type sur le plateau peuvent aussi fusionner dès le tour suivant leur arrivée (⇄).</li>
     <li><b>Votre tour :</b> le ravitaillement paie les cartes. <b>Glissez une carte sur une case bleue</b> de vos lignes ; toutes les couleurs se jouent ensemble. <b>« Fin du tour »</b> : l'ennemi joue. ↶ défait la dernière action.</li>
     <li><b>L'ennemi se montre à l'avance :</b> silhouettes en pointillé pour les renforts, case cerclée de rouge pour un obus (un chasseur l'intercepte).</li>
+    <li><b>Intentions ennemies :</b> chaque ennemi annonce sa cible du prochain tour : flèche rouge, pastille <b>⌖ −X</b> sur votre unité visée, « visé −X » sur votre QG. Pour l'en empêcher : <b>abattez-le</b> avant, <b>repliez</b> la cible (le tir est perdu), <b>enfumez</b> le secteur, ou posez une unité terrestre dans le secteur de votre QG : elle sert d'<b>appât</b> et prend le tir à sa place.</li>
+    <li><b>Réserve :</b> l'épingle 📌 d'une carte la garde en main pour le tour suivant (2 au plus). Le ravitaillement non dépensé est reporté, jusqu'à 3 points.</li>
     <li><b>Butin de guerre :</b> après chaque bataille, achetez des <b>jokers</b>, des cartes, entraînez une carte, ou achetez <b>+1 ravitaillement par tour</b> (jusqu'à +3) ; vaincre un <b>boss</b> en offre un.</li>
     </ol>
     <p class="small muted">Touchez un groupe pour voir ses détails, ou le « i » d'une carte.</p>`);
@@ -3592,6 +3687,8 @@ document.addEventListener('click', e => {
   if (off) { SFX.play('jokerbuy'); C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
   if (S && document.getElementById('hand')) {
     const info = t.closest('[data-cinfo]'); if (info) { SFX.play('tap'); return cardModal(+info.dataset.cinfo); }
+    const kp = t.closest('[data-keep]');
+    if (kp && !busy && !discardSel) { const hc = kp.closest('.card[data-hi]'); if (hc && toggleKeep(S, +hc.dataset.hi)) { SFX.play('select'); renderBattle(); } else toast(`Vous gardez ${MAX_KEEP} cartes au plus.`); return; }
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
     const hqt = t.closest('[data-hqtgt]'); if (hqt && selU !== null && !busy) return doAttack(selU, 'hq');
     if (t.closest('[data-hqdrop]') && picked.length === 1 && picked[0].t === 'bombardier' && !busy) return deployCardAt(picked[0], S.hqPos.en[0], S.hqPos.en[1]);

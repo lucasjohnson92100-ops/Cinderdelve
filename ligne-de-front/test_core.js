@@ -1,7 +1,7 @@
 // Vérifie le moteur : secteurs et terrains, terrains forts/faibles des couleurs, portées, QG, avance, couverture, villages, fusions, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {DOCTRINES,doctrineCards,pickDoctrines,BOSS_DOWN,DISCARD_SUPPLY,applyDamage,lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
+const E=new Function(core+';return {toggleKeep,MAX_KEEP,MAX_CARRY,computeIntents,intentTarget,DOCTRINES,doctrineCards,pickDoctrines,BOSS_DOWN,DISCARD_SUPPLY,applyDamage,lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // plateau : 4 lignes x 5 secteurs, terrain fixe par secteur
@@ -65,8 +65,17 @@ E.attackUnit(S,a,[]);check('forêt : 10 → 7',100-e.hp,7);a.attacked=false;e.ar
 // avance des unités au contact, tour ennemi
 S=mk();S.plan=[];S.units=[];S.hand=[];S.grid=lanes('champ','champ','champ','champ','mer');
 e=E.mkUnit(S,'en','rifle');e.fresh=false;E.placeUnit(S,e,0,1);let mg=E.mkUnit(S,'en','mgnest');mg.fresh=false;E.placeUnit(S,mg,0,2);a=E.mkUnit(S,'me','tireurs','');a.born=0;E.placeUnit(S,a,3,3);
+E.computeIntents(S);check('le soldat à l\'arrière n\'a pas de cible',e.intent,null);check('la mitrailleuse vise votre QG',!!(mg.intent&&mg.intent.hq),true);
 const hqm=S.hq.me;E.endTurn(S);check('vos tireurs avancent au front',a.r,2);check('soldats ennemis avancent',e.r,1);check('mitrailleuse reste à l\'arrière',mg.r,0);
-check('secteurs sans défense : votre QG touché (6 + 8)',hqm-S.hq.me,14);
+check('secteurs sans défense : votre QG touché par la mitrailleuse',hqm-S.hq.me,8);check('le soldat avancé vise votre QG au tour suivant',!!(e.intent&&e.intent.hq),true);
+// intentions : tir perdu si la cible quitte la case, appât qui protège le QG
+{S=mk();S.plan=[];S.units=[];S.hand=[];S.grid=lanes('champ','champ','champ','champ','mer');
+ const g=E.mkUnit(S,'en','gren');g.fresh=false;E.placeUnit(S,g,1,1);const v=E.mkUnit(S,'me','tireurs','');v.born=0;v.fresh=false;E.placeUnit(S,v,2,1);
+ E.computeIntents(S);check('intention sur la case de votre unité',g.intent&&g.intent.r+','+g.intent.c,'2,1');
+ S.hand=[E.mkCard('repli','')];S.supply=5;E.playOrder(S,0,2,1);check('repli : à l\'arrière',v.r,3);const hp0=v.hp;E.endTurn(S);check('repli : le tir est perdu',v.hp,hp0);check('repli : reste à l\'arrière ce tour',v.r===3||v.r===2,true);
+ S=mk();S.plan=[];S.units=[];S.hand=[];S.grid=lanes('champ','champ','champ','champ','mer');
+ const g2=E.mkUnit(S,'en','gren');g2.fresh=false;E.placeUnit(S,g2,1,2);E.computeIntents(S);check('secteur vide : vise le QG',!!g2.intent.hq,true);
+ const bait=E.mkUnit(S,'me','tireurs','');bait.born=0;E.placeUnit(S,bait,2,2);const h0=S.hq.me,b0=bait.hp;E.endTurn(S);check('appât : le QG est épargné',S.hq.me,h0);check('appât : il prend le tir',bait.hp<b0||!S.units.includes(bait),true);}
 // villages
 S=mk();S.plan=[];S.units=[];S.grid=lanes('village','champ','champ','champ','mer');a=E.mkUnit(S,'me','tireurs','');E.placeUnit(S,a,3,0);check('village tenu',E.villageIncome(S),1);
 e=E.mkUnit(S,'en','rifle');E.placeUnit(S,e,0,0);check('village disputé',E.villageIncome(S),0);
@@ -241,4 +250,10 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  const Q2=E.newBattle({level:0,deck:[E.mkCard('ravitaillement','')],hq:60,hqMax:60,officers:[]},Math.random,E.battleCfg({type:'battle',levelIdx:0,layer:1,obj:{type:'hq'}}));
  Q2.hand=[E.mkCard('ravitaillement','')];Q2.draw=[];Q2.discard=[];E.playOrder(Q2,0,2,0);check('ravitaillement ne se repioche pas',Q2.hand.length+'/'+Q2.discard.length,'0/1');
 }
+// réserve : cartes épinglées et ravitaillement reporté
+{const Q=E.newBattle({level:0,deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[]},Math.random,E.battleCfg({type:'battle',levelIdx:0,layer:1,obj:{type:'hq'}}));
+ const k0=Q.hand[0],k1=Q.hand[1];check('épingle 1',E.toggleKeep(Q,0),true);E.toggleKeep(Q,1);check('épingle 3 refusée',E.toggleKeep(Q,2),false);
+ Q.supply=5;const base=E.BASE_SUPPLY;E.endTurn(Q);
+ if(!Q.over){check('cartes gardées en main',Q.hand.includes(k0)&&Q.hand.includes(k1),true);check('épingles retirées',!!(k0.kept||k1.kept),false);
+ check('ravitaillement reporté (3 au plus)',Q.supply>=base+E.MAX_CARRY,true);check('main = 6 + 2 gardées',Q.hand.length,8);}}
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);

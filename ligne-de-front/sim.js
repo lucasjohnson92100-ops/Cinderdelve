@@ -1,7 +1,7 @@
 // Simulation d'une campagne : un bot déploie, fusionne, attaque et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {shotDmg,ENEMIES,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,playOrder,discardHand,isOrder,deployCells,GW,airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
+const E=new Function(core+';return {intentTarget,strikeDmg,toggleKeep,MAX_KEEP,shotDmg,ENEMIES,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,playOrder,discardHand,isOrder,deployCells,GW,airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
 function evalGroups(S,budget){
@@ -13,6 +13,8 @@ function evalGroups(S,budget){
     if(v>best.value)best={value:v,idxs:sel};}}
   S.supply=real;return best;
 }
+const hqAimCol=(S,c)=>E.units(S,'en').filter(u=>u.c===c).reduce((t,u)=>{const tg=E.intentTarget(S,u);return t+(tg&&tg.hq?E.strikeDmg(S,u,null):0);},0);
+function aimedAt(S,m){return E.units(S,'en').reduce((t,u)=>{const tg=E.intentTarget(S,u);return t+(tg&&tg.t===m?E.strikeDmg(S,u,m):0);},0);}
 function chooseCell(S,card){
   const cells=E.deployCells(S,card),def=E.TYPES[card.t];if(!cells.length)return null;
   const tmp=E.mkUnit(S,'me',card.t,card.c,card.lv);
@@ -22,7 +24,7 @@ function chooseCell(S,card){
     if(card.t==='bombardier'){sc=r<0?3:E.units(S,'en').filter(t=>Math.abs(t.r-r)<=1&&Math.abs(t.c-c)<=1).length*4;}
     else{
       tmp.r=r;tmp.c=c;const ts=E.targetsFrom(S,tmp,r,c),foesHere=E.units(S,'en').some(t=>t.land&&t.c===c),mineHere=E.units(S,'me').some(t=>t.land&&t.c===c);
-      sc=ts.length*4+(!foesHere&&E.hqInRange(S,tmp,r,c)?3:0);
+      sc=ts.length*4+(!foesHere&&E.hqInRange(S,tmp,r,c)?3:0);if(def.land&&!process.env.NOAI)sc+=hqAimCol(S,c)>0?Math.min(8,hqAimCol(S,c)/2):0;
       if(def.land){sc+=(E.terrainMult(card.c,S.grid[r][c])-1)*8+(E.TERRAIN[S.grid[r][c]].cover||0)*4+(foesHere&&!mineHere?5:0)+(S.grid[r][c]==='village'&&!mineHere?2:0);
         if(def.rng[1]>1&&r===3)sc+=1;if(def.rng[1]<=1&&r===2)sc+=1;}
     }
@@ -46,8 +48,9 @@ function playOrders(S,phase){
     // embuscade là où un renfort arrive au front
     const pd=S.plan.find(p=>p.k==='deploy'&&p.r===1);if(pd)play('embuscade',1,pd.c);
     // repli des unités très abîmées au front
-    E.units(S,'me').filter(u=>u.land&&u.r===2&&u.hp<u.hpMax*0.4).forEach(u=>play('repli',u.r,u.c));
+    E.units(S,'me').filter(u=>u.land&&u.r===2&&(u.hp<u.hpMax*0.4||(!process.env.NOAI&&aimedAt(S,u)>=u.hp))).forEach(u=>play('repli',u.r,u.c));
   }else{
+    if(!process.env.NOAI)for(let c=0;c<E.GW;c++)if(hqAimCol(S,c)>=8)play('fumigenes',2,c);
     // assaut : secteur où au moins 2 unités ont déjà attaqué
     for(let c=0;c<E.GW;c++){if(E.units(S,'me').filter(u=>u.c===c&&u.attacked&&!u.fresh&&u.dmg>0).length>=2&&play('assaut',2,c))return true;}
     // protections pour le tour ennemi
@@ -64,7 +67,7 @@ function attackAll(S){
     const o=E.attackOptions(S,u);
     const boss=o.units.find(t=>E.ENEMIES[t.key]&&E.ENEMIES[t.key].val===99&&E.shotDmg(S,u,t)*u.men>=3);
     if(boss)E.playerAttack(S,u.uid,boss.uid);
-    else if(o.units.length){const t=o.units.slice().sort((a,b)=>(b.marked-a.marked)||(a.hp-b.hp))[0];const pick=u.kw.includes('hunt')||u.kw.includes('weak')||u.kw.includes('arty')?t:o.units.slice().sort((a,b)=>E.dist(u.r,u.c,a.r,a.c)-E.dist(u.r,u.c,b.r,b.c)||a.hp-b.hp)[0];E.playerAttack(S,u.uid,pick.uid);}
+    else if(o.units.length){const threat=x=>{if(process.env.NOAI)return 0;const tg=E.intentTarget(S,x);return tg&&!tg.miss?E.strikeDmg(S,x,tg.t||null):0;};const t=o.units.slice().sort((a,b)=>(threat(b)-threat(a))||(b.marked-a.marked)||(a.hp-b.hp))[0];const pick=threat(t)>0||u.kw.includes('hunt')||u.kw.includes('weak')||u.kw.includes('arty')?t:o.units.slice().sort((a,b)=>E.dist(u.r,u.c,a.r,a.c)-E.dist(u.r,u.c,b.r,b.c)||a.hp-b.hp)[0];E.playerAttack(S,u.uid,pick.uid);}
     else if(o.hq)E.playerAttack(S,u.uid,'hq');
   }
 }
@@ -89,6 +92,7 @@ function botTurn(S,reserve){
   attackAll(S);
   if(playOrders(S,'post'))attackAll(S);
   playOrders(S,'post');
+  if(!process.env.NOKEEP)S.hand.map((c,i)=>i).sort((a,b)=>E.TYPES[S.hand[b].t].cost-E.TYPES[S.hand[a].t].cost).slice(0,E.MAX_KEEP).forEach(i=>E.toggleKeep(S,i));
 }
 const RES=0;
 function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S,RES);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
