@@ -980,6 +980,47 @@ body:has(.briefing) { background: linear-gradient(180deg, rgba(14, 20, 32, .45),
 .gc .emine.plan { background: rgba(120, 20, 10, .45); border-style: dashed; }
 
 /* ---- Intendance ---- */
+/* ---- Intendance sur un seul écran ---- */
+#app:has(.shop2) { max-width: 560px; height: 100dvh; padding: 0; overflow: hidden; }
+html:has(.shop2), body:has(.shop2) { overflow: hidden; height: 100dvh; overscroll-behavior: none; }
+.shop2 { position: fixed; inset: 0; z-index: 5; margin-inline: auto; width: 100%; max-width: 560px; height: 100dvh; display: grid; grid-template-rows: auto auto minmax(0, 1.3fr) minmax(0, 1.05fr) minmax(0, .95fr) auto auto auto; gap: 6px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: repeating-linear-gradient(90deg, #5a3b20 0 22px, #63422a 22px 44px); }
+.s2-top { display: flex; align-items: center; gap: 8px; } .s2-top .sb-hq { display: flex; align-items: center; gap: 2px; color: #f2e6c6; font-weight: 800; margin-left: auto; } .s2-top .hqmini { width: 22px; height: 26px; overflow: visible; }
+.s2-jok { display: flex; align-items: center; gap: 8px; color: #f2e6c6; min-width: 0; } .s2-jok .jbar { transform-origin: left center; } .s2-jok .jk { width: 34px; height: 34px; }
+.s2-shelf { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 4px; min-height: 0; background: linear-gradient(180deg, #6e4a2a, #4f3219); border: 2px solid #2b1a0b; border-radius: 10px; padding: 4px 6px 6px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .12), 0 3px 0 #2b1a0b; }
+.s2-shelf h3 { margin: 0; font-family: var(--font-stencil, var(--font-display)); font-size: .74rem; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; color: #f2d79a; }
+.s2-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-height: 0; }
+.s2-row.six { grid-template-columns: repeat(2, minmax(0, 1.2fr)) repeat(4, minmax(0, 1fr)); }
+.stile { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; min-width: 0; background: #fff8e2; color: #2b2116; border: 2px solid #2b1a0b; border-radius: 10px; padding: 4px 4px 3px; box-shadow: 0 3px 0 #2b1a0b; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; transition: transform .15s; }
+.stile:active { cursor: grabbing; }
+.stile.k-j { background: linear-gradient(180deg, #fff3c8, #f2d79a); } .stile.k-m { background: linear-gradient(180deg, #e6f0ff, #c4d8f5); } .stile.k-k { background: linear-gradient(180deg, #e9c99a, #c79a62); }
+.stile.sold { filter: grayscale(.9) brightness(.65); cursor: default; } .stile.poor .st-price { background: #b9b2a0; color: #5b5346; } .stile.full .st-price { background: #b9b2a0; }
+.stile.lifted { opacity: .35; transform: scale(.94); }
+.st-price { justify-self: center; margin-top: 2px; font-family: var(--font-display); font-weight: 700; font-size: .78rem; background: #ffd24a; border: 2px solid #2b1a0b; border-radius: 99px; padding: 0 7px; line-height: 1.3; }
+.st-art { position: relative; min-height: 0; overflow: hidden; } .st-art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.st-nm { font-family: var(--font-display); font-size: .64rem; line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: anywhere; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.stile:has(.st-nm) { grid-template-rows: minmax(0, 1fr) auto auto; }
+.stile.k-k .st-nm { font-size: .58rem; overflow-wrap: normal; letter-spacing: -.01em; }
+.st-book { font-size: 1.7rem; position: relative; } .st-book i { position: absolute; bottom: 0; right: -2px; font-style: normal; font-size: .6rem; font-weight: 800; background: #2f7de1; color: #fff; border-radius: 6px; padding: 0 4px; }
+.mc { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; height: 100%; position: relative; }
+.mc-band { height: 6px; border-radius: 4px; border: 1.5px solid #2b1a0b; }
+.mc-cost { position: absolute; top: -9px; left: -9px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #ffd24a; border: 2px solid #2b1a0b; font-family: var(--font-display); font-weight: 700; font-size: .72rem; z-index: 2; }
+.mc-art { position: relative; min-height: 0; overflow: hidden; margin-top: 2px; } .mc-art svg { position: absolute; inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); }
+.mc-nm { font-family: var(--font-display); font-size: .64rem; line-height: 1.05; text-align: center; hyphens: auto; overflow-wrap: anywhere; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mc.air .mc-art { background: linear-gradient(#cfe8ff, #eaf4ff); border-radius: 6px; } .mc.mer .mc-art { background: linear-gradient(#cfe8ff, #8cc6f0); border-radius: 6px; } .mc.ordre .mc-art { background: #efe3c2; border-radius: 6px; }
+.ssvc { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; justify-items: center; align-items: center; min-height: 0; min-width: 0; background: #fff8e2; color: #2b2116; border: 2px solid #2b1a0b; border-radius: 10px; padding: 3px 2px; box-shadow: 0 3px 0 #2b1a0b; font: inherit; cursor: pointer; }
+.ssvc:disabled { filter: grayscale(.8) brightness(.75); cursor: default; } .ssvc .sv-ic { font-size: 1.05rem; color: #7a5230; } .ssvc b { font-family: var(--font-display); font-size: .6rem; line-height: 1.05; text-align: center; }
+.s2-buy { display: flex; align-items: center; gap: 10px; min-height: 58px; border: 3px dashed #f2d79a; border-radius: 14px; padding: 6px 12px; color: #f2e6c6; background: rgba(0, 0, 0, .22); transition: background .15s, transform .15s, border-color .15s; }
+.s2-buy .bz-ic { font-size: 1.6rem; } .s2-buy .bz-tx { display: grid; gap: 1px; } .s2-buy b { font-family: var(--font-display); font-size: 1.05rem; } .s2-buy .bz-tx span { font-size: .74rem; opacity: .85; }
+.s2-buy.armed { border-color: #ffd24a; background: rgba(255, 210, 74, .16); animation: aimpulse 1s ease-in-out infinite; }
+.s2-buy.over { background: rgba(82, 179, 79, .4); border-style: solid; border-color: #9be38f; transform: scale(1.03); }
+.s2-buy.deny { animation: shake .4s; border-color: #e5543f; background: rgba(229, 84, 63, .3); } .s2-buy.paid { background: rgba(255, 210, 74, .45); border-style: solid; }
+.s2-tip { font-size: .72rem; line-height: 1.25; color: #f2e6c6; opacity: .9; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } .s2-tip b { color: #f2d79a; }
+.s2-foot { display: flex; gap: 8px; align-items: center; min-width: 0; } .s2-foot .btn.go { flex: 1; min-width: 0; } .s2-foot .pill { flex: none; }
+@media (max-width: 360px) { .s2-foot { gap: 6px; } .s2-foot .pill { padding-inline: 9px; font-size: .82rem; } .s2-foot .btn.go { font-size: 1rem; padding-inline: 8px; }
+  .st-nm, .mc-nm { font-size: .56rem; overflow-wrap: normal; word-break: normal; } .ssvc b { font-size: .54rem; } .s2-row { gap: 4px; } .s2-row.six { gap: 3px; } }
+.sghost { position: fixed; left: 0; top: 0; z-index: 90; pointer-events: none; box-shadow: 0 14px 24px rgba(0, 0, 0, .45); opacity: .95; }
+.mclist { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; } .mclist .mc { height: 104px; background: #fff8e2; border: 2px solid #2b1a0b; border-radius: 10px; padding: 4px; }
+@media (max-height: 640px) { .shop2 { gap: 4px; padding-top: 6px; } .s2-tip { display: none; } .s2-buy { min-height: 48px; } .s2-buy .bz-tx span { display: none; } }
 .shopscreen { gap: 12px; padding-bottom: 84px; min-width: 0; max-width: 100%; }
 .shopscreen > * { min-width: 0; max-width: 100%; }
 .shopscreen > .shopbar { max-width: none; }
@@ -3791,34 +3832,104 @@ function quartermasterTip() {
   return 'Les ordres se jouent en plus de vos unités, sans règle de couleur : un bon complément à toute composition.';
 }
 const fmtMult = m => String(Math.round(m * 100) / 100).replace('.', ',');
+// ---- Intendance façon Balatro : tout tient sur un écran ; toucher = détail, glisser vers la zone d'achat = acheter ----
+function miniCardHTML(card) {
+  const d = TYPES[card.t], cs = cardStats(card);
+  const art = isOrder(card) ? iconSVG(ORDER_ICON[card.t], 40).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c);
+  return `<span class="mc ${d.fam}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
+}
+const SVC = [
+  { act: 'train', ic: '★', name: 'Entraîner', price: () => Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), ok: () => C.deck.some(canUpgrade) },
+  { act: 'supply', ic: '⛽', name: 'Ravit. +1', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
+  { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
+  { act: 'reform', ic: '✂', name: 'Réformer', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
+];
+function shopTile(kind, i, it, inner) {
+  const full = kind === 'j' && C.officers.length >= MAX_JOKERS && !it.sold;
+  return `<div class="stile k-${kind} ${it.sold ? 'sold' : ''} ${!it.sold && C.loot < it.price ? 'poor' : ''} ${full ? 'full' : ''}" data-sk="${kind}" data-si="${i}" role="button" aria-label="Voir l'article">
+    ${inner}<span class="st-price">${it.sold ? (kind === 'k' ? 'Ouverte' : kind === 'm' ? 'Lu' : 'Vendu') : '$' + it.price}</span></div>`;
+}
 function renderShop() {
   saveRun('shop');
-  const sh = C.shop, full = C.officers.length >= MAX_JOKERS, rc = 2 + sh.rerolls;
+  const sh = C.shop, rc = 2 + sh.rerolls;
   if (!sh.crates) sh.crates = [];
-  const cards = sh.cards.map((c, i) => `<div class="shopcard ${c.sold ? 'sold' : ''}">${cardHTML(c.card, 'pick')}<button class="tag buy" data-buyc="${i}" ${c.sold || C.loot < c.price ? 'disabled' : ''}>${c.sold ? 'Vendu' : '$' + c.price}</button></div>`).join('');
-  const jrows = sh.jokers.map((j, i) => {
-    const d = JOKERS.find(x => x.id === j.id);
-    return `<div class="sjok ${j.sold ? 'sold' : ''}">${officerSVG(j.id, 46)}<span class="tx"><b>${d.name}</b><span>${d.desc}</span></span><button class="tag buy" data-buyj="${i}" ${j.sold || full || C.loot < j.price ? 'disabled' : ''}>${j.sold ? 'Vendu' : full ? 'Plein' : '$' + j.price}</button></div>`;
-  }).join('');
-  const trainFrom = Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), supMax = (C.supplyBonus || 0) >= MAX_SUPPLY_BONUS;
-  const svc = (act, icon, title, sub, price, ok) => `<button class="svc" data-act="${act}" ${ok ? '' : 'disabled'}><span class="svc-ic">${icon}</span><b>${title}</b><span>${sub}</span><span class="tag">${price}</span></button>`;
-  app.innerHTML = `<div class="stack shopscreen">
-    <div class="shopbar"><div class="sb1"><span class="ribbon sm">Intendance</span><span class="sb-hq"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg>${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></div>
-      <div class="sb2"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div></div>
-    <div class="qm">${officerSVG('intendant', 58)}<div class="bubble"><b>L'intendant</b><span>${quartermasterTip()}</span></div></div>
-    <section class="shelf"><h3>Recrues et ordres</h3><div class="shelf-row">${cards}</div></section>
-    <section class="shelf"><h3>Manuels tactiques <small>(combinaisons d'assaut)</small></h3><div class="sjoks">${(sh.manuals || []).map((m, i) => { const c = COMBOS.find(x => x.id === m.id), lv = (C.comboLv || {})[m.id] || 1, nx = c.add ? `+${fmtMult(c.add + c.step * lv)}` : `×${fmtMult(c.mul + c.step * lv)}`; return `<div class="sjok ${m.sold ? 'sold' : ''}"><span class="manual">📘</span><span class="tx"><b>${c.name} niv. ${lv + 1}</b><span>${c.txt} : ${nx} Mult</span></span><button class="tag buy" data-buym="${i}" ${m.sold || C.loot < m.price ? 'disabled' : ''}>${m.sold ? 'Lu' : '$' + m.price}</button></div>`; }).join('')}</div></section>
-    <section class="shelf"><h3>Caisses de ravitaillement</h3><div class="crates">${sh.crates.map(crateHTML).join('')}</div></section>
-    <section class="shelf"><h3>État-major ${full ? '<small>(emplacements pleins)</small>' : ''}</h3><div class="sjoks">${jrows}</div></section>
-    <section class="shelf"><h3>Services</h3><div class="svcs">
-      ${svc('train', '★', 'Entraîner', 'Une carte gagne un niveau', 'dès $' + trainFrom, C.deck.some(canUpgrade) && C.loot >= trainFrom)}
-      ${svc('supply', '⛽', 'Ravitaillement', supMax ? 'Maximum atteint (+3)' : `+1 par tour, définitif (+${C.supplyBonus || 0})`, supMax ? '—' : '$' + supplyBonusCost(C), !supMax && C.loot >= supplyBonusCost(C))}
-      ${svc('shopheal', '✚', 'Infirmerie', `QG +${HEAL_AMOUNT} PV`, '$' + HEAL_COST, C.hq < C.hqMax && C.loot >= HEAL_COST)}
-      ${svc('reform', '✂', 'Réformer', 'Retirer une carte', '$' + REFORM_COST, C.deck.length > 8 && C.loot >= REFORM_COST)}
-    </div></section>
-    <div class="shopfoot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouvelles recrues et nouveaux jokers">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></div>
+  if (!sh.manuals) sh.manuals = [];
+  const cards = sh.cards.map((c, i) => shopTile('c', i, c, miniCardHTML(c.card))).join('');
+  const joks = sh.jokers.map((j, i) => shopTile('j', i, j, `<span class="st-art">${officerSVG(j.id, 52)}</span><b class="st-nm">${JOKERS.find(x => x.id === j.id).name}</b>`)).join('');
+  const mans = sh.manuals.map((m, i) => { const c = COMBOS.find(x => x.id === m.id), lv = (C.comboLv || {})[m.id] || 1; return shopTile('m', i, m, `<span class="st-art st-book">📘<i>niv. ${lv + 1}</i></span><b class="st-nm">${c.name}</b>`); }).join('');
+  const crates = sh.crates.map((cr, i) => { const [k, col] = CRATE_ART[cr.id]; return shopTile('k', i, cr, `<span class="st-art st-crate">${spriteSVG(k, 'me', 40, col)}</span><b class="st-nm">${COMPOS[cr.id].name.replace('Caisse ', '')}</b>`); }).join('');
+  const svcs = SVC.map(v => { const pr = v.price(), ok = v.ok() && C.loot >= pr; return `<button class="ssvc" data-act="${v.act}" ${ok ? '' : 'disabled'}><span class="sv-ic">${v.ic}</span><b>${v.name}</b><span class="st-price">${v.ok() ? '$' + pr : '—'}</span></button>`; }).join('');
+  app.innerHTML = `<div class="shop2" lang="fr">
+    <header class="s2-top"><span class="ribbon sm">Intendance</span><span class="sb-hq"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg>${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></header>
+    <div class="s2-jok"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div>
+    <section class="s2-shelf"><h3>Recrues et ordres</h3><div class="s2-row">${cards}</div></section>
+    <section class="s2-shelf"><h3>État-major · Manuels tactiques</h3><div class="s2-row">${joks}${mans}</div></section>
+    <section class="s2-shelf"><h3>Caisses · Services</h3><div class="s2-row six">${crates}${svcs}</div></section>
+    <div class="s2-buy" id="buyzone"><span class="bz-ic">🛒</span><span class="bz-tx"><b>Zone d'achat</b><span>Glissez un article ici pour l'acheter · touchez-le pour le détail</span></span></div>
+    <div class="s2-tip"><b>L'intendant :</b> ${quartermasterTip()}</div>
+    <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouvelles recrues, jokers et manuels">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
   </div>`;
 }
+// Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
+function shopBuy(kind, i) {
+  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates }[kind]?.[i];
+  if (!it || it.sold) return 'Déjà acheté.';
+  if (kind === 'j' && C.officers.length >= MAX_JOKERS) return 'Vos 5 emplacements de joker sont pleins.';
+  if (C.loot < it.price) return `Pas assez de butin : il faut $${it.price}.`;
+  if (kind === 'k') { openCrateModal(i); return ''; }
+  C.loot -= it.price; it.sold = true;
+  if (kind === 'c') { C.deck.push({ ...it.card }); SFX.play('buy'); toast(`${TYPES[it.card.t].name} rejoint votre paquet.`); }
+  if (kind === 'j') { C.officers.push(it.id); if (it.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === it.id).name} rejoint l'état-major.`); }
+  if (kind === 'm') { const lv = buyManual(C, it.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === it.id).name} passe au niveau ${lv}.`); }
+  renderShop();
+  return '';
+}
+// Détail d'un article (toucher), avec un bouton d'achat de secours
+function shopDetail(kind, i) {
+  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates }[kind]?.[i]; if (!it) return;
+  let body = '', title = '';
+  if (kind === 'c') { title = TYPES[it.card.t].name; body = `<div class="cardrow">${cardHTML(it.card, 'pick')}</div>`; }
+  if (kind === 'j') { const d = JOKERS.find(x => x.id === it.id); title = d.name; body = `<div class="row" style="flex-wrap:nowrap;gap:14px">${officerSVG(it.id, 84)}<p>${d.desc}</p></div><p class="small muted">Un joker agit à chaque bataille, pour toute la campagne (5 au plus).</p>`; }
+  if (kind === 'm') { const c = COMBOS.find(x => x.id === it.id), lv = (C.comboLv || {})[it.id] || 1, cur = c.add ? '+' + fmtMult(c.add + c.step * (lv - 1)) : '×' + fmtMult(c.mul + c.step * (lv - 1)), nx = c.add ? '+' + fmtMult(c.add + c.step * lv) : '×' + fmtMult(c.mul + c.step * lv); title = `Manuel : ${c.name}`; body = `<p><b>${c.name}</b> (${c.txt}) passe du niveau ${lv} au niveau ${lv + 1} : <b>${cur} → ${nx} Mult</b>, pour toute la campagne.</p>`; }
+  if (kind === 'k') { const c = COMPOS[it.id]; title = c.name; body = `<p>À l'ouverture : 1 carte au choix parmi 3, tirées de cette composition (${c.tip}).</p><div class="mclist">${c.cards.map(t => miniCardHTML(mkCard(t, TYPES[t].order ? '' : 'J'))).join('')}</div>`; }
+  const can = !it.sold && C.loot >= it.price && !(kind === 'j' && C.officers.length >= MAX_JOKERS);
+  openModal(`<div class="hd"><span class="ribbon">${title}</span><button class="pill" data-act="close">Fermer</button></div>${body}
+    <div class="row" style="justify-content:space-between;gap:10px"><span class="small muted">${it.sold ? 'Déjà acheté.' : 'Glissez l’article vers la zone d’achat pour l’acheter.'}</span><button class="btn go sm" data-shopbuy="${kind}${i}" ${can ? '' : 'disabled'}>${it.sold ? 'Acheté' : 'Acheter $' + it.price}</button></div>`);
+}
+// Glisser-déposer vers la zone d'achat
+let sdrag = null, sdragDone = 0;
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest && e.target.closest('.shop2 .stile');
+  if (!el || el.classList.contains('sold') || e.button > 0) return;
+  sdrag = { el, kind: el.dataset.sk, i: +el.dataset.si, x: e.clientX, y: e.clientY, on: false, ghost: null };
+});
+document.addEventListener('pointermove', e => {
+  if (!sdrag) return;
+  if (!sdrag.on) {
+    if (Math.hypot(e.clientX - sdrag.x, e.clientY - sdrag.y) < 8) return;
+    sdrag.on = true;
+    const r = sdrag.el.getBoundingClientRect(), g = sdrag.el.cloneNode(true);
+    g.classList.add('sghost'); g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    sdrag.dx = sdrag.x - r.left; sdrag.dy = sdrag.y - r.top; document.body.appendChild(g); sdrag.ghost = g;
+    sdrag.el.classList.add('lifted'); document.getElementById('buyzone')?.classList.add('armed'); SFX.play('select');
+  }
+  sdrag.ghost.style.transform = `translate(${e.clientX - sdrag.dx}px, ${e.clientY - sdrag.dy}px) rotate(-4deg) scale(1.06)`;
+  const bz = document.getElementById('buyzone'), br = bz && bz.getBoundingClientRect(), over = br && e.clientX >= br.left && e.clientX <= br.right && e.clientY >= br.top - 10 && e.clientY <= br.bottom;
+  if (bz) bz.classList.toggle('over', !!over); sdrag.over = !!over;
+});
+document.addEventListener('pointerup', () => {
+  if (!sdrag) return;
+  const d = sdrag; sdrag = null;
+  if (!d.on) return;
+  sdragDone = Date.now();
+  const bz = document.getElementById('buyzone'); bz?.classList.remove('armed', 'over');
+  d.el.classList.remove('lifted'); d.ghost?.remove();
+  if (!d.over) return;
+  const err = shopBuy(d.kind, d.i);
+  if (err) { SFX.play('deny'); toast(err); const z = document.getElementById('buyzone'); z?.classList.add('deny'); setTimeout(() => z?.classList.remove('deny'), 450); }
+  else { const z = document.getElementById('buyzone'); z?.classList.add('paid'); setTimeout(() => z?.classList.remove('paid'), 600); }
+});
+document.addEventListener('pointercancel', () => { if (sdrag) { sdrag.ghost?.remove(); sdrag.el.classList.remove('lifted'); document.getElementById('buyzone')?.classList.remove('armed', 'over'); sdrag = null; } });
 // Ouvrir une caisse : 3 cartes de la composition, on en garde une
 function openCrateModal(i) {
   const cr = C.shop.crates[i]; if (!cr || cr.sold || C.loot < cr.price) return;
@@ -3919,6 +4030,8 @@ document.addEventListener('click', e => {
   const crb = t.closest('[data-crate]'); if (crb && !crb.disabled) return openCrateModal(+crb.dataset.crate);
   const cp = t.closest('[data-cratepick]'); if (cp && window.__crate) { const c = window.__crate[+cp.dataset.cratepick]; C.deck.push({ ...c }); window.__crate = null; closeModal(); SFX.play('buy'); toast(`${TYPES[c.t].name} rejoint votre paquet.`); return C.phase === 'shop' ? renderShop() : finishNode(); }
   const ev = t.closest('[data-evt]'); if (ev) return chooseEvent(+ev.dataset.evt);
+  const stl = t.closest('.shop2 .stile'); if (stl) { if (Date.now() - sdragDone < 350) return; SFX.play('tap'); return shopDetail(stl.dataset.sk, +stl.dataset.si); }
+  const sbuy = t.closest('[data-shopbuy]'); if (sbuy) { const k = sbuy.dataset.shopbuy[0], n = +sbuy.dataset.shopbuy.slice(1); closeModal(); const err = shopBuy(k, n); if (err) { SFX.play('deny'); toast(err); } return; }
   const bm = t.closest('[data-buym]'); if (bm) { const m = C.shop.manuals[+bm.dataset.buym]; if (!m || m.sold || C.loot < m.price) return; C.loot -= m.price; m.sold = true; const lv = buyManual(C, m.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === m.id).name} passe au niveau ${lv}.`); return renderShop(); }
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
   const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }

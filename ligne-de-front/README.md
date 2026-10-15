@@ -44,7 +44,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Écran de combat** : il tient entièrement dans l'écran en portrait ; les cartes de la main sont en éventail, toutes visibles sans défiler.
 - **Annuler** : défait la dernière action (placement, fusion).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
-- **Intendance** : l'intendant conseille selon votre paquet ; rayons « Recrues et ordres » (3 unités et 1 ordre), « Caisses de ravitaillement » ($5, une par composition : Blitz, Artillerie, Défense, Commandos, Marine ; on choisit 1 carte parmi 3, la caisse de votre composition principale est toujours proposée), « État-major » (jokers) et « Services » (entraîner, ravitaillement +1, infirmerie : QG +12 PV pour $4, réformer). Relancer renouvelle recrues et jokers.
+- **Intendance façon Balatro** : tout tient sur un écran, sans défilement. Trois étagères de tuiles (recrues et ordres ; jokers et manuels tactiques ; caisses et services). **Toucher** une tuile affiche son détail, **la faire glisser vers la zone d'achat** l'achète (la zone s'illumine, et refuse si le butin manque). Les services (entraîner, ravitaillement, infirmerie, réformer) se touchent directement.
 - **Ravitaillement permanent** : +1 par tour (jusqu'à +3) en battant un boss ou à l'intendance ($14, puis $26, puis $38).
 - **Jokers** : 23 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
