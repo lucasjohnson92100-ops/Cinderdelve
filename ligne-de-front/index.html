@@ -673,6 +673,9 @@ body:has(.btl) .sky-fx { display: none; }
 .scene.quake { animation: quake .35s; } @keyframes quake { 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
 .sp-art { height: 112px; }
 .figs { position: relative; width: 100%; height: 100%; }
+.figs.scaled { container-type: inline-size; }
+.figs.scaled .fig.grounded { top: auto; bottom: calc(var(--s) * -0.125 + var(--lift, 0%) + 15%); margin-top: 0; }
+.figs.scaled .fig .spr { width: 100%; height: 100%; }
 .fig { position: absolute; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2); margin-top: calc(var(--s) / -2); animation: idle 1.4s ease-in-out infinite alternate; animation-delay: calc(var(--j) * -.17s); }
 .fig svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 0 rgba(27, 37, 64, .22)); }
 .fig.shoot::after { content: ""; position: absolute; right: -16%; top: 30%; width: 42%; height: 42%; opacity: 0; background: radial-gradient(circle, #fff 0 25%, #ffd24a 26% 55%, transparent 56%); clip-path: polygon(0 50%, 40% 38%, 50% 0, 60% 38%, 100% 50%, 60% 62%, 50% 100%, 40% 62%); animation: flash .16s 4; animation-delay: var(--fd, 0ms); }
@@ -3338,18 +3341,35 @@ const NOUN = { train: ['wagon', 'wagons'], battery: ['canon', 'canons'], howitze
 const noun = (k, n) => (NOUN[k] || ['unité', 'unités'])[n > 1 ? 1 : 0];
 const scKey = i => (i.side === 'me' ? SPR_OF[i.key] : i.key);
 // Figurines de la scène : une par homme ou véhicule (jusqu'à 10), qui tombent une à une
-const FIG_MAX = { train: 1, battery: 1, howitzer: 2, bunker: 1, obs: 2, medic: 2, sapper: 4, arty: 2, halftrack: 2, td: 1, recon: 1, inf: 10, rifle: 10, para: 8, gren: 8, sniper: 5, mgnest: 4, jeep: 4, tank: 3, panzer: 3, heavy: 2, destroyer: 1, croiseur: 1, sousmarin: 1, chasseur: 3, bombardier: 2 };
+const FIG_MAX = { train: 1, battery: 1, howitzer: 2, bunker: 1, obs: 2, medic: 2, sapper: 4, arty: 2, halftrack: 2, td: 1, recon: 1, inf: 10, rifle: 10, para: 8, gren: 8, sniper: 5, mgnest: 4, jeep: 2, tank: 2, panzer: 2, heavy: 1, destroyer: 1, croiseur: 1, sousmarin: 1, chasseur: 2, bombardier: 1 };
 const figCount = (i, n) => { const mx = Math.min(i.menMax, FIG_MAX[scKey(i)] || 5); return n <= 0 ? 0 : Math.max(1, Math.round((n / i.menMax) * mx)); };
+// Échelle commune des scènes : un soldat mesure 1,8 m ; chaque véhicule est dessiné à sa longueur réelle
+// (environ 28 px par mètre pour une colonne de 180 px), en % de la largeur de la colonne pour suivre l'écran.
+const LEN_M = { tank: 5.8, panzer: 5.9, heavy: 7.6, jeep: 3.4, halftrack: 6.2, td: 6, arty: 5.6, howitzer: 6, mgnest: 3.2, bunker: 5, battery: 8, train: 12, recon: 9, chasseur: 10, bombardier: 16, destroyer: 99, croiseur: 99, sousmarin: 99 };
+const FOOT_PCT = 36, PX_PER_M_PCT = 28 / 180 * 100;
+const figPct = key => (LEN_M[key] ? Math.min(98, (LEN_M[key] * PX_PER_M_PCT) / 0.97) : FOOT_PCT);
 function figsHTML(i, n, small) {
-  const k = figCount(i, n), key = scKey(i), perRow = k > 5 ? Math.ceil(k / 2) : k, rows = k > 5 ? 2 : 1;
-  const size = small ? (k > 3 ? 30 : 44) : k <= 1 ? (paintOf(key, i.side) && kindOf(key) !== 'foot' ? 106 : 92) : k <= 3 ? 66 : k <= 5 ? 52 : 46;
+  const k = figCount(i, n), key = scKey(i);
+  if (small) {
+    const size = k > 3 ? 30 : 44, perRow = k > 5 ? Math.ceil(k / 2) : k, rows = k > 5 ? 2 : 1;
+    let h = '';
+    for (let j = 0; j < k; j++) {
+      const row = rows === 2 && j < perRow ? 0 : rows - 1, idx = rows === 2 && j >= perRow ? j - perRow : j, inRow = rows === 2 && row === 1 ? k - perRow : perRow;
+      const x = inRow === 1 ? 50 : 10 + (idx / (inRow - 1)) * 80, y = rows === 2 ? (row === 0 ? 30 : 70) : 60;
+      h += `<span class="fig" style="left:${x}%;top:${y}%;z-index:${row + 1};--j:${j};--s:${size}px">${spriteSVG(key, i.side, size, i.cols)}</span>`;
+    }
+    return `<div class="figs">${h}</div>`;
+  }
+  // figurines posées sur une même ligne de sol ; au-delà de la largeur, elles s'échelonnent en profondeur
+  const w = figPct(key), fits = Math.max(1, Math.floor((100 + w * 0.35) / (w * 0.65))), rows = k > fits ? 2 : 1, perRow = Math.ceil(k / rows);
   let h = '';
   for (let j = 0; j < k; j++) {
     const row = rows === 2 && j < perRow ? 0 : rows - 1, idx = rows === 2 && j >= perRow ? j - perRow : j, inRow = rows === 2 && row === 1 ? k - perRow : perRow;
-    const x = inRow === 1 ? 50 : 10 + (idx / (inRow - 1)) * 80 + (row === 0 && rows === 2 ? 4 : 0), y = rows === 2 ? (row === 0 ? 30 : 70) : 60;
-    h += `<span class="fig" style="left:${x}%;top:${y}%;z-index:${row + 1};--j:${j};--s:${size}px">${spriteSVG(key, i.side, size, i.cols)}</span>`;
+    const span = Math.max(0, 100 - w), x = inRow === 1 ? 50 : w / 2 + (idx / (inRow - 1)) * span + (rows === 2 && row === 0 && w < 50 ? 4 : 0);
+    const lift = rows === 2 && row === 0 ? 16 : 0;
+    h += `<span class="fig grounded" style="left:${x.toFixed(1)}%;--lift:${lift}%;z-index:${row + 1};--j:${j};--s:${w.toFixed(1)}cqw">${spriteSVG(key, i.side, 64, i.cols)}</span>`;
   }
-  return `<div class="figs">${h}</div>`;
+  return `<div class="figs scaled">${h}</div>`;
 }
 // Décor de chaque moitié de la scène selon le terrain de l'unité
 function scBack(t) {
