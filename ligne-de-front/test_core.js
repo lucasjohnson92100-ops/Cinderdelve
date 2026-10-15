@@ -280,8 +280,8 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  Q=B2();Q.comboLv={armes:3};const k1=M(Q,'tireurs',2,1),k2=M(Q,'blinde',2,1),kz=N(Q,'rifle',1,1);check('manuel : armes combinées niv. 3 = +3',E.assaultCombos(Q,[k1,k2],kz).list.find(c=>c.id==='armes').add,3);
 }
 // PV ennemis multipliés pour encaisser les assauts combinés (vraies constantes)
-{const R=new Function(coreReal+';return {newBattle,mkUnit,battleCfg,ENEMY_HP,HQ_MULT,ENEMIES,LEVELS,START_DECK}')();
+{const R=new Function(coreReal+';return {newBattle,mkUnit,battleCfg,ENEMY_HP,HQ_MULT,ENEMIES,LEVELS,START_DECK,hpRamp}')();check('PV ennemis : ×3,75 dès la 3e bataille',R.hpRamp(2),R.ENEMY_HP);
  const Q=R.newBattle({level:0,deck:R.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=>0.5,R.battleCfg({type:'battle',levelIdx:0,layer:1,obj:{type:'hq'}}));
- const r=R.mkUnit(Q,'en','rifle');check('PV ennemis × ENEMY_HP',r.hpMax,Math.ceil(R.ENEMIES.rifle.men*R.ENEMIES.rifle.hpm*R.ENEMY_HP));
- check('QG ennemi × HQ_MULT',Q.hq.en,Math.round(R.LEVELS[0].hq*R.HQ_MULT));}
+ const r=R.mkUnit(Q,'en','rifle');check('PV ennemis : ×2 à la première bataille',r.hpMax,Math.ceil(R.ENEMIES.rifle.men*R.ENEMIES.rifle.hpm*2));
+ check('QG ennemi : ×2 à la première bataille',Q.hq.en,Math.round(R.LEVELS[0].hq*2));}
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);

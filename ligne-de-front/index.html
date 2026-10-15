@@ -1242,7 +1242,9 @@ const has = (S, id) => S.officers.includes(id);
 
 // ---- Le plateau : 5 secteurs (colonnes) au terrain fixe, sans déplacement ----
 // Ligne 0 = arrière ennemi, 1 = front ennemi, 2 = votre front, 3 = votre arrière. Chaque QG est derrière son camp.
-const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_KEEP = 2, MAX_CARRY = 3, ENEMY_GROWTH = 0.06, ENEMY_HP = 3.75, HQ_MULT = 3.75, ENEMY_DMG = 1.5, ENEMY_DMG_GROWTH = 0.1, BOSS_DOWN = 0.5;
+const GW = 5, GH = 4, MAX_EN_UNITS = 7, MAX_PLAN = 5, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_KEEP = 2, MAX_CARRY = 3, ENEMY_GROWTH = 0.06, ENEMY_HP = 3.75, HQ_MULT = 3.75,
+  // les premières batailles sont plus douces, le temps d'apprendre les assauts combinés
+  hpRamp = lv => Math.min(ENEMY_HP, 2 + 0.9 * lv), ENEMY_DMG = 1.5, ENEMY_DMG_GROWTH = 0.1, BOSS_DOWN = 0.5;
 const ME_ROWS = [2, 3], FRONT = { en: 1, me: 2 }, REAR = { en: 0, me: 3 };
 const TERRAIN = {
   route: { name: 'Route', cover: 0, txt: 'Terrain dégagé : toutes les unités y passent.' },
@@ -1319,7 +1321,7 @@ function mkUnit(S, side, key, cols, lv, parts) {
   const def = side === 'me' ? TYPES[key] : ENEMIES[key], st = parts ? cardStatsFor({ t: key, c: cols, lv, parts }, S, side) : statsFor(def, cols, S, side, lv);
   // l'ennemi se renforce au fil de la campagne (+8 % de PV par niveau)
   // l'ennemi encaisse les assauts combinés : PV multipliés, puis croissance avec le niveau
-  if (side === 'en' && S && S.lvl) st.hp = Math.ceil(st.hp * ENEMY_HP * (1 + ENEMY_GROWTH * (S.level || 0)));
+  if (side === 'en' && S && S.lvl) st.hp = Math.ceil(st.hp * hpRamp(S.level || 0) * (1 + ENEMY_GROWTH * (S.level || 0)));
   const fortified = side === 'en' && (def.kw || []).includes('fort');
   return {
     uid: S.uid++, side, key, cols: cols || '', name: def.name, lv: lv || 1, men: st.men, menMax: st.men, dmg: st.dmg, hp: st.hp, hpMax: st.hp,
@@ -2073,7 +2075,7 @@ function genMap(rng = Math.random) {
 function battleCfg(node) {
   const base = LEVELS[node.levelIdx], elite = node.type === 'elite', o = node.obj || { type: 'hq' };
   const mult = (elite ? 1.18 : 1) * (o.type === 'hold' ? 1.35 : o.type === 'kills' ? 1.15 : 1);
-  return { name: node.name, hq: Math.round(base.hq * HQ_MULT), budget: base.budget * mult, boss: node.type === 'boss' ? node.boss || base.boss : undefined, final: node.type === 'boss' && !!base.final,
+  return { name: node.name, hq: Math.round(base.hq * HQ_MULT * hpRamp(node.levelIdx || 0) / ENEMY_HP), budget: base.budget * mult, boss: node.type === 'boss' ? node.boss || base.boss : undefined, final: node.type === 'boss' && !!base.final,
     levelIdx: node.levelIdx, obj: node.obj || { type: 'hq' }, elite, tutorial: node.layer === 0 };
 }
 // Cartes proposées en récompense : type et couleur tirés au hasard
@@ -3410,6 +3412,8 @@ function onUnit(uid) {
     else { group.push(uid); selU = uid; SFX.play('select'); }
     return renderBattle();
   }
+  // une unité qui ne peut pas attaquer ne casse pas le groupe en cours : on explique pourquoi
+  if (groupUnits().length) { SFX.play('deny'); return toast(`${u.name} ne peut pas rejoindre l'assaut : ${u.fresh ? 'elle vient d’arriver (zz)' : u.attacked ? 'elle a déjà attaqué ce tour' : u.dmg <= 0 ? 'elle ne tire pas' : 'aucune cible à sa portée'}.`); }
   if (selU === uid) return unitSheet(uid);
   group = []; selU = uid; SFX.play('select'); renderBattle();
 }
