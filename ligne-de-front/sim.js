@@ -37,6 +37,10 @@ function playOrders(S,phase){
   const play=(t,r,c)=>{const i=ORD(S,t);if(i>=0&&E.TYPES[t].cost<=S.supply)return E.playOrder(S,i,r,c);return null;};
   if(phase==='pre'){
     while(ORD(S,'ravitaillement')>=0&&play('ravitaillement',2,0));
+    // sabotage avec les raiders derrière les lignes
+    E.units(S,'me').filter(u=>u.land&&u.r===0).forEach(u=>play('sabotage',u.r,u.c));
+    // débarquement face à l'ennemi
+    {const i=ORD(S,'debarquement');if(i>=0){const cells=E.deployCells(S,S.hand[i]);const pick=cells.sort((a,b)=>enemiesIn(S,b[1]).length-enemiesIn(S,a[1]).length)[0];if(pick)play('debarquement',pick[0],pick[1]);}}
     // barrage sur le secteur ennemi le plus chargé
     let best=-1,bc=-1;for(let c=0;c<E.GW;c++){const v=enemiesIn(S,c).reduce((t,u)=>t+Math.min(u.hp,6),0);if(v>best){best=v;bc=c;}}
     if(best>=6)play('barrage',1,bc);

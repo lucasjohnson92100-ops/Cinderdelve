@@ -21,6 +21,9 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Ordres** : cartes sans couleur qui ne posent pas d'unité, jouées en plus des déploiements : Barrage d'artillerie, Fumigènes, Ravitaillement, Retranchement, Repli, Assaut, Contre-attaque, Embuscade.
 - **Synergies** : Marqué (+2 par tir, artillerie ×2), Armes combinées (infanterie + véhicule dans un secteur : +1 chacun), Élan (+1 par véhicule à élan déjà posé ce tour), Soutien (soins), Transport, pièges (mines, embuscade). Compositions possibles : blitz motorisé, artillerie et observateurs, défense en profondeur, commandos, marine.
 - **Défausses** : 3 par bataille ; chacune remplace jusqu'à 5 cartes de la main.
+- **Débarquement et commandos** : l'ordre Débarquement pose au front la première carte d'infanterie de la pioche (prête à tirer avec un navire en mer). Les parachutistes peuvent sauter derrière les lignes ennemies, d'où ils frappent le QG même si le secteur est gardé ; l'ordre Sabotage leur fait infliger 12 dégâts au QG.
+- **Ennemis à mécaniques** : obusiers (artillerie ennemie, à l'arrière, portée 2–3), bunkers retranchés (génie ×3, barrage ×2 contre eux), mines ennemies posées dans vos secteurs (☠ : la prochaine unité posée perd 6 PV, le génie désamorce), annoncées à l'avance.
+- **Jokers de composition** : Sergent Intendant (+1 défausse), Général Éclair (élan ×2), Major Radio (cibles marquées +3), Capitaine Sapeur (pièges +4, génie moins cher), Amiral Lebrun (navires +1 par autre navire), Major Faucon (paras moins chers, sabotage +6), Général de Fer (armes combinées +2).
 - **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
 - **Fusion illimitée** : on fusionne autant de cartes du même type qu'on veut, de couleurs différentes ou non (jaune + rouge = orange ; 3 couleurs = tricolore ; 4 = arc-en-ciel), en main ou, sur la carte, entre groupes voisins dès le tour suivant leur arrivée. Les **soldats et les PV s'additionnent** (10 + 10 + 15 tireurs = 35) et les bonus de couleur valent pour tout le groupe. Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion.
 - **Règle des couleurs** : dans un même tour, on ne déploie que des cartes de **même couleur**. Si l'on déploie une carte **fusionnée** (ex. orange = jaune + rouge), on peut y joindre des cartes des couleurs qui la composent (jaune et rouge).
@@ -30,7 +33,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Annuler** : défait la dernière action (placement, fusion).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
 - **Ravitaillement permanent** : +1 par tour (jusqu'à +3) en battant un boss ou à l'intendance ($14, puis $26, puis $38).
-- **Jokers** : 16 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
+- **Jokers** : 23 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
 - **Carte de campagne** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
 
