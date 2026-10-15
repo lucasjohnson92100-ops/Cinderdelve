@@ -1,7 +1,9 @@
 // Vérifie le moteur : secteurs et terrains, terrains forts/faibles des couleurs, portées, QG, avance, couverture, villages, fusions, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
-const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {toggleKeep,MAX_KEEP,MAX_CARRY,computeIntents,intentTarget,DOCTRINES,doctrineCards,pickDoctrines,BOSS_DOWN,DISCARD_SUPPLY,applyDamage,lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
+const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
+// les tests de mécanique tournent avec des PV ennemis non multipliés ; le vrai multiplicateur est vérifié à part
+const core=coreReal.replace(/ENEMY_HP = [\d.]+, HQ_MULT = [\d.]+,/,'ENEMY_HP = 1, HQ_MULT = 1,');
+const E=new Function(core+';return {assault,assaultPreview,assaultCombos,COMBOS,toggleKeep,MAX_KEEP,MAX_CARRY,computeIntents,intentTarget,DOCTRINES,doctrineCards,pickDoctrines,BOSS_DOWN,DISCARD_SUPPLY,applyDamage,lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap,landingCard,enemyMinesCheck,ENEMIES,REAR,FRONT,BOSSES,spawnBoss,hqShielded,rollTrain,EVENTS,pickEvent,applyEvent};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // plateau : 4 lignes x 5 secteurs, terrain fixe par secteur
@@ -140,9 +142,9 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  S=B();S.hand=[E.mkCard('artillerie','')];check('artillerie : arrière seulement',E.deployCells(S,S.hand[0]).every(([r])=>r===3),true);
  let ar=me(S,'artillerie',3,2),e2=en(S,'panzer',1,2);e2.armor=0;e2.hp=e2.hpMax=200;check('artillerie : portée 2',E.targetsFrom(S,ar,3,2).length,1);
  E.playerAttack(S,ar.uid,e2.uid);check('artillerie : 2 × 4',200-e2.hp,8);
- S=B();ar=me(S,'artillerie',3,2);me(S,'observateur',2,2);e2=en(S,'panzer',1,2);e2.armor=0;e2.hp=e2.hpMax=200;E.applyMarks(S);E.playerAttack(S,ar.uid,e2.uid);check('artillerie sur cible marquée, avec armes combinées : 2 × (4+1+2) × 2',200-e2.hp,28);
+ S=B();ar=me(S,'artillerie',3,2);me(S,'observateur',2,2);e2=en(S,'panzer',1,2);e2.armor=0;e2.hp=e2.hpMax=200;E.applyMarks(S);E.playerAttack(S,ar.uid,e2.uid);check('artillerie sur cible marquée : 2 × (4+2) × 2',200-e2.hp,24);
  // armes combinées
- S=B();t=me(S,'tireurs',2,0);check('seul : pas de bonus',E.combinedBonus(S,t),0);const bl=me(S,'blinde',3,0);check('infanterie + char : +1',E.combinedBonus(S,t)+'/'+E.combinedBonus(S,bl),'1/1');
+ S=B();t=me(S,'tireurs',2,0);check('seul : pas de bonus',E.combinedBonus(S,t),0);const bl=me(S,'blinde',3,0);check('plus de bonus passif d\'armes combinées',E.combinedBonus(S,t)+'/'+E.combinedBonus(S,bl),'0/0');
  // antichar
  S=B();let at=me(S,'antichar',2,0),pz=en(S,'panzer',1,0),ri=en(S,'rifle',1,1);check('antichar contre blindé : (6-0)×2',E.shotDmg(S,at,pz),12);check('antichar contre infanterie : moitié',E.shotDmg(S,at,ri),3);
  // élan
@@ -211,7 +213,7 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  S=B(['intendant']);check('intendant : +2 défausses',S.discards,E.BASE_DISCARDS+2);
  S=B(['blitz']);S.hand=[E.mkCard('jeep','J'),E.mkCard('jeep','J')];E.placeCard(S,0,2,0);const jb=E.placeCard(S,0,2,1);check('blitz : élan ×2',jb.elan,2);
  S=B(['radio']);const rt=me(S,'tireurs',2,1),rpz=en(S,'panzer',1,1);rpz.armor=0;rpz.marked=true;check('radio : +4 sur cible marquée',E.shotDmg(S,rt,rpz),5);
- S=B(['fer']);const ft=me(S,'tireurs',2,1);me(S,'blinde',3,1);check('fer : armes combinées +2',E.combinedBonus(S,ft),2);
+ S=B(['fer']);const ft=me(S,'tireurs',2,1),fb=me(S,'blinde',3,1);check('fer : armes combinées +3 Mult',E.assaultCombos(S,[ft,fb],null).list.find(c=>c.id==='armes').add,3);
  S=B(['lebrun']);const d1=me(S,'destroyer',2,4);me(S,'croiseur',3,4);const lt=en(S,'rifle',1,3);check('lebrun : +1 par autre navire',E.shotDmg(S,d1,lt),2);
  S=B(['sapeur']);S.hand=[E.mkCard('genie','J')];check('sapeur : génie à 1',E.cardCost(S,S.hand[0]),1);E.placeCard(S,0,2,1);S.plan=[{k:'deploy',key:'panzer',r:1,c:1}];S.hand=[];E.endTurn(S);check('sapeur : mines 6+4',E.units(S,'en')[0]?.hpMax-E.units(S,'en')[0]?.hp,10);
 }
@@ -256,4 +258,30 @@ S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=
  Q.supply=5;const base=E.BASE_SUPPLY;E.endTurn(Q);
  if(!Q.over){check('cartes gardées en main',Q.hand.includes(k0)&&Q.hand.includes(k1),true);check('épingles retirées',!!(k0.kept||k1.kept),false);
  check('ravitaillement reporté (3 au plus)',Q.supply>=base+E.MAX_CARRY,true);check('main = 6 + 2 gardées',Q.hand.length,8);}}
+// assaut combiné : Puissance × Mult, combinaisons, débordement, QG, riposte
+{const B2=(o=[])=>{const Q=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:o},()=>0.5);Q.units=[];Q.plan=[];Q.grid=Q.grid.map(r=>r.map(()=>'champ'));return Q;};
+ const M=(Q,k,r,c,cols='')=>{const u=E.mkUnit(Q,'me',k,cols);u.born=0;u.fresh=false;E.placeUnit(Q,u,r,c);return u;},N=(Q,k,r,c)=>{const u=E.mkUnit(Q,'en',k);u.fresh=false;E.placeUnit(Q,u,r,c);return u;};
+ let Q=B2();const a=M(Q,'tireurs',2,1),b=M(Q,'blinde',2,2),x=N(Q,'rifle',1,1);x.hp=x.hpMax=500;
+ let pv=E.assaultPreview(Q,[a.uid],x.uid);check('assaut seul : mult 1',pv.mult,1);check('assaut seul : puissance = 10 tirs',pv.power,10);
+ pv=E.assaultPreview(Q,[a.uid,b.uid],x.uid);check('binôme + armes combinées + feu croisé : (1+0,5+1+1)',pv.mult,3.5);check('total = puissance × mult',pv.total,Math.round(pv.power*3.5));
+ const c2=M(Q,'tireurs',3,1,'J'),d2=M(Q,'jeep',2,0,'J');check('même couleur : ×1,5',E.assaultCombos(Q,[c2,d2],null).list.some(c=>c.id==='couleur'),true);
+ // débordement : la cible meurt, le reste passe au voisin du secteur puis au QG
+ Q=B2();const t1=M(Q,'tireurs',2,1),t2=M(Q,'blinde',3,1),e1=N(Q,'rifle',1,1);E.placeUnit(Q,E.mkUnit(Q,'en','rifle'),0,1);
+ const hq0=Q.hq.en,st=E.assault(Q,[t1.uid,t2.uid],e1.uid);check('débordement : les deux soldats ennemis tombent',E.units(Q,'en').filter(u=>u.c===1).length,0);
+ check('débordement : le reste frappe le QG',Q.hq.en<hq0,true);check('assaut : unités marquées comme ayant attaqué',t1.attacked&&t2.attacked,true);check('scène avec combo',!!st.scene.combo,true);
+ // pas de débordement sur le QG si la cible survit
+ Q=B2();const s1=M(Q,'tireurs',2,1),big=N(Q,'rifle',1,1);big.hp=big.hpMax=999;const h1=Q.hq.en;E.assault(Q,[s1.uid],big.uid);check('cible survivante : QG intact',Q.hq.en,h1);
+ check('riposte de la cible survivante',s1.hp<s1.hpMax,true);
+ // groupe invalide : une unité hors de portée
+ Q=B2();const f1=M(Q,'tireurs',2,1),f2=M(Q,'tireurs',2,3),z=N(Q,'rifle',1,1);check('groupe : toutes doivent atteindre la cible',E.assaultPreview(Q,[f1.uid,f2.uid],z.uid),null);
+ // jokers d'assaut
+ Q=B2(['clairon','tenaille']);const j1=M(Q,'tireurs',2,1),j2=M(Q,'blinde',2,2),jz=N(Q,'rifle',1,1);jz.hp=jz.hpMax=999;
+ check('clairon +1 et tenaille ×2 : (1+0,5+1+1)×2',E.assaultPreview(Q,[j1.uid,j2.uid],jz.uid).mult,7);
+ Q=B2();Q.comboLv={armes:3};const k1=M(Q,'tireurs',2,1),k2=M(Q,'blinde',2,1),kz=N(Q,'rifle',1,1);check('manuel : armes combinées niv. 3 = +3',E.assaultCombos(Q,[k1,k2],kz).list.find(c=>c.id==='armes').add,3);
+}
+// PV ennemis multipliés pour encaisser les assauts combinés (vraies constantes)
+{const R=new Function(coreReal+';return {newBattle,mkUnit,battleCfg,ENEMY_HP,HQ_MULT,ENEMIES,LEVELS,START_DECK}')();
+ const Q=R.newBattle({level:0,deck:R.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=>0.5,R.battleCfg({type:'battle',levelIdx:0,layer:1,obj:{type:'hq'}}));
+ const r=R.mkUnit(Q,'en','rifle');check('PV ennemis × ENEMY_HP',r.hpMax,Math.ceil(R.ENEMIES.rifle.men*R.ENEMIES.rifle.hpm*R.ENEMY_HP));
+ check('QG ennemi × HQ_MULT',Q.hq.en,Math.round(R.LEVELS[0].hq*R.HQ_MULT));}
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);

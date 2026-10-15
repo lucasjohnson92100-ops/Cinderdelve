@@ -1,7 +1,7 @@
 // Simulation d'une campagne : un bot déploie, fusionne, attaque et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {intentTarget,strikeDmg,toggleKeep,MAX_KEEP,shotDmg,ENEMIES,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,playOrder,discardHand,isOrder,deployCells,GW,airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
+const E=new Function(core+';return {assault,assaultPreview,intentTarget,strikeDmg,toggleKeep,MAX_KEEP,shotDmg,ENEMIES,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,playOrder,discardHand,isOrder,deployCells,GW,airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
 function evalGroups(S,budget){
@@ -62,13 +62,20 @@ function playOrders(S,phase){
   return false;
 }
 function attackAll(S){
-  for(const u of E.units(S,'me').sort((a,b)=>a.r-b.r)){
-    if(S.over)break;if(!E.canAttack(S,u))continue;
-    const o=E.attackOptions(S,u);
-    const boss=o.units.find(t=>E.ENEMIES[t.key]&&E.ENEMIES[t.key].val===99&&E.shotDmg(S,u,t)*u.men>=3);
-    if(boss)E.playerAttack(S,u.uid,boss.uid);
-    else if(o.units.length){const threat=x=>{if(process.env.NOAI)return 0;const tg=E.intentTarget(S,x);return tg&&!tg.miss?E.strikeDmg(S,x,tg.t||null):0;};const t=o.units.slice().sort((a,b)=>(threat(b)-threat(a))||(b.marked-a.marked)||(a.hp-b.hp))[0];const pick=threat(t)>0||u.kw.includes('hunt')||u.kw.includes('weak')||u.kw.includes('arty')?t:o.units.slice().sort((a,b)=>E.dist(u.r,u.c,a.r,a.c)-E.dist(u.r,u.c,b.r,b.c)||a.hp-b.hp)[0];E.playerAttack(S,u.uid,pick.uid);}
-    else if(o.hq)E.playerAttack(S,u.uid,'hq');
+  // assauts combinés : pour chaque cible, toutes les unités prêtes qui l'atteignent ; on lance le meilleur, puis on recommence
+  const threat=x=>{if(process.env.NOAI)return 0;const tg=E.intentTarget(S,x);return tg&&!tg.miss?E.strikeDmg(S,x,tg.t||null):0;};
+  for(let guard=0;guard<14&&!S.over;guard++){
+    const ready=E.units(S,'me').filter(u=>E.canAttack(S,u));if(!ready.length)break;
+    let best=null;
+    for(const t of [...E.units(S,'en').map(x=>x.uid),'hq']){
+      const x=t==='hq'?null:S.units.find(z=>z.uid===t);
+      let grp=ready.filter(u=>x?E.attackOptions(S,u).units.includes(x):E.hqInRange(S,u,u.r,u.c));if(!grp.length)continue;if(process.env.SINGLE)grp=[grp[0]];
+      const pv=E.assaultPreview(S,grp.map(u=>u.uid),t);if(!pv||pv.total<=0)continue;
+      const v=x?Math.min(pv.total,x.hp*2)+(pv.total>=x.hp?15:0)+threat(x):pv.total*1.1;
+      if(!best||v>best.v)best={v,ids:grp.map(u=>u.uid),t};
+    }
+    if(!best)break;
+    E.assault(S,best.ids,best.t);
   }
 }
 function botTurn(S,reserve){
