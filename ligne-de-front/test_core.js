@@ -1,7 +1,7 @@
 // Vérifie le moteur : secteurs et terrains, terrains forts/faibles des couleurs, portées, QG, avance, couverture, villages, fusions, règle des couleurs, plan ennemi, jokers, boutique (node test_core.js)
 const fs=require('fs');
 const core=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell};')();
+const E=new Function(core+';return {lootFor,genShop,upgradeCost,canUpgrade,cardPrice,upText,JOKERS,MAX_JOKERS,UP,newBattle,endTurn,TYPES,ENEMIES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,planDeploy,placeCard,deployCells,advance,terrainMult,canStand,COLOR_TERRAIN,villageIncome,unitAt,units,findUnit,mkUnit,placeUnit,spawnEnemy,genTerrain,genPlan,colorsReachable,selectionValid,airStrike,genMap,battleCfg,mkCard,statsFor,LEVELS,shotsOf,rewardCards,cardCost,shuffle,HQ_START,GW,GH,TERRAIN,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,BASE_SUPPLY,attackUnit,playerAttack,canAttack,attackOptions,targetsFrom,hqInRange,isLandCell,playOrder,discardHand,applyMarks,shotDmg,combinedBonus,isOrder,BASE_DISCARDS,springTrap};')();
 let bad=0;const check=(n,g,e)=>{if(g!==e){bad++;console.log('ÉCHEC',n,'obtenu',g,'attendu',e);}};
 const T=E.TYPES,GW=E.GW,GH=E.GH;
 // plateau : 4 lignes x 5 secteurs, terrain fixe par secteur
@@ -124,4 +124,55 @@ const sh2=E.genShop({officers:['ashby'],deck:E.START_DECK},undefined,false);chec
 const Cc={supplyBonus:0};check('coût 1er bonus',E.supplyBonusCost(Cc),14);E.addSupplyBonus(Cc);E.addSupplyBonus(Cc);E.addSupplyBonus(Cc);check('plafond',E.addSupplyBonus(Cc),false);
 // boss
 S=E.newBattle({level:0,deck:E.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=>0.5,E.battleCfg({type:'boss',levelIdx:7,layer:8,obj:{type:'hq'}}));check('boss en place',E.units(S,'en').map(u=>u.key).sort().join(),'heavy,panzer');
+
+// ---- Étape 1 : nouvelles unités, ordres, synergies, défausses ----
+{const B=()=>{const S=mk();S.plan=[];S.units=[];S.hand=[];S.grid=lanes('champ','champ','champ','champ','mer');S.supply=30;return S;};
+ const me=(S,k,r,c,col='')=>{const u=E.mkUnit(S,'me',k,col);u.born=0;u.fresh=false;E.placeUnit(S,u,r,c);return u;},en=(S,k,r,c)=>{const u=E.mkUnit(S,'en',k);u.fresh=false;E.placeUnit(S,u,r,c);return u;};
+ let S=B();check('défausses au départ',mk().discards,E.BASE_DISCARDS);
+ // marquage par un observateur : +2 par tir
+ let o=me(S,'observateur',3,1),t=me(S,'tireurs',2,1),e=en(S,'panzer',1,1);e.armor=0;e.hp=e.hpMax=200;E.applyMarks(S);check('observateur marque l\'ennemi d\'en face',e.marked,true);
+ check('observateur ne tire pas',E.canAttack(S,o),false);
+ E.playerAttack(S,t.uid,e.uid);check('tirs sur cible marquée : 10 × (1+2)',200-e.hp,30);
+ // artillerie : à l'arrière seulement, ×2 sur cible marquée
+ S=B();S.hand=[E.mkCard('artillerie','')];check('artillerie : arrière seulement',E.deployCells(S,S.hand[0]).every(([r])=>r===3),true);
+ let ar=me(S,'artillerie',3,2),e2=en(S,'panzer',1,2);e2.armor=0;e2.hp=e2.hpMax=200;check('artillerie : portée 2',E.targetsFrom(S,ar,3,2).length,1);
+ E.playerAttack(S,ar.uid,e2.uid);check('artillerie : 2 × 4',200-e2.hp,8);
+ S=B();ar=me(S,'artillerie',3,2);me(S,'observateur',2,2);e2=en(S,'panzer',1,2);e2.armor=0;e2.hp=e2.hpMax=200;E.applyMarks(S);E.playerAttack(S,ar.uid,e2.uid);check('artillerie sur cible marquée, avec armes combinées : 2 × (4+1+2) × 2',200-e2.hp,28);
+ // armes combinées
+ S=B();t=me(S,'tireurs',2,0);check('seul : pas de bonus',E.combinedBonus(S,t),0);const bl=me(S,'blinde',3,0);check('infanterie + char : +1',E.combinedBonus(S,t)+'/'+E.combinedBonus(S,bl),'1/1');
+ // antichar
+ S=B();let at=me(S,'antichar',2,0),pz=en(S,'panzer',1,0),ri=en(S,'rifle',1,1);check('antichar contre blindé : (6-0)×2',E.shotDmg(S,at,pz),12);check('antichar contre infanterie : moitié',E.shotDmg(S,at,ri),3);
+ // élan
+ S=B();S.hand=[E.mkCard('jeep','J'),E.mkCard('blinde','J'),E.mkCard('jeep','J')];const j1=E.placeCard(S,0,2,0),b1=E.placeCard(S,0,2,1),j2=E.placeCard(S,0,3,0);
+ check('élan : 0, puis +1, puis +2',[j1.elan||0,b1.elan,j2.elan].join(),'0,1,2');check('élan : dégâts',j2.dmg,3+2);
+ // half-track : l'infanterie de son secteur tire dès l'arrivée
+ S=B();S.hand=[E.mkCard('halftrack','J'),E.mkCard('tireurs','J'),E.mkCard('tireurs','J')];E.placeCard(S,0,3,2);const ti=E.placeCard(S,0,2,2),tj=E.placeCard(S,0,2,3);check('transport : infanterie prête',ti.fresh,false);check('autre secteur : dort',tj.fresh,true);
+ // génie : mines déclenchées à l'arrivée au front
+ S=B();S.hand=[E.mkCard('genie','J')];E.placeCard(S,0,2,1);check('mines posées',S.traps[1].mine,6);
+ S.plan=[{k:'deploy',key:'rifle',r:1,c:1}];S.hand=[];E.endTurn(S);check('mines : soldats tués (6 PV)',E.units(S,'en').length,0);check('mines consommées',!!S.traps[1],false);
+ // infirmiers
+ S=B();S.hand=[];me(S,'infirmiers',3,1);const w=me(S,'tireurs',2,1);w.hp=3;const far=me(S,'tireurs',2,3);far.hp=3;S.plan=[];E.endTurn(S);check('infirmiers soignent le voisin',w.hp,7);check('pas les autres',far.hp,3);
+ check('infirmiers n\'avancent pas',E.units(S,'me').find(u=>u.key==='infirmiers').r,3);
+ // mitrailleuse alliée : riposte doublée
+ S=B();const mg=me(S,'mitrailleuse',2,1);mg.hp=mg.hpMax=100;let ene=en(S,'rifle',1,1);ene.hp=ene.hpMax=100;S.phase='en';E.attackUnit(S,ene,[]);check('mitrailleuse : riposte 3 × 2 × 2',100-ene.hp,12);
+ // reconnaissance : marque tout le secteur
+ S=B();me(S,'reco',2,2);const a1=en(S,'rifle',1,2),a2=en(S,'rifle',0,2),a3=en(S,'rifle',1,3);E.applyMarks(S);check('reco : secteur marqué',[a1.marked,a2.marked,a3.marked].join(),'true,true,false');
+ // ordres
+ S=B();S.hand=[E.mkCard('barrage','')];const b1e=en(S,'gren',1,1),b2e=en(S,'gren',0,1),b3e=en(S,'gren',1,2);check('barrage : cible secteur ennemi',E.deployCells(S,S.hand[0]).every(([r])=>r<=1),true);
+ const rb=E.playOrder(S,0,1,1);check('barrage : 2 ennemis touchés',rb.hits.length,2);check('barrage : grenadiers (6 PV) détruits',S.units.includes(b1e)||S.units.includes(b2e),false);check('barrage : coût',S.supply,27);check('ordre défaussé',S.discard.some(c=>c.t==='barrage'),true);
+ S=B();S.hand=[E.mkCard('fumigenes','')];const fs1=me(S,'tireurs',2,1);E.playOrder(S,0,2,1);const fe=en(S,'rifle',1,1);check('fumigènes : pas de cible',E.targetsFrom(S,fe,1,1).length,0);
+ check('fumigènes : QG protégé',E.hqInRange(S,en(S,'rifle',1,3),1,1),false);
+ S=B();S.hand=[E.mkCard('assaut','')];const as1=me(S,'tireurs',2,1);as1.attacked=true;E.playOrder(S,0,2,1);check('assaut : attaque de nouveau',as1.attacked,false);
+ S=B();S.hand=[E.mkCard('retranchement','')];const rt=me(S,'tireurs',2,1);E.playOrder(S,0,2,1);check('retranchement : couverture',E.shotDmg?Math.round(100*(rt.dig)):0,30);
+ S=B();S.hand=[E.mkCard('repli','')];const rp=me(S,'tireurs',2,1);rp.hp=4;E.playOrder(S,0,2,1);check('repli : recule et soigne',rp.r+'/'+rp.hp,'3/7');
+ S=B();S.hand=[E.mkCard('ravitaillement','')];S.draw=[E.mkCard('jeep','J')];E.playOrder(S,0,2,0);check('ravitaillement : +2 et pioche',S.supply+'/'+S.hand.length,'32/1');
+ S=B();S.hand=[E.mkCard('contreattaque','')];const ca=me(S,'tireurs',2,1);ca.hp=ca.hpMax=100;E.playOrder(S,0,2,1);const cae=en(S,'rifle',1,1);cae.hp=cae.hpMax=100;S.phase='en';E.attackUnit(S,cae,[]);check('contre-attaque : riposte doublée',100-cae.hp,20);
+ S=B();S.hand=[E.mkCard('embuscade','')];E.playOrder(S,0,1,2);S.plan=[{k:'deploy',key:'panzer',r:1,c:2}];S.hand=[];E.endTurn(S);check('embuscade : panzer à moitié',E.units(S,'en').find(u=>u.key==='panzer')?.hp,8);
+ check('ordres sans couleur ni fusion',E.canFuse(E.mkCard('barrage',''),E.mkCard('barrage','')),false);
+ S=B();S.hand=[E.mkCard('tireurs','J'),E.mkCard('barrage','')];E.placeCard(S,0,2,1);en(S,'rifle',1,1);check('ordre jouable malgré la règle des couleurs',!!E.playOrder(S,0,1,1),true);
+ // défausses
+ S=B();S.discards=2;S.hand=[E.mkCard('jeep','J'),E.mkCard('jeep','R'),E.mkCard('blinde','J')];S.draw=[E.mkCard('tireurs','N'),E.mkCard('tireurs','V')];
+ check('défausse de 2 cartes',E.discardHand(S,[0,2]).length,2);check('main refaite',S.hand.map(c=>c.t).sort().join(),'jeep,tireurs,tireurs');check('compteur',S.discards,1);
+ E.discardHand(S,[0]);check('plus de défausse',E.discardHand(S,[0]),null);
+}
 console.log(bad?bad+' échec(s)':'tests OK');process.exit(bad?1:0);
