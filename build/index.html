@@ -13070,7 +13070,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       return "";
     }
     Object.keys(w).forEach(function (k) {
-      if (!(w[k] > 0 && w[k] < 6) || !SURV_WEAPONS[k]) return;
+      if (!(w[k] > 0 && w[k] < 3) || !SURV_WEAPONS[k]) return; /* la boutique n'offre que les premiers niveaux : la suite, les évolutions, les fusions et les nouvelles attaques viennent des niveaux et des boss */
       var id = "sv_w_" + k, lv = w[k];
       SHOP[id] = { get name() { return "Forge : " + survWName(k); }, get desc() { var l = w[k] || 0; return l >= 6 ? "Niveau max atteint" : "Niveau " + l + " → " + (l + 1) + " · " + SURV_WEAPONS[k].up; }, icon: SURV_WEAPONS[k].icon, base: 30 + 11 * cyc, step: 0, get combo() { return (w[k] || 0) >= 6 ? "" : wTag(k, (w[k] || 0) + 1); },
         block: function () { return (w[k] || 0) >= 6 ? "Niveau max" : null; }, apply: function () { w[k]++; say(survWName(k) + " passe au niveau " + w[k] + " !"); } };
@@ -13085,14 +13085,14 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         block: function () { return spL(k) >= SURV_SP_MAX ? "Niveau max" : null; }, apply: function () { state.spellLv[k] = spL(k) + 1; say(SPELLS[k].name + " passe au niveau " + state.spellLv[k] + " !"); } };
       ids.push(id);
     });
-    Object.keys(w).forEach(function (k) {
+    if (false) Object.keys(w).forEach(function (k) {
       if (!SURV_WEAPONS[k] || (w[k] || 0) < 3 || wRank(k) >= MERGE_MAX) return;
       var id = "sv_f_" + k;
       SHOP[id] = { get name() { return "Fusion : " + survWName(k) + " " + "★".repeat(wRank(k) + 1); }, get desc() { return "Une 2e copie fusionne avec l'arme : dégâts +45 % (rang " + (wRank(k) + 1) + "/" + MERGE_MAX + ")"; }, icon: SURV_WEAPONS[k].icon, get base() { return 60 + 14 * (state.survCycle || 0) + 30 * wRank(k); }, step: 0, combo: "Fusion d'armes",
         block: function () { return wRank(k) >= MERGE_MAX ? "Rang max" : null; }, apply: function () { survMerge(k); } };
       ids.push(id);
     });
-    shuffle(Object.keys(SURV_WEAPONS).filter(function (k) { return !w[k] && canTakeW(k); })).slice(0, 2).forEach(function (k) {
+    shuffle(Object.keys(SURV_WEAPONS).filter(function (k) { return false && !w[k] && canTakeW(k); })).slice(0, 2).forEach(function (k) {
       var id = "sv_n_" + k;
       SHOP[id] = { name: "Nouvelle arme : " + SURV_WEAPONS[k].name, desc: SURV_WEAPONS[k].learn, icon: SURV_WEAPONS[k].icon, base: 42 + 9 * cyc, step: 0, combo: wTag(k, 1),
         block: function () { return w[k] ? "Déjà apprise" : null; }, apply: function () { state.survW = state.survW || {}; state.survW[k] = 1; say("Nouvelle arme : " + SURV_WEAPONS[k].name + " !"); } };
