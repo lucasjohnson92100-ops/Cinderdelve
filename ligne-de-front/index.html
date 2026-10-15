@@ -858,6 +858,39 @@ body { background-color: var(--slate); background-image: radial-gradient(ellipse
 .hqbar.fort .hqmini { width: 30px; height: 34px; flex: none; margin: -6px 0 -2px; overflow: visible; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, .4)); }
 .hqbar.fort.dep { outline: 3px solid var(--yellow); outline-offset: 1px; animation: depulse .8s infinite alternate; }
 .hqbar.fort.drophover { outline-color: #fff; background: linear-gradient(180deg, #6a2a22, #46170f); }
+
+/* ---- Carte de campagne illustrée ---- */
+.mapscreen { gap: 8px; }
+.mapbar { position: sticky; top: 0; z-index: 20; margin-inline: -14px; padding: 8px 12px 8px; background: linear-gradient(180deg, rgba(22, 29, 40, .97), rgba(22, 29, 40, .9)); border-bottom: 2px solid #0d1218; box-shadow: 0 6px 14px rgba(0, 0, 0, .35); display: grid; gap: 6px; backdrop-filter: blur(4px); }
+.mapbar .mb1 { display: flex; align-items: center; gap: 8px; } .mapbar .mstep { margin-left: auto; color: #f2e6c6; font-family: var(--font-stencil, var(--font-display)); font-size: .95rem; letter-spacing: .04em; } .mapbar .mstep b { color: #ffe08a; font-weight: 400; }
+.mapbar .mb2 { display: flex; align-items: center; gap: 6px; } .mapbar .mb2 .hqbar { flex: 1; min-width: 0; }
+.mapbar .hqmini { width: 26px; height: 30px; flex: none; margin: -6px 0 -3px; overflow: visible; }
+.mapbar .mb3 { display: flex; } .mapbar .mb3 > * { transform: scale(.82); transform-origin: left center; }
+.mapbar .mhint { font-size: .78rem; font-weight: 800; color: #ffe08a; text-align: center; letter-spacing: .02em; }
+.map { background: #8cc35a !important; border: 0 !important; border-radius: 12px; box-shadow: 0 0 0 3px #3f2a16, 0 0 0 7px #7a5230, 0 0 0 9px #2b1a0b, 0 18px 30px rgba(0, 0, 0, .5) !important; margin: 6px 4px 10px; }
+.map::after { background: radial-gradient(ellipse at 50% 50%, transparent 62%, rgba(40, 25, 5, .38)) !important; inset: 0 !important; z-index: 1; }
+.map .mapterr, .map .mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map .mapsvg { z-index: 1; }
+.map .road-o { stroke: #3a2a14; stroke-width: 13px; fill: none; opacity: .9; }
+.map .road-i { stroke: #d8b77a; stroke-width: 8px; stroke-dasharray: none; fill: none; }
+.map .road-i.open { stroke: #ffe08a; }
+.map .road-i.taken { stroke: #6fb0f5; stroke-dasharray: 4 7; }
+.map .riverflow { animation: dash 1.4s linear infinite; }
+.map .node { z-index: 3; }
+.map .node.later { filter: saturate(.75) brightness(.95); opacity: .92; }
+.map .node.past { filter: grayscale(1) brightness(.85); opacity: .55; }
+.map .node.done { filter: grayscale(.4) brightness(.95); }
+.map .node .lb { font-size: .62rem; padding: 1px 6px; max-width: 96px; white-space: normal; box-shadow: 0 2px 0 rgba(43, 33, 22, .6); }
+.map .node .otag { top: -11px; right: -18px; font-size: .62rem; z-index: 2; }
+.map .node.done::after { left: auto; right: -6px; top: auto; bottom: -4px; }
+.map .node.boss { box-shadow: 0 4px 0 #2b2116, 0 0 0 5px rgba(229, 84, 63, .55), 0 8px 18px rgba(0, 0, 0, .4); }
+.map .mreg { position: absolute; left: 0; width: 18px; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.map .mreg i { writing-mode: vertical-rl; transform: rotate(180deg); font-style: normal; font-family: var(--font-stencil, var(--font-display)); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: #f2e6c6; background: rgba(43, 26, 11, .72); padding: 8px 2px; border-radius: 0 6px 6px 0; white-space: nowrap; }
+.map .armytok { position: absolute; z-index: 4; transform: translate(-128%, -30%); pointer-events: none; display: grid; justify-items: center; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .4)); }
+.map .armytok.atstart { transform: translate(-50%, -64%); } .map .armytok.atstart i { display: none; }
+.map .armytok > svg { animation: tokbob .7s ease-in-out infinite alternate; } @keyframes tokbob { to { transform: translateY(-4px); } }
+.map .armytok i { font-style: normal; font: 800 .55rem/1 var(--font-display, sans-serif); color: #fff; background: var(--blue); border: 1.5px solid #0d1218; border-radius: 99px; padding: 1px 5px; margin-top: -4px; }
+.map .start { z-index: 4; background: #2559b5; border: 2px solid #0d1218; }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1933,37 +1966,94 @@ function mapReach() {
   const cur = C.map[C.pos.layer][C.pos.i];
   return { layer: C.pos.layer + 1, idx: cur.next };
 }
+// Régions de la campagne, de la plage (en bas) au QG ennemi (en haut)
+const MAP_REGIONS = [[0, 0, 'Plages du débarquement'], [1, 3, 'Bocage'], [4, 4, 'Le fleuve'], [5, 6, 'Forêts'], [7, 7, 'Ligne fortifiée'], [8, 8, 'Capitale ennemie']];
+// Décor illustré de la carte de campagne (coordonnées : W de large, en pixels de haut)
+function mapTerrainSVG(W, total, yL, H, nodesXY) {
+  const near = (x, y, dx = 46, dy = 42) => nodesXY.some(p => Math.abs(p.x - x) < dx && Math.abs(p.y - y) < dy);
+  const yTop = l => yL(l) - H / 2, yBot = l => yL(l) + H / 2;
+  let s = `<rect width="${W}" height="${total}" fill="#8cc35a"/>`;
+  // champs en damier bordés de haies (bocage), légèrement de travers
+  const cw = 66, ch = 54, cols = ['#9fcf63', '#b8d46c', '#d8c46e', '#86bd55', '#a9cd62', '#cdbd66'];
+  for (let y = yTop(7); y < yBot(0) - 20; y += ch) for (let x = -10; x < W; x += cw) {
+    const k = hash2(Math.round(y), Math.round(x), 2), j = (a, b) => (hash2(a, b, 5) - 0.5) * 10;
+    const pts = [[x + j(x, y), y + j(y, x)], [x + cw + j(x + 1, y), y + j(y, x + 1)], [x + cw + j(x + 2, y), y + ch + j(y + 1, x)], [x + j(x + 3, y), y + ch + j(y + 2, x)]];
+    s += `<path d="M${pts.map(p => p.map(v => v.toFixed(1)).join(' ')).join(' L')} Z" fill="${cols[Math.floor(k * cols.length)]}" stroke="#4f8a37" stroke-width="3" stroke-linejoin="round" opacity="${y > yTop(3) && y < yBot(1) ? 1 : 0.75}"/>`;
+    if (k > 0.55 && k < 0.8) for (let r = 0; r < 4; r++) s += `<path d="M${x + 8} ${y + 10 + r * 10} h${cw - 16}" stroke="rgba(110,80,30,.22)" stroke-width="2"/>`;
+  }
+  // plage et mer en bas (départ), avec écume et péniches de débarquement
+  const beach = yBot(0) - 26;
+  s += `<path d="M0 ${beach} Q${W * 0.3} ${beach - 14} ${W * 0.55} ${beach - 4} T${W} ${beach - 8} V${total} H0 Z" fill="#ecd59a" stroke="#c9a85e" stroke-width="3"/>`;
+  const sea = beach + 30;
+  s += `<path d="M0 ${sea} Q${W * 0.25} ${sea - 10} ${W * 0.5} ${sea} T${W} ${sea - 4} V${total} H0 Z" fill="#3f9bdc"/><path d="M0 ${sea} Q${W * 0.25} ${sea - 10} ${W * 0.5} ${sea} T${W} ${sea - 4}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>`;
+  for (let i = 0; i < 7; i++) { const x = 20 + i * (W - 40) / 6, y = sea + 18 + (i % 2) * 12; s += `<path d="M${x - 10} ${y} q5 -5 10 0 t10 0" fill="none" stroke="#bfe5fb" stroke-width="2.4" stroke-linecap="round"/>`; }
+  [[0.16, 22], [0.84, 30]].forEach(([fx, dy]) => { const x = W * fx, y = sea + dy; s += `<g transform="translate(${x} ${y})"><path d="M-14 0 H14 L10 9 H-10 Z" fill="#7d8692" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/><rect x="-10" y="-5" width="20" height="5" fill="#5b6470" stroke="#1b2540" stroke-width="1.6"/><path d="M-18 11 q4 -3 8 0" stroke="#fff" stroke-width="2" fill="none"/></g>`; });
+  // le fleuve qui traverse la carte à l'étape du pont
+  const ry = yL(4);
+  const river = `M-10 ${ry + 18} C${W * 0.2} ${ry - 26} ${W * 0.35} ${ry + 40} ${W * 0.5} ${ry + 6} S${W * 0.8} ${ry - 30} ${W + 10} ${ry + 10}`;
+  s += `<path d="${river}" fill="none" stroke="#e8d79f" stroke-width="40" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#3f9bdc" stroke-width="28" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#8fd0f5" stroke-width="6" stroke-dasharray="14 18" stroke-linecap="round" class="riverflow"/>`;
+  // forêts des Ardennes et bosquets épars
+  for (let i = 0; i < 70; i++) {
+    const fy = yTop(6) + hash2(i, 3, 1) * (yBot(5) - yTop(6)), fx = hash2(i, 9, 2) * W;
+    if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.35 + hash2(i, 1, 4) * 0.5);
+  }
+  for (let i = 0; i < 26; i++) {
+    const fy = yTop(3) + hash2(i, 5, 7) * (yBot(1) - yTop(3)), fx = hash2(i, 2, 8) * W;
+    if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.1);
+  }
+  // ligne fortifiée : dents de dragon et barbelés
+  const fy = yBot(7) - 8;
+  s += `<path d="M0 ${fy} ${Array.from({ length: 24 }, (_, i) => `L${(i + 1) * W / 24} ${fy + (i % 2 ? -6 : 6)}`).join(' ')}" fill="none" stroke="#5a4a3a" stroke-width="2"/>`;
+  for (let x = 8; x < W; x += 20) if (!near(x, fy + 14, 34, 30)) s += `<path d="M${x - 6} ${fy + 22} L${x} ${fy + 10} L${x + 6} ${fy + 22} Z" fill="#c9c3b2" stroke="#1b2540" stroke-width="1.6" stroke-linejoin="round"/>`;
+  // capitale ennemie : immeubles en ruine en haut de la carte
+  s += `<rect x="0" y="0" width="${W}" height="${yBot(8) - 6}" fill="#b8b2a2" opacity=".55"/>`;
+  for (let i = 0; i < 16; i++) {
+    const x = (i * W) / 15 - 8 + hash2(i, 4, 4) * 8, h = 22 + hash2(i, 6, 1) * 40, y = 8 + hash2(i, 8, 3) * 30, w = 18 + hash2(i, 2, 2) * 12;
+    if (near(x + w / 2, y + h / 2, 50, 50)) continue;
+    s += `<path d="M${x} ${y + h} V${y + 6} L${x + w * 0.35} ${y} L${x + w * 0.6} ${y + 8} L${x + w} ${y + 3} V${y + h} Z" fill="${['#9b9484', '#8a8474', '#a9a291'][i % 3]}" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/>`;
+    for (let r = 0; r < 3; r++) s += `<rect x="${x + 4}" y="${y + 12 + r * 9}" width="4" height="4" fill="#4a4639"/><rect x="${x + w - 9}" y="${y + 14 + r * 9}" width="4" height="4" fill="#4a4639"/>`;
+  }
+  return `<svg class="mapterr" viewBox="0 0 ${W} ${total}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
+}
 function toMap() {
-  const L = C.map, H = 122, total = L.length * H + 44, reach = mapReach();
-  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: (L.length - 1 - n.layer) * H + H / 2 + 10 });
+  const L = C.map, H = 132, TOP = 58, total = TOP + L.length * H + 70, reach = mapReach(), W = 360;
+  const yL = l => TOP + (L.length - 1 - l) * H + H / 2;
+  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: yL(n.layer) });
+  const px = n => ({ x: (xy(n).x * W) / 100, y: xy(n).y });
   C.trail = C.trail || {};
+  // routes de terre courbes entre les étapes ; le chemin déjà parcouru est en bleu
   let edges = '';
   L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
-    const a = xy(n), b = xy(L[l + 1][j]);
+    const a = px(n), b = px(L[l + 1][j]);
     const taken = C.trail[l] === n.i && (C.trail[l + 1] === j || (C.pos && C.pos.layer === l + 1 && C.pos.i === j));
-    edges += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="road-o"/><line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="road-i ${taken ? 'taken' : ''}"/>`;
+    const open = C.pos ? C.pos.layer === l && C.pos.i === n.i : false;
+    const d = `M${a.x.toFixed(1)} ${a.y} C${a.x.toFixed(1)} ${a.y - H * 0.5} ${b.x.toFixed(1)} ${b.y + H * 0.5} ${b.x.toFixed(1)} ${b.y}`;
+    edges += `<path d="${d}" class="road-o"/><path d="${d}" class="road-i ${taken ? 'taken' : ''} ${open ? 'open' : ''}"/>`;
   })));
-  if (!C.decor) C.decor = Array.from({ length: 26 }, () => ({ x: 3 + Math.random() * 94, y: 10 + Math.random() * (total - 40), k: Math.random() < .7 ? 0 : 1 }));
-  const decor = C.decor.filter(d => !L.some(layer => layer.some(n => { const p = xy(n); return Math.abs(p.x - d.x) < 13 && Math.abs(p.y - d.y) < 38; })))
-    .map(d => `<span class="deco" style="left:${d.x}%;top:${d.y}px">${d.k ? '<svg viewBox="0 0 40 30" width="30" height="22"><path d="M2 28 L16 4 L24 16 L30 8 L38 28Z" fill="#a9a08a" stroke="#1b2540" stroke-width="2.4" stroke-linejoin="round"/></svg>'
-      : '<svg viewBox="0 0 30 34" width="22" height="26"><rect x="13" y="22" width="4" height="9" fill="#8a5a2b" stroke="#1b2540" stroke-width="2"/><circle cx="15" cy="14" r="11" fill="#3f9d46" stroke="#1b2540" stroke-width="2.4"/></svg>'}</span>`).join('');
+  const nodesXY = L.flat().map(px);
+  const regions = MAP_REGIONS.map(([a, b, name]) => `<span class="mreg" style="top:${yL(b) - H / 2 + 4}px;height:${(b - a + 1) * H - 8}px"><i>${name}</i></span>`).join('');
   const nodes = L.flatMap(layer => layer.map(n => {
     const p = xy(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
-    const isDone = C.trail[n.layer] === n.i;
+    const isDone = C.trail[n.layer] === n.i && !(C.pos && C.pos.layer === n.layer && C.pos.i === n.i);
     const isCur = C.pos && C.pos.layer === n.layer && C.pos.i === n.i;
-    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : ''].join(' ');
+    const past = C.pos ? n.layer <= C.pos.layer && !isCur && !isDone : false;
+    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : '', past ? 'past' : '', !isReach && !isDone && !isCur && !past ? 'later' : ''].join(' ');
     const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
     return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}%;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
   })).join('');
-  
-  app.innerHTML = `<div class="stack">
-    <div class="hd"><span class="ribbon">Carte du front</span><span class="num">Étape ${C.pos ? Math.min(9, C.pos.layer + 2) : 1} / 9</span></div>
-    <div class="hq me hqbar"><div class="lbl"><span>${flagSVG('me', 20)} Votre QG</span><span class="num">${C.hq} / ${C.hqMax}</span></div><div class="bar"><i style="width:${(C.hq / C.hqMax) * 100}%"></i></div></div>
-    <div class="row" style="justify-content:space-between"><span class="coin num" title="Butin de guerre">$${C.loot}</span><span class="row"><button class="pill" data-act="help">Aide</button><button class="pill" data-act="deck">Paquet (${C.deck.length})</button></span></div>
-    <div class="ribbon" style="justify-self:start">Jokers</div>${jokerBar()}
-    <div class="panel small">Choisissez votre prochaine étape : touchez un point qui clignote. Les routes montrent où vous pouvez aller.</div>
-    <div class="map" style="height:${total}px"><svg class="mapsvg" viewBox="0 0 100 ${total}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${decor}${nodes}
-      ${C.pos ? '' : `<span class="start" style="left:50%;top:${total - 6}px">Départ</span>`}</div>
+  const cur = C.pos ? xy(C.map[C.pos.layer][C.pos.i]) : { x: 50, y: yL(0) + H / 2 + 6 };
+  const step = C.pos ? Math.min(9, C.pos.layer + 2) : 1, hqPct = (C.hq / C.hqMax) * 100;
+  app.innerHTML = `<div class="stack mapscreen">
+    <div class="mapbar">
+      <div class="mb1"><span class="ribbon sm">Carte du front</span><span class="mstep"><b>Étape ${step}</b>/9</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
+      <div class="mb2"><div class="hq me hqbar compact"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg><span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
+        <button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button></div>
+      ${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}
+      <div class="mhint">▲ Touchez une étape qui clignote pour avancer</div>
+    </div>
+    <div class="map" style="height:${total}px">${mapTerrainSVG(W, total, yL, H, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${W} ${total}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
+      <span class="armytok ${C.pos ? '' : 'atstart'}" style="left:${cur.x}%;top:${cur.y}px" aria-hidden="true">${spriteSVG('jeep', 'me', 40, 'J')}<i>Vous</i></span>
+      ${C.pos ? '' : `<span class="start" style="left:50%;top:${yL(0) + H / 2 + 34}px">Départ</span>`}</div>
   </div>`;
   setTimeout(() => { const t = document.querySelector('.node.reach'); if (t) t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 60);
 }
@@ -1993,6 +2083,7 @@ function enterNode(n) {
   const map = document.querySelector('.map'), tgt = map && map.querySelector(`[data-node="${n.layer}-${n.i}"]`);
   if (map && tgt && !window.__travel) {
     const cur = map.querySelector('.node.cur') || map.querySelector('.start'), m = map.getBoundingClientRect(), b = tgt.getBoundingClientRect(), a = cur ? cur.getBoundingClientRect() : { left: b.left, top: b.bottom + 90, width: b.width, height: 0 };
+    map.querySelector('.armytok')?.remove();
     const mk = document.createElement('span'); mk.className = 'travel'; mk.innerHTML = spriteSVG('jeep', 'me', 46, 'J'); map.appendChild(mk);
     const p = r => [r.left - m.left + r.width / 2, r.top - m.top + r.height / 2];
     const [x1, y1] = p(a), [x2, y2] = p(b);
@@ -2703,7 +2794,8 @@ function turnBanner(text, side) {
   return new Promise(res => setTimeout(() => { b.remove(); res(); }, fast ? 200 : 1100));
 }
 function finishBattle() {
-  busy = true;
+  if (S.finished) return;
+  S.finished = true; busy = true;
   setTimeout(() => {
     if (S.over === 'win') { SFX.play('win'); confetti(36); return toReward(); }
     SFX.play('lose');
