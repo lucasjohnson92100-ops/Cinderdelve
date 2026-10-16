@@ -4581,7 +4581,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
 
     /* ---- effets animés dans le monde ---- */
     var FX = [];
-    function add(kind, x, y, r, dur, ex) { var f = { k: kind, x: x, y: y, r: r || 2, t0: now() + ((ex && ex.delay) || 0), dur: dur || 600, seed: Math.random() * 6 }; if (ex) for (var q in ex) f[q] = ex[q]; FX.push(f); }
+    function add(kind, x, y, r, dur, ex) { if (typeof state !== "undefined" && state && state.survival && r) r *= 1.3; var f = { k: kind, x: x, y: y, r: r || 2, t0: now() + ((ex && ex.delay) || 0), dur: dur || 600, seed: Math.random() * 6 }; if (ex) for (var q in ex) f[q] = ex[q]; FX.push(f); }
     function draw(ctx, t, TILE) {
       for (var i = FX.length - 1; i >= 0; i--) {
         var f = FX[i], k = (t - f.t0) / f.dur; if (k >= 1) { FX.splice(i, 1); continue; } if (k < 0) continue;
@@ -4822,6 +4822,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     function add(k, x, y, dur, ex) {
       var f = { k: k, x: px(x), y: px(y), t0: now() + ((ex && ex.delay) || 0), dur: dur, seed: Math.random() * T2 };
       if (ex) for (var q in ex) f[q] = ex[q];
+      if (f.R && k !== "beam" && typeof state !== "undefined" && state && state.survival) f.R *= (k === "slash" ? 1.9 : 1.35); /* effets plus gros et plus lisibles en survie */
       L.push(f); if (L.length > 80) L.shift(); return f;
     }
     function disc(c, x, y, r, col, a) { var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(col, a)); g.addColorStop(1, rg(col, 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill(); }
@@ -7051,6 +7052,9 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     }
     e.hp -= d;
     e.flash = now() + 130;
+    if (state.survival && dmgSrc && dmgSrc !== "Attaque" && !(e.fxT > now() - 140)) { /* chaque coup d'arme ou de sort laisse un anneau net, à la couleur de sa famille */
+      e.fxT = now(); var fhc = famOfSrc(dmgSrc); rings.push({ x: e.vx, y: e.vy, t0: now(), dur: 280, c: fhc ? FAMS[fhc][1] : "#ffffff", R: 16 }); if (rings.length > 60) rings.shift();
+    }
     e.hitT = now(); { var hdx = e.vx - p.vx, hdy = e.vy - p.vy, hdl = Math.hypot(hdx, hdy) || 1; e.hdx = hdx / hdl; e.hdy = hdy / hdl; }
     burst(e.vx, e.vy, spriteAvg(e.type), d > e.maxHp * 0.3 ? 8 : 4, 70);
     if (GFX === "dark") bloodHit(e, d);
@@ -8382,6 +8386,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (pr.src) dmgSrc = pr.src;
     var col = pr.kind === "ice" ? "#6fd6ff" : pr.kind === "energy" ? "#a56bff" : "#ff9a3c";
     burst(e.vx, e.vy, col, 10, 70);
+    if (state.survival && pr.own === "player" && pr.kind === "energy") { burst(e.vx, e.vy, "#d8c0ff", 16, 110); AFX.add("shock", e.vx, e.vy, 330, { R: 1.1, pal: AFX.PAL.cavia }); }
     if (pr.kind === "ice" || pr.kind === "fire") { SPV.add(pr.kind === "ice" ? "frost" : "boom", e.vx, e.vy, pr.splash ? pr.splash * 0.9 : 0.95, 650); burst(e.vx, e.vy, pr.kind === "ice" ? "#e8fbff" : "#ffd23c", 8, 110); hitStop(28); }
     var dead = dmgEnemy(e, pr.dmg, pr.kind === "ice" ? "L'éclat de glace frappe" : pr.kind === "energy" ? "L'énergie frappe" : "La boule de feu brûle");
     if (pr.kind === "ice" && !dead) applyIce(e, pr.lvl, false);
@@ -9604,7 +9609,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survPasFull() { return survPasIds().length >= slotP(); }
   function pasLv(id) { return (state && state.pas && state.pas[id]) || 0; }
   function survCdMul() { return 1 + 0.1 * pasLv("pCd"); }
-  function survArea() { return 1 + 0.1 * pasLv("pArea"); }
+  function survArea() { return 1.25 + 0.1 * pasLv("pArea"); } /* zones d'effet de base +25 % : les attaques au contact couvrent plus de monstres */
   /* ---- nouvelles attaques ---- */
   Object.assign(SURV_WEAPONS, {
     mines: { name: "Mines à grain", icon: "pi_mines", learn: "Pose des mines qui explosent quand un monstre s'approche", up: "+12 % de dégâts (une mine de plus aux niveaux pairs)" },
@@ -9826,7 +9831,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (SW.aura) {
       state.survAuraT = (state.survAuraT || 0) - dt;
       if (state.survAuraT <= 0) {
-        state.survAuraT = 0.9;
+        state.survAuraT = 0.9; state.survAuraFx = now();
         var aev = state.survWEvo && state.survWEvo.aura, ar = (1.4 + 0.2 * (SW.aura - 1) + (aev ? 0.6 : 0)) * survArea(), am = (1 + 0.1 * (SW.aura - 1)) * 0.6 * (aev ? 2 : 1);
         dmgSrc = survWName("aura");
         enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) <= ar + e.r * 0.5) dmgEnemy(e, survWDmg(am), "L'aura brûle"); });
@@ -9838,8 +9843,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       dmgSrc = survWName("orbit");
       state.survOrbA = (state.survOrbA || 0) + dt * 3.2;
       for (var b = 0; b < nb; b++) {
-        var an = state.survOrbA + b / nb * 6.283, bx = p.vx + Math.cos(an) * 1.7, by = p.vy + Math.sin(an) * 1.7;
-        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && Math.hypot(e.vx - bx, e.vy - by) < 0.55 + e.r * 0.5 && !(e.orbHitT > tnow)) { e.orbHitT = tnow + 450; dmgSrc = survWName("orbit"); if (!dmgEnemy(e, survWDmg(om), "La lame tranche") && oev) { e.slowT = 1.2; e.slowF = 0.5; } } });
+        var an = state.survOrbA + b / nb * 6.283, bx = p.vx + Math.cos(an) * 2.1, by = p.vy + Math.sin(an) * 2.1;
+        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && Math.hypot(e.vx - bx, e.vy - by) < 0.85 + e.r * 0.5 && !(e.orbHitT > tnow)) { e.orbHitT = tnow + 450; dmgSrc = survWName("orbit"); if (!dmgEnemy(e, survWDmg(om), "La lame tranche") && oev) { e.slowT = 1.2; e.slowF = 0.5; } } });
         if (mode !== "play") return;
       }
     }
@@ -9859,7 +9864,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (!bo.back) { bo.x += bo.dx * sp3; bo.y += bo.dy * sp3; bo.d += sp3; if (bo.d >= 5.5) bo.back = true; }
         else { var hx = p.vx - bo.x, hy = p.vy - bo.y, hd = Math.hypot(hx, hy); if (hd < 0.5) { survBooms.splice(i2, 1); continue; } bo.x += hx / hd * sp3; bo.y += hy / hd * sp3; }
         var key3 = bo.id + (bo.back ? "b" : "f");
-        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && e.boomHit !== key3 && Math.hypot(e.vx - bo.x, e.vy - bo.y) < 0.6 + e.r * 0.5) { e.boomHit = key3; dmgSrc = survWName("boom"); dmgEnemy(e, survWDmg(bm), "Le boomerang frappe"); } });
+        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && e.boomHit !== key3 && Math.hypot(e.vx - bo.x, e.vy - bo.y) < 0.9 + e.r * 0.5) { e.boomHit = key3; dmgSrc = survWName("boom"); dmgEnemy(e, survWDmg(bm), "Le boomerang frappe"); } });
         if (mode !== "play") return;
       }
     }
@@ -10031,7 +10036,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var crl = survNearEnemies(6 * ar);
         if (crl.length) {
           state.xCrT = Math.max(1.8, 4 - 0.25 * SW.crows); var crn = 2 + Math.floor(SW.crows / 2); dmgSrc = survWName("crows"); sfx("slash");
-          for (var ci = 0; ci < crn; ci++) { var ct = crl[rnd(crl.length)]; survTracer(ct.vx, ct.vy, P.paon); AFX.add("slash", ct.vx, ct.vy, 380, { R: 1.1, pal: P.paon, flip: ci % 2, delay: ci * 90 }); dmgEnemy(ct, survWDmg((1 + 0.12 * (SW.crows - 1)) * 1.1), "Un corbeau pique"); }
+          for (var ci = 0; ci < crn; ci++) { var ct = crl[rnd(crl.length)]; survTracer(ct.vx, ct.vy, P.paon); AFX.add("shock", ct.vx, ct.vy, 360, { R: 1.1, pal: P.paon, delay: ci * 90 }); AFX.add("slash", ct.vx, ct.vy, 380, { R: 1.1, pal: P.paon, flip: ci % 2, delay: ci * 90 }); dmgEnemy(ct, survWDmg((1 + 0.12 * (SW.crows - 1)) * 1.1), "Un corbeau pique"); }
           if (mode !== "play") return;
         } else state.xCrT = 0.4;
       }
@@ -10160,7 +10165,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xClT <= 0) {
         var clb = null; enemies.forEach(function (e) { if (e.hp > 0 && !e.survivalBoss && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 5.5 && (!clb || e.maxHp > clb.maxHp)) clb = e; });
         if (clb) {
-          state.xClT = Math.max(4.5, 8.5 - 0.5 * SW.cleaver); dmgSrc = survWName("cleaver"); survTracer(clb.vx, clb.vy, P.taureau); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau }); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau, flip: 1, delay: 90 }); sfx("slash"); shake(2.4, 180);
+          state.xClT = Math.max(4.5, 8.5 - 0.5 * SW.cleaver); dmgSrc = survWName("cleaver"); survTracer(clb.vx, clb.vy, P.taureau); AFX.add("shock", clb.vx, clb.vy, 520, { R: 2.4, pal: P.taureau }); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau }); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau, flip: 1, delay: 90 }); sfx("slash"); shake(2.4, 180);
           dmgEnemy(clb, survWDmg((1 + 0.12 * (SW.cleaver - 1)) * 5), "La hache s'abat");
           if (mode !== "play") return;
         } else state.xClT = 0.4;
@@ -10171,7 +10176,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xLkT <= 0) {
         var lkl = survNearEnemies(6 * ar);
         if (lkl.length) {
-          state.xLkT = Math.max(1.4, 2.6 - 0.15 * SW.lucky); var lkt = lkl[rnd(lkl.length)], lkm = 1 + rnd(4); dmgSrc = survWName("lucky"); survTracer(lkt.vx, lkt.vy, P.cocotte); AFX.add("slash", lkt.vx, lkt.vy, 320, { R: 0.9, pal: P.cocotte });
+          state.xLkT = Math.max(1.4, 2.6 - 0.15 * SW.lucky); var lkt = lkl[rnd(lkl.length)], lkm = 1 + rnd(4); dmgSrc = survWName("lucky"); survTracer(lkt.vx, lkt.vy, P.cocotte); AFX.add("slash", lkt.vx, lkt.vy, 320, { R: 0.9, pal: P.cocotte }); AFX.add("shock", lkt.vx, lkt.vy, 380, { R: 1.3, pal: P.cocotte }); burst(lkt.vx, lkt.vy, "#ffd23c", 14, 100);
           addFloat(lkt.vx, lkt.vy - 0.5, lkm === 4 ? "JACKPOT ×4" : "×" + lkm, lkm === 4 ? "#ffd23c" : "#ffe9a8");
           dmgEnemy(lkt, survWDmg((1 + 0.12 * (SW.lucky - 1)) * 0.6 * lkm), "La pièce frappe"); earn(lkm + Math.floor(SW.lucky / 2), lkt.vx, lkt.vy);
           if (mode !== "play") return;
@@ -10247,17 +10252,21 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (SW.aura) {
       var arp = (1.4 + 0.2 * (SW.aura - 1) + (state.survWEvo && state.survWEvo.aura ? 0.6 : 0)) * TILE;
       var ag = ctx.createRadialGradient(cx0, cy0, arp * 0.3, cx0, cy0, arp);
-      var acol = state.survWEvo && state.survWEvo.aura ? "90,210,90" : "255,120,30"; ag.addColorStop(0, "rgba(" + acol + ",0)"); ag.addColorStop(0.8, "rgba(" + acol + "," + (0.14 + 0.06 * Math.sin(t / 200)).toFixed(2) + ")"); ag.addColorStop(1, "rgba(" + acol + ",0)");
+      var acol = state.survWEvo && state.survWEvo.aura ? "90,210,90" : "255,120,30"; ag.addColorStop(0, "rgba(" + acol + ",0)"); ag.addColorStop(0.8, "rgba(" + acol + "," + (0.3 + 0.08 * Math.sin(t / 200)).toFixed(2) + ")"); ag.addColorStop(1, "rgba(" + acol + ",0)");
       ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(cx0, cy0, arp, 0, 6.283); ctx.fill();
+      var afk = state.survAuraFx ? Math.min(1, (t - state.survAuraFx) / 420) : 1;
+      ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(" + acol + ",0.55)"; ctx.setLineDash([5, 4]); ctx.lineDashOffset = -t / 40; ctx.beginPath(); ctx.arc(cx0, cy0, arp * 0.96, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
+      if (afk < 1) { ctx.globalAlpha = 1 - afk; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,230,160,0.9)"; ctx.beginPath(); ctx.arc(cx0, cy0, arp * (0.55 + 0.5 * afk), 0, 6.283); ctx.stroke(); ctx.fillStyle = "rgba(" + acol + ",0.22)"; ctx.fill(); }
+      ctx.restore();
     }
     if (SW.orbit) {
       var nb = Math.min(4, 1 + Math.floor(SW.orbit / 2)), si = SP.dagger && SP.dagger.h || SP.sword && SP.sword.h;
       for (var b = 0; b < nb; b++) {
-        var an = (state.survOrbA || 0) + b / nb * 6.283, bx = cx0 + Math.cos(an) * 1.7 * TILE, by = cy0 + Math.sin(an) * 1.7 * TILE;
-        var bg = ctx.createRadialGradient(bx, by, 0, bx, by, 7); bg.addColorStop(0, "rgba(200,230,255,0.5)"); bg.addColorStop(1, "rgba(200,230,255,0)");
-        ctx.fillStyle = bg; ctx.fillRect(bx - 7, by - 7, 14, 14);
+        var an = (state.survOrbA || 0) + b / nb * 6.283, bx = cx0 + Math.cos(an) * 2.1 * TILE, by = cy0 + Math.sin(an) * 2.1 * TILE;
+        var bg = ctx.createRadialGradient(bx, by, 0, bx, by, 13); bg.addColorStop(0, "rgba(200,230,255,0.65)"); bg.addColorStop(1, "rgba(200,230,255,0)");
+        ctx.fillStyle = bg; ctx.fillRect(bx - 13, by - 13, 26, 26);
         ctx.save(); ctx.translate(bx, by); ctx.rotate(an + 1.57);
-        if (si) ctx.drawImage(si, -6, -6, 12, 12); else { ctx.fillStyle = "#dfe8ff"; ctx.fillRect(-1, -5, 2, 10); }
+        if (si) ctx.drawImage(si, -11, -11, 22, 22); else { ctx.fillStyle = "#dfe8ff"; ctx.fillRect(-2, -9, 4, 18); }
         ctx.restore();
       }
     }
@@ -10266,7 +10275,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       survBooms.forEach(function (bo) {
         var bx2 = bo.x * TILE + 8, by2 = bo.y * TILE + 8;
         ctx.save(); ctx.translate(bx2, by2); ctx.rotate(t / 60);
-        if (bi) ctx.drawImage(bi, -6, -6, 12, 12); else { ctx.fillStyle = "#c98a2a"; ctx.fillRect(-4, -1, 8, 2); }
+        ctx.globalAlpha = 0.35; ctx.fillStyle = "#ffe0a0"; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; if (bi) ctx.drawImage(bi, -11, -11, 22, 22); else { ctx.fillStyle = "#c98a2a"; ctx.fillRect(-7, -2, 14, 4); }
         ctx.restore();
       });
     }
@@ -14992,10 +15001,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         ctx.strokeStyle = "#c8a070"; ctx.lineWidth = 1.2; ctx.stroke();
         ctx.fillStyle = "#e8eef8"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(acx + adx * 6.5, acy + ady * 6.5); ctx.lineTo(acx + adx * 3 - ady * 2, acy + ady * 3 + adx * 2); ctx.lineTo(acx + adx * 3 + ady * 2, acy + ady * 3 - adx * 2); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
       } else if (pr.kind === "bolt" || pr.kind === "energy") {
-        var ocx = fx + 8, ocy = fy + 8, og = ctx.createRadialGradient(ocx, ocy, 0, ocx, ocy, 9); og.addColorStop(0, "rgba(220,180,255,0.9)"); og.addColorStop(1, "rgba(140,80,255,0)");
-        ctx.fillStyle = og; ctx.fillRect(ocx - 9, ocy - 9, 18, 18);
-        ctx.fillStyle = "#a56bff"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ocx, ocy, 3.6, 0, 6.2832); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(ocx - 0.8, ocy - 0.8, 1.4, 0, 6.2832); ctx.fill();
+        var eS = state && state.survival ? 1.9 : 1, ocx = fx + 8, ocy = fy + 8, og = ctx.createRadialGradient(ocx, ocy, 0, ocx, ocy, 9 * eS); og.addColorStop(0, "rgba(220,180,255,0.9)"); og.addColorStop(1, "rgba(140,80,255,0)");
+        ctx.fillStyle = og; ctx.fillRect(ocx - 9 * eS, ocy - 9 * eS, 18 * eS, 18 * eS);
+        ctx.fillStyle = "#a56bff"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ocx, ocy, 3.6 * eS, 0, 6.2832); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(ocx - 0.8 * eS, ocy - 0.8 * eS, 1.4 * eS, 0, 6.2832); ctx.fill();
         parts.push({ x: fx + 8, y: fy + 8, vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20, t0: t, life: 220, c: Math.random() < 0.5 ? "#a56bff" : "#6fd6ff" });
       } else {
         var tcol = pr.kind === "ice" ? "150,225,255" : "255,150,40", tg = ctx.createLinearGradient(fx + 8, fy + 8, fx + 8 - adx * 30, fy + 8 - ady * 30); tg.addColorStop(0, "rgba(" + tcol + ",0.8)"); tg.addColorStop(1, "rgba(" + tcol + ",0)");
