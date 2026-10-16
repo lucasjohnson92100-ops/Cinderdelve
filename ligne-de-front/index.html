@@ -1728,6 +1728,13 @@ body:has(.mapscreen.h) .topbar { display: none; }
 .btl.land .ln.nodep { filter: saturate(.45) brightness(.82); }
 .btl.land .ln.drophover { box-shadow: 0 0 0 4px #fff, 0 0 18px #ffd24a !important; }
 .dragghost .grpn { position: absolute; right: -8px; top: -8px; z-index: 5; font-family: var(--font-display); font-size: 1rem; background: #e8463a; color: #fff; border: 2px solid #0d1218; border-radius: 99px; padding: 2px 7px; }
+
+/* places d'un secteur */
+.lc.head .capp { display: flex; gap: 2px; margin-top: 1px; }
+.lc.head .capp i { width: 6px; height: 6px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .7); background: transparent; }
+.lc.head .capp i.on { background: #ffd24a; border-color: #ffd24a; }
+.lc.head .capp.full i.on { background: #ff7b61; border-color: #ff7b61; }
+.st-upg { display: grid; place-items: center; font-size: 1.5rem; line-height: 1; } .st-upg i { font-style: normal; font-size: .58rem; font-weight: 800; margin-top: 2px; white-space: nowrap; }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1996,6 +2003,26 @@ function genTerrain(rng = Math.random) {
   return { grid: Array.from({ length: GH }, () => lanes.slice()), lanes, seaCol: lanes.indexOf('mer') };
 }
 const landCols = S => [...Array(GW).keys()].filter(c => S.lanes[c] !== 'mer');
+// ---- Places par secteur : 3 au départ ; chaque terrain s'améliore à part (Fortifications) ----
+const BASE_CAP = 3, MAX_CAP = 7, LAND_TERRAINS = ['route', 'champ', 'foret', 'village', 'riviere'];
+const sectorCap = (S, c) => Math.min(MAX_CAP, BASE_CAP + ((S.capLv || {})[S.lanes[c]] || 0));
+const sectorLoad = (S, c) => S.units.filter(u => u.side === 'me' && u.c === c).length;
+// ---- Niveaux par type de cartes (comme les cartes Planète de Balatro) : +20 % d'Attaque et de Défense par niveau ----
+const CATS = {
+  foot: { name: 'Infanterie', ic: '🪖', test: u => !!u.land && u.cls === 'foot' },
+  veh: { name: 'Véhicules', ic: '🛞', test: u => !!u.land && (u.cls === 'wheel' || u.cls === 'track') },
+  air: { name: 'Aviation', ic: '✈', test: u => u.cls === 'air' },
+  mer: { name: 'Marine', ic: '⚓', test: u => u.cls === 'ship' },
+};
+const CAT_STEP = 0.2;
+const catOf = u => Object.keys(CATS).find(k => CATS[k].test(u)) || null;
+const catMult = (S, u) => { const k = catOf(u); return 1 + CAT_STEP * ((k && (S.catLv || {})[k]) || 0); };
+const upgPrice = (C, kind, id) => 5 + 2 * ((((kind === 't' ? C.capLv : C.catLv) || {})[id]) || 0);
+function applyUpgrade(C, kind, id) {
+  if (kind === 't') { C.capLv = C.capLv || {}; C.capLv[id] = Math.min(MAX_CAP - BASE_CAP, (C.capLv[id] || 0) + 1); return BASE_CAP + C.capLv[id]; }
+  C.catLv = C.catLv || {}; C.catLv[id] = (C.catLv[id] || 0) + 1; return C.catLv[id] + 1;
+}
+const canUpgradeTerrain = (C, ter) => ((C.capLv || {})[ter] || 0) < MAX_CAP - BASE_CAP;
 
 // ---- Caractéristiques d'une unité selon sa carte (type, couleurs, niveau) et les jokers ----
 function statsFor(def, cols, S, side, lv) {
@@ -2043,7 +2070,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
     officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax, supplyBonus: C.supplyBonus || 0,
     grid: T.grid, lanes: T.lanes, seaCol: T.seaCol, units: [], best: 0,
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], supply: 0, flags: {}, plan: {}, smoke: false, counterCols: [],
-    comboLv: { ...(C.comboLv || {}) }, discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 2 : 0),
+    comboLv: { ...(C.comboLv || {}) }, capLv: { ...(C.capLv || {}) }, catLv: { ...(C.catLv || {}) }, discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 2 : 0),
   };
   S.fx = lvl.fx || pickFx(lvl, rng);
   if (lvl.tutorial) ['tireurs:R:1', 'tireurs:J:1'].forEach(k => { const i = S.draw.findIndex(c => cardKey(c) === k); if (i >= 0) S.draw.push(S.draw.splice(i, 1)[0]); });
@@ -2093,22 +2120,22 @@ const shipReach = def => Math.max(1, (def.rng || [1, 2])[1] - 1);
 const isSupport = def => !def.land && !def.order && def.id !== 'bombardier';
 const blockedCol = S => (S.plan && S.plan.train !== undefined ? S.plan.train : -1);
 // Cibles d'une carte : liste de { c } (secteur) ou { uid } (unité)
-function deployTargets(S, card) {
-  const def = TYPES[card.t], out = [], L = landCols(S), open = L.filter(c => c !== blockedCol(S));
+function deployTargets(S, card, noCap) {
+  const def = TYPES[card.t], out = [], L = landCols(S), open = L.filter(c => c !== blockedCol(S)), full = c => !noCap && sectorLoad(S, c) >= sectorCap(S, c);
   if (def.order) {
     if (def.tgt === 'myCol') L.forEach(c => out.push({ c }));
     else if (def.tgt === 'myUnit') units(S, 'me').filter(u => u.land).forEach(u => out.push({ uid: u.uid, c: u.c }));
     else if (def.tgt === 'raider') units(S, 'me').filter(u => u.key === 'paras').forEach(u => out.push({ uid: u.uid, c: u.c }));
-    else if (def.tgt === 'landing') { if (landingCard(S)) open.filter(c => queue(S, 'me', c).length < MAX_LAND).forEach(c => out.push({ c })); }
+    else if (def.tgt === 'landing') { if (landingCard(S)) open.filter(c => !full(c)).forEach(c => out.push({ c })); }
     else L.forEach(c => out.push({ c }));
     return out;
   }
   if (card.t === 'bombardier') { L.forEach(c => out.push({ c })); return out; }
   if (isSupport(def)) {
-    open.forEach(c => { if (def.cls === 'ship' && (S.seaCol < 0 || Math.abs(c - S.seaCol) > shipReach(def))) return; out.push({ c }); });
+    open.forEach(c => { if (full(c)) return; if (def.cls === 'ship' && (S.seaCol < 0 || Math.abs(c - S.seaCol) > shipReach(def))) return; out.push({ c }); });
     return out;
   }
-  open.forEach(c => { if (queue(S, 'me', c).length < MAX_LAND && canStand(def.cls, S.lanes[c])) out.push({ c }); });
+  open.forEach(c => { if (!full(c) && canStand(def.cls, S.lanes[c])) out.push({ c }); });
   return out;
 }
 const deploySectors = (S, card) => deployTargets(S, card).map(t => t.c);
@@ -2233,16 +2260,19 @@ const groupCost = (S, cards) => cards.reduce((t, k) => t + cardCost(S, k), 0);
 // Secteurs où toute la main peut être posée
 function groupSectors(S, cards) {
   if (!cards.length || (cards.length > 1 && cards.some(isUnitTargetOrder)) || isUnitTargetOrder(cards[0])) return [];
-  let out = landCols(S);
-  for (const k of cards) { const ok = new Set(deployTargets(S, k).filter(t => t.uid === undefined).map(t => t.c)); out = out.filter(c => ok.has(c)); }
+  const need = groupPlaces(cards);
+  let out = landCols(S).filter(c => sectorLoad(S, c) + need <= sectorCap(S, c) || !need);
+  for (const k of cards) { const ok = new Set(deployTargets(S, k, true).filter(t => t.uid === undefined).map(t => t.c)); out = out.filter(c => ok.has(c)); }
   return out;
 }
+// Places prises par une main : chaque unité (terrestre ou appui) ; le Débarquement en ajoute une
+const groupPlaces = cards => cards.filter(k => !isOrder(k) && k.t !== 'bombardier').length + cards.filter(k => k.t === 'debarquement').length;
 function canPlayGroup(S, cards) {
   if (!cards.length || S.over) return { ok: false, reason: 'card' };
   if (cards.length > 1 && cards.some(isUnitTargetOrder)) return { ok: false, reason: 'solo' };
   if (groupCost(S, cards) > S.supply) return { ok: false, reason: 'supply' };
   if (cards.length === 1 && isUnitTargetOrder(cards[0])) return canDeployNow(S, cards[0]);
-  if (!groupSectors(S, cards).length) { const k = cards[0]; return { ok: false, reason: cards.length > 1 ? 'nosector' : TYPES[k.t].order ? 'target' : TYPES[k.t].fam === 'mer' ? 'sea' : 'cells' }; }
+  if (!groupSectors(S, cards).length) { const k = cards[0], need = groupPlaces(cards); if (need && landCols(S).some(c => c !== blockedCol(S) && sectorLoad(S, c) + need > sectorCap(S, c))) return { ok: false, reason: 'full' }; return { ok: false, reason: cards.length > 1 ? 'nosector' : TYPES[k.t].order ? 'target' : TYPES[k.t].fam === 'mer' ? 'sea' : 'cells' }; }
   return { ok: true };
 }
 // Pose la main : les unités terrestres d'abord, puis les appuis, les ordres et enfin le bombardier
@@ -2284,12 +2314,13 @@ function unitAtk(S, u) {
   if (u.land && u.cls === 'foot' && hasFx(S, 'nids')) a *= 0.75;
   if (u.cls === 'ship' && hasFx(S, 'batterie')) a *= 0.5;
   if (u.cls === 'ship' && has(S, 'lebrun')) a += 4 * S.units.filter(x => x !== u && x.side === 'me' && x.cls === 'ship').length;
+  if (u.side === 'me') a *= catMult(S, u);
   return Math.round(a * 10) / 10;
 }
 // Défense = valeur de l'unité + couvert du terrain et retranchement
 function unitDef(S, u) {
   if (!u) return 0;
-  return Math.round((u.def || 0) * (1 + coverOf(S, u) + (u.dig || 0)) * 10) / 10;
+  return Math.round((u.def || 0) * (1 + coverOf(S, u) + (u.dig || 0)) * (u.side === 'me' ? catMult(S, u) : 1) * 10) / 10;
 }
 // Combinaisons de secteur : en Attaque ou en Défense ; « + » s'additionnent, puis « × » multiplient
 const COMBOS = [
@@ -2466,6 +2497,8 @@ const SKIP_TAGS = {
   staff: { name: 'Joker', ic: '🃏', w: 2, txt: () => 'Un joker au choix parmi 3' },
   camp: { name: 'Repos', ic: '⛺', w: 1.5, txt: () => 'Soigner le QG de 16 PV ou retirer une carte' },
   event: { name: 'Événement', ic: '❓', w: 1.5, txt: () => 'Un événement : deux choix' },
+  fortif: { name: 'Fortification', ic: '🏗', w: 1.5, label: n => 'Fortif. ' + TERRAIN[n.bonus.id].name, txt: n => `+1 place dans les secteurs ${TERRAIN[n.bonus.id].name}, pour toute la campagne` },
+  niveau: { name: 'Niveau', ic: '⬆', w: 1.5, label: n => CATS[n.bonus.id].name + ' +1', txt: n => `${CATS[n.bonus.id].name} : +1 niveau (+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense), pour toute la campagne` },
 };
 // Niveau de force de la blinde b : régulier jusqu'à la 20e (≈ 7), plus rapide ensuite (mode infini)
 const levelOfBlind = b => (b < BLINDS_TO_WIN ? b * 0.37 : (BLINDS_TO_WIN - 1) * 0.37 + (b - BLINDS_TO_WIN + 1) * 0.5);
@@ -2481,6 +2514,8 @@ function blindAt(b, rng = Math.random) {
     const keys = Object.keys(SKIP_TAGS); let x = rng() * keys.reduce((t, k) => t + SKIP_TAGS[k].w, 0), tag = keys[0];
     for (const k of keys) { if (x < SKIP_TAGS[k].w) { tag = k; break; } x -= SKIP_TAGS[k].w; }
     node.bonus = { tag, n: tag === 'loot' ? 6 + node.ante * 2 : 0 };
+    if (tag === 'fortif') node.bonus.id = LAND_TERRAINS[Math.floor(rng() * LAND_TERRAINS.length)];
+    if (tag === 'niveau') { const ks = Object.keys(CATS); node.bonus.id = ks[Math.floor(rng() * ks.length)]; }
   }
   return node;
 }
@@ -2550,7 +2585,9 @@ function genShop(C, rng = Math.random, rare = false) {
   const main = mainCompo(C.deck || []), ids = Object.keys(COMPOS);
   const crates = [...new Set([main || ids[Math.floor(rng() * ids.length)], ...shuffle(ids.slice(), rng)])].slice(0, 2).map(id => ({ id, price: CRATE_PRICE }));
   const manuals = shuffle(COMBOS.map(c => c.id), rng).slice(0, 2).map(id => ({ id, price: MANUAL_PRICE }));
-  return { jokers, cards, crates, manuals, rerolls: 0 };
+  const ters = shuffle(LAND_TERRAINS.filter(t => canUpgradeTerrain(C, t)), rng), cats = shuffle(Object.keys(CATS), rng);
+  const upgrades = [...(ters.length ? [{ kind: 't', id: ters[0] }] : []), { kind: 'c', id: cats[0] }].map(u => ({ ...u, price: upgPrice(C, u.kind, u.id) }));
+  return { jokers, cards, crates, manuals, upgrades, rerolls: 0 };
 }
 const HEAL_COST = 4, HEAL_AMOUNT = 12, MANUAL_PRICE = 4;
 // Manuel tactique : une combinaison d'assaut gagne un niveau pour toute la campagne
@@ -3089,8 +3126,8 @@ function blindState(n) { const r = (C.trail || {})[n.layer]; return r === 2 ? 's
 function blindCardHTML(n) {
   const st = blindState(n), cfg = battleCfg(n), cur = st === 'cur', boss = n.type === 'boss', bd = boss ? BOSSES[n.boss] : null, tag = n.bonus && SKIP_TAGS[n.bonus.tag];
   const stamp = st === 'done' ? '<i class="bl-stamp ok">Vaincue</i>' : st === 'skipped' ? '<i class="bl-stamp sk">Passée</i>' : '';
-  const foot = cur ? `<div class="bl-btns"><button class="btn go sm" data-play="${n.layer}">Jouer</button>${tag ? `<button class="btn ghost sm bl-skip" data-skipb="${n.layer}"><span>Passer</span><small>${tag.ic} ${tag.name}</small></button>` : ''}</div>`
-    : tag && st === 'lock' ? `<div class="bl-bonus" title="Bonus si on passe">Passer : ${tag.ic} ${tag.name}</div>` : st === 'skipped' && tag ? `<div class="bl-bonus got">${tag.ic} ${tag.name} obtenu</div>` : '';
+  const foot = cur ? `<div class="bl-btns"><button class="btn go sm" data-play="${n.layer}">Jouer</button>${tag ? `<button class="btn ghost sm bl-skip" data-skipb="${n.layer}"><span>Passer</span><small>${tag.ic} ${tag.label ? tag.label(n) : tag.name}</small></button>` : ''}</div>`
+    : tag && st === 'lock' ? `<div class="bl-bonus" title="Bonus si on passe">Passer : ${tag.ic} ${tag.label ? tag.label(n) : tag.name}</div>` : st === 'skipped' && tag ? `<div class="bl-bonus got">${tag.ic} ${tag.label ? tag.label(n) : tag.name} obtenu</div>` : '';
   return `<article class="bl s${n.slot} ${st}" data-blind="${n.layer}" style="--bc:${BL_COLOR[n.slot]}">
     <header><b>${n.label}</b></header>
     <div class="bl-art">${nodeIcon(n)}</div>
@@ -3132,7 +3169,7 @@ function skipModal(n) {
   const tag = SKIP_TAGS[n.bonus.tag];
   openModal(`<div class="hd"><span class="ribbon">Passer la blinde ?</span><button class="pill" data-act="close">Retour</button></div>
     <div class="stack" style="gap:6px"><span>La blinde compte comme franchie, mais vous renoncez au butin, au renfort et à l'intendance.</span>
-    <div class="panel"><b>${tag.ic} Bonus : ${tag.name}</b><br>${tag.txt(n)}</div><span class="small">Les blindes suivantes restent plus fortes : sans renforts, le boss sera plus dur à battre.</span></div>
+    <div class="panel"><b>${tag.ic} Bonus : ${tag.label ? tag.label(n) : tag.name}</b><br>${tag.txt(n)}</div><span class="small">Les blindes suivantes restent plus fortes : sans renforts, le boss sera plus dur à battre.</span></div>
     <button class="btn go" data-doskip="${n.layer}">Passer et prendre le bonus</button>`);
 }
 function skipBlind(n) {
@@ -3140,6 +3177,8 @@ function skipBlind(n) {
   const rec = load(); rec.level = Math.max(rec.level || 0, n.layer + 1); save(rec);
   const t = n.bonus.tag;
   if (t === 'loot') { C.loot += n.bonus.n; SFX.play('coins'); toast(`Blinde passée : +$${n.bonus.n}`); return finishNode(); }
+  if (t === 'fortif') { const k = applyUpgrade(C, 't', n.bonus.id); SFX.play('buy'); toast(`Fortification : ${k} places dans les secteurs ${TERRAIN[n.bonus.id].name}.`); return finishNode(); }
+  if (t === 'niveau') { const k = applyUpgrade(C, 'c', n.bonus.id); SFX.play('buy'); toast(`${CATS[n.bonus.id].name} passe au niveau ${k}.`); return finishNode(); }
   if (t === 'depot') return cardStep(false);
   if (t === 'staff') return jokerStep();
   if (t === 'camp') return toCamp();
@@ -3362,7 +3401,8 @@ function boardHTML(view, live) {
     if (ter === 'mer') { lanes += `<div class="ln gc t-mer sea" data-c="${c}"><span class="coast">⚓ La côte · appui naval</span></div>`; continue; }
     const q = view.units.filter(u => u.side === 'me' && u.c === c).sort((a, b) => (b.land - a.land) || a.ord - b.ord);
     const blocked = S.plan && S.plan.train === c, shell = S.plan && S.plan.shell === c, mined = S.mineCol === c, pv = P && P.map[c], open = !!pv, best = P && P.best === c;
-    const head = `<b class="tname">${TERRAIN[ter].name}</b>${laneTag(ter)}<span class="marks">${shell ? '<i class="mk shell" title="Obus annoncé : −1 endurance aux unités de ce secteur">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici perd 1 endurance">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`;
+    const load = q.length, cap = sectorCap(S, c);
+    const head = `<b class="tname">${TERRAIN[ter].name}</b>${laneTag(ter)}<span class="capp ${load >= cap ? 'full' : ''}" title="Places occupées / places du secteur">${Array.from({ length: cap }, (_, k) => `<i class="${k < load ? 'on' : ''}"></i>`).join('')}</span><span class="marks">${shell ? '<i class="mk shell" title="Obus annoncé : −1 endurance aux unités de ce secteur">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici perd 1 endurance">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`;
     const toks = q.map(u => slotUnitHTML(u, u.uid === selU, depU && depU.has(u.uid))).join('');
     const f = fc[c], cf = pv || f, nc = pv ? new Set(pv.nc.map(k => k.id)) : null;
     const cbs = cf ? cf.combos.atk.map(k => cbTag(k, 'a', nc && nc.has(k.id))).join('') + cf.combos.def.map(k => cbTag(k, 'd', nc && nc.has(k.id))).join('') : '';
@@ -3552,7 +3592,7 @@ function showHits(hits) {
 }
 
 // ---- Actions ----
-const WHY = { target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour cette carte en plus.', sea: 'Aucun secteur assez proche de la côte sans appui.', cells: 'Aucun secteur au terrain praticable pour cette carte.', solo: 'Retranchement, Repli et Sabotage se jouent seuls, sur une unité.', nosector: 'Aucun secteur ne peut recevoir toute cette main (navires : près de la côte ; certains terrains sont impraticables). Retirez une carte.', };
+const WHY = { target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour cette carte en plus.', sea: 'Aucun secteur assez proche de la côte sans appui.', cells: 'Aucun secteur au terrain praticable pour cette carte.', solo: 'Retranchement, Repli et Sabotage se jouent seuls, sur une unité.', full: 'Pas assez de places : un secteur a 3 places au départ (+1 par Fortification de son terrain). Retirez une carte de la main.', nosector: 'Aucun secteur ne peut recevoir toute cette main (navires : près de la côte ; certains terrains sont impraticables). Retirez une carte.', };
 const WHY_DEP = r => WHY[r] || 'Impossible de jouer cette carte.';
 // Toucher une carte : l'ajouter à la main choisie (ou l'en retirer), comme dans Balatro
 function onCard(i) {
@@ -3570,7 +3610,7 @@ function onCard(i) {
 function deployGroupAt(cards, c) {
   const g = canPlayGroup(S, cards);
   if (!g.ok) { SFX.play('deny'); toast(WHY_DEP(g.reason)); return false; }
-  if (!groupSectors(S, cards).includes(c)) { SFX.play('deny'); toast(blockedCol(S) === c ? 'Ce secteur est coupé par le train blindé ce tour.' : 'Ce secteur ne peut pas recevoir toute cette main : posez-la sur un secteur en surbrillance.'); return false; }
+  if (!groupSectors(S, cards).includes(c)) { SFX.play('deny'); if (sectorLoad(S, c) + groupPlaces(cards) > sectorCap(S, c)) { toast(`Secteur plein : ${sectorLoad(S, c)}/${sectorCap(S, c)} places. Une Fortification ${TERRAIN[S.lanes[c]].name} en ajoute une.`); return false; } toast(blockedCol(S) === c ? 'Ce secteur est coupé par le train blindé ce tour.' : 'Ce secteur ne peut pas recevoir toute cette main : posez-la sur un secteur en surbrillance.'); return false; }
   const before = sectorForecast(S, c).strike, tot0 = frontForecast(S).toEn;
   undo.push(snapshotState(S));
   const res = playGroup(S, cards, c);
@@ -3727,7 +3767,7 @@ function sectorSheet(c) {
   const f = sectorForecast(S, c), ter = TERRAIN[S.lanes[c]], me = queue(S, 'me', c), sups = supportsAt(S, c);
   const line = u => `<li>${u.name}${u.cols ? ' ' + colorName(u.cols).toLowerCase() : ''}<span class="small muted"> · ${SWORD}${fmtN(unitAtk(S, u))} ${SHIELD}${fmtN(unitDef(S, u))} · ${u.stam} tour${u.stam > 1 ? 's' : ''}</span></li>`;
   const notes = [f.barrage ? `Barrage : +${f.barrage} d'Attaque de base` : '', f.notes.includes('bunker') ? 'Bunker : frappe ×0,7 (génie ou paras l’ignorent)' : '', f.notes.includes('mammouth') ? `Mammouth : −${mammothWall(S)} (seuil de blindage)` : '', f.notes.includes('train') ? 'Coupé par le train : ce secteur ne frappe pas ce tour' : ''].filter(Boolean);
-  openModal(`<div class="hd"><span class="ribbon">Secteur ${ter.name}</span><button class="pill" data-act="close">Fermer</button></div>
+  openModal(`<div class="hd"><span class="ribbon">Secteur ${ter.name} · ${sectorLoad(S, c)}/${sectorCap(S, c)} places</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="secsheet">
       <div class="ss-side me"><ol>${me.map(line).join('') || '<li class="muted">Aucune unité terrestre</li>'}${sups.map(u => line(u).replace('<li>', '<li>Appui : ')).join('')}</ol>
         <p class="calc">${SWORD} Attaque ${fmtN(f.baseAtk)} × ${fmtMult(f.mult.atk)} = <b>${fmtN(f.atk)}</b>${f.strike !== f.atk ? ` → frappe réelle <b>${fmtN(f.strike)}</b>` : ''}<br>${SHIELD} Défense ${fmtN(f.baseDef)} × ${fmtMult(f.mult.def)} = <b>${fmtN(f.def)}</b></p>
@@ -4153,16 +4193,20 @@ const SVC = [
 function shopTile(kind, i, it, inner) {
   const full = kind === 'j' && C.officers.length >= MAX_JOKERS && !it.sold;
   return `<div class="stile k-${kind} ${it.sold ? 'sold' : ''} ${!it.sold && C.loot < it.price ? 'poor' : ''} ${full ? 'full' : ''}" data-sk="${kind}" data-si="${i}" role="button" aria-label="Voir l'article">
-    ${inner}<span class="st-price">${it.sold ? (kind === 'k' ? 'Ouverte' : kind === 'm' ? 'Lu' : 'Vendu') : '$' + it.price}</span></div>`;
+    ${inner}<span class="st-price">${it.sold ? (kind === 'k' ? 'Ouverte' : kind === 'm' ? 'Lu' : kind === 'u' ? 'Acquis' : 'Vendu') : '$' + it.price}</span></div>`;
 }
 function renderShop() {
   saveRun('shop');
   const sh = C.shop, rc = 2 + sh.rerolls;
   if (!sh.crates) sh.crates = [];
   if (!sh.manuals) sh.manuals = [];
+  if (!sh.upgrades) sh.upgrades = [];
   const cards = sh.cards.map((c, i) => shopTile('c', i, c, miniCardHTML(c.card))).join('');
   const joks = sh.jokers.map((j, i) => shopTile('j', i, j, `<span class="st-art">${officerSVG(j.id, 52)}</span><b class="st-nm">${JOKERS.find(x => x.id === j.id).name}</b>`)).join('');
   const mans = sh.manuals.map((m, i) => { const c = COMBOS.find(x => x.id === m.id), lv = (C.comboLv || {})[m.id] || 1; return shopTile('m', i, m, `<span class="st-art st-book">📘<i>niv. ${lv + 1}</i></span><b class="st-nm">${c.name}</b>`); }).join('');
+  const upgs = sh.upgrades.map((u, i) => shopTile('u', i, u, u.kind === 't'
+    ? `<span class="st-art st-upg">🏗<i>${BASE_CAP + ((C.capLv || {})[u.id] || 0)} → ${BASE_CAP + ((C.capLv || {})[u.id] || 0) + (u.sold ? 0 : 1)} places</i></span><b class="st-nm">Fortif. ${TERRAIN[u.id].name}</b>`
+    : `<span class="st-art st-upg">${CATS[u.id].ic}<i>niv. ${((C.catLv || {})[u.id] || 0) + (u.sold ? 1 : 2)}</i></span><b class="st-nm">${CATS[u.id].name}</b>`)).join('');
   const crates = sh.crates.map((cr, i) => { const [k, col] = CRATE_ART[cr.id]; return shopTile('k', i, cr, `<span class="st-art st-crate">${spriteSVG(k, 'me', 40, col)}</span><b class="st-nm">${COMPOS[cr.id].name.replace('Caisse ', '')}</b>`); }).join('');
   const svcs = SVC.map(v => { const pr = v.price(), ok = v.ok() && C.loot >= pr; return `<button class="ssvc" data-act="${v.act}" ${ok ? '' : 'disabled'}><span class="sv-ic">${v.ic}</span><b>${v.name}</b><span class="st-price">${v.ok() ? '$' + pr : '—'}</span></button>`; }).join('');
   app.innerHTML = `<div class="shop2 land" lang="fr"><aside class="s2-side">
@@ -4173,14 +4217,14 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouvelles recrues, jokers et manuels">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf"><h3>Recrues et ordres</h3><div class="s2-row">${cards}</div></section>
-    <section class="s2-shelf"><h3>État-major · Manuels tactiques</h3><div class="s2-row">${joks}${mans}</div></section>
+    <section class="s2-shelf"><h3>État-major · Manuels · Améliorations</h3><div class="s2-row six">${joks}${mans}${upgs}</div></section>
     <section class="s2-shelf"><h3>Caisses · Services</h3><div class="s2-row six">${crates}${svcs}</div></section></div>
 
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
 function shopBuy(kind, i) {
-  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates }[kind]?.[i];
+  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates, u: sh.upgrades }[kind]?.[i];
   if (!it || it.sold) return 'Déjà acheté.';
   if (kind === 'j' && C.officers.length >= MAX_JOKERS) return 'Vos 5 emplacements de joker sont pleins.';
   if (C.loot < it.price) return `Pas assez de butin : il faut $${it.price}.`;
@@ -4189,16 +4233,19 @@ function shopBuy(kind, i) {
   if (kind === 'c') { C.deck.push({ ...it.card }); SFX.play('buy'); toast(`${TYPES[it.card.t].name} rejoint votre paquet.`); }
   if (kind === 'j') { C.officers.push(it.id); if (it.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === it.id).name} rejoint l'état-major.`); }
   if (kind === 'm') { const lv = buyManual(C, it.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === it.id).name} passe au niveau ${lv}.`); }
+  if (kind === 'u') { const k = applyUpgrade(C, it.kind, it.id); SFX.play('buy'); toast(it.kind === 't' ? `Fortification : ${k} places dans les secteurs ${TERRAIN[it.id].name}.` : `${CATS[it.id].name} passe au niveau ${k}.`); }
   renderShop();
   return '';
 }
 // Détail d'un article (toucher), avec un bouton d'achat de secours
 function shopDetail(kind, i) {
-  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates }[kind]?.[i]; if (!it) return;
+  const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates, u: sh.upgrades }[kind]?.[i]; if (!it) return;
   let body = '', title = '';
   if (kind === 'c') { title = TYPES[it.card.t].name; body = `<div class="cardrow">${cardHTML(it.card, 'pick')}</div>`; }
   if (kind === 'j') { const d = JOKERS.find(x => x.id === it.id); title = d.name; body = `<div class="row" style="flex-wrap:nowrap;gap:14px">${officerSVG(it.id, 84)}<p>${d.desc}</p></div><p class="small muted">Un joker agit à chaque bataille, pour toute la campagne (5 au plus).</p>`; }
   if (kind === 'm') { const c = COMBOS.find(x => x.id === it.id), lv = (C.comboLv || {})[it.id] || 1, cur = c.add ? '+' + fmtMult(c.add + c.step * (lv - 1)) : '×' + fmtMult(c.mul + c.step * (lv - 1)), nx = c.add ? '+' + fmtMult(c.add + c.step * lv) : '×' + fmtMult(c.mul + c.step * lv); title = `Manuel : ${c.name}`; body = `<p><b>${c.name}</b> (${c.txt}) passe du niveau ${lv} au niveau ${lv + 1} : <b>${cur} → ${nx} Mult</b>, pour toute la campagne.</p>`; }
+  if (kind === 'u' && it.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[it.id] || 0); title = `Fortifications : ${TERRAIN[it.id].name}`; body = `<p>Les secteurs <b>${TERRAIN[it.id].name}</b> passent de <b>${cap} à ${Math.min(MAX_CAP, cap + 1)} places</b>, pour toute la campagne (${MAX_CAP} au plus). Plus de places = de plus grosses mains dans ce terrain (Bataillon dès 5 unités).</p>`; }
+  if (kind === 'u' && it.kind === 'c') { const lv = ((C.catLv || {})[it.id] || 0) + 1; title = `Niveau : ${CATS[it.id].name}`; body = `<p>Toutes vos unités <b>${CATS[it.id].name.toLowerCase()}</b> passent du niveau ${lv} au niveau ${lv + 1} : <b>+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense</b> de plus, pour toute la campagne.</p>`; }
   if (kind === 'k') { const c = COMPOS[it.id]; title = c.name; body = `<p>À l'ouverture : 1 carte au choix parmi 3, tirées de cette composition (${c.tip}).</p><div class="mclist">${c.cards.map(t => miniCardHTML(mkCard(t, TYPES[t].order ? '' : 'J'))).join('')}</div>`; }
   const can = !it.sold && C.loot >= it.price && !(kind === 'j' && C.officers.length >= MAX_JOKERS);
   openModal(`<div class="hd"><span class="ribbon">${title}</span><button class="pill" data-act="close">Fermer</button></div>${body}
@@ -4319,7 +4366,8 @@ const HELP_PAGES = () => [
   { t: 'Jouer une main', l: [
     '<b>Jouer une main</b>, comme dans Balatro : touchez plusieurs cartes, chaque secteur affiche alors son score <b>après</b> la pose (★ = le meilleur). Touchez le secteur : toutes s\'y posent et s\'ajoutent à ce qui s\'y trouve déjà.',
     '<b>Lire le score</b> : à droite de chaque secteur, Attaque (bleu) × Mult (rouge) = sa frappe, en gros chiffres dorés. Les étiquettes du secteur montrent ses combos ; une étiquette qui clignote est un combo que la main va déclencher.',
-    '<b>Ordres</b> : la plupart se jouent dans la main (Barrage, Assaut, Fumigènes…). Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
+    '<b>Places</b> : 3 par secteur au départ (les ronds sous le nom). <b>Fortifications</b> : +1 place pour un terrain. <b>Niveaux</b> (Infanterie, Véhicules, Aviation, Marine) : +20 % d\'Attaque et de Défense. À l\'intendance, ou en passant une blinde.',
+    '<b>Ordres</b> : ils ne prennent pas de place. Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
   { t: 'Vos unités', l: [
     '<b>Usure</b> : chaque unité a une <b>endurance</b> (les points sous elle) : infanterie 2 tours, blindés, mitrailleuses et navires 3. Elle perd 1 point par tour, puis quitte le front.',
     '<b>Prolonger</b> : couleur verte (+1), ordres Retranchement et Relève (+1), infirmiers (+1 aux voisins). <b>Repli</b> renvoie la carte dans votre main.',
