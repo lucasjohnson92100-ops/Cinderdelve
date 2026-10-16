@@ -535,5 +535,10 @@
  "Danger : ": "Danger: ",
  " (verrouillé)": " (locked)",
  "Termine un lieu pour débloquer le niveau de danger 1.": "Clear a location to unlock danger level 1.",
- "Arme de prédilection · ": "Favorite weapon · "
+ "Arme de prédilection · ": "Favorite weapon · ",
+ "Passer": "Skip",
+ " œufs d'or à la place": " golden eggs instead",
+ "Aucun arcane : +": "No arcane: +",
+ "Un pouvoir pour le reste de la partie, avec un prix à payer. Tu peux aussi passer.": "A power for the rest of the run, with a price to pay. You can also skip.",
+ " · +16 % de puissance": " · +16% power"
 }
