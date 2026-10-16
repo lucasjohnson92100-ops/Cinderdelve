@@ -3,7 +3,7 @@ const fs=require('fs');
 let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
 for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
-const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
+const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
 // Valeur d'une position : fraction du QG ennemi frappée ce tour, moins la fraction de votre QG perdue ; les unités qui restent comptent un peu
@@ -46,17 +46,19 @@ function botTurn(S){
 }
 const RES=0;
 function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
-const PATH=[['battle',0],['battle',1],['elite',1],['battle',2],['boss',3],['battle',4],['elite',4],['battle',5],['battle',6],['boss',7]];
+const PATH=Array.from({length:+process.env.BLINDS||20},(_,i)=>[['battle','battle','elite','boss'][i%4],i]);
 // ONE=n : trace une seule bataille du niveau n-1 (TYPE=boss|elite pour le type de nœud)
-if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],loot:0};const S=E.newBattle(C,rnd,E.battleCfg({type:process.env.TYPE||'battle',levelIdx:+process.env.ONE-1,layer:1,obj:{type:'hq'},boss:process.env.TYPE==='boss'?(process.env.BOSS||'tank'):undefined}));
+if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],loot:0};const S=E.newBattle(C,rnd,E.battleCfg(E.genMap(rnd)[+process.env.ONE-1][0]));
   for(let k=0;k<15&&!S.over;k++){botTurn(S);const F=E.frontForecast(S);console.log('T'+S.turn,'QG',JSON.stringify(S.hq),'frappe',F.toEn,'déf',F.def,'riposte',F.enAtk,'→',F.toMe,'| fx',S.fx.join(','),'| vous',E.units(S,'me').map(u=>u.key+'@'+u.c+'('+u.stam+')').join(' '));E.endTurn(S);}
   console.log('fin',JSON.stringify(S.hq),S.over);process.exit(0);}
 const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0,hq:0}));let done=0;const stats={jok:0,lv:0};
 for(let r=0;r<N;r++){
   const doc=process.env.DOC||E.pickDoctrines(rnd)[0];const C={deck:[...E.START_DECK.map(c=>({...c})),...E.doctrineCards(doc)],hq:E.HQ_START,hqMax:E.HQ_START,officers:[],loot:2};let ok=true;
+  const MAP=E.genMap(rnd);
   for(let i=0;i<PATH.length;i++){
-    const [type,lv]=PATH[i];reach[i].n++;reach[i].hq+=C.hq;
-    const f=fight(C,{type,levelIdx:lv,layer:Math.max(1,i),obj:{type:'hq'},boss:type==='boss'?(process.env.BOSS||['tank','train','battery'][Math.floor(rnd()*3)]):undefined});reach[i].t+=f.S.turn;if(!f.win){ok=false;break;}reach[i].w++;
+    const node=MAP[i][0],type=node.type;reach[i].n++;reach[i].hq+=C.hq;
+    if(process.env.SKIP&&type!=='boss'&&i>=2&&node.slot===0){C.loot+=node.bonus.tag==='loot'?node.bonus.n:5;reach[i].w++;continue;}
+    const f=fight(C,node);reach[i].t+=f.S.turn;if(!f.win){ok=false;break;}reach[i].w++;
     C.hq=Math.min(C.hqMax,f.S.hq.me+12);C.loot+=E.lootFor(f.S,C,type).total;
     if(type==='boss'&&i<PATH.length-1)E.addSupplyBonus(C);
     // carte de récompense : de préférence un type que le paquet n'a pas encore, sinon une unité

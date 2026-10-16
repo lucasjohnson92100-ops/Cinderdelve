@@ -1,7 +1,7 @@
 # Ligne de Front
 
 Deckbuilder de guerre solo (1944), dans un style cartoon « Advance Wars ».
-Vous déployez des groupes d'unités dans les secteurs d'un plateau simple (sans déplacement), vous les fusionnez par couleur et vous avancez sur une carte de campagne jusqu'au quartier général final.
+Vous déployez des groupes d'unités dans les secteurs d'un plateau simple (sans déplacement), vous les fusionnez par couleur et vous enchaînez des « blindes » façon Balatro : 20 à vaincre pour gagner, puis l'infini.
 
 ## Jouer
 
@@ -9,11 +9,11 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 
 ## Mode paysage
 
-Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche** (les secteurs, puis votre main en dessous) et **la blinde à battre est à droite** (le QG ennemi, ses effets et sa riposte, puis les totaux, votre QG, les conseils et « Fin du tour »). La carte de campagne se lit de gauche à droite, de la plage du débarquement à la capitale ennemie ; l'intendance range ses étagères à gauche et la zone d'achat à droite. Un téléphone tenu en portrait affiche « Tournez votre téléphone ».
+Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche** (les secteurs, puis votre main en dessous) et **la blinde à battre est à droite** (le QG ennemi, ses effets et sa riposte, puis les totaux, votre QG, les conseils et « Fin du tour »). L'écran de campagne montre la manche en cours (4 blindes côte à côte) ; l'intendance range ses étagères à gauche et la zone d'achat à droite. Un téléphone tenu en portrait affiche « Tournez votre téléphone ».
 
-- **Jamais de défilement** : aucun écran ni aucune fenêtre ne défile ni ne se rogne, de 568×320 (iPhone SE couché) à 1280×720. L'aide, le paquet et le guide sont en pages courtes (Précédent / Suivant), la carte de campagne tient entière à l'écran (la taille des nœuds suit la place ; les noms des étapes lointaines s'affichent au toucher), les écrans de choix se compactent selon la hauteur. `node` + Playwright : le test `noscroll` parcourt une trentaine d'écrans sur 8 tailles.
-- **Accueil** : le logo, la promesse et les trois points forts à gauche sur l'illustration ; à droite un menu clair. Une campagne en cours s'affiche avec sa progression (9 pastilles), votre QG, le butin, les jokers et le paquet, et un gros bouton « Continuer ». « Nouvelle campagne » demande une seconde touche avant d'effacer la campagne en cours.
-- **Carte** : un panneau latéral donne la progression (les boss sont marqués ☠), votre QG, et **la liste des prochaines étapes** à toucher, sans chercher sur la carte. La carte est plus grande : nœuds de 66 px, noms lisibles sur deux lignes, régions nommées en haut, défilement au doigt ou à la souris (glisser).
+- **Jamais de défilement** : aucun écran ni aucune fenêtre ne défile ni ne se rogne, de 568×320 (iPhone SE couché) à 1280×720. L'aide, le paquet et le guide sont en pages courtes (Précédent / Suivant), l'écran des blindes tient entier, les écrans de choix se compactent selon la hauteur. `node` + Playwright : le test `noscroll` parcourt une trentaine d'écrans sur 8 tailles.
+- **Accueil** : le logo, la promesse et les trois points forts à gauche sur l'illustration ; à droite un menu clair. Une campagne en cours s'affiche avec sa progression (20 pastilles), votre QG, le butin, les jokers et le paquet, et un gros bouton « Continuer ». « Nouvelle campagne » demande une seconde touche avant d'effacer la campagne en cours.
+- **Campagne en blindes** : un panneau latéral donne la progression (20 pastilles, un ☠ tous les 4), votre QG et vos jokers ; à droite, les 4 blindes de la manche (Petite, Moyenne, Grosse, Boss) avec leur cible de PV, leur objectif et, pour les blindes à venir, le bonus gagné en les passant.
 - **Plateau en couloirs** : chaque secteur est un couloir horizontal qui avance vers la blinde. De gauche à droite : le terrain (avec ses couleurs fortes ▲ et faibles ▼ et les marqueurs d'obus, de mines ou de train), vos 3 emplacements d'unités (sprite à gauche, Attaque, Défense et endurance à droite), l'appui, puis le score du couloir qui pointe vers le QG ennemi. Les terrains se distinguent d'un coup d'œil (route sable, champ vert clair, forêt sombre, village, rivière). La main est plus grande.
 
 ## Règles en bref
@@ -55,7 +55,7 @@ Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche*
 - **Ravitaillement permanent** : +1 par tour (jusqu'à +3) en battant un boss ou à l'intendance ($14, puis $26, puis $38).
 - **Jokers** : 23 cartes à effet permanent (5 au maximum), achetées ou gagnées en campagne.
 - **Entraînement** : améliorer une carte jusqu'au niveau 3. On peut aussi acheter de nouvelles cartes ou en retirer.
-- **Carte de campagne** : 9 étapes à embranchements (bataille, élite, boss, camp, dépôt, état-major). Objectifs : détruire le QG, tenir la position, éliminer des unités.
+- **Blindes** : 4 par manche (Petite, Moyenne, Grosse = élite, Boss), chacune plus forte que la précédente (PV et attaque du QG ennemi croissants). On peut **passer** les trois premières (dès la 3e blinde) pour un **bonus** annoncé — butin, carte au choix, joker, soins ou événement — au prix du butin, du renfort et de l'intendance ; le boss est obligatoire. **20 blindes** (la 20e est le boss final) donnent la victoire ; on peut alors **continuer à l'infini**, avec des blindes de plus en plus fortes et des effets plus nombreux. Objectifs : détruire le QG, tenir la position, frappe décisive.
 
 ## Graphismes et animations
 

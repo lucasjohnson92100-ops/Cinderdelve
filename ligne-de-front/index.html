@@ -1482,7 +1482,7 @@ body:has(.title) { padding: 0; overflow: hidden; }
 body:has(.home) { padding: 0 !important; overflow: hidden; }
 body:has(.home) .topbar { display: none; }
 #app:has(.home) { max-width: none; padding: 0; }
-.home { position: relative; height: 100dvh; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); align-items: center; column-gap: 3vw; padding: 3vh 4vw 8vh; overflow: hidden;
+.home { position: relative; height: 100dvh; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 6px 3vw; overflow: hidden;
   background: linear-gradient(90deg, rgba(8, 12, 20, .86) 0, rgba(8, 12, 20, .55) 42%, rgba(8, 12, 20, .12) 72%), linear-gradient(180deg, rgba(8, 12, 20, .25) 0, rgba(8, 12, 20, 0) 35%, rgba(8, 12, 20, .7) 100%), var(--art-title) center 70% / cover, #1b2540; }
 .hm-brand { display: grid; gap: 1.6vh; justify-items: start; text-align: left; max-width: 560px; animation: fadein .7s both; }
 .hm-kicker { font-family: var(--font-display); font-size: .74rem; letter-spacing: .18em; text-transform: uppercase; color: #ffe08a; background: rgba(8, 12, 20, .55); border: 2px solid rgba(255, 224, 138, .6); border-radius: 99px; padding: 2px 12px; }
@@ -1503,7 +1503,9 @@ body:has(.home) .topbar { display: none; }
 .hm-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .78rem; color: #5a4a35; font-weight: 700; }
 .hm-parade { position: absolute; left: 0; right: 0; bottom: 0; height: 52px; overflow: hidden; pointer-events: none; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); background: linear-gradient(180deg, transparent, rgba(10, 14, 10, .55)); }
 .hm-parade .ptrack { animation-duration: 28s; padding-top: 4px; }
-@media (max-height: 460px) { .home { padding: 2vh 4vw 7vh; } .hm-feat { display: none; } .hm-menu { padding: 10px; gap: 7px; } .hm-menu .btn.big { padding: 9px 12px; font-size: 1rem; } .hm-run { gap: 5px; padding: 7px 9px; } }
+.hm-in { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); align-items: center; column-gap: 3vw; width: 100%; max-width: 980px; transform-origin: center center; flex: none; }
+.home.nopar .hm-parade { display: none; }
+@media (max-height: 460px) { .hm-feat { display: none; } .hm-menu { padding: 10px; gap: 7px; } .hm-menu .btn.big { padding: 9px 12px; font-size: 1rem; } .hm-run { gap: 5px; padding: 7px 9px; } }
 /* ==== Carte de campagne : panneau latéral + carte lisible ==== */
 .mapscreen.h { grid-template-columns: 236px minmax(0, 1fr); }
 .mapbar.side { gap: 9px; padding: 10px 12px; padding-bottom: 10px; background: linear-gradient(180deg, #1f2a3a, #141b26); }
@@ -1606,6 +1608,31 @@ body:has(.mapscreen.h) .topbar { display: none; }
 @media (max-height: 420px) { .evchoice { padding: 7px 10px; } .evchoice b { font-size: .9rem; } .evchoice span { font-size: .72rem; } }
 @media (max-height: 380px) { .glist { columns: 3 150px; font-size: .68rem; } .glist li { padding-bottom: 4px; } .gmock .ln { height: 48px; } .doctrine .dchip .dtx b, .dchip .dtx b { font-size: .6rem; overflow-wrap: anywhere; } .doctrine .dchip { min-width: 0; } }
 @media (max-height: 360px) { .modal .box { padding: 8px 12px; gap: 6px; } .modal .hd { margin-bottom: 0; } .crateopen { zoom: .55; } .modal .box > p.small { margin: 0; font-size: .7rem; } .gmock .ln { height: 42px; } .glist li { padding-bottom: 2px; line-height: 1.15; } .gm-hq { padding: 3px 6px; } }
+
+/* ==== Campagne en blindes (façon Balatro) ==== */
+.bw { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 10px; height: 100dvh; box-sizing: border-box; min-width: 0; background: radial-gradient(120% 90% at 50% 20%, #2f6b4a, #1b3d2e 70%, #12281f); }
+.bw-head { display: flex; align-items: baseline; gap: 12px; flex: none; }
+.bw-ante { font-family: var(--font-stencil, var(--font-display)); font-size: 1.35rem; color: #ffe08a; text-transform: uppercase; letter-spacing: .06em; text-shadow: 0 2px 0 #3b2a0d; }
+.bw-sub { color: #d7e9d2; font-size: .78rem; font-weight: 700; opacity: .9; }
+.blrow { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.bl { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-height: 0; padding: 0 8px 8px; text-align: center; color: #2b2116; background: linear-gradient(180deg, #fff8e2, #f1e3b8); border: 3px solid #2b2116; border-radius: 14px; box-shadow: 0 5px 0 #2b2116, 0 12px 22px rgba(0, 0, 0, .35); cursor: pointer; overflow: hidden; transition: transform .15s; }
+.bl header { margin: 0 -8px; padding: 4px 6px; background: var(--bc); color: #fff; font-family: var(--font-display); font-size: .95rem; letter-spacing: .03em; text-shadow: 0 2px 0 rgba(0, 0, 0, .35); border-bottom: 3px solid #2b2116; }
+.bl.s3 header::before { content: "☠ "; }
+.bl-art { flex: 1 1 0; min-height: 0; display: grid; place-items: center; overflow: hidden; } .bl-art svg { max-height: 100%; width: auto; max-width: 70%; }
+.bl-name { font-weight: 800; font-size: .8rem; line-height: 1.1; }
+.bl-goal { display: grid; padding: 3px 4px; background: rgba(43, 33, 22, .1); border-radius: 8px; } .bl-goal small { font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; opacity: .7; }
+.bl-goal strong { font-family: var(--font-display); font-size: 1.15rem; color: #b8281c; } .bl-goal strong i { font-style: normal; font-size: .7rem; }
+.bl-obj { font-size: .74rem; font-weight: 800; color: #2559b5; } .bl-rew { font-size: .7rem; opacity: .85; }
+.bl-btns { display: grid; gap: 4px; } .bl-btns .btn { width: 100%; justify-content: center; padding: 6px 8px; font-size: .9rem; }
+.bl-skip { display: grid !important; gap: 0; line-height: 1.05; } .bl-skip small { font-size: .66rem; font-weight: 800; opacity: .8; }
+.bl-bonus { font-size: .7rem; font-weight: 800; color: #5a4a35; background: rgba(43, 33, 22, .09); border-radius: 8px; padding: 3px 4px; } .bl-bonus.got { color: #2f7d3a; }
+.bl.cur { transform: translateY(-4px); border-color: #ffd24a; box-shadow: 0 5px 0 #7a5a10, 0 0 0 3px rgba(255, 210, 74, .55), 0 14px 26px rgba(0, 0, 0, .45); }
+.bl.lock { filter: saturate(.55) brightness(.9); } .bl.done, .bl.skipped { filter: saturate(.7) brightness(.82); }
+.bl-stamp { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%) rotate(-14deg); font-family: var(--font-stencil, var(--font-display)); font-style: normal; font-size: .95rem; letter-spacing: .06em; text-transform: uppercase; padding: 1px 8px; white-space: nowrap; border: 3px solid; border-radius: 8px; background: rgba(255, 248, 226, .85); pointer-events: none; }
+.bl-stamp.ok { color: #2f7d3a; } .bl-stamp.sk { color: #2559b5; }
+.ms-pips i.skip { background: #5aa0f0; border-color: #2559b5; }
+@media (max-height: 460px) { .bw { padding: 6px 10px; gap: 5px; } .bw-ante { font-size: 1.05rem; } .bw-sub { font-size: .68rem; } .blrow { gap: 7px; } .bl { gap: 2px; padding: 0 6px 6px; } .bl header { font-size: .8rem; padding: 2px 4px; } .bl-goal strong { font-size: .98rem; } .bl-goal small, .bl-rew { display: none; } .bl-btns .btn { padding: 4px 6px; font-size: .8rem; } .bl-name { font-size: .72rem; } }
+@media (max-height: 340px) { .bw-sub, .bl-name { display: none; } .bl-art svg { max-width: 55%; } .bl-obj { font-size: .66rem; } .bl-bonus { font-size: .62rem; padding: 1px 3px; } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1775,7 +1802,7 @@ const mammothWall = S => Math.round(16 * egrow(S.level));
 function pickFx(lvl, rng = Math.random) {
   const lv = lvl.levelIdx || 0, pool = Object.keys(HQFX).filter(k => !HQFX[k].boss && HQFX[k].min <= lv), out = [];
   if (lvl.boss) out.push(BOSS_FX[lvl.boss] || 'mammouth');
-  const n = lvl.tutorial ? 0 : lvl.boss ? (lvl.final ? 2 : 1) : lvl.elite ? 2 : lv >= 1 ? 1 : 0;
+  const n = (lvl.tutorial ? 0 : lvl.boss ? (lvl.final ? 2 : 1) : lvl.elite ? 2 : lv >= 1 ? 1 : 0) + (!lvl.tutorial && lv >= 9 ? 1 : 0);
   const bag = shuffle(pool.slice(), rng);
   while (out.length < n + (lvl.boss ? 1 : 0) && bag.length) out.push(bag.pop());
   return out;
@@ -2314,47 +2341,52 @@ function applyEvent(C, id, k, rng = Math.random) {
 }
 
 // ---- Carte de campagne ----
-const LAYER_SIZES = [1, 2, 3, 2, 1, 3, 3, 2, 1];
-const LAYER_POOLS = [['battle'], ['battle', 'event', 'depot'], ['battle', 'elite', 'staff'], ['battle', 'camp', 'event'], ['boss'],
-  ['battle', 'elite', 'event'], ['battle', 'staff', 'event'], ['camp', 'battle', 'event'], ['boss']];
-const LAYER_LEVEL = [0, 1, 1, 2, 3, 4, 5, 6, 7];
 const PLACES = ["Plage d'assaut", 'Bocage', 'Ferme des Trois Chênes', 'Carrefour de la Croix', 'Colline 62', 'Village fortifié', 'Haies normandes', 'Gare de triage',
   'Forêt des Ardennes', 'Ville en ruines', 'Aérodrome', 'Ligne de défense', 'Col des Vosges', 'Faubourg nord', 'Usine désaffectée', 'Pont du Rhin'];
 const NODE_LABEL = { battle: 'Bataille', elite: 'Bataille d’élite', boss: 'Boss', camp: 'Camp de base', depot: 'Dépôt de ravitaillement', staff: 'État-major', event: 'Événement' };
 
-function genMap(rng = Math.random) {
-  const places = shuffle(PLACES.slice(), rng), bosses = shuffle(Object.keys(BOSSES), rng);
-  const layers = LAYER_SIZES.map((size, l) => {
-    let types = shuffle(LAYER_POOLS[l].slice(), rng).slice(0, size);
-    if (l > 0 && size > 1 && !types.includes('battle')) types[0] = 'battle';
-    return types.map((type, i) => {
-      const node = { id: l + '-' + i, layer: l, i, type, levelIdx: LAYER_LEVEL[l], next: [] };
-      if (type === 'boss') { node.name = l === 4 ? 'Le pont' : 'Quartier général'; node.boss = bosses[l === 4 ? 0 : 1]; }
-      else if (type === 'battle' || type === 'elite') node.name = places.pop();
-      else node.name = NODE_LABEL[type];
-      if (type === 'battle' && l > 0) { const r = rng(); node.obj = r < 0.6 ? { type: 'hq' } : r < 0.8 ? { type: 'hold', n: 5 + (node.levelIdx >= 4 ? 1 : 0) + (node.levelIdx >= 6 ? 1 : 0) } : { type: 'kills', n: 6 + Math.floor(node.levelIdx / 2) }; }
-      else if (type === 'battle' || type === 'elite' || type === 'boss') node.obj = { type: 'hq' };
-      return node;
-    });
-  });
-  for (let l = 0; l < layers.length - 1; l++) {
-    const a = layers[l], b = layers[l + 1], inc = b.map(() => 0);
-    a.forEach((n, i) => {
-      const pos = a.length === 1 ? null : (i * (b.length - 1)) / (a.length - 1);
-      const t = pos === null ? b.map((_, j) => j) : [...new Set([Math.floor(pos), Math.ceil(pos)])];
-      n.next = t; t.forEach(j => { inc[j]++; });
-    });
-    inc.forEach((c, j) => { if (!c) { const i = Math.min(a.length - 1, Math.round((j * (a.length - 1)) / Math.max(1, b.length - 1))); a[i].next.push(j); a[i].next.sort(); } });
+// Campagne façon Balatro : une suite de « blindes » à passer ou à faire. Chaque manche (ante) en compte 4 : Petite, Moyenne, Grosse, puis un Boss.
+// On peut PASSER les trois premières pour un bonus (au lieu du butin et des renforts) ; le Boss est obligatoire.
+// 20 blindes à vaincre pour gagner la guerre ; ensuite la campagne continue à l'infini, toujours plus dure.
+const BLINDS_PER_ANTE = 4, BLINDS_TO_WIN = 20;
+const BLIND_NAMES = ['Petite blinde', 'Moyenne blinde', 'Grosse blinde', 'Boss'];
+const BLIND_TYPES = ['battle', 'battle', 'elite', 'boss'];
+const BLIND_HQ = [1, 1, 1.08, 1.05];
+const BOSS_ORDER = ['train', 'battery', 'tank'];
+const SKIP_TAGS = {
+  loot: { name: 'Butin', ic: '💰', w: 3, txt: n => `+$${n.bonus.n} de butin de guerre` },
+  depot: { name: 'Renfort', ic: '🂠', w: 2, txt: () => 'Une carte au choix parmi 3' },
+  staff: { name: 'Joker', ic: '🃏', w: 2, txt: () => 'Un joker au choix parmi 3' },
+  camp: { name: 'Repos', ic: '⛺', w: 1.5, txt: () => 'Soigner le QG de 16 PV ou retirer une carte' },
+  event: { name: 'Événement', ic: '❓', w: 1.5, txt: () => 'Un événement : deux choix' },
+};
+// Niveau de force de la blinde b : régulier jusqu'à la 20e (≈ 7), plus rapide ensuite (mode infini)
+const levelOfBlind = b => (b < BLINDS_TO_WIN ? b * 0.37 : (BLINDS_TO_WIN - 1) * 0.37 + (b - BLINDS_TO_WIN + 1) * 0.5);
+const anteOf = b => Math.floor(b / BLINDS_PER_ANTE) + 1;
+function blindAt(b, rng = Math.random) {
+  const slot = b % BLINDS_PER_ANTE, type = BLIND_TYPES[slot], lv = Math.round(levelOfBlind(b) * 100) / 100;
+  const node = { id: String(b), layer: b, i: 0, slot, type, levelIdx: lv, next: [0], label: BLIND_NAMES[slot], ante: anteOf(b) };
+  if (type === 'boss') { const k = Math.floor(b / BLINDS_PER_ANTE); node.final = b === BLINDS_TO_WIN - 1; node.boss = node.final ? 'tank' : BOSS_ORDER[k % BOSS_ORDER.length]; node.name = BOSSES[node.boss].name; }
+  else node.name = PLACES[Math.floor(rng() * PLACES.length)];
+  if (b >= 2 && slot === 1) { const r = rng(); node.obj = r < 0.5 ? { type: 'hq' } : r < 0.75 ? { type: 'hold', n: 5 + (lv >= 3 ? 1 : 0) + (lv >= 5 ? 1 : 0) } : { type: 'burst' }; }
+  else node.obj = { type: 'hq' };
+  if (type !== 'boss' && b >= 2) {
+    const keys = Object.keys(SKIP_TAGS); let x = rng() * keys.reduce((t, k) => t + SKIP_TAGS[k].w, 0), tag = keys[0];
+    for (const k of keys) { if (x < SKIP_TAGS[k].w) { tag = k; break; } x -= SKIP_TAGS[k].w; }
+    node.bonus = { tag, n: tag === 'loot' ? 6 + node.ante * 2 : 0 };
   }
-  return layers;
+  return node;
 }
+// La carte de campagne : une liste de couches d'un seul élément (la blinde b). Elle s'allonge à la demande en mode infini.
+function ensureMap(map, upTo, rng = Math.random) { for (let b = map.length; b <= upTo; b++) map.push([blindAt(b, rng)]); return map; }
+function genMap(rng = Math.random) { return ensureMap([], BLINDS_TO_WIN - 1, rng); }
 function battleCfg(node) {
-  const base = LEVELS[node.levelIdx], elite = node.type === 'elite', o = node.obj || { type: 'hq' };
-  const hq = Math.round(base.hq * HQ_MULT * Math.pow(HQ_GROW, node.levelIdx || 0) * (elite ? 1.15 : 1));
+  const lv = node.levelIdx, elite = node.type === 'elite', o = node.obj || { type: 'hq' };
+  const hq = Math.round((22 + 8 * lv) * BLIND_HQ[node.slot === undefined ? 1 : node.slot] * HQ_MULT * Math.pow(HQ_GROW, lv));
   // « Frappe décisive » : gagner en infligeant assez en un seul tour (remplace l'ancien objectif « éliminer »)
   const obj = o.type === 'kills' || o.type === 'burst' ? { type: 'burst', n: Math.round(hq * 0.3) } : o;
-  return { name: node.name, hq, atk: base.atk * (o.type === 'hold' ? 1.25 : 1), boss: node.type === 'boss' ? node.boss || base.boss : undefined, final: node.type === 'boss' && !!base.final,
-    levelIdx: node.levelIdx, obj, elite, tutorial: node.layer === 0 };
+  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * (o.type === 'hold' ? 1.25 : 1), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
+    levelIdx: lv, obj, elite, tutorial: node.layer === 0 };
 }
 // Cartes proposées en récompense : type et couleur tirés au hasard
 function rewardCards(rng = Math.random, minRar = 1, deck = null) {
@@ -2877,11 +2909,11 @@ function saveRun(screen) {
   try {
     const c = { ...C, node: C.node ? { layer: C.node.layer, i: C.node.i, id: C.node.id } : null };
     const s = screen === 'battle' && S && !S.over ? { ...S, rng: null } : null;
-    localStorage.setItem(RUN_KEY, JSON.stringify({ v: 1, screen, C: c, S: s, at: Date.now() }));
+    localStorage.setItem(RUN_KEY, JSON.stringify({ v: 2, screen, C: c, S: s, at: Date.now() }));
   } catch (e) { /* stockage indisponible */ }
 }
 function clearRun() { try { localStorage.removeItem(RUN_KEY); } catch (e) { /* stockage indisponible */ } }
-function loadRun() { try { const r = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return r && r.v === 1 && r.C && r.C.map ? r : null; } catch (e) { return null; } }
+function loadRun() { try { const r = JSON.parse(localStorage.getItem(RUN_KEY) || 'null'); return r && r.v === 2 && r.C && r.C.map ? r : null; } catch (e) { return null; } }
 function resumeRun() {
   const r = loadRun(); if (!r) return showTitle();
   C = r.C;
@@ -2895,12 +2927,13 @@ function resumeRun() {
   if (r.screen === 'camp') return toCamp();
   if (r.screen === 'doctrine' && C.docOpts) return doctrineStep();
   if (r.screen === 'spoils') return spoilsStep();
-  if (r.screen === 'depot') return cardStep(C.node && C.node.type === 'elite');
+  if (r.screen === 'victory') return victory();
+  if (r.screen === 'depot') return cardStep(C.node && C.node.type === 'elite' && !C.skipping);
   if (r.screen === 'event' && typeof eventStep === 'function') return eventStep();
   toMap();
 }
 function newCampaign() {
-  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), pos: null, node: null, decor: null, docOpts: pickDoctrines() };
+  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), next: 0, trail: {}, won: false, pos: null, node: null, decor: null, docOpts: pickDoctrines() };
   doctrineStep();
 }
 // Choix d'une doctrine : 3 cartes qui orientent le paquet de départ
@@ -2939,192 +2972,71 @@ function nodeIcon(n) {
   if (n.type === 'depot') return iconSVG('ration', 34);
   return officerSVG('brandt', 38);
 }
-function mapReach() {
-  if (!C.pos) return { layer: 0, idx: [0] };
-  const cur = C.map[C.pos.layer][C.pos.i];
-  return { layer: C.pos.layer + 1, idx: cur.next };
+const clearCoach = () => document.querySelectorAll('.coach').forEach(x => x.remove());
+// ---- La campagne façon Balatro : 4 blindes par manche ; on affronte ou on passe (bonus à la clé) ----
+const BL_COLOR = ['#3b8fd9', '#52b34f', '#e8892b', '#d9453b'];
+const objShort = o => (o.type === 'hold' ? `Tenir ${o.n} tours` : o.type === 'burst' || o.type === 'kills' ? 'Frappe décisive' : 'Détruire le QG');
+const blindLoot = n => ({ battle: 4, elite: 6, boss: 9 }[n.type]);
+const blindsDone = () => Object.values(C.trail || {}).filter(v => v === 1).length;
+function blindState(n) { const r = (C.trail || {})[n.layer]; return r === 2 ? 'skipped' : r ? 'done' : n.layer === (C.next || 0) ? 'cur' : 'lock'; }
+function blindCardHTML(n) {
+  const st = blindState(n), cfg = battleCfg(n), cur = st === 'cur', boss = n.type === 'boss', bd = boss ? BOSSES[n.boss] : null, tag = n.bonus && SKIP_TAGS[n.bonus.tag];
+  const stamp = st === 'done' ? '<i class="bl-stamp ok">Vaincue</i>' : st === 'skipped' ? '<i class="bl-stamp sk">Passée</i>' : '';
+  const foot = cur ? `<div class="bl-btns"><button class="btn go sm" data-play="${n.layer}">Jouer</button>${tag ? `<button class="btn ghost sm bl-skip" data-skipb="${n.layer}"><span>Passer</span><small>${tag.ic} ${tag.name}</small></button>` : ''}</div>`
+    : tag && st === 'lock' ? `<div class="bl-bonus" title="Bonus si on passe">Passer : ${tag.ic} ${tag.name}</div>` : st === 'skipped' && tag ? `<div class="bl-bonus got">${tag.ic} ${tag.name} obtenu</div>` : '';
+  return `<article class="bl s${n.slot} ${st}" data-blind="${n.layer}" style="--bc:${BL_COLOR[n.slot]}">
+    <header><b>${n.label}</b></header>
+    <div class="bl-art">${nodeIcon(n)}</div>
+    <div class="bl-name">${n.name}</div>
+    <div class="bl-goal"><small>Blinde à vaincre</small><strong>${fmtN(cfg.hq)} <i>PV</i></strong></div>
+    <div class="bl-obj">${objShort(cfg.obj)}</div>
+    <div class="bl-rew">Victoire : <b>$${blindLoot(n)}</b> + renfort</div>
+    ${foot}${stamp}</article>`;
 }
-// Régions de la campagne, de la plage (en bas) au QG ennemi (en haut)
-const MAP_REGIONS = [[0, 0, 'Plages du débarquement'], [1, 3, 'Bocage'], [4, 4, 'Le fleuve'], [5, 6, 'Forêts'], [7, 7, 'Ligne fortifiée'], [8, 8, 'Capitale ennemie']];
-// Décor illustré de la carte de campagne (coordonnées : W de large, en pixels de haut)
-function mapTerrainSVG(W, total, yL, H, nodesXY) {
-  const near = (x, y, dx = 46, dy = 42) => nodesXY.some(p => Math.abs(p.x - x) < dx && Math.abs(p.y - y) < dy);
-  const yTop = l => yL(l) - H / 2, yBot = l => yL(l) + H / 2;
-  let s = `<rect width="${W}" height="${total}" fill="#8cc35a"/>`;
-  // champs en damier bordés de haies (bocage), légèrement de travers
-  const cw = 66, ch = 54, cols = ['#9fcf63', '#b8d46c', '#d8c46e', '#86bd55', '#a9cd62', '#cdbd66'];
-  for (let y = yTop(7); y < yBot(0) - 20; y += ch) for (let x = -10; x < W; x += cw) {
-    const k = hash2(Math.round(y), Math.round(x), 2), j = (a, b) => (hash2(a, b, 5) - 0.5) * 10;
-    const pts = [[x + j(x, y), y + j(y, x)], [x + cw + j(x + 1, y), y + j(y, x + 1)], [x + cw + j(x + 2, y), y + ch + j(y + 1, x)], [x + j(x + 3, y), y + ch + j(y + 2, x)]];
-    s += `<path d="M${pts.map(p => p.map(v => v.toFixed(1)).join(' ')).join(' L')} Z" fill="${cols[Math.floor(k * cols.length)]}" stroke="#4f8a37" stroke-width="3" stroke-linejoin="round" opacity="${y > yTop(3) && y < yBot(1) ? 1 : 0.75}"/>`;
-    if (k > 0.55 && k < 0.8) for (let r = 0; r < 4; r++) s += `<path d="M${x + 8} ${y + 10 + r * 10} h${cw - 16}" stroke="rgba(110,80,30,.22)" stroke-width="2"/>`;
-  }
-  // plage et mer en bas (départ), avec écume et péniches de débarquement
-  const beach = yBot(0) - 26;
-  s += `<path d="M0 ${beach} Q${W * 0.3} ${beach - 14} ${W * 0.55} ${beach - 4} T${W} ${beach - 8} V${total} H0 Z" fill="#ecd59a" stroke="#c9a85e" stroke-width="3"/>`;
-  const sea = beach + 30;
-  s += `<path d="M0 ${sea} Q${W * 0.25} ${sea - 10} ${W * 0.5} ${sea} T${W} ${sea - 4} V${total} H0 Z" fill="#3f9bdc"/><path d="M0 ${sea} Q${W * 0.25} ${sea - 10} ${W * 0.5} ${sea} T${W} ${sea - 4}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>`;
-  for (let i = 0; i < 7; i++) { const x = 20 + i * (W - 40) / 6, y = sea + 18 + (i % 2) * 12; s += `<path d="M${x - 10} ${y} q5 -5 10 0 t10 0" fill="none" stroke="#bfe5fb" stroke-width="2.4" stroke-linecap="round"/>`; }
-  [[0.16, 22], [0.84, 30]].forEach(([fx, dy]) => { const x = W * fx, y = sea + dy; s += `<g transform="translate(${x} ${y})"><path d="M-14 0 H14 L10 9 H-10 Z" fill="#7d8692" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/><rect x="-10" y="-5" width="20" height="5" fill="#5b6470" stroke="#1b2540" stroke-width="1.6"/><path d="M-18 11 q4 -3 8 0" stroke="#fff" stroke-width="2" fill="none"/></g>`; });
-  // le fleuve qui traverse la carte à l'étape du pont
-  const ry = yL(4);
-  const river = `M-10 ${ry + 18} C${W * 0.2} ${ry - 26} ${W * 0.35} ${ry + 40} ${W * 0.5} ${ry + 6} S${W * 0.8} ${ry - 30} ${W + 10} ${ry + 10}`;
-  s += `<path d="${river}" fill="none" stroke="#e8d79f" stroke-width="40" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#3f9bdc" stroke-width="28" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#8fd0f5" stroke-width="6" stroke-dasharray="14 18" stroke-linecap="round" class="riverflow"/>`;
-  // forêts des Ardennes et bosquets épars
-  for (let i = 0; i < 70; i++) {
-    const fy = yTop(6) + hash2(i, 3, 1) * (yBot(5) - yTop(6)), fx = hash2(i, 9, 2) * W;
-    if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.35 + hash2(i, 1, 4) * 0.5);
-  }
-  for (let i = 0; i < 26; i++) {
-    const fy = yTop(3) + hash2(i, 5, 7) * (yBot(1) - yTop(3)), fx = hash2(i, 2, 8) * W;
-    if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.1);
-  }
-  // ligne fortifiée : dents de dragon et barbelés
-  const fy = yBot(7) - 8;
-  s += `<path d="M0 ${fy} ${Array.from({ length: 24 }, (_, i) => `L${(i + 1) * W / 24} ${fy + (i % 2 ? -6 : 6)}`).join(' ')}" fill="none" stroke="#5a4a3a" stroke-width="2"/>`;
-  for (let x = 8; x < W; x += 20) if (!near(x, fy + 14, 34, 30)) s += `<path d="M${x - 6} ${fy + 22} L${x} ${fy + 10} L${x + 6} ${fy + 22} Z" fill="#c9c3b2" stroke="#1b2540" stroke-width="1.6" stroke-linejoin="round"/>`;
-  // capitale ennemie : immeubles en ruine en haut de la carte
-  s += `<rect x="0" y="0" width="${W}" height="${yBot(8) - 6}" fill="#b8b2a2" opacity=".55"/>`;
-  for (let i = 0; i < 16; i++) {
-    const x = (i * W) / 15 - 8 + hash2(i, 4, 4) * 8, h = 22 + hash2(i, 6, 1) * 40, y = 8 + hash2(i, 8, 3) * 30, w = 18 + hash2(i, 2, 2) * 12;
-    if (near(x + w / 2, y + h / 2, 50, 50)) continue;
-    s += `<path d="M${x} ${y + h} V${y + 6} L${x + w * 0.35} ${y} L${x + w * 0.6} ${y + 8} L${x + w} ${y + 3} V${y + h} Z" fill="${['#9b9484', '#8a8474', '#a9a291'][i % 3]}" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/>`;
-    for (let r = 0; r < 3; r++) s += `<rect x="${x + 4}" y="${y + 12 + r * 9}" width="4" height="4" fill="#4a4639"/><rect x="${x + w - 9}" y="${y + 14 + r * 9}" width="4" height="4" fill="#4a4639"/>`;
-  }
-  return `<svg class="mapterr" viewBox="0 0 ${W} ${total}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
-}
-// ---- Carte de campagne en paysage : de la plage (à gauche) à la capitale ennemie (à droite) ----
-function mapTerrainH(total, Hh, xL, Wl, nodesXY) {
-  const near = (x, y, dx = 46, dy = 42) => nodesXY.some(p => Math.abs(p.x - x) < dx && Math.abs(p.y - y) < dy);
-  const xL0 = l => xL(l) - Wl / 2, xR = l => xL(l) + Wl / 2;
-  let s = `<rect width="${total}" height="${Hh}" fill="#8cc35a"/>`;
-  // champs en damier bordés de haies
-  const cw = 58, ch = 50, cols = ['#9fcf63', '#b8d46c', '#d8c46e', '#86bd55', '#a9cd62', '#cdbd66'];
-  for (let x = xR(0) - 10; x < xL0(8); x += cw) for (let y = -10; y < Hh; y += ch) {
-    const k = hash2(Math.round(x), Math.round(y), 2), j = (a, b) => (hash2(a, b, 5) - 0.5) * 10;
-    const pts = [[x + j(x, y), y + j(y, x)], [x + cw + j(x + 1, y), y + j(y, x + 1)], [x + cw + j(x + 2, y), y + ch + j(y + 1, x)], [x + j(x + 3, y), y + ch + j(y + 2, x)]];
-    s += `<path d="M${pts.map(p => p.map(v => v.toFixed(1)).join(' ')).join(' L')} Z" fill="${cols[Math.floor(k * cols.length)]}" stroke="#4f8a37" stroke-width="3" stroke-linejoin="round" opacity="${x > xL0(1) && x < xR(3) ? 1 : 0.75}"/>`;
-    if (k > 0.55 && k < 0.8) for (let r = 0; r < 4; r++) s += `<path d="M${x + 8} ${y + 8 + r * 9} h${cw - 16}" stroke="rgba(110,80,30,.22)" stroke-width="2"/>`;
-  }
-  // mer et plage à gauche (départ), avec écume et péniches
-  const beach = xR(0) - 30, sea = beach - 34;
-  s += `<path d="M${beach} 0 Q${beach + 12} ${Hh * 0.3} ${beach + 2} ${Hh * 0.55} T${beach + 8} ${Hh} H0 V0 Z" fill="#ecd59a" stroke="#c9a85e" stroke-width="3"/>`;
-  s += `<path d="M${sea} 0 Q${sea + 10} ${Hh * 0.25} ${sea} ${Hh * 0.5} T${sea + 4} ${Hh} H0 V0 Z" fill="#3f9bdc"/><path d="M${sea} 0 Q${sea + 10} ${Hh * 0.25} ${sea} ${Hh * 0.5} T${sea + 4} ${Hh}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
-  for (let i = 0; i < 6; i++) { const y = 20 + i * (Hh - 40) / 5, x = sea - 18 - (i % 2) * 12; s += `<path d="M${x - 10} ${y} q5 -5 10 0 t10 0" fill="none" stroke="#bfe5fb" stroke-width="2.4" stroke-linecap="round"/>`; }
-  [[0.2, 22], [0.78, 30]].forEach(([fy, dx]) => { const y = Hh * fy, x = sea - dx; s += `<g transform="translate(${x} ${y})"><path d="M-14 0 H14 L10 9 H-10 Z" fill="#7d8692" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/><rect x="-10" y="-5" width="20" height="6" rx="2" fill="#6c7480" stroke="#1b2540" stroke-width="1.6"/></g>`; });
-  // le fleuve qui traverse la carte à l'étape du pont
-  const rx = xL(4);
-  const river = `M${rx + 18} -10 C${rx - 26} ${Hh * 0.2} ${rx + 40} ${Hh * 0.35} ${rx + 6} ${Hh * 0.5} S${rx - 30} ${Hh * 0.8} ${rx + 10} ${Hh + 10}`;
-  s += `<path d="${river}" fill="none" stroke="#e8d79f" stroke-width="40" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#3f9bdc" stroke-width="28" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#8fd0f5" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 14"/>`;
-  // forêts des Ardennes et bosquets épars
-  for (let i = 0; i < 60; i++) { const fx = xL0(5) + hash2(i, 3, 1) * (xR(6) - xL0(5)), fy = hash2(i, 9, 2) * Hh; if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.3 + hash2(i, 1, 4) * 0.5); }
-  for (let i = 0; i < 22; i++) { const fx = xL0(1) + hash2(i, 5, 7) * (xR(3) - xL0(1)), fy = hash2(i, 2, 8) * Hh; if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.05); }
-  // ligne fortifiée : barbelés et dents de dragon
-  const fx = xR(7) + 8;
-  s += `<path d="M${fx} 0 ${Array.from({ length: 16 }, (_, i) => `L${fx + (i % 2 ? -6 : 6)} ${(i + 1) * Hh / 16}`).join(' ')}" fill="none" stroke="#5a4a3a" stroke-width="2"/>`;
-  for (let y = 8; y < Hh; y += 20) if (!near(fx - 14, y, 30, 34)) s += `<path d="M${fx - 22} ${y + 6} L${fx - 10} ${y} L${fx - 22} ${y - 6} Z" fill="#c9c3b2" stroke="#1b2540" stroke-width="1.6" stroke-linejoin="round"/>`;
-  // capitale ennemie : immeubles en ruine à droite
-  s += `<rect x="${xL0(8) + 6}" y="0" width="${total}" height="${Hh}" fill="#b8b2a2" opacity=".55"/>`;
-  for (let i = 0; i < 12; i++) {
-    const x = xL0(8) + 10 + hash2(i, 4, 4) * (Wl - 30), h = 22 + hash2(i, 6, 1) * 34, y = (i * Hh) / 11 - 10 + hash2(i, 8, 3) * 10, w = 18 + hash2(i, 2, 2) * 12;
-    if (near(x + w / 2, y + h / 2, 50, 50)) continue;
-    s += `<path d="M${x} ${y + h} V${y + 6} L${x + w * 0.35} ${y} L${x + w * 0.6} ${y + 8} L${x + w} ${y + 3} V${y + h} Z" fill="${['#9b9484', '#8a8474', '#a9a291'][i % 3]}" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/>`;
-    for (let r = 0; r < 3; r++) s += `<rect x="${x + 4}" y="${y + 12 + r * 9}" width="4" height="4" fill="#4a4639"/><rect x="${x + w - 9}" y="${y + 14 + r * 9}" width="4" height="4" fill="#4a4639"/>`;
-  }
-  return `<svg class="mapterr" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
-}
-function toMapH() {
-  clearCoach();
-  // toute la campagne tient à l'écran : la taille des nœuds suit la place disponible
-  const L = C.map, reach = mapReach(), sideW = innerWidth < 720 ? 168 : innerHeight < 420 ? 206 : 236, total = innerWidth - sideW - 20, Hh = Math.max(200, innerHeight - 12);
-  const LEFT = Math.max(26, Math.round(total * 0.065)), Wl = (total - LEFT - 18) / L.length, ND = Math.max(30, Math.min(68, Math.round(Wl * 0.64))), showLb = Wl >= 100;
-  const xL = l => LEFT + l * Wl + Wl / 2;
-  const PAD = Math.round(ND / 2 + (showLb ? 30 : 22)), yP = n => PAD + ((n.i + 1) / (L[n.layer].length + 1)) * (Hh - 2 * PAD - 8) + 8;
-  const px = n => ({ x: xL(n.layer), y: yP(n) });
-  C.trail = C.trail || {};
-  let edges = '';
-  L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
-    const a = px(n), b = px(L[l + 1][j]);
-    const taken = C.trail[l] === n.i && (C.trail[l + 1] === j || (C.pos && C.pos.layer === l + 1 && C.pos.i === j));
-    const open = C.pos ? C.pos.layer === l && C.pos.i === n.i : false;
-    const d = `M${a.x} ${a.y.toFixed(1)} C${a.x + Wl * 0.5} ${a.y.toFixed(1)} ${b.x - Wl * 0.5} ${b.y.toFixed(1)} ${b.x} ${b.y.toFixed(1)}`;
-    edges += `<path d="${d}" class="road-o"/><path d="${d}" class="road-i ${taken ? 'taken' : ''} ${open ? 'open' : ''}"/>`;
-  })));
-  const nodesXY = L.flat().map(px);
-  const regions = MAP_REGIONS.filter(([a, b]) => (b - a + 1) * Wl >= 84).map(([a, b, name]) => `<span class="mreg h" style="left:${xL(a) - Wl / 2 + 4}px;width:${(b - a + 1) * Wl - 8}px"><i>${name}</i></span>`).join('');
-  const nodes = L.flatMap(layer => layer.map(n => {
-    const p = px(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
-    const isDone = C.trail[n.layer] === n.i && !(C.pos && C.pos.layer === n.layer && C.pos.i === n.i);
-    const isCur = C.pos && C.pos.layer === n.layer && C.pos.i === n.i;
-    const past = C.pos ? n.layer <= C.pos.layer && !isCur && !isDone : false;
-    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : '', past ? 'past' : '', !isReach && !isDone && !isCur && !past ? 'later' : ''].join(' ');
-    const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
-    return `<button class="${cls} ${showLb || isReach || isCur || n.type === 'boss' ? 'wlb' : ''}" data-node="${n.layer}-${n.i}" title="${n.name} · ${NODE_LABEL[n.type]}" style="left:${p.x}px;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${showLb ? tag : ''}<span class="lb">${n.name}</span></button>`;
-  })).join('');
-  const cur = C.pos ? px(C.map[C.pos.layer][C.pos.i]) : { x: LEFT - 30, y: Hh / 2 };
-  const step = C.pos ? Math.min(9, C.pos.layer + 2) : 1, hqPct = (C.hq / C.hqMax) * 100;
-  const nextNodes = (L[reach.layer] || []).filter(n => reach.idx.includes(n.i));
-  const pips = L.map((layer, l) => { const boss = layer.some(n => n.type === 'boss'), st = l < step - 1 ? 'done' : l === step - 1 ? 'cur' : ''; return `<i class="${st} ${boss ? 'boss' : ''}" title="Étape ${l + 1}${boss ? ' : boss' : ''}">${boss ? '☠' : ''}</i>`; }).join('');
-  const nx = nextNodes.map(n => `<button class="nx reach ${n.type}" data-node="${n.layer}-${n.i}"><span class="nx-ic">${nodeIcon(n)}</span><span class="nx-tx"><b>${n.name}</b><small>${NX_SUB[n.type] || NODE_LABEL[n.type]}${n.obj && OBJ_SHORT[n.obj.type] ? ' · ' + OBJ_SHORT[n.obj.type] : ''}</small></span><span class="nx-go">›</span></button>`).join('');
-  app.innerHTML = `<div class="mapscreen h" style="grid-template-columns:${sideW}px minmax(0,1fr)">
+function toMap() {
+  clearCoach(); closeModal();
+  const L = C.map, nxt = C.next || 0, ante = anteOf(nxt), base = (ante - 1) * BLINDS_PER_ANTE, endless = !!C.won || nxt >= BLINDS_TO_WIN;
+  ensureMap(L, base + BLINDS_PER_ANTE + BLINDS_PER_ANTE); C.trail = C.trail || {};
+  const sideW = innerWidth < 720 ? 168 : innerHeight < 420 ? 206 : 236, hqPct = (C.hq / C.hqMax) * 100;
+  const pips = Array.from({ length: BLINDS_TO_WIN }, (_, k) => { const st = (C.trail || {})[k], cl = st === 2 ? 'skip' : st ? 'done' : k === nxt ? 'cur' : ''; return `<i class="${cl} ${k % BLINDS_PER_ANTE === BLINDS_PER_ANTE - 1 ? 'boss' : ''}"></i>`; }).join('');
+  const cards = L.slice(base, base + BLINDS_PER_ANTE).map(l => blindCardHTML(l[0])).join('');
+  app.innerHTML = `<div class="mapscreen h bls" style="grid-template-columns:${sideW}px minmax(0,1fr)">
     <aside class="mapbar side">
-      <div class="ms-top"><span class="ribbon sm">Carte du front</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
-      <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>Étape ${step} sur 9</b><span>Départ ⟶ capitale ennemie</span></div></div>
+      <div class="ms-top"><span class="ribbon sm">Campagne</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
+      <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>${endless ? `Blinde ${nxt + 1} · ∞` : `Blinde ${nxt + 1} sur ${BLINDS_TO_WIN}`}</b><span>${endless ? 'Mode infini : toujours plus dur' : `${BLINDS_TO_WIN} blindes vaincues = victoire`}</span></div></div>
       <div class="hq me hqbar compact"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg><span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
-      <div class="ms-next"><h3>${C.pos ? 'Prochaine étape' : 'Première étape'}</h3>${nx}</div>
       <div class="ms-foot">${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}<div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
     </aside>
-    <div class="mapwrap"><div class="mapscroll" id="mapscroll"><div class="map h" style="width:${total}px;height:${Hh}px;--nd:${ND}px">${mapTerrainH(total, Hh, xL, Wl, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
-      <span class="armytok ${C.pos ? '' : 'atstart'}" style="left:${cur.x}px;top:${cur.y}px" aria-hidden="true">${spriteSVG('jeep', 'me', 44, 'J')}<i>Vous</i></span></div></div></div>
+    <div class="mapwrap bw"><div class="bw-head"><span class="bw-ante">Manche ${ante}</span><span class="bw-sub">Affrontez la blinde ou passez-la pour un bonus. Le boss est obligatoire.</span></div>
+      <div class="blrow">${cards}</div></div>
   </div>`;
   saveRun('map');
 }
-const NX_SUB = { battle: 'Bataille', elite: 'Bataille d’élite · plus dure', boss: 'Boss · effet spécial', camp: 'Soigner le QG ou alléger le paquet', depot: 'Gagner une carte', staff: 'Gagner un joker', event: 'Un choix à faire' };
-const clearCoach = () => document.querySelectorAll('.coach').forEach(x => x.remove());
-function toMap() {
-  if (window.innerWidth >= window.innerHeight) return toMapH();
-  clearCoach();
-  const L = C.map, H = 132, TOP = 58, total = TOP + L.length * H + 70, reach = mapReach(), W = 360;
-  const yL = l => TOP + (L.length - 1 - l) * H + H / 2;
-  const xy = n => ({ x: ((n.i + 1) / (L[n.layer].length + 1)) * 100, y: yL(n.layer) });
-  const px = n => ({ x: (xy(n).x * W) / 100, y: xy(n).y });
-  C.trail = C.trail || {};
-  // routes de terre courbes entre les étapes ; le chemin déjà parcouru est en bleu
-  let edges = '';
-  L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
-    const a = px(n), b = px(L[l + 1][j]);
-    const taken = C.trail[l] === n.i && (C.trail[l + 1] === j || (C.pos && C.pos.layer === l + 1 && C.pos.i === j));
-    const open = C.pos ? C.pos.layer === l && C.pos.i === n.i : false;
-    const d = `M${a.x.toFixed(1)} ${a.y} C${a.x.toFixed(1)} ${a.y - H * 0.5} ${b.x.toFixed(1)} ${b.y + H * 0.5} ${b.x.toFixed(1)} ${b.y}`;
-    edges += `<path d="${d}" class="road-o"/><path d="${d}" class="road-i ${taken ? 'taken' : ''} ${open ? 'open' : ''}"/>`;
-  })));
-  const nodesXY = L.flat().map(px);
-  const regions = MAP_REGIONS.map(([a, b, name]) => `<span class="mreg" style="top:${yL(b) - H / 2 + 4}px;height:${(b - a + 1) * H - 8}px"><i>${name}</i></span>`).join('');
-  const nodes = L.flatMap(layer => layer.map(n => {
-    const p = xy(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
-    const isDone = C.trail[n.layer] === n.i && !(C.pos && C.pos.layer === n.layer && C.pos.i === n.i);
-    const isCur = C.pos && C.pos.layer === n.layer && C.pos.i === n.i;
-    const past = C.pos ? n.layer <= C.pos.layer && !isCur && !isDone : false;
-    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : '', past ? 'past' : '', !isReach && !isDone && !isCur && !past ? 'later' : ''].join(' ');
-    const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
-    return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}%;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
-  })).join('');
-  const cur = C.pos ? xy(C.map[C.pos.layer][C.pos.i]) : { x: 50, y: yL(0) + H / 2 + 6 };
-  const step = C.pos ? Math.min(9, C.pos.layer + 2) : 1, hqPct = (C.hq / C.hqMax) * 100;
-  app.innerHTML = `<div class="stack mapscreen">
-    <div class="mapbar">
-      <div class="mb1"><span class="ribbon sm">Carte du front</span><span class="mstep"><b>Étape ${step}</b>/9</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
-      <div class="mb2"><div class="hq me hqbar compact"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg><span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
-        <button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button></div>
-      ${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}
-      <div class="mhint">▲ Touchez une étape qui clignote pour avancer</div>
-    </div>
-    <div class="map" style="height:${total}px">${mapTerrainSVG(W, total, yL, H, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${W} ${total}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
-      <span class="armytok ${C.pos ? '' : 'atstart'}" style="left:${cur.x}%;top:${cur.y}px" aria-hidden="true">${spriteSVG('jeep', 'me', 40, 'J')}<i>Vous</i></span>
-      ${C.pos ? '' : `<span class="start" style="left:50%;top:${yL(0) + H / 2 + 34}px">Départ</span>`}</div>
-  </div>`;
-  setTimeout(() => { const t = document.querySelector('.node.reach'); if (t) t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 60);
-  saveRun('map');
+function blindModal(n) {
+  const fight = true, cfg = battleCfg(n), tag = n.bonus && SKIP_TAGS[n.bonus.tag], bd = n.type === 'boss' ? BOSSES[n.boss] : null, st = blindState(n);
+  openModal(`<div class="hd"><span class="ribbon ${n.type === 'boss' ? 'red' : ''}">${n.label}</span><button class="pill" data-act="close">Retour</button></div>
+    <div class="row" style="gap:14px;flex-wrap:nowrap"><span class="nodeart">${nodeIcon(n)}</span><div class="stack" style="gap:4px"><b>${n.name} · manche ${n.ante}</b>
+    <span>${objectiveText(cfg.obj, cfg.hq)}</span>${bd ? `<span><b>${bd.name}</b> : ${bd.desc}</span>` : ''}
+    <span class="small">${n.type === 'boss' ? NODE_DESC.boss : n.type === 'elite' ? NODE_DESC.elite : NODE_DESC.battle}</span>
+    ${tag ? `<span class="small"><b>Si vous passez :</b> ${tag.ic} ${tag.txt(n)} (mais ni butin, ni renfort, ni intendance).</span>` : n.type === 'boss' ? '<span class="small"><b>Obligatoire</b> : un boss ne se passe pas.</span>' : ''}</div></div>
+    ${st === 'cur' ? `<div class="row" style="gap:8px"><button class="btn go" data-play="${n.layer}">Jouer</button>${tag ? `<button class="btn ghost" data-skipb="${n.layer}">Passer</button>` : ''}</div>` : ''}`);
+}
+function skipModal(n) {
+  const tag = SKIP_TAGS[n.bonus.tag];
+  openModal(`<div class="hd"><span class="ribbon">Passer la blinde ?</span><button class="pill" data-act="close">Retour</button></div>
+    <div class="stack" style="gap:6px"><span>La blinde compte comme franchie, mais vous renoncez au butin, au renfort et à l'intendance.</span>
+    <div class="panel"><b>${tag.ic} Bonus : ${tag.name}</b><br>${tag.txt(n)}</div><span class="small">Les blindes suivantes restent plus fortes : sans renforts, le boss sera plus dur à battre.</span></div>
+    <button class="btn go" data-doskip="${n.layer}">Passer et prendre le bonus</button>`);
+}
+function skipBlind(n) {
+  closeModal(); C.trail = C.trail || {}; C.trail[n.layer] = 2; C.pos = { layer: n.layer, i: 0 }; C.node = n; C.inNode = true; C.phase = 'node'; C.shop = null; C.skipping = true; C.skipped = (C.skipped || 0) + 1;
+  const rec = load(); rec.level = Math.max(rec.level || 0, n.layer + 1); save(rec);
+  const t = n.bonus.tag;
+  if (t === 'loot') { C.loot += n.bonus.n; SFX.play('coins'); toast(`Blinde passée : +$${n.bonus.n}`); return finishNode(); }
+  if (t === 'depot') return cardStep(false);
+  if (t === 'staff') return jokerStep();
+  if (t === 'camp') return toCamp();
+  C.event = pickEvent(C); eventStep();
 }
 const NODE_DESC = {
   event: 'Une rencontre sur la route : un récit et deux choix (butin, cartes, soins, avantages pour la bataille suivante…).',
@@ -3140,45 +3052,17 @@ function objectiveText(o, hq) {
   if (o.type === 'kills' || o.type === 'burst') return `Frappe décisive : infligez ${fmtN(Math.round(hq * 0.3))} en un seul tour (ou détruisez le QG ennemi, ${fmtN(hq)} PV).`;
   return `Détruisez le QG ennemi (${hq} PV).`;
 }
-function nodeModal(n) {
-  const fight = ['battle', 'elite', 'boss'].includes(n.type);
-  const cfg = fight ? battleCfg(n) : null;
-  openModal(`<div class="hd"><span class="ribbon ${fight ? 'red' : ''}">${n.name}</span><button class="pill" data-act="close">Retour</button></div>
-    <div class="row" style="gap:14px;flex-wrap:nowrap"><span class="nodeart">${nodeIcon(n)}</span><div class="stack" style="gap:4px"><b>${NODE_LABEL[n.type]}</b>
-    ${fight ? `<span>${objectiveText(cfg.obj, cfg.hq)}</span>` : ''}${n.type === 'boss' && BOSSES[n.boss] ? `<span><b>${BOSSES[n.boss].name}</b> : ${BOSSES[n.boss].desc}</span>` : ''}<span class="small muted">${NODE_DESC[n.type]}</span></div></div>
-    <button class="btn go" data-go="${n.layer}-${n.i}">En avant !</button>`);
-}
-function enterNode(n) {
-  closeModal();
-  const map = document.querySelector('.map'), tgt = map && map.querySelector(`[data-node="${n.layer}-${n.i}"]`);
-  if (map && tgt && !window.__travel) {
-    const cur = map.querySelector('.node.cur') || map.querySelector('.start'), m = map.getBoundingClientRect(), b = tgt.getBoundingClientRect(), a = cur ? cur.getBoundingClientRect() : { left: b.left, top: b.bottom + 90, width: b.width, height: 0 };
-    map.querySelector('.armytok')?.remove();
-    const mk = document.createElement('span'); mk.className = 'travel'; mk.innerHTML = spriteSVG('jeep', 'me', 46, 'J'); map.appendChild(mk);
-    const p = r => [r.left - m.left + r.width / 2, r.top - m.top + r.height / 2];
-    const [x1, y1] = p(a), [x2, y2] = p(b);
-    window.__travel = true; SFX.play('land');
-    mk.animate([{ transform: `translate(${x1}px, ${y1}px)` }, { transform: `translate(${x2}px, ${y2}px)` }], { duration: 650, easing: 'ease-in-out', fill: 'forwards' });
-    setTimeout(() => { window.__travel = false; enterNode2(n); }, 700);
-    return;
-  }
-  enterNode2(n);
-}
+function enterNode(n) { closeModal(); enterNode2(n); }
 function enterNode2(n) {
   C.trail = C.trail || {};
-  if (C.pos) C.trail[C.pos.layer] = C.pos.i;
   C.pos = { layer: n.layer, i: n.i }; C.node = n; C.inNode = true; C.phase = 'node'; C.shop = null;
   const rec = load(); rec.level = Math.max(rec.level || 0, n.layer + 1); save(rec);
-  if (['battle', 'elite', 'boss'].includes(n.type)) startBattle(n);
-  else if (n.type === 'camp') toCamp();
-  else if (n.type === 'depot') cardStep(false);
-  else if (n.type === 'event') { C.event = pickEvent(C); eventStep(); }
-  else jokerStep();
+  startBattle(n);
 }
 function finishNode() {
-  const n = C.node; C.inNode = false;
-  C.trail[n.layer] = n.i;
-  if (n.type === 'boss' && n.layer === 8) return victory();
+  const n = C.node; C.inNode = false; C.skipping = false; C.trail = C.trail || {};
+  if (!C.trail[n.layer]) C.trail[n.layer] = 1;
+  C.next = n.layer + 1; ensureMap(C.map, C.next + BLINDS_PER_ANTE);
   toMap();
 }
 function startBattle(node) {
@@ -4074,7 +3958,7 @@ function finishBattle() {
     SFX.play('lose');
     clearRun();
     app.innerHTML = `<div class="stack end"><div class="big lose">Défaite</div>${spriteSVG('inf', 'me', 90)}<h2>Le front a cédé : ${S.lvl.name}</h2>
-      <p>Vous aviez atteint l’étape ${C.node.layer + 1} sur 9.</p>
+      <p>${C.won || C.node.layer >= BLINDS_TO_WIN ? `Mode infini : vous avez atteint la blinde ${C.node.layer + 1}.` : `Vous aviez atteint la blinde ${C.node.layer + 1} sur ${BLINDS_TO_WIN}.`} Blindes vaincues : ${blindsDone()}.</p>
       <button class="btn" data-act="new">Nouvelle campagne</button></div>`;
   }, 1000);
 }
@@ -4083,7 +3967,7 @@ function finishBattle() {
 function toReward() {
   C.hq = Math.min(C.hqMax, S.hq.me + 12);
   const n = C.node;
-  if (n.type === 'boss' && n.layer === 8) return victory();
+  if (n.final && !C.won) return victory();
   const lo = lootFor(S, C, n.type); C.loot += lo.total; const gotSupply = n.type === 'boss' && addSupplyBonus(C); C.phase = 'reward'; C.shop = null; C.spoils = rewardCards(Math.random, n.type === 'battle' ? 1 : 2, C.deck); saveRun('reward'); setTimeout(() => SFX.play('coins'), 250);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
     <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
@@ -4285,11 +4169,11 @@ function toCamp() {
     <button class="off-item plain" data-act="removecard"><span class="tx"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></span></button></div>`;
 }
 function victory() {
-  clearRun();
+  const rec = load(); rec.level = Math.max(rec.level || 0, BLINDS_TO_WIN); rec.wins = (rec.wins || 0) + 1; save(rec); saveRun('victory');
   setTimeout(() => confetti(80), 200);
-  app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'jeep', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>Le dernier quartier général est tombé</h2>
-    <p>Campagne gagnée avec ${C.deck.length} cartes et ${C.officers.length} jokers.</p>
-    <button class="btn" data-act="new">Rejouer</button></div>`;
+  app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'jeep', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>${BLINDS_TO_WIN} blindes vaincues : la guerre est gagnée</h2>
+    <p>Avec ${C.deck.length} cartes et ${C.officers.length} jokers. Vous pouvez continuer à l'infini : les blindes seront toujours plus fortes.</p>
+    <div class="row" style="gap:10px;justify-content:center"><button class="btn go" data-act="endless">Continuer à l'infini ∞</button><button class="btn ghost" data-act="quit">Terminer la campagne</button></div></div>`;
 }
 
 // ---- Fenêtres ----
@@ -4341,7 +4225,11 @@ const HELP_PAGES = () => [
     '<b>Bombardier</b> : frappe aussitôt le QG ennemi.',
     '<b>Effets du QG</b> (annoncés, comme les boss de Balatro) : Bunker (frappe ×0,7 sauf génie et paras), Division blindée (riposte +30 %), Artillerie lourde (obus ◎), Champs de mines (☠), Tireurs d\'élite, Nids de mitrailleuses.',
     '<b>Boss</b> : Le Mammouth (seuil de blindage par secteur), Train blindé (un secteur coupé 🚂), Batterie côtière (navires −50 %).'] },
-  { t: 'Cartes et campagne', l: [
+  { t: 'La campagne', l: [
+    `<b>20 blindes</b> à vaincre pour gagner, par manches de 4 : Petite, Moyenne, Grosse blinde, puis un <b>Boss</b>. Chaque blinde est plus forte que la précédente.`,
+    '<b>Passer une blinde</b> (sauf le boss) : vous la franchissez sans combattre et prenez un <b>bonus</b> (butin, carte, joker, soins, événement)… mais sans butin, renfort ni intendance.',
+    '<b>Après la 20e blinde</b>, la guerre est gagnée, mais vous pouvez continuer à l\'infini : les blindes grossissent et leurs effets se multiplient.'] },
+  { t: 'Cartes et butin', l: [
     '<b>Fusionner</b> : touchez une carte puis une autre du même type : soldats additionnés, couleurs cumulées. Deux unités du même type d\'un secteur peuvent aussi fusionner (⇄).',
     '<b>Défausse ⟲</b> : 3 par bataille, jusqu\'à 5 cartes, +1 ravitaillement. <b>Réserve</b> : 📌 garde 2 cartes ; jusqu\'à 3 de ravitaillement est reporté.',
     '<b>Objectifs</b> : détruire le QG, tenir N tours, ou <b>Frappe décisive</b> (30 % de ses PV en un seul tour).',
@@ -4397,6 +4285,10 @@ document.addEventListener('click', e => {
   const t = e.target;
   const hp = t.closest('[data-hpg]'); if (hp && !hp.disabled) { SFX.play('tap'); return helpModal(false, +hp.dataset.hpg); }
   const dp = t.closest('[data-dpg]'); if (dp && !dp.disabled) { SFX.play('tap'); return deckModal(window.__deckMode, +dp.dataset.dpg); }
+  const pl = t.closest('[data-play]'); if (pl) { SFX.play('go'); return enterNode(C.map[+pl.dataset.play][0]); }
+  const sk = t.closest('[data-skipb]'); if (sk) { SFX.play('stamp'); return skipModal(C.map[+sk.dataset.skipb][0]); }
+  const ds = t.closest('[data-doskip]'); if (ds) { SFX.play('go'); return skipBlind(C.map[+ds.dataset.doskip][0]); }
+  const bc0 = t.closest('[data-blind]'); if (bc0 && !t.closest('button')) { SFX.play('tap'); return blindModal(C.map[+bc0.dataset.blind][0]); }
   const nd = t.closest('[data-node]'); if (nd && !nd.classList.contains('reach') && nd.title) { SFX.play('tap'); return toast(nd.title); } if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
@@ -4445,6 +4337,8 @@ document.addEventListener('click', e => {
     window.__newArm = 0; newCampaign();
   }
   else if (a === 'continue') resumeRun();
+  else if (a === 'endless') { C.won = true; toReward(); }
+  else if (a === 'quit') { clearRun(); showTitle(); }
   else if (a === 'coachok') { const st = currentCoach(); if (st) tutoMark(st.id); showCoach(); }
   else if (a === 'coachoff') { const r = load(); r.tuto = { ...(r.tuto || {}), off: 1 }; save(r); showCoach(); toast('Tutoriel désactivé. Le bouton « ? » reste disponible.'); }
   else if (a === 'help') helpModal(false);
@@ -4500,26 +4394,36 @@ function showTitle() {
   renderSoundButton();
   const rec = load(), run = loadRun();
   const walk = [['inf', 'J'], ['inf', 'R'], ['jeep', 'V'], ['inf', 'N'], ['tank', 'J'], ['inf', 'V'], ['jeep', 'R'], ['inf', 'J'], ['inf', 'N'], ['tank', 'V']];
-  const step = run ? (run.C.pos ? Math.min(9, run.C.pos.layer + 1) : 1) : 0;
-  const resume = run ? `<div class="hm-run"><div class="hm-runh"><b>Campagne en cours</b><span>Étape ${step} / 9</span></div>
-      <div class="hm-prog">${Array.from({ length: 9 }, (_, k) => `<i class="${k < step - 1 ? 'done' : k === step - 1 ? 'cur' : ''}"></i>`).join('')}</div>
+  const step = run ? (run.C.next || 0) + 1 : 0, endless = run && (run.C.won || step > BLINDS_TO_WIN);
+  const resume = run ? `<div class="hm-run"><div class="hm-runh"><b>Campagne en cours</b><span>${endless ? `Blinde ${step} · ∞` : `Blinde ${step} / ${BLINDS_TO_WIN}`}</span></div>
+      <div class="hm-prog">${Array.from({ length: BLINDS_TO_WIN }, (_, k) => `<i class="${k < step - 1 ? 'done' : k === step - 1 ? 'cur' : ''}"></i>`).join('')}</div>
       <div class="hm-stats"><span title="Votre QG">🏰 ${run.C.hq}/${run.C.hqMax}</span><span title="Butin de guerre">$${run.C.loot}</span><span title="Jokers">🃏 ${run.C.officers.length}/${MAX_JOKERS}</span><span title="Cartes du paquet">🂠 ${run.C.deck.length}</span></div>
       <button class="btn go big" data-act="continue">▶ Continuer</button></div>` : '';
-  app.innerHTML = `<div class="home">
+  app.innerHTML = `<div class="home"><div class="hm-in">
     <section class="hm-brand">
       <span class="hm-kicker">1944 · Stratégie en cartes</span>
       <h1><span>Ligne</span><span>de Front</span></h1>
       <p class="hm-tag">Posez vos troupes secteur par secteur, additionnez vos combos et faites tomber la blinde ennemie avant qu'elle ne brise votre QG.</p>
-      <ul class="hm-feat"><li><b>⚔</b> Un score par secteur, façon Balatro</li><li><b>🗺</b> Une campagne de 9 étapes, 3 boss</li><li><b>🃏</b> Jokers, doctrines et manuels tactiques</li></ul>
+      <ul class="hm-feat"><li><b>⚔</b> Un score par secteur, façon Balatro</li><li><b>🗺</b> 20 blindes à vaincre… ou à passer, puis l'infini</li><li><b>🃏</b> Jokers, doctrines et manuels tactiques</li></ul>
     </section>
     <nav class="hm-menu" aria-label="Menu principal">
       ${resume}
       <button class="btn ${run ? 'ghost' : 'go big'}" data-act="new" id="hm-new">${run ? 'Nouvelle campagne' : '▶ Nouvelle campagne'}</button>
       <button class="btn ghost" data-act="help">Comment jouer</button>
-      <div class="hm-foot"><span class="hm-rec">${rec.level ? `🏅 Record : étape ${Math.min(9, rec.level)} / 9` : 'Aucune campagne jouée'}</span><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
-    </nav>
+      <div class="hm-foot"><span class="hm-rec">${rec.level ? `🏅 Record : blinde ${rec.level}${rec.level > BLINDS_TO_WIN ? ' ∞' : ''}` : 'Aucune campagne jouée'}</span><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
+    </nav></div>
     <div class="hm-parade" aria-hidden="true"><div class="ptrack">${walk.concat(walk).map(k => `<span>${spriteSVG(k[0], 'me', 44, k[1])}</span>`).join('')}</div></div>
   </div>`;
+  fitHome();
 }
+// L'accueil s'adapte à la hauteur réelle de la fenêtre (barre du navigateur, cadre de l'application) : parade masquée si l'écran est bas, puis réduction du contenu au besoin
+function fitHome() {
+  const h = document.querySelector('.home'), c = h && h.querySelector('.hm-in'); if (!c) return;
+  c.style.transform = 'none'; h.classList.toggle('nopar', h.clientHeight < 330);
+  const par = h.classList.contains('nopar') ? 0 : 54, availH = h.clientHeight - par - 8, availW = h.clientWidth - 12;
+  const k = Math.min(1, availH / c.offsetHeight, availW / c.offsetWidth);
+  c.style.transform = k < 1 ? `scale(${k.toFixed(3)}) translateY(${(-par / 2 / k).toFixed(1)}px)` : (par ? `translateY(${-par / 2}px)` : 'none');
+}
+addEventListener('resize', () => { if (document.querySelector('.home')) fitHome(); });
 showTitle();
 </script>

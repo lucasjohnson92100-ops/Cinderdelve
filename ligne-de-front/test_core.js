@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -97,7 +97,11 @@ S=mk({},E.battleCfg({type:'battle',levelIdx:2,layer:3,obj:{type:'kills',n:4}}));
 S.units=[];S.lanes=['mer','champ','champ','champ','champ'];S.fx=[];S.plan={};S.obj.n=10;E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),1);E.endTurn(S);check('frappe décisive gagnée',S.over,'win');
 S=mk({},E.battleCfg({type:'battle',levelIdx:2,layer:3,obj:{type:'hold',n:2}}));S.fx=[];S.plan={};S.hq.me=999;E.endTurn(S);E.endTurn(S);check('tenir 2 tours',S.over,'win');
 // campagne
-check('9 couches',E.genMap().length,9);check('paquet de départ 15',E.START_DECK.length,15);check('5 doctrines',Object.keys(E.DOCTRINES).length,5);
+{const M=E.genMap(),B=M.map(l=>l[0]);check('20 blindes',M.length,20);check('boss toutes les 4',B.filter(n=>n.type==='boss').map(n=>n.layer).join(),'3,7,11,15,19');check('boss final',B.filter(n=>n.final).map(n=>n.layer).join(),'19');
+ check('petite/moyenne/grosse/boss',B.slice(0,4).map(n=>n.type).join(),'battle,battle,elite,boss');check('boss sans passe',B.filter(n=>n.type==='boss'&&n.bonus).length,0);check('tutoriel sans passe',B.slice(0,2).filter(n=>n.bonus).length,0);check('passe avec bonus',B.filter(n=>n.type!=='boss'&&n.layer>=2).every(n=>n.bonus&&n.bonus.tag),true);
+ const R0=new Function(coreReal+';return {battleCfg,ensureMap,genMap}')();const hq=R0.genMap().map(l=>R0.battleCfg(l[0]).hq);check('chaque blinde plus forte',hq.every((h,i)=>!i||h>hq[i-1]),true);const atk=B.map(n=>{const c=E.battleCfg(n);return c.atk/(c.obj.type==='hold'?1.25:1)});check('attaque croissante',atk.every((a,i)=>!i||a>=atk[i-1]*0.99),true);
+ E.ensureMap(M,45);check('mode infini',M.length,46);const M2=R0.ensureMap(R0.genMap(),45),hq2=M2.map(l=>R0.battleCfg(l[0]).hq);check('infini toujours plus fort',hq2.slice(19).every((h,i,a)=>!i||h>a[i-1]),true);check('un seul boss final',M.filter(l=>l[0].final).length,1);check('ante',E.anteOf(0)+','+E.anteOf(3)+','+E.anteOf(4)+','+E.anteOf(19),'1,1,2,5');}
+check('paquet de départ 15',E.START_DECK.length,15);check('5 doctrines',Object.keys(E.DOCTRINES).length,5);
 check('boss : effets de boss',Object.values(E.BOSSES).every(b=>b.desc.length>10),true);
 {const Cc={deck:E.START_DECK.slice(),hq:40,hqMax:60,loot:3,officers:[]};E.applyEvent(Cc,'convoi',0);check('convoi : +7',Cc.loot,10);}
 // vraies constantes : progression exponentielle
