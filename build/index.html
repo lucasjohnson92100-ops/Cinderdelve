@@ -12089,12 +12089,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var bl = survMapDef().boss, type = bl[rnd(bl.length)], a = Math.random() * 6.283, r = 8;
     var ex = Math.round(p.x + Math.cos(a) * r), ey = Math.round(p.y + Math.sin(a) * r);
     if (!inb(ex, ey) || g[ey][ex] !== 0) { var fb2 = survFreeNear(p.x, p.y - 3); ex = fb2[0]; ey = fb2[1]; }
-    var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true;
+    var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true; e.scale = (e.scale || 1) * 1.85; e.r += 0.35; /* un boss doit en imposer : bien plus gros qu'un monstre */
     var cyc = survCyc();
     e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
-      e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.3 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.45; e.r += 0.15;
+      e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.3 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.5; e.r += 0.25;
       var lti = LT.info(state.survMapTheme || 0);
       if (lti) { e.skin = "lt_" + lti.id; e.title = lti.name; if (lti.big) { e.hp = e.maxHp = Math.round(e.hp * 1.3); e.scale *= 1.15; } }
       shake(6, 600);
@@ -12102,6 +12102,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         setTimeout(function () { say(lti && lti.big ? "Le Grand Boucher en personne ! Plus jamais au menu !" : "Un lieutenant du Grand Boucher ! Plus jamais au menu !"); }, 600); }
     }
     survApplyCurse(e); enemies.push(e);
+    for (var bk = 0; bk < 4; bk++) rings.push({ x: e.vx, y: e.vy, t0: now() + bk * 140, dur: 900, c: bk % 2 ? "#ff7a3c" : "#ff3a2a", R: 50 + bk * 26 }); screenFlash("255,60,40", 420); burst(e.vx, e.vy, "#ff5a3c", 30, 120);
     state.survRing = { x: p.vx, y: p.vy, t0: now(), cur: 11 }; say("Une barrière rouge se referme : reste à l'intérieur !"); survTip("ring", "Pendant le combat de boss, reste dans le cercle rouge : il se referme et brûle ceux qui en sortent !");
     say((e.title || NAMES[type][1]) + " surgit pour t'arrêter !"); sfx("warn"); shake(3, 300); setTrack("boss");
   }
@@ -12655,7 +12656,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     return L;
   }
   function gearPrice(it) {
-    var b = Math.round(it.value * 3.5);
+    var b = Math.round(it.value * (state && state.survival ? 12 : 3.5));
     return state.cls === "rogue" ? Math.max(1, Math.round(b * 0.85)) : b;
   }
   function rgba(hex, a) {
@@ -13107,16 +13108,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   /* boutique de survie (idées de Brotato) : on peut verrouiller une offre pour la garder à la prochaine boutique, et relancer les autres contre un prix croissant */
   function survRerollCost() { return 5 + 2 * (state.survCycle || 0) + 4 * (state.shopRerolls || 0); }
+  /* boutique de survie : uniquement de l'équipement supplémentaire (3 pièces), à prix élevés */
   function survBuildOffers(isReroll) {
-    var dyn = survShopDyn(), basics = Object.keys(SURV_SHOP).filter(function (k) { return !/^sv_(wlvl|slvl|wnew)$/.test(k) && !SURV_SHOP[k].block(); });
-    var locked = (state.shopLocked || []).filter(function (id) { return SHOP[id] && !SHOP[id].block(); }), prev = isReroll ? (state.offers || []) : [];
-    function notPrev(id) { return locked.indexOf(id) < 0 && prev.indexOf(id) < 0; }
-    var pool = dyn.filter(notPrev), combos = shuffle(pool.filter(function (id) { return SHOP[id].combo; })).slice(0, 2);
-    var rest = shuffle(pool.filter(function (id) { return !SHOP[id].combo; })).slice(0, 1).concat(shuffle(basics.filter(notPrev)).slice(0, 1));
-    var fresh = combos.concat(rest);
-    if (fresh.length < 3) fresh = fresh.concat(shuffle(dyn.concat(basics).filter(function (id) { return locked.indexOf(id) < 0 && fresh.indexOf(id) < 0; })).slice(0, 3 - fresh.length));
-    locked = locked.slice(0, 2); state.shopLocked = locked; state.offers = locked.concat(fresh).slice(0, 3);   /* 3 offres + 1 équipement : un choix lisible */
-    if (!(state.shopGearLocked && state.gearOffers && state.gearOffers[0])) { state.shopGearLocked = false; var gs2 = shuffle(["weapon", "armor", "trinket"]); state.gearOffers = [genGear(gs2[0], 1 + (state.survCycle || 0) * 5, { bonus: 0.1 })]; }
+    state.offers = []; state.shopLocked = [];
+    if (!(state.shopGearLocked && state.gearOffers && state.gearOffers[0])) {
+      state.shopGearLocked = false; var cyG = state.survCycle || 0;
+      state.gearOffers = ["weapon", "armor", "trinket"].map(function (sl) { return genGear(sl, 1 + cyG * 5, { bonus: 0.15 + 0.03 * cyG }); });
+    }
   }
   function openShop() {
     mode = "shop";
@@ -13787,8 +13785,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.strokeStyle = "rgba(190,150,255," + ((1 - bornK) * 0.85).toFixed(2) + ")"; ctx.lineWidth = 1.3;
       ctx.beginPath(); ctx.ellipse(px + 8, py + 14.5, (3 + bornK * 8) * sc, (3 + bornK * 8) * sc * 0.4, 0, 0, 6.283); ctx.stroke();
     }
-    if (!isPlayer && (o.elite || o.kami || o.miniBoss)) {
-      var ga = o.kami ? 0.3 + 0.25 * Math.sin(t / 70) : 0.26 + 0.1 * Math.sin(t / 220), gr0 = (o.miniBoss ? 17 : 12) * sc, gcol = o.kami ? "255,70,40" : o.miniBoss ? "255,150,40" : "255,210,70";
+    if (!isPlayer && o.survivalBoss) {
+      var bpu = 0.5 + 0.5 * Math.sin(t / 260), bcx = px + 8, bcy = py + 14.5, brr = (o.superBoss ? 13 : 11) * sc * 0.62;
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineWidth = 1.4;
+      ctx.strokeStyle = "rgba(255," + (o.superBoss ? "70,60" : "120,50") + "," + (0.35 + 0.3 * bpu).toFixed(2) + ")"; ctx.beginPath(); ctx.ellipse(bcx, bcy, brr * (1 + 0.06 * bpu), brr * 0.38 * (1 + 0.06 * bpu), 0, 0, 6.2832); ctx.stroke();
+      ctx.setLineDash([3, 4]); ctx.lineDashOffset = -t / 60; ctx.strokeStyle = "rgba(255,210,120," + (0.3 + 0.2 * bpu).toFixed(2) + ")"; ctx.beginPath(); ctx.ellipse(bcx, bcy, brr * 1.25, brr * 0.47, 0, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
+      ctx.restore();
+    }
+    if (!isPlayer && (o.elite || o.kami || o.miniBoss || o.survivalBoss)) {
+      var ga = o.kami ? 0.3 + 0.25 * Math.sin(t / 70) : o.survivalBoss ? 0.3 + 0.14 * Math.sin(t / 200) : 0.26 + 0.1 * Math.sin(t / 220), gr0 = (o.survivalBoss ? 15 : o.miniBoss ? 17 : 12) * sc, gcol = o.kami ? "255,70,40" : o.survivalBoss ? (o.superBoss ? "255,50,70" : "255,110,40") : o.miniBoss ? "255,150,40" : "255,210,70";
       var gg0 = ctx.createRadialGradient(px + 8, py + 8, 1, px + 8, py + 8, gr0); gg0.addColorStop(0, "rgba(" + gcol + "," + ga.toFixed(2) + ")"); gg0.addColorStop(1, "rgba(" + gcol + ",0)");
       ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = gg0; ctx.fillRect(px + 8 - gr0, py + 8 - gr0, gr0 * 2, gr0 * 2); ctx.restore();
     }
@@ -14226,7 +14231,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         else { var pd = survPasList().filter(function (d) { return d.id === id; })[0]; if (!pd) continue; icon = pd.icon; lv = state.pas[id]; }
         ctx.drawImage(loadIcon(icon), x + 1.2, y + 1.2, sz - 2.4, sz - 2.4);
         if (evo) { ctx.strokeStyle = "#ffd23c"; ctx.lineWidth = 1.2; ctx.strokeRect(x + 0.5, y + 0.5, sz - 1, sz - 1); }
-        if (ri === 0 && id.charAt(0) === "w" && wRank(id.slice(2)) > 0) { var fr = "×" + (wRank(id.slice(2)) + 1); ctx.textAlign = "left"; ctx.fillStyle = "#ffd23c"; ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 1.4; ctx.strokeText(fr, x + 0.8, y + 5.6); ctx.fillText(fr, x + 0.8, y + 5.6); ctx.textAlign = "right"; }
+        if (ri === 0 && id.charAt(0) === "w" && wRank(id.slice(2)) > 0) { /* fusion d'armes : cadre doré, étoiles et pastille « ×N » bien visibles sur l'icône */
+          var wrk = wRank(id.slice(2)), fpu = 0.5 + 0.5 * Math.sin(t / 300);
+          ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,200,60," + (0.18 + 0.12 * fpu).toFixed(2) + ")"; ctx.fillRect(x, y, sz, sz); ctx.restore();
+          ctx.strokeStyle = "#ffd23c"; ctx.lineWidth = 1.6; ctx.strokeRect(x + 0.8, y + 0.8, sz - 1.6, sz - 1.6);
+          ctx.fillStyle = "#ffd23c"; ctx.fillRect(x - 1.5, y - 2.5, 8.5, 6); ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 0.9; ctx.strokeRect(x - 1.5, y - 2.5, 8.5, 6);
+          ctx.textAlign = "center"; ctx.font = "bold 5.2px sans-serif"; ctx.fillStyle = "#3a1500"; ctx.fillText("×" + (wrk + 1), x + 2.75, y + 2.1);
+          ctx.font = "bold 4px sans-serif"; ctx.fillStyle = "#ffe98a"; ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 1; var stt = "★".repeat(wrk); ctx.strokeText(stt, x + sz / 2, y + sz + 3.4); ctx.fillText(stt, x + sz / 2, y + sz + 3.4);
+          ctx.textAlign = "right"; ctx.font = "bold 5.5px sans-serif";
+        }
         ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 1.4; var lt = String(lv); ctx.strokeText(lt, x + sz - 0.8, y + sz - 0.9); ctx.fillText(lt, x + sz - 0.8, y + sz - 0.9);
       }
     });
