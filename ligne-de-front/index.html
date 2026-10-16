@@ -1541,6 +1541,71 @@ body:has(.home) .topbar { display: none; }
 body:has(.mapscreen.h) .topbar { display: none; }
 .ms-lab { flex-direction: column; align-items: flex-start; gap: 0; }
 .mapbar.side .ms-next { margin-top: 2px; }
+/* ==== Jamais de défilement : pages, tuiles, carte entière, écrans compactés ==== */
+.modal .box { overflow: hidden; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.pager .pdots { display: inline-flex; align-items: center; gap: 5px; } .pager .pdots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(43, 33, 22, .22); border: 1.5px solid #2b2116; } .pager .pdots i.on { background: #2559b5; }
+.pager .pdots small { margin-left: 4px; font-weight: 800; color: #5a4a35; font-size: .72rem; }
+.pager button[disabled] { opacity: .35; }
+.hpage { list-style: none; margin: 0; padding: 0; columns: 2 240px; column-gap: 18px; font-size: .86rem; line-height: 1.3; }
+.hpage li { break-inside: avoid; margin: 0 0 8px; padding: 6px 9px; background: rgba(255, 255, 255, .55); border: 2px solid rgba(43, 33, 22, .35); border-radius: 10px; }
+.hpage .dot { display: inline-block; width: .8em; height: .8em; border-radius: 50%; border: 1.5px solid #2b2116; vertical-align: -1px; }
+/* paquet en tuiles */
+.dkgrid { display: grid; gap: 6px; justify-content: center; align-content: start; }
+.dk { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; justify-items: center; align-items: center; gap: 1px; padding: 0 3px 2px; font-family: inherit; color: #2b2116; text-align: center; background: linear-gradient(180deg, #fffaf0, #efe2bb); border: 2.5px solid #2b2116; border-radius: 9px; overflow: hidden; width: var(--w); cursor: default; }
+.dk.pick { cursor: pointer; } .dk.pick:hover, .dk.pick:active { box-shadow: 0 0 0 3px var(--yellow); }
+.dk-band { align-self: stretch; height: 6px; margin: 0 -3px; border-bottom: 2px solid #2b2116; }
+.dk-art { height: 100%; display: grid; place-items: center; min-height: 0; } .dk-art svg { max-height: 32px; width: auto; max-width: 90%; }
+.dk-nm { font-size: .7rem; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.dk-st { font-size: .58rem; font-weight: 800; color: #3a4666; line-height: 1.1; display: flex; gap: 3px; align-items: center; white-space: nowrap; }
+.dk-up { font-size: .54rem; line-height: 1.05; color: #a35a00; font-weight: 800; }
+.dk-n { position: absolute; right: 2px; top: 8px; font-style: normal; font-family: var(--font-display); font-size: .66rem; background: #2b2116; color: #fff; border-radius: 99px; padding: 0 5px; }
+/* guide : couloir miniature */
+.gmock { display: grid; grid-template-columns: minmax(0, 1fr) 118px; gap: 8px; align-items: center; }
+.gmock .ln { height: 62px; flex: none; cursor: default; grid-template-columns: 52px repeat(3, minmax(0, 1fr)) 30px minmax(52px, .9fr); }
+.gmock .lc.foot { position: relative; }
+.gmock .gu { position: absolute; inset: 2px; display: block; } .gmock .gu .gart svg { max-height: 100%; }
+.gm-hq { display: grid; gap: 3px; padding: 5px 7px; background: #fff3ee; border: 2.5px solid #2b2116; border-radius: 10px; font-size: .62rem; text-align: center; } .gm-hq b { color: var(--red-d); font-family: var(--font-display); } .gm-hq .bar { display: block; height: 8px; border-radius: 99px; border: 1.5px solid #2b2116; background: #4a1d14; overflow: hidden; } .gm-hq .bar i { display: block; height: 100%; width: 80%; background: #e5543f; } .gm-hq small { font-weight: 800; color: var(--red-d); }
+.glist { margin: 8px 0 0; padding: 0; list-style: none; columns: 2 230px; column-gap: 14px; font-size: .78rem; line-height: 1.25; counter-reset: g; }
+.glist li { break-inside: avoid; counter-increment: g; position: relative; padding: 0 0 6px 24px; } .glist li::before { content: counter(g); position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); border: 2px solid #2b2116; display: grid; place-items: center; font-family: var(--font-display); font-size: .68rem; }
+.glist i.a { color: var(--blue-d); font-style: normal; font-weight: 800; } .glist i.d { color: #2f7d3a; font-style: normal; font-weight: 800; }
+/* carte entière à l'écran */
+.mapscroll { overflow: hidden !important; cursor: default; padding: 6px 0; }
+.mapwrap::before, .mapwrap::after { display: none; }
+.map.h { margin: 0 10px; }
+.map.h .node { width: var(--nd); height: var(--nd); } .map.h .node.boss { width: calc(var(--nd) * 1.2); height: calc(var(--nd) * 1.2); }
+.map.h .node .ic svg { max-width: calc(var(--nd) * .8); max-height: calc(var(--nd) * .8); } .map.h .node.boss .ic svg { max-width: calc(var(--nd) * .95); max-height: calc(var(--nd) * .95); }
+.map.h .node:not(.wlb) .lb { display: none; }
+.map.h .node .lb { font-size: clamp(.58rem, 1.9vh, .74rem); max-width: 130px; }
+.map.h .node::after { font-size: .7rem; }
+.map.h .node.done::after { width: 16px; height: 16px; left: -3px; top: -3px; font-size: .62rem; }
+.map.h .node::before { content: ""; position: absolute; inset: -6px; }
+.mapbar.side { overflow: hidden; }
+@media (max-height: 420px) {
+  .ms-lab span, .nx-tx small { display: none; } .ms-next h3 { font-size: .68rem; } .mapbar.side { gap: 6px; padding: 7px 9px; } .ms-top .ribbon { font-size: .82rem; padding: 2px 10px; }
+  .nx { grid-template-columns: 32px minmax(0, 1fr) auto; padding: 3px 6px; gap: 6px; border-width: 2.5px; } .nx-ic { width: 32px; height: 32px; } .nx-ic svg { width: 28px; height: 28px; } .nx-tx b { font-size: .76rem; } .nx-go { font-size: 1.2rem; }
+  .ms-foot .jk { width: 28px; height: 28px; } .ms-foot .jk svg { width: 100%; height: 100%; } .ms-foot .jbar { gap: 3px; } .ms-foot .jbar > * { transform: none; }
+  .ms-pips i { height: 11px; } .ms-prog { gap: 2px; }
+}
+@media (max-height: 360px) { .mapbar.side .hqbar { display: none; } .ms-lab b { font-size: .8rem; } }
+/* écrans de choix compactés selon la hauteur */
+@media (max-height: 420px) {
+  .stack { gap: 6px; } .stack > .panel { padding: 5px 10px; font-size: .78rem; line-height: 1.25; }
+  .cardrow { zoom: .78; gap: 8px; } .officers { zoom: .85; } .stack .btn { padding: 7px 14px; font-size: .95rem; }
+  .briefing:has(.doctrine) .doctrine { padding: 6px 8px; gap: 3px; } .doctrine .dchips { gap: 4px; } .dchip { padding: 2px; }
+}
+@media (max-height: 360px) { .cardrow { zoom: .62; } .officers { zoom: .7; } .stack > .panel { font-size: .72rem; padding: 3px 8px; } .stack .btn { padding: 5px 12px; } .doctrine .dchip .dart svg { height: 26px; width: auto; } .crateopen { zoom: .62; } .gmock .ln { height: 52px; } .glist { font-size: .7rem; } .hpage { font-size: .78rem; } }
+.crateopen { zoom: 1; }
+@media (max-height: 420px) { .crateopen { zoom: .75; } }
+/* événement : le récit à gauche, les choix à droite */
+.eventscreen { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px 14px !important; align-items: stretch; }
+.eventscreen > .hd, .eventscreen > .small { grid-column: 1 / -1; }
+.eventscreen .evcard { grid-column: 1; align-self: stretch; display: grid; align-content: center; justify-items: center; gap: 4px; }
+.eventscreen .evchoices { grid-column: 2; display: grid; align-content: center; gap: 8px; }
+.eventscreen .ev-art svg { max-height: 12vh; width: auto; } .eventscreen h2 { margin: 0; font-size: clamp(1rem, 4.6vh, 1.4rem); } .eventscreen p { margin: 0; font-size: clamp(.74rem, 3.3vh, 1rem); }
+@media (max-height: 420px) { .evchoice { padding: 7px 10px; } .evchoice b { font-size: .9rem; } .evchoice span { font-size: .72rem; } }
+@media (max-height: 380px) { .glist { columns: 3 150px; font-size: .68rem; } .glist li { padding-bottom: 4px; } .gmock .ln { height: 48px; } .doctrine .dchip .dtx b, .dchip .dtx b { font-size: .6rem; overflow-wrap: anywhere; } .doctrine .dchip { min-width: 0; } }
+@media (max-height: 360px) { .modal .box { padding: 8px 12px; gap: 6px; } .modal .hd { margin-bottom: 0; } .crateopen { zoom: .55; } .modal .box > p.small { margin: 0; font-size: .7rem; } .gmock .ln { height: 42px; } .glist li { padding-bottom: 2px; line-height: 1.15; } .gm-hq { padding: 3px 6px; } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -2970,9 +3035,11 @@ function mapTerrainH(total, Hh, xL, Wl, nodesXY) {
 }
 function toMapH() {
   clearCoach();
-  const L = C.map, Wl = 190, LEFT = 90, total = LEFT + L.length * Wl + 50, reach = mapReach(), Hh = Math.max(240, window.innerHeight - 16);
+  // toute la campagne tient à l'écran : la taille des nœuds suit la place disponible
+  const L = C.map, reach = mapReach(), sideW = innerWidth < 720 ? 168 : innerHeight < 420 ? 206 : 236, total = innerWidth - sideW - 20, Hh = Math.max(200, innerHeight - 12);
+  const LEFT = Math.max(26, Math.round(total * 0.065)), Wl = (total - LEFT - 18) / L.length, ND = Math.max(30, Math.min(68, Math.round(Wl * 0.64))), showLb = Wl >= 100;
   const xL = l => LEFT + l * Wl + Wl / 2;
-  const PAD = 62, yP = n => PAD + ((n.i + 1) / (L[n.layer].length + 1)) * (Hh - 2 * PAD - 8) + 8;
+  const PAD = Math.round(ND / 2 + (showLb ? 30 : 22)), yP = n => PAD + ((n.i + 1) / (L[n.layer].length + 1)) * (Hh - 2 * PAD - 8) + 8;
   const px = n => ({ x: xL(n.layer), y: yP(n) });
   C.trail = C.trail || {};
   let edges = '';
@@ -2984,7 +3051,7 @@ function toMapH() {
     edges += `<path d="${d}" class="road-o"/><path d="${d}" class="road-i ${taken ? 'taken' : ''} ${open ? 'open' : ''}"/>`;
   })));
   const nodesXY = L.flat().map(px);
-  const regions = MAP_REGIONS.map(([a, b, name]) => `<span class="mreg h" style="left:${xL(a) - Wl / 2 + 6}px;width:${(b - a + 1) * Wl - 12}px"><i>${name}</i></span>`).join('');
+  const regions = MAP_REGIONS.filter(([a, b]) => (b - a + 1) * Wl >= 84).map(([a, b, name]) => `<span class="mreg h" style="left:${xL(a) - Wl / 2 + 4}px;width:${(b - a + 1) * Wl - 8}px"><i>${name}</i></span>`).join('');
   const nodes = L.flatMap(layer => layer.map(n => {
     const p = px(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
     const isDone = C.trail[n.layer] === n.i && !(C.pos && C.pos.layer === n.layer && C.pos.i === n.i);
@@ -2992,14 +3059,14 @@ function toMapH() {
     const past = C.pos ? n.layer <= C.pos.layer && !isCur && !isDone : false;
     const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : '', past ? 'past' : '', !isReach && !isDone && !isCur && !past ? 'later' : ''].join(' ');
     const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
-    return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}px;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
+    return `<button class="${cls} ${showLb || isReach || isCur || n.type === 'boss' ? 'wlb' : ''}" data-node="${n.layer}-${n.i}" title="${n.name} · ${NODE_LABEL[n.type]}" style="left:${p.x}px;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${showLb ? tag : ''}<span class="lb">${n.name}</span></button>`;
   })).join('');
   const cur = C.pos ? px(C.map[C.pos.layer][C.pos.i]) : { x: LEFT - 30, y: Hh / 2 };
   const step = C.pos ? Math.min(9, C.pos.layer + 2) : 1, hqPct = (C.hq / C.hqMax) * 100;
   const nextNodes = (L[reach.layer] || []).filter(n => reach.idx.includes(n.i));
   const pips = L.map((layer, l) => { const boss = layer.some(n => n.type === 'boss'), st = l < step - 1 ? 'done' : l === step - 1 ? 'cur' : ''; return `<i class="${st} ${boss ? 'boss' : ''}" title="Étape ${l + 1}${boss ? ' : boss' : ''}">${boss ? '☠' : ''}</i>`; }).join('');
   const nx = nextNodes.map(n => `<button class="nx reach ${n.type}" data-node="${n.layer}-${n.i}"><span class="nx-ic">${nodeIcon(n)}</span><span class="nx-tx"><b>${n.name}</b><small>${NX_SUB[n.type] || NODE_LABEL[n.type]}${n.obj && OBJ_SHORT[n.obj.type] ? ' · ' + OBJ_SHORT[n.obj.type] : ''}</small></span><span class="nx-go">›</span></button>`).join('');
-  app.innerHTML = `<div class="mapscreen h">
+  app.innerHTML = `<div class="mapscreen h" style="grid-template-columns:${sideW}px minmax(0,1fr)">
     <aside class="mapbar side">
       <div class="ms-top"><span class="ribbon sm">Carte du front</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
       <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>Étape ${step} sur 9</b><span>Départ ⟶ capitale ennemie</span></div></div>
@@ -3007,16 +3074,9 @@ function toMapH() {
       <div class="ms-next"><h3>${C.pos ? 'Prochaine étape' : 'Première étape'}</h3>${nx}</div>
       <div class="ms-foot">${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}<div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
     </aside>
-    <div class="mapwrap"><div class="mapscroll" id="mapscroll"><div class="map h" style="width:${total}px;height:${Hh}px">${mapTerrainH(total, Hh, xL, Wl, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
+    <div class="mapwrap"><div class="mapscroll" id="mapscroll"><div class="map h" style="width:${total}px;height:${Hh}px;--nd:${ND}px">${mapTerrainH(total, Hh, xL, Wl, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
       <span class="armytok ${C.pos ? '' : 'atstart'}" style="left:${cur.x}px;top:${cur.y}px" aria-hidden="true">${spriteSVG('jeep', 'me', 44, 'J')}<i>Vous</i></span></div></div></div>
   </div>`;
-  // défilement à la souris (au doigt, le défilement est natif)
-  const sc = document.getElementById('mapscroll');
-  let dr = null;
-  sc.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) dr = { x: e.clientX, l: sc.scrollLeft, m: false }; });
-  window.addEventListener('pointermove', e => { if (!dr) return; const dx = e.clientX - dr.x; if (Math.abs(dx) > 5) { dr.m = true; sc.classList.add('grabbing'); } if (dr.m) sc.scrollLeft = dr.l - dx; });
-  window.addEventListener('pointerup', () => { if (dr && dr.m) { window.__mapDrag = Date.now() + 250; } dr = null; sc.classList.remove('grabbing'); });
-  setTimeout(() => { const t = document.querySelector('.node.reach'), sc = document.getElementById('mapscroll'); if (t && sc) sc.scrollTo({ left: Math.max(0, t.offsetLeft - sc.clientWidth / 2), behavior: 'smooth' }); }, 60);
   saveRun('map');
 }
 const NX_SUB = { battle: 'Bataille', elite: 'Bataille d’élite · plus dure', boss: 'Boss · effet spécial', camp: 'Soigner le QG ou alléger le paquet', depot: 'Gagner une carte', staff: 'Gagner un joker', event: 'Un choix à faire' };
@@ -3420,7 +3480,7 @@ function renderBattle() {
   // main en éventail : toutes les cartes sont visibles sans défiler
   // paysage : la main occupe le bas gauche, sous votre plateau ; la colonne de droite garde la blinde et les commandes
   const H = window.innerHeight, rw = sideW(), W = Math.min(window.innerWidth, 1400) - rw - 34, n = S.hand.length;
-  const short = H < 500, cw = Math.round(Math.max(60, Math.min(104, H * 0.205, W * 0.2))), ch = Math.round(cw * 1.28);
+  const short = H < 500, cw = Math.round(Math.max(60, Math.min(104, H * 0.195, W * 0.2))), ch = Math.round(cw * 1.28);
   const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
     const on = picked.includes(k), partner = !on && picked.length === 1 && canFuse(picked[0], k), off = !on && !partner && !canDeployNow(S, k).ok;
@@ -4259,39 +4319,85 @@ function guideModal() {
   document.querySelectorAll('.coach').forEach(x => x.remove());
   openModal(`<div class="hd"><span class="ribbon">Lire le plateau</span><button class="pill" data-act="close">Compris</button></div>${mock}`);
 }
-function helpModal(first) {
-  openModal(`<div class="hd"><span class="ribbon">Comment jouer</span><button class="pill" data-act="close">${first ? 'Compris' : 'Fermer'}</button></div>
-    <ol>
-    <li><b>But :</b> faire tomber le <b>QG ennemi</b> à 0 PV (sa « blinde », comme dans Balatro) avant que <b>votre QG</b> tombe. Vos PV de QG vous suivent de bataille en bataille.</li>
-    <li><b>Seul vous avez une tactique par secteur :</b> le front compte 4 secteurs terrestres (route, champ, forêt, village, rivière) et la côte. Chaque secteur accueille 3 unités terrestres et 1 appui (navire près de la côte, ou avion).</li>
-    <li><b>Score d'un secteur :</b> Attaque de ses unités (hommes × dégâts par tir, × terrain de la couleur) × ses <b>combos</b>. Les scores de tous les secteurs <b>s'additionnent</b> et frappent le QG ennemi en fin de tour.</li>
-    <li><b>Riposte :</b> l'ennemi attaque d'un seul front avec une Attaque annoncée qui grimpe chaque tour. Votre <b>Défense totale</b> (somme des secteurs, × combos de Défense) la réduit ; au moins ${Math.round(MIN_THROUGH * 100)} % passe toujours.</li>
-    <li><b>Usure :</b> chaque unité a une <b>endurance</b> (les points sous elle) : infanterie 2 tours, blindés et mitrailleuses 3, appuis 2 à 3. Elle perd 1 point par tour, puis quitte le front. Vert : +1 endurance. Ordres Retranchement et Relève : +1. <b>Repli</b> : la carte revient en main.</li>
-    <li><b>Effets du QG ennemi</b> (comme les boss de Balatro) : Bunker (frappe ×0,7, sauf secteurs avec génie ou paras), Division blindée (riposte +30 %, anti-chars ×2), Artillerie lourde (obus annoncé ◎ : −1 endurance), Champs de mines (☠), Tireurs d'élite, Nids de mitrailleuses (infanterie −25 %). Boss : Le Mammouth (seuil de blindage par secteur), Train blindé (un secteur coupé 🚂), Batterie côtière.</li>
-    <li><b>Combos d'Attaque</b> : Binôme +0,5, Trio +1, Armes combinées +1, Appui +1, puis Tir guidé ×1,5 et Même couleur ×1,5. <b>Combos de Défense</b> : Nid défensif +1, Rempart blindé +1, Soutien sanitaire +0,5, Ligne tenue +0,5, Couverture aérienne ×1,5. Les manuels tactiques les font monter de niveau.</li>
-    <li><b>Terrains des couleurs :</b> chaque couleur a un terrain fort ▲ (+50 % d'Attaque) et faible ▼ (−25 %) : <i class="dot" style="background:#ffd24a"></i> jaune ▲ route ▼ forêt · <i class="dot" style="background:#e5543f"></i> rouge ▲ champ ▼ rivière · <i class="dot" style="background:#52b34f"></i> vert ▲ forêt ▼ route · <i class="dot" style="background:#39404f"></i> noir ▲ village ▼ champ.</li>
-    <li><b>Les couleurs :</b> jaune +1 dégât par tir · rouge +50 % d'hommes · vert +25 % de Défense et +1 endurance · noir perçage.</li>
-    <li><b>Ordres</b> (cartes beiges) : Barrage (+20 Attaque dans un secteur), Assaut (×1,5), Contre-attaque (Défense ×1,5), Fumigènes (riposte ÷2, obus perdu), Retranchement, Relève, Repli, Ravitaillement, Débarquement, Sabotage (−8 % au QG). Le bombardier frappe aussitôt le QG.</li>
-    <li><b>Fusionner :</b> touchez une carte puis une autre du même type : soldats additionnés, couleurs cumulées. Deux unités du même type dans un secteur peuvent aussi fusionner (⇄).</li>
-    <li><b>Défausse (⟲)</b> : 3 fois par bataille, jusqu'à 5 cartes, +1 ravitaillement. <b>Réserve :</b> 📌 garde 2 cartes au tour suivant ; jusqu'à 3 de ravitaillement est reporté.</li>
-    <li><b>Objectifs</b> : détruire le QG, tenir N tours, ou <b>Frappe décisive</b> (infliger assez en un seul tour).</li>
-    </ol>
-    <p class="small muted">Le bouton 📖 réaffiche « Lire le plateau ». Touchez un secteur pour son calcul, une unité pour sa fiche, un effet du QG pour son détail.</p>`);
+// Aide : des pages courtes, jamais de défilement
+const HELP_PAGES = () => [
+  { t: 'Le but', l: [
+    '<b>Faire tomber le QG ennemi</b> à 0 PV (sa « blinde », comme dans Balatro) avant que <b>votre QG</b> tombe. Vos PV de QG vous suivent de bataille en bataille.',
+    '<b>Le front</b> : 4 secteurs terrestres (couloirs) et la côte. Chaque secteur accueille <b>3 unités terrestres</b> et <b>1 appui</b> (navire près de la côte, ou avion).',
+    '<b>Score d\'un secteur</b> : Attaque de ses unités × ses <b>combos</b>. Les scores de tous les secteurs <b>s\'additionnent</b> et frappent le QG ennemi en fin de tour.',
+    `<b>Riposte</b> : l'ennemi attaque d'un seul front, avec une Attaque annoncée qui grimpe. Votre <b>Défense totale</b> la réduit ; au moins ${Math.round(MIN_THROUGH * 100)} % passe toujours.`] },
+  { t: 'Vos unités', l: [
+    '<b>Usure</b> : chaque unité a une <b>endurance</b> (les points sous elle) : infanterie 2 tours, blindés, mitrailleuses et navires 3. Elle perd 1 point par tour, puis quitte le front.',
+    '<b>Prolonger</b> : couleur verte (+1), ordres Retranchement et Relève (+1), infirmiers (+1 aux voisins). <b>Repli</b> renvoie la carte dans votre main.',
+    '<b>Couleurs</b> : <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât · <i class="dot" style="background:#e5543f"></i> rouge +50 % d\'hommes · <i class="dot" style="background:#52b34f"></i> vert +25 % Défense, +1 tour · <i class="dot" style="background:#39404f"></i> noir perçage.',
+    '<b>Terrains</b> (▲ +50 % d\'Attaque, ▼ −25 %) : <i class="dot" style="background:#ffd24a"></i> route ▲ forêt ▼ · <i class="dot" style="background:#e5543f"></i> champ ▲ rivière ▼ · <i class="dot" style="background:#52b34f"></i> forêt ▲ route ▼ · <i class="dot" style="background:#39404f"></i> village ▲ champ ▼.'] },
+  { t: 'Les combos', l: [
+    '<b>Attaque</b> : Binôme +0,5 (2 unités) · Trio +1 (3 unités) · Armes combinées +1 (infanterie + véhicule) · Appui +1 (avion ou navire).',
+    '<b>Multiplicateurs</b> : Tir guidé ×1,5 (observateur + artillerie ou navire) · Même couleur ×1,5.',
+    '<b>Défense</b> : Nid défensif +1 (mitrailleuse + infanterie) · Rempart blindé +1 (2 véhicules) · Soutien sanitaire +0,5 · Ligne tenue +0,5 (3 unités) · Couverture aérienne ×1,5 (chasseur).',
+    'Les <b>manuels tactiques</b> de l\'intendance font monter un combo de niveau ; certains <b>jokers</b> en ajoutent.'] },
+  { t: 'Ordres et effets du QG', l: [
+    '<b>Ordres</b> (cartes beiges) : Barrage +20 Attaque · Assaut ×1,5 · Contre-attaque (Défense ×1,5) · Fumigènes (riposte ÷2) · Retranchement · Relève · Repli · Ravitaillement · Débarquement · Sabotage (−8 % au QG).',
+    '<b>Bombardier</b> : frappe aussitôt le QG ennemi.',
+    '<b>Effets du QG</b> (annoncés, comme les boss de Balatro) : Bunker (frappe ×0,7 sauf génie et paras), Division blindée (riposte +30 %), Artillerie lourde (obus ◎), Champs de mines (☠), Tireurs d\'élite, Nids de mitrailleuses.',
+    '<b>Boss</b> : Le Mammouth (seuil de blindage par secteur), Train blindé (un secteur coupé 🚂), Batterie côtière (navires −50 %).'] },
+  { t: 'Cartes et campagne', l: [
+    '<b>Fusionner</b> : touchez une carte puis une autre du même type : soldats additionnés, couleurs cumulées. Deux unités du même type d\'un secteur peuvent aussi fusionner (⇄).',
+    '<b>Défausse ⟲</b> : 3 par bataille, jusqu\'à 5 cartes, +1 ravitaillement. <b>Réserve</b> : 📌 garde 2 cartes ; jusqu\'à 3 de ravitaillement est reporté.',
+    '<b>Objectifs</b> : détruire le QG, tenir N tours, ou <b>Frappe décisive</b> (30 % de ses PV en un seul tour).',
+    '<b>Butin</b> : après chaque bataille, achetez jokers, cartes, manuels, entraînement ou +1 ravitaillement. Vaincre un <b>boss</b> offre un joker.'] },
+];
+function helpModal(first, pg = 0) {
+  const P = HELP_PAGES(); pg = Math.max(0, Math.min(P.length - 1, pg)); const page = P[pg];
+  openModal(`<div class="hd"><span class="ribbon">Comment jouer · ${page.t}</span><button class="pill" data-act="close">${first ? 'Compris' : 'Fermer'}</button></div>
+    <ul class="hpage">${page.l.map(x => `<li>${x}</li>`).join('')}</ul>
+    <div class="pager"><button class="pill sm" data-hpg="${pg - 1}" ${pg ? '' : 'disabled'}>‹ Précédent</button><span class="pdots">${P.map((_, k) => `<i class="${k === pg ? 'on' : ''}"></i>`).join('')}<small>${pg + 1}/${P.length}</small></span><button class="btn go sm" data-hpg="${pg + 1}" ${pg < P.length - 1 ? '' : 'disabled'}>Suivant ›</button></div>`);
 }
-function deckModal(mode) {
+// Lire le plateau : un couloir miniature annoté
+function guideModal() {
+  document.querySelectorAll('.coach').forEach(x => x.remove());
+  const u = (k, cols, a, d, on) => `<span class="lc slot"><span class="gu me"><span class="gart">${spriteSVG(k, 'me', 36, cols)}</span><span class="gst"><i class="a">${a}</i><i class="d">${d}</i></span><span class="pips">${[0, 1, 2].map(i => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</span></span></span>`;
+  openModal(`<div class="hd"><span class="ribbon">Lire le plateau</span><button class="pill" data-act="close">Compris</button></div>
+    <div class="gmock"><div class="ln gc t-champ"><span class="lc head"><b class="tname">Champ</b><span class="ltag"><i class="up" style="--c:#e5543f">▲</i></span></span>
+      ${u('inf', 'J', 30, 3, 2)}${u('jeep', 'J', 16, 3, 1)}<span class="lc slot"><span class="slotph"></span></span><span class="lc supc"></span>
+      <span class="lc foot"><span class="score">${SWORD}90</span><span class="sdef">${SHIELD}8</span><i class="xa">×3</i></span></div>
+      <div class="gm-hq"><b>QG ENNEMI</b><span class="bar"><i></i></span><small>Riposte ${SWORD}18</small></div></div>
+    <ol class="glist"><li><b>Un couloir = un secteur</b> et son terrain (▲ fort, ▼ faible pour votre couleur).</li>
+      <li><b>3 emplacements</b> : sprite, <i class="a">Attaque</i> et <i class="d">Défense</i>, et les points d'<b>endurance</b> (1 de moins par tour).</li>
+      <li><b>L'appui</b> (avion, navire) s'ajoute sans prendre de place.</li>
+      <li><b>Le score</b> du couloir (Attaque × combos) part vers le QG ennemi à droite.</li>
+      <li><b>Fin du tour</b> : tous les scores s'additionnent et frappent la blinde ; elle riposte contre votre Défense totale.</li>
+      <li><b>★</b> = meilleur couloir pour la carte choisie ; <b>⚠</b> = la riposte dépasse votre Défense.</li></ol>`);
+}
+// Paquet : des tuiles compactes en pages, jamais de défilement
+function deckModal(mode, pg = 0) {
+  window.__deckMode = mode; 
   const groups = new Map();
   C.deck.forEach(c => { if (mode === 'upgrade' && !canUpgrade(c)) return; const k = cardKey(c); if (!groups.has(k)) groups.set(k, { c, n: 0 }); groups.get(k).n++; });
   const list = [...groups.values()].sort((a, b) => FAM_ORDER[TYPES[a.c.t].fam] - FAM_ORDER[TYPES[b.c.t].fam] || a.c.t.localeCompare(b.c.t) || a.c.c.localeCompare(b.c.c) || (a.c.lv || 1) - (b.c.lv || 1));
   const title = mode === 'remove' ? 'Retirer quelle carte ?' : mode === 'upgrade' ? 'Entraîner quelle carte ?' : `Votre paquet (${C.deck.length})`;
   const attr = c => (mode === 'remove' ? `data-remove="${cardKey(c)}"` : mode === 'upgrade' ? `data-train="${cardKey(c)}"` : '');
-  const note = c => (mode === 'upgrade' ? `<div class="small" style="text-align:center;margin-top:4px"><b>Niv. ${c.lv || 1} → ${(c.lv || 1) + 1}</b> : ${upText(c.t, (c.lv || 1) + 1)}<br><span class="coin num">$${upgradeCost(c)}</span></div>` : '');
+  // la page tient dans l'écran : on calcule le nombre de tuiles
+  const bw = Math.min(860, innerWidth * 0.94) - 30, bh = innerHeight * 0.94 - 30 - 44 - 36 - 6, TW = 112, TH = mode === 'upgrade' ? 92 : 80;
+  const cols = Math.max(2, Math.floor((bw + 6) / (TW + 6))), rows = Math.max(1, Math.floor((bh + 6) / (TH + 6))), per = cols * rows, pages = Math.max(1, Math.ceil(list.length / per));
+  pg = Math.max(0, Math.min(pages - 1, pg)); window.__deckPage = pg;
+  const tile = g => { const c = g.c, d = TYPES[c.t], ord = isOrder(c), st = ord ? null : cardStats(c).st, ad = ord ? null : cardAD(c);
+    return `<button class="dk ${d.fam} ${mode ? 'pick' : ''}" ${attr(c)} style="--w:${TW}px;height:${TH}px" title="${d.name}">
+      <span class="dk-band" style="background:${chipBg(c.c)}"></span><span class="dk-art">${ord ? iconSVG(ORDER_ICON[c.t], 34) : squadSVG(SPR_OF[c.t], 'me', st.men, st.men, 32, c.c)}</span>
+      <b class="dk-nm">${d.name}${(c.lv || 1) > 1 ? ' ' + '★'.repeat(c.lv - 1) : ''}</b>
+      <span class="dk-st">${ad ? `${SWORD}${fmtN(ad.a)} ${SHIELD}${fmtN(ad.d)} · ${ad.s}t` : ORDER_SHORT[c.t] || 'Ordre'}</span>
+      ${mode === 'upgrade' ? `<span class="dk-up">Niv.${c.lv || 1}→${(c.lv || 1) + 1} · $${upgradeCost(c)}<br>${upText(c.t, (c.lv || 1) + 1)}</span>` : ''}
+      <i class="dk-n">×${g.n}</i></button>`; };
   openModal(`<div class="hd"><span class="ribbon">${title}</span><button class="pill" data-act="close">${mode ? 'Annuler' : 'Fermer'}</button></div>
-    <div class="deckgrid">${list.map(g => `<div>${cardHTML(g.c, mode ? 'pick' : '', attr(g.c))}${note(g.c)}<div class="small" style="text-align:center;margin-top:5px">× ${g.n}</div></div>`).join('')}</div>`);
+    <div class="dkgrid" style="grid-template-columns:repeat(${cols}, ${TW}px);grid-auto-rows:${TH}px">${list.slice(pg * per, pg * per + per).map(tile).join('')}</div>
+    <div class="pager"><button class="pill sm" data-dpg="${pg - 1}" ${pg ? '' : 'disabled'}>‹</button><span class="pdots">${Array.from({ length: pages }, (_, k) => `<i class="${k === pg ? 'on' : ''}"></i>`).join('')}<small>page ${pg + 1}/${pages}</small></span><button class="pill sm" data-dpg="${pg + 1}" ${pg < pages - 1 ? '' : 'disabled'}>›</button></div>`);
 }
 // ---- Événements ----
 document.addEventListener('click', e => {
   const t = e.target;
-  const nd = t.closest('[data-node]'); if (nd && Date.now() < (window.__mapDrag || 0)) return; if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
+  const hp = t.closest('[data-hpg]'); if (hp && !hp.disabled) { SFX.play('tap'); return helpModal(false, +hp.dataset.hpg); }
+  const dp = t.closest('[data-dpg]'); if (dp && !dp.disabled) { SFX.play('tap'); return deckModal(window.__deckMode, +dp.dataset.dpg); }
+  const nd = t.closest('[data-node]'); if (nd && !nd.classList.contains('reach') && nd.title) { SFX.play('tap'); return toast(nd.title); } if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
   const dc = t.closest('[data-doctrine]'); if (dc) return chooseDoctrine(dc.dataset.doctrine);
