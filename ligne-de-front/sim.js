@@ -2,23 +2,16 @@
 const fs=require('fs');
 let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
-for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_HP','EHP'],['ENEMY_ATK','EATK'],['HQ_TAKE','HQT'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
-const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,sectorForecast,queue,landCols,hqShielded,hqTake,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW};')();
+for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
+const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
-// Valeur d'une position : dégâts prévus de part et d'autre, le QG compte double (c'est lui qui décide de la partie)
-const qhp=(S,side,c)=>E.queue(S,side,c).reduce((t,u)=>t+Math.max(0,u.hp),0);
+// Valeur d'une position : fraction du QG ennemi frappée ce tour, moins la fraction de votre QG perdue ; les unités qui restent comptent un peu
 function evalPos(S){
   if(S.over)return S.over==='win'?1e6:-1e6;
-  let v=0;
-  for(const c of E.landCols(S)){
-    const f=E.sectorForecast(S,c),he=qhp(S,'en',c),hm=qhp(S,'me',c);
-    const oe=E.hqTake(S,'en',f.toEn-he),om=E.hqTake(S,'me',f.toMe-hm);
-    // en fraction de QG : 1 point = 1 % du QG ; les unités tuées comptent un peu (elles ne frapperont plus)
-    v+=100*oe/Math.max(1,S.hq.en)+8*Math.min(f.toEn,he)/(he+1)-(100*om/Math.max(1,S.hq.me)+4*Math.min(f.toMe,hm)/(hm+1))*(process.env.CARELESS?0.3:1);
-  }
-  const shells=(S.plan||[]).filter(p=>p.k==='shell').length;
-  return v-shells*0;
+  const F=E.frontForecast(S);
+  const persist=E.units(S,'me').reduce((t,u)=>t+Math.max(0,u.stam-1)*0.15,0);
+  return 100*F.toEn/Math.max(1,S.hq.en)-100*F.toMe/Math.max(1,S.hq.me)*(process.env.CARELESS?0.3:1)+persist;
 }
 // Le bot essaie chaque carte jouable sur chaque cible et garde le meilleur coup, tant qu'il en reste un utile
 function bestMove(S){
@@ -26,12 +19,13 @@ function bestMove(S){
   for(let hi=0;hi<S.hand.length;hi++){
     const card=S.hand[hi],d=E.TYPES[card.t];if(!E.canDeployNow(S,card).ok)continue;
     if(card.t==='ravitaillement')return {hi,tg:{c:E.landCols(S)[0]},v:99};
+    if(card.t==='repli')continue;
     for(const tg of E.deployTargets(S,card)){
-      const snap=E.snapshotState(S),plan=S.plan;
+      const snap=E.snapshotState(S);
       let ok;
       if(card.t==='bombardier')ok=E.airStrike(S,hi,tg.c);else if(d.order)ok=E.playOrder(S,hi,tg);else ok=E.placeCard(S,hi,tg.c);
-      const v=ok?evalPos(S)-base+(d.order||card.t==='bombardier'?0:0.3*E.cardCost(S,card)+(d.land?0.5:0)):-1e9;
-      E.restoreState(S,snap);S.plan=plan;
+      const v=ok?evalPos(S)-base+(d.order||card.t==='bombardier'?0:0.05*E.cardCost(S,card)):-1e9;
+      E.restoreState(S,snap);
       if(v>0&&(!best||v>best.v))best={hi,tg,v};
     }
   }
@@ -55,8 +49,7 @@ function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;
 const PATH=[['battle',0],['battle',1],['elite',1],['battle',2],['boss',3],['battle',4],['elite',4],['battle',5],['battle',6],['boss',7]];
 // ONE=n : trace une seule bataille du niveau n-1 (TYPE=boss|elite pour le type de nœud)
 if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],loot:0};const S=E.newBattle(C,rnd,E.battleCfg({type:process.env.TYPE||'battle',levelIdx:+process.env.ONE-1,layer:1,obj:{type:'hq'},boss:process.env.TYPE==='boss'?(process.env.BOSS||'tank'):undefined}));
-  for(let k=0;k<15&&!S.over;k++){botTurn(S);console.log('T'+S.turn,'QG',JSON.stringify(S.hq),'| vous',E.units(S,'me').map(u=>u.key+'@'+u.c+'('+u.hp+')').join(' '),'| en',E.units(S,'en').map(u=>u.key+'@'+u.c+'('+u.hp+')').join(' '));
-    console.log('   ',E.landCols(S).map(c=>{const f=E.sectorForecast(S,c);return 'c'+c+' '+f.atk+'/'+f.def+' v '+f.enAtk+'/'+f.enDef;}).join(' | '));E.endTurn(S);}
+  for(let k=0;k<15&&!S.over;k++){botTurn(S);const F=E.frontForecast(S);console.log('T'+S.turn,'QG',JSON.stringify(S.hq),'frappe',F.toEn,'déf',F.def,'riposte',F.enAtk,'→',F.toMe,'| fx',S.fx.join(','),'| vous',E.units(S,'me').map(u=>u.key+'@'+u.c+'('+u.stam+')').join(' '));E.endTurn(S);}
   console.log('fin',JSON.stringify(S.hq),S.over);process.exit(0);}
 const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0,hq:0}));let done=0;const stats={jok:0,lv:0};
 for(let r=0;r<N;r++){
