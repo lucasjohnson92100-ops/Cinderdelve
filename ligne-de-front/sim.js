@@ -1,120 +1,75 @@
-// Simulation d'une campagne : un bot déploie, fusionne, attaque et achète en boutique (node sim.js [parties] [moteur])
+// Simulation d'une campagne : un bot pose ses cartes secteur par secteur (meilleur bilan prévu), fusionne et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
-const core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
-const E=new Function(core+';return {assault,assaultPreview,intentTarget,strikeDmg,toggleKeep,MAX_KEEP,shotDmg,ENEMIES,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,playOrder,discardHand,isOrder,deployCells,GW,airStrike,playerAttack,canAttack,attackOptions,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,planDeploy,placeCard,deployCells,unitAt,units,targetsFrom,hqInRange,terrainMult,FRONT,mkUnit,genMap,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,GH,TERRAIN,dist,isLandCell};')();
+let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
+// réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
+for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_HP','EHP'],['ENEMY_ATK','EATK'],['HQ_TAKE','HQT'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
+const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,sectorForecast,queue,landCols,hqShielded,hqTake,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW};')();
 const rnd=Math.random;
 function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
-function evalGroups(S,budget){
-  const real=S.supply;S.supply=budget;
-  const groups=new Map([['all',S.hand.map((c,i)=>i)]]);
-  let best={value:-1,idxs:[]};
-  for(const idxs of groups.values()){const n=idxs.length;for(let m=1;m<(1<<n);m++){const sel=idxs.filter((_,b)=>m>>b&1);if(!E.planDeploy(S,sel).ok)continue;
-    let v=0;for(const i of sel){const c=S.hand[i],d=E.TYPES[c.t];v+=d.cost+(c.c.length>1?2:0)+((c.lv||1)-1)*0.5;}
-    if(v>best.value)best={value:v,idxs:sel};}}
-  S.supply=real;return best;
+// Valeur d'une position : dégâts prévus de part et d'autre, le QG compte double (c'est lui qui décide de la partie)
+const qhp=(S,side,c)=>E.queue(S,side,c).reduce((t,u)=>t+Math.max(0,u.hp),0);
+function evalPos(S){
+  if(S.over)return S.over==='win'?1e6:-1e6;
+  let v=0;
+  for(const c of E.landCols(S)){
+    const f=E.sectorForecast(S,c),he=qhp(S,'en',c),hm=qhp(S,'me',c);
+    const oe=E.hqTake(S,'en',f.toEn-he),om=E.hqTake(S,'me',f.toMe-hm);
+    // en fraction de QG : 1 point = 1 % du QG ; les unités tuées comptent un peu (elles ne frapperont plus)
+    v+=100*oe/Math.max(1,S.hq.en)+8*Math.min(f.toEn,he)/(he+1)-(100*om/Math.max(1,S.hq.me)+4*Math.min(f.toMe,hm)/(hm+1))*(process.env.CARELESS?0.3:1);
+  }
+  const shells=(S.plan||[]).filter(p=>p.k==='shell').length;
+  return v-shells*0;
 }
-const hqAimCol=(S,c)=>E.units(S,'en').filter(u=>u.c===c).reduce((t,u)=>{const tg=E.intentTarget(S,u);return t+(tg&&tg.hq?E.strikeDmg(S,u,null):0);},0);
-function aimedAt(S,m){return E.units(S,'en').reduce((t,u)=>{const tg=E.intentTarget(S,u);return t+(tg&&tg.t===m?E.strikeDmg(S,u,m):0);},0);}
-function chooseCell(S,card){
-  const cells=E.deployCells(S,card),def=E.TYPES[card.t];if(!cells.length)return null;
-  const tmp=E.mkUnit(S,'me',card.t,card.c,card.lv);
-  let best=null;
-  for(const [r,c] of cells){
-    let sc=0;
-    if(card.t==='bombardier'){sc=r<0?3:E.units(S,'en').filter(t=>Math.abs(t.r-r)<=1&&Math.abs(t.c-c)<=1).length*4;}
-    else{
-      tmp.r=r;tmp.c=c;const ts=E.targetsFrom(S,tmp,r,c),foesHere=E.units(S,'en').some(t=>t.land&&t.c===c),mineHere=E.units(S,'me').some(t=>t.land&&t.c===c);
-      sc=ts.length*4+(!foesHere&&E.hqInRange(S,tmp,r,c)?3:0);if(def.land&&!process.env.NOAI)sc+=hqAimCol(S,c)>0?Math.min(8,hqAimCol(S,c)/2):0;
-      if(def.land){sc+=(E.terrainMult(card.c,S.grid[r][c])-1)*8+(E.TERRAIN[S.grid[r][c]].cover||0)*4+(foesHere&&!mineHere?5:0)+(S.grid[r][c]==='village'&&!mineHere?2:0);
-        if(def.rng[1]>1&&r===3)sc+=1;if(def.rng[1]<=1&&r===2)sc+=1;}
+// Le bot essaie chaque carte jouable sur chaque cible et garde le meilleur coup, tant qu'il en reste un utile
+function bestMove(S){
+  const base=evalPos(S);let best=null;
+  for(let hi=0;hi<S.hand.length;hi++){
+    const card=S.hand[hi],d=E.TYPES[card.t];if(!E.canDeployNow(S,card).ok)continue;
+    if(card.t==='ravitaillement')return {hi,tg:{c:E.landCols(S)[0]},v:99};
+    for(const tg of E.deployTargets(S,card)){
+      const snap=E.snapshotState(S),plan=S.plan;
+      let ok;
+      if(card.t==='bombardier')ok=E.airStrike(S,hi,tg.c);else if(d.order)ok=E.playOrder(S,hi,tg);else ok=E.placeCard(S,hi,tg.c);
+      const v=ok?evalPos(S)-base+(d.order||card.t==='bombardier'?0:0.3*E.cardCost(S,card)+(d.land?0.5:0)):-1e9;
+      E.restoreState(S,snap);S.plan=plan;
+      if(v>0&&(!best||v>best.v))best={hi,tg,v};
     }
-    if(!best||sc>best.sc)best={sc,r,c};
   }
   return best;
 }
-const ORD=(S,t)=>S.hand.findIndex(c=>c.t===t);
-const enemiesIn=(S,c)=>E.units(S,'en').filter(u=>u.c===c);
-function playOrders(S,phase){
-  const play=(t,r,c)=>{const i=ORD(S,t);if(i>=0&&E.TYPES[t].cost<=S.supply)return E.playOrder(S,i,r,c);return null;};
-  if(phase==='pre'){
-    while(ORD(S,'ravitaillement')>=0&&play('ravitaillement',2,0));
-    // sabotage avec les raiders derrière les lignes
-    E.units(S,'me').filter(u=>u.land&&u.r===0).forEach(u=>play('sabotage',u.r,u.c));
-    // débarquement face à l'ennemi
-    {const i=ORD(S,'debarquement');if(i>=0){const cells=E.deployCells(S,S.hand[i]);const pick=cells.sort((a,b)=>enemiesIn(S,b[1]).length-enemiesIn(S,a[1]).length)[0];if(pick)play('debarquement',pick[0],pick[1]);}}
-    // barrage sur le secteur ennemi le plus chargé
-    let best=-1,bc=-1;for(let c=0;c<E.GW;c++){const v=enemiesIn(S,c).reduce((t,u)=>t+Math.min(u.hp,6),0);if(v>best){best=v;bc=c;}}
-    if(best>=6)play('barrage',1,bc);
-    // embuscade là où un renfort arrive au front
-    const pd=S.plan.find(p=>p.k==='deploy'&&p.r===1);if(pd)play('embuscade',1,pd.c);
-    // repli des unités très abîmées au front
-    E.units(S,'me').filter(u=>u.land&&u.r===2&&(u.hp<u.hpMax*0.4||(!process.env.NOAI&&aimedAt(S,u)>=u.hp))).forEach(u=>play('repli',u.r,u.c));
-  }else{
-    if(!process.env.NOAI)for(let c=0;c<E.GW;c++)if(hqAimCol(S,c)>=8)play('fumigenes',2,c);
-    // assaut : secteur où au moins 2 unités ont déjà attaqué
-    for(let c=0;c<E.GW;c++){if(E.units(S,'me').filter(u=>u.c===c&&u.attacked&&!u.fresh&&u.dmg>0).length>=2&&play('assaut',2,c))return true;}
-    // protections pour le tour ennemi
-    for(let c=0;c<E.GW;c++){const foes=enemiesIn(S,c).length,mine=E.units(S,'me').filter(u=>u.c===c&&u.land);if(!foes)continue;
-      if(!mine.length||mine.some(u=>u.hp<u.hpMax*0.5)){if(play('fumigenes',2,c))continue;}
-      if(mine.length&&play('contreattaque',2,c))continue;
-      const u=mine.find(x=>x.r===2&&!x.dig);if(u)play('retranchement',u.r,u.c);}
-  }
-  return false;
-}
-function attackAll(S){
-  // assauts combinés : pour chaque cible, toutes les unités prêtes qui l'atteignent ; on lance le meilleur, puis on recommence
-  const threat=x=>{if(process.env.NOAI)return 0;const tg=E.intentTarget(S,x);return tg&&!tg.miss?E.strikeDmg(S,x,tg.t||null):0;};
-  for(let guard=0;guard<14&&!S.over;guard++){
-    const ready=E.units(S,'me').filter(u=>E.canAttack(S,u));if(!ready.length)break;
-    let best=null;
-    for(const t of [...E.units(S,'en').map(x=>x.uid),'hq']){
-      const x=t==='hq'?null:S.units.find(z=>z.uid===t);
-      let grp=ready.filter(u=>x?E.attackOptions(S,u).units.includes(x):E.hqInRange(S,u,u.r,u.c));if(!grp.length)continue;if(process.env.SINGLE)grp=[grp[0]];
-      const pv=E.assaultPreview(S,grp.map(u=>u.uid),t);if(!pv||pv.total<=0)continue;
-      const v=x?Math.min(pv.total,x.hp*2)+(pv.total>=x.hp?15:0)+threat(x):pv.total*1.1;
-      if(!best||v>best.v)best={v,ids:grp.map(u=>u.uid),t};
-    }
-    if(!best)break;
-    E.assault(S,best.ids,best.t);
-  }
-}
-function botTurn(S,reserve){
+function botTurn(S){
   // défausse des cartes injouables (une fois par tour)
-  if(S.discards>0){const bad=S.hand.map((c,i)=>i).filter(i=>{const c=S.hand[i];return E.TYPES[c.t].cost>S.supply+1||!E.deployCells(S,c).length;});if(bad.length>=1)E.discardHand(S,bad.slice(0,5));}
-  playOrders(S,'pre');
-  // fusion de groupes voisins
+  if(S.discards>0){const bad=S.hand.map((c,i)=>i).filter(i=>{const c=S.hand[i];return E.TYPES[c.t].cost>S.supply+1||!E.deployTargets(S,c).length;});if(bad.length>=2)E.discardHand(S,bad.slice(0,5));}
+  if(!process.env.NOFUSE)fuseAllHand(S);
+  // fusion d'unités du même type dans un secteur (libère une place)
   let again=true;while(again){again=false;const us=E.units(S,'me');outer2:for(const a of us)for(const b of us)if(E.canFuseUnits(S,a,b)){E.fuseUnits(S,a.uid,b.uid);again=true;break outer2;}}
-  const keep=S.hand.filter(c=>E.isOrder(c));S.hand=S.hand.filter(c=>!E.isOrder(c));
-  const snap=E.snapshotState(S);
-  const budget=Math.max(0,S.supply-reserve);
-  fuseAllHand(S);const A=evalGroups(S,budget);E.restoreState(S,snap);
-  const B=evalGroups(S,budget);
-  let sel;
-  if(A.value>B.value){fuseAllHand(S);sel=evalGroups(S,budget);}else sel=B;
-  if(sel.idxs.length){
-    const cards=sel.idxs.map(i=>S.hand[i]).sort((a,b)=>E.TYPES[b.t].cost-E.TYPES[a.t].cost);
-    for(const card of cards){const hi=S.hand.indexOf(card);if(hi<0)continue;const cell=chooseCell(S,card);if(!cell)continue;if(card.t==='bombardier')E.airStrike(S,hi,cell.r,cell.c);else E.placeCard(S,hi,cell.r,cell.c);}
+  for(let g=0;g<20&&!S.over;g++){
+    const m=bestMove(S);if(!m)break;
+    const card=S.hand[m.hi],d=E.TYPES[card.t];
+    if(card.t==='bombardier')E.airStrike(S,m.hi,m.tg.c);else if(d.order)E.playOrder(S,m.hi,m.tg);else E.placeCard(S,m.hi,m.tg.c);
   }
-  S.hand.push(...keep);
-  attackAll(S);
-  if(playOrders(S,'post'))attackAll(S);
-  playOrders(S,'post');
   if(!process.env.NOKEEP)S.hand.map((c,i)=>i).sort((a,b)=>E.TYPES[S.hand[b].t].cost-E.TYPES[S.hand[a].t].cost).slice(0,E.MAX_KEEP).forEach(i=>E.toggleKeep(S,i));
 }
 const RES=0;
-function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S,RES);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
+function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
 const PATH=[['battle',0],['battle',1],['elite',1],['battle',2],['boss',3],['battle',4],['elite',4],['battle',5],['battle',6],['boss',7]];
-const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0}));let done=0;const stats={jok:0,lv:0};
+// ONE=n : trace une seule bataille du niveau n-1 (TYPE=boss|elite pour le type de nœud)
+if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],loot:0};const S=E.newBattle(C,rnd,E.battleCfg({type:process.env.TYPE||'battle',levelIdx:+process.env.ONE-1,layer:1,obj:{type:'hq'},boss:process.env.TYPE==='boss'?(process.env.BOSS||'tank'):undefined}));
+  for(let k=0;k<15&&!S.over;k++){botTurn(S);console.log('T'+S.turn,'QG',JSON.stringify(S.hq),'| vous',E.units(S,'me').map(u=>u.key+'@'+u.c+'('+u.hp+')').join(' '),'| en',E.units(S,'en').map(u=>u.key+'@'+u.c+'('+u.hp+')').join(' '));
+    console.log('   ',E.landCols(S).map(c=>{const f=E.sectorForecast(S,c);return 'c'+c+' '+f.atk+'/'+f.def+' v '+f.enAtk+'/'+f.enDef;}).join(' | '));E.endTurn(S);}
+  console.log('fin',JSON.stringify(S.hq),S.over);process.exit(0);}
+const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0,hq:0}));let done=0;const stats={jok:0,lv:0};
 for(let r=0;r<N;r++){
   const doc=process.env.DOC||E.pickDoctrines(rnd)[0];const C={deck:[...E.START_DECK.map(c=>({...c})),...E.doctrineCards(doc)],hq:E.HQ_START,hqMax:E.HQ_START,officers:[],loot:2};let ok=true;
   for(let i=0;i<PATH.length;i++){
-    const [type,lv]=PATH[i];reach[i].n++;
+    const [type,lv]=PATH[i];reach[i].n++;reach[i].hq+=C.hq;
     const f=fight(C,{type,levelIdx:lv,layer:Math.max(1,i),obj:{type:'hq'},boss:type==='boss'?(process.env.BOSS||['tank','train','battery'][Math.floor(rnd()*3)]):undefined});reach[i].t+=f.S.turn;if(!f.win){ok=false;break;}reach[i].w++;
     C.hq=Math.min(C.hqMax,f.S.hq.me+12);C.loot+=E.lootFor(f.S,C,type).total;
     if(type==='boss'&&i<PATH.length-1)E.addSupplyBonus(C);
     // carte de récompense : de préférence un type que le paquet n'a pas encore, sinon une unité
     {const opts=E.rewardCards(rnd,type==='battle'?1:2,C.deck);const own=new Set(C.deck.map(c=>c.t));const pick=opts.find(c=>!own.has(c.t)&&!E.isOrder(c))||opts.find(c=>!E.isOrder(c))||opts[0];if(pick&&!process.env.NOREWARD)C.deck.push({...pick});}
     let shop=E.genShop(C,rnd,type!=='battle');
+    while(C.hq<C.hqMax*0.6&&C.loot>=4&&!process.env.NOHEAL){C.loot-=4;C.hq=Math.min(C.hqMax,C.hq+12);}
     for(let tries=0;tries<6;tries++){
       const cheapJ=shop.jokers.filter(j=>j.price<=C.loot).sort((a,b)=>b.price-a.price)[0];
       if(cheapJ&&C.officers.length<E.MAX_JOKERS){C.loot-=cheapJ.price;C.officers.push(cheapJ.id);if(cheapJ.id==='brandt'){C.hqMax+=20;C.hq+=20;}shop.jokers=shop.jokers.filter(j=>j!==cheapJ);continue;}
@@ -127,4 +82,4 @@ for(let r=0;r<N;r++){
   if(ok)done++;stats.jok+=C.officers.length;stats.lv+=C.deck.reduce((s,c)=>s+(c.lv||1)-1,0);
 }
 console.log('campagne terminée par le bot :',(done*100/N).toFixed(1)+'%','| jokers moyens',(stats.jok/N).toFixed(1),'| niveaux achetés',(stats.lv/N).toFixed(1));
-reach.forEach((x,i)=>console.log(`étape ${i+1} ${PATH[i][0].padEnd(6)} niveau ${PATH[i][1]} : atteinte ${x.n}  victoires ${x.n?Math.round(x.w*100/x.n):0}%  tours moy ${x.n?(x.t/x.n).toFixed(1):0}`));
+reach.forEach((x,i)=>console.log(`étape ${i+1} ${PATH[i][0].padEnd(6)} niveau ${PATH[i][1]} : atteinte ${x.n}  victoires ${x.n?Math.round(x.w*100/x.n):0}%  tours moy ${x.n?(x.t/x.n).toFixed(1):0}  QG à l'entrée ${x.n?Math.round(x.hq/x.n):0}`));
