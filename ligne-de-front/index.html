@@ -1633,6 +1633,54 @@ body:has(.mapscreen.h) .topbar { display: none; }
 .ms-pips i.skip { background: #5aa0f0; border-color: #2559b5; }
 @media (max-height: 460px) { .bw { padding: 6px 10px; gap: 5px; } .bw-ante { font-size: 1.05rem; } .bw-sub { font-size: .68rem; } .blrow { gap: 7px; } .bl { gap: 2px; padding: 0 6px 6px; } .bl header { font-size: .8rem; padding: 2px 4px; } .bl-goal strong { font-size: .98rem; } .bl-goal small, .bl-rew { display: none; } .bl-btns .btn { padding: 4px 6px; font-size: .8rem; } .bl-name { font-size: .72rem; } }
 @media (max-height: 340px) { .bw-sub, .bl-name { display: none; } .bl-art svg { max-width: 55%; } .bl-obj { font-size: .66rem; } .bl-bonus { font-size: .62rem; padding: 1px 3px; } }
+
+/* ==== Plateau : le tableau de jeu prend la place, la colonne de droite se réduit à l'essentiel ==== */
+.hqpic { display: inline-block; flex: none; width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--ink); background: var(--art-qg) 50% 26% / 260% auto no-repeat; box-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.hqpic.me { filter: hue-rotate(190deg) saturate(.85) brightness(1.05); }
+.hqbar .hqmini.hqpic, .mapbar .hqmini.hqpic { width: 26px; height: 26px; margin: -3px 0; }
+.s2-top .hqmini.hqpic, .shopbar .hqmini.hqpic { width: 22px; height: 22px; margin: 0 3px 0 0; }
+.btl.land { grid-template-columns: minmax(0, 1fr) var(--rw); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; column-gap: 7px; row-gap: 3px; padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px)) 6px; }
+.btl.land > .bt-head { display: none; }
+.btl.land .bt-tools { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.btl.land .bt-tools .jbar { display: flex; gap: 2px; flex: 1; min-width: 0; justify-content: flex-start; } .btl.land .bt-tools .jk.empty { display: none; }
+.btl.land .bt-tools .jk { width: 24px; height: 24px; padding: 0; } .btl.land .bt-tools .jk svg { width: 100%; height: 100%; }
+.btl.land .bt-tools .pill { min-height: 24px; padding: 0 10px; font-size: 1rem; line-height: 1; }
+.btl.land .board > .bgrid { grid-column: 1; grid-row: 1 / 6; }
+.btl.land .board > .enhq { grid-column: 2; grid-row: 2; }
+.btl.land .board > .totals { grid-column: 2; grid-row: 3; }
+.btl.land .board > .hq.me { grid-column: 2; grid-row: 4; align-self: start; }
+.btl.land .bt-hint { grid-column: 2; grid-row: 5; min-height: 0; overflow: hidden; font-size: .62rem; line-height: 1.15; padding: 2px 6px; align-self: start; }
+.btl.land .bt-hint .ht { -webkit-line-clamp: 3; }
+.btl.land .hand.fan { grid-column: 1; grid-row: 6; }
+.btl.land .dock { grid-column: 2; grid-row: 6; }
+.btl.land .ln.sea { flex: .2 1 0; min-height: 13px; } .btl.land .ln.sea .coast { font-size: .52rem; }
+.menugrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .menugrid .btn { justify-content: center; font-size: .95rem; }
+/* le QG ennemi : l'illustration peinte en fond, texte clair par-dessus */
+.btl.land .enhq { position: relative; display: block; overflow: hidden; padding: 0; border: 3px solid var(--ink); border-radius: 12px; background: #1a1210; color: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .45); }
+.btl.land .enhq .enpic { position: absolute; inset: 0; background: var(--art-qg) 50% 6% / cover no-repeat; filter: brightness(calc(.6 + .4 * var(--hp, 1))) saturate(calc(.7 + .3 * var(--hp, 1))); transition: filter .5s; }
+.btl.land .enhq::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(12, 8, 10, .25) 0, rgba(12, 8, 10, .45) 34%, rgba(12, 8, 10, .86) 100%); }
+.btl.land .enhq.low::after { content: ""; position: absolute; inset: 0; z-index: 1; background: radial-gradient(70% 60% at 30% 100%, rgba(255, 120, 30, .5), transparent 70%); animation: advp 1s infinite alternate; pointer-events: none; }
+.btl.land .enhq .enmain { position: relative; z-index: 2; display: grid; gap: 2px; padding: 3px 6px 4px; }
+.btl.land .enhq .enl { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+.btl.land .enhq .enl { flex-wrap: nowrap; } .btl.land .enhq .enl b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .74rem; color: #ffe08a; text-shadow: 0 2px 0 rgba(0, 0, 0, .7); min-width: 0; }
+.btl.land .enhq .tour { font-size: .68rem; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, .7); }
+.btl.land .enhq .enobj { font-size: .6rem; font-weight: 800; color: #f2e6c6; text-shadow: 0 1px 0 rgba(0, 0, 0, .8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btl.land .enhq .bar.big { height: 14px; display: grid; place-items: center; }
+.btl.land .enhq .enhp { position: relative; z-index: 2; font-family: var(--font-display); font-size: .62rem; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; line-height: 1; }
+.btl.land .enhq .enrow { gap: 3px; flex-wrap: nowrap; overflow: hidden; }
+.btl.land .enhq .enatk { font-size: .64rem; padding: 0 5px; flex: none; }
+.btl.land .enhq .fxchip { padding: 0 4px; flex: none; } .btl.land .enhq .fxchip b { display: none; } .btl.land .enhq .fxchip svg { width: 16px; height: 16px; }
+.btl.land .totals { padding: 2px 6px; font-size: .64rem; line-height: 1.2; }
+.btl.land .totals .t-strike b { font-size: .9rem; }
+.btl.land .hq.me.hqbar { padding: 2px 6px; gap: 4px; } .btl.land .hq.me .hl { font-size: .6rem; }
+.btl.land .dock { padding: 3px 5px; gap: 3px; }
+.btl.land .dock #bend { padding: 5px 8px; font-size: .86rem; }
+.btl.land .dock .pill { min-height: 26px; }
+@media (min-height: 520px) { .btl.land .enhq .fxchip b { display: inline; } .btl.land .bt-hint { font-size: .7rem; } .btl.land .enhq .enmain { padding: 6px 8px 7px; gap: 4px; } .btl.land .enhq .enl b { font-size: .9rem; } .btl.land .enhq .enobj { font-size: .72rem; } .btl.land .enhq .bar.big { height: 18px; } .btl.land .enhq .enhp { font-size: .78rem; } .btl.land .bt-tools .jk { width: 32px; height: 32px; } }
+@media (max-height: 340px) { .stack.end { gap: 4px; padding-block: 4px; } .stack.end .big { font-size: 2rem; margin: 0; } .stack.end svg { max-height: 56px; width: auto; } .stack.end h2 { font-size: 1rem; margin: 0; } .stack.end p { margin: 0; font-size: .8rem; } .stack.end .armies svg { height: 52px; } }
+.btl.land .dock .supply > span:first-child { white-space: nowrap; font-size: .62rem; } .btl.land .dock .pip { width: 8px; height: 8px; } .btl.land .dock .pips.two { grid-template-rows: repeat(2, 8px); }
+.btl.land .treport { top: 8%; width: min(70%, 380px); padding: 5px 10px; font-size: .8rem; line-height: 1.25; } .btl.land .treport .rp-t { font-size: .9rem; } .btl.land .treport .tip, .btl.land .treport .muted { font-size: .66rem; }
+@media (max-height: 340px) { .btl.land .treport { font-size: .7rem; padding: 3px 8px; } .btl.land .treport > * { margin: 1px 0; } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -3004,7 +3052,7 @@ function toMap() {
     <aside class="mapbar side">
       <div class="ms-top"><span class="ribbon sm">Campagne</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
       <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>${endless ? `Blinde ${nxt + 1} · ∞` : `Blinde ${nxt + 1} sur ${BLINDS_TO_WIN}`}</b><span>${endless ? 'Mode infini : toujours plus dur' : `${BLINDS_TO_WIN} blindes vaincues = victoire`}</span></div></div>
-      <div class="hq me hqbar compact"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg><span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
+      <div class="hq me hqbar compact">${hqPic('me')}<span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
       <div class="ms-foot">${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}<div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
     </aside>
     <div class="mapwrap bw"><div class="bw-head"><span class="bw-ante">Manche ${ante}</span><span class="bw-sub">Affrontez la blinde ou passez-la pour un bonus. Le boss est obligatoire.</span></div>
@@ -3076,7 +3124,7 @@ function startBattle(node) {
 // ---- Tutoriel guidé : des bulles pas à pas pendant les deux premières batailles ----
 const myUnits = () => S.units.filter(u => u.side === 'me');
 const TUTO = [
-  { id: 'b-goal', stage: 1, info: true, sel: '#enhq', text: 'Votre cible : le QG ennemi. Sa barre de PV est la « blinde » à faire tomber. Chaque tour, il riposte avec l’Attaque annoncée ⚔ contre votre Défense. Le bouton 📖 réexplique tout.' },
+  { id: 'b-goal', stage: 1, info: true, sel: '#enhq', text: 'Votre cible : le QG ennemi. Sa barre de PV est la « blinde » à faire tomber. Chaque tour, il riposte avec l’Attaque annoncée ⚔ contre votre Défense. Le menu ⋯ (📖 Lire le plateau) réexplique tout.' },
   { id: 'b-deploy', stage: 1, sel: '#hand', when: () => !myUnits().length, done: () => myUnits().length > 0, text: 'Touchez une carte (★ indique le meilleur secteur), puis glissez-la sur une colonne : son score ⚔ s’affiche en bas.' },
   { id: 'b-total', stage: 1, info: true, sel: '#totals', when: () => myUnits().length > 0, text: 'Vos secteurs s’additionnent : la Frappe totale part sur le QG ennemi en fin de tour. Votre Défense totale réduit sa riposte sur votre QG.' },
   { id: 'b-stam', stage: 1, info: true, sel: '.gu .pips', text: 'Les points sous une unité = son endurance. Elle perd 1 point par tour, puis quitte le front : il faut renouveler vos troupes.' },
@@ -3160,6 +3208,8 @@ function groundSVG(g, r, c) {
 }
 const HQ_COL = { me: ['#3d86e8', '#2559b5'], en: ['#e5543f', '#b3351f'] };
 // Le QG : un fort avec tour, drapeau et dégâts visibles (fissures, fumée, flammes)
+// Le QG est l'illustration peinte (variable --art-qg) : celui de l'ennemi tel quel, le vôtre passé au bleu
+const hqPic = side => `<span class="hqmini hqpic ${side}" aria-hidden="true"></span>`;
 function hqArt(side, pct) {
   const [c0, c1] = HQ_COL[side];
   const cracks = pct < 0.66 ? '<path d="M9 21 l3 3 -2 3 M31 19 l-2 4 2 3 M18 12 l2 3" fill="none" stroke="#1b2540" stroke-width="1"/>' : '';
@@ -3215,10 +3265,11 @@ function laneTag(ter) {
 function enemyHQHTML(view, live, F) {
   const hold = S.obj.type === 'hold', max = S.lvl.hq || 1, cur = Math.max(0, view.hq.en), pct = hold ? 100 : Math.max(0, Math.min(100, (cur / max) * 100));
   const atk = F ? F.enAtk : enemyAtk(S), fx = (S.fx || []).map(k => `<button class="fxchip ${HQFX[k].boss ? 'boss' : ''}" data-fx="${k}">${spriteSVG(HQFX[k].icon, 'en', 18)}<b>${HQFX[k].name}</b></button>`).join('');
-  return `<div class="enhq ${live && F && F.toEn >= cur && !hold ? 'doomed' : ''}" id="enhq">
-    <svg class="enfort" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('en', pct / 100)}</svg>
-    <div class="enmain"><div class="enl"><b>${hold ? 'Tenir la position' : S.lvl.name || 'QG ennemi'}</b><span class="enhp" id="enhp">${hold ? `Tour ${Math.min(S.obj.n, S.turn)} / ${S.obj.n}` : `${fmtN(cur)} / ${fmtN(max)} PV`}</span></div>
-      <div class="bar big"><i style="width:${pct}%"></i>${live && F && !hold ? `<i class="dmgp" style="left:${Math.max(0, pct - Math.min(pct, (F.toEn / max) * 100))}%;width:${Math.min(pct, (F.toEn / max) * 100)}%"></i>` : ''}</div>
+  return `<div class="enhq ${live && F && F.toEn >= cur && !hold ? 'doomed' : ''} ${pct < 50 ? 'low' : ''} ${pct < 25 ? 'crit' : ''}" id="enhq" style="--hp:${(pct / 100).toFixed(2)}">
+    <i class="enpic" aria-hidden="true"></i>
+    <div class="enmain"><div class="enl"><b>${hold ? 'Tenir la position' : S.lvl.name || 'QG ennemi'}</b><span class="tour">Tour ${S.turn}</span></div>
+      <div class="enobj" id="obj">${objLine()}</div>
+      <div class="bar big"><i style="width:${pct}%"></i>${live && F && !hold ? `<i class="dmgp" style="left:${Math.max(0, pct - Math.min(pct, (F.toEn / max) * 100))}%;width:${Math.min(pct, (F.toEn / max) * 100)}%"></i>` : ''}<span class="enhp" id="enhp">${hold ? `Tour ${Math.min(S.obj.n, S.turn)} / ${S.obj.n}` : `${fmtN(cur)} / ${fmtN(max)} PV`}</span></div>
       <div class="enrow"><span class="enatk" title="Attaque ennemie de ce tour, contre votre Défense totale">${SWORD} Riposte <b>${fmtN(atk)}</b>${S.smoke ? ' <small>(fumée ÷2)</small>' : ''}</span>${fx}</div></div></div>`;
 }
 function boardHTML(view, live) {
@@ -3250,7 +3301,7 @@ function boardHTML(view, live) {
 }
 function hqBar(side, label, cur, max, extra, tgt, aimed) {
   const pct = Math.max(0, Math.min(100, (cur / max) * 100));
-  return `<div class="hq ${side} hqbar compact fort ${aimed ? 'aimed' : ''}"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt(side, Math.max(0, cur) / max)}</svg><span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
+  return `<div class="hq ${side} hqbar compact fort ${aimed ? 'aimed' : ''}">${hqPic(side)}<span class="hl">${label}</span><div class="bar"><i style="width:${pct}%"></i></div><span class="num">${extra || `${Math.max(0, cur)}/${max}`}</span></div>`;
 }
 // Bilan si l'on posait cette carte dans ce secteur, sans rien modifier : le secteur et le front entier
 function previewPlace(card, c) {
@@ -3357,7 +3408,7 @@ function hintText() {
   return `<b class="advl">✔ Votre Défense tient.</b> Renforcez votre frappe : posez vos cartes là où le ★ l'indique. Touchez un secteur pour son calcul.${fore}`;
 }
 // Largeur de la colonne de droite (blinde, totaux, commandes) en paysage
-const sideW = () => Math.round(Math.max(220, Math.min(340, Math.min(window.innerWidth, 1400) * 0.3)));
+const sideW = () => Math.round(Math.max(176, Math.min(300, Math.min(window.innerWidth, 1400) * 0.235)));
 function renderBattle() {
   const reserved = picked.length === 1 ? cardCost(S, picked[0]) : 0;
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
@@ -3378,13 +3429,12 @@ function renderBattle() {
   const extra = hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : fz.length ? '<button class="btn go sm" data-act="fuse">Fusionner</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
   app.innerHTML = `<div class="btl land" style="--rw:${rw}px">
-    <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}<span class="sp"></span>
-      <button class="pill sm" data-act="guide" aria-label="Lire le plateau">📖</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="deck">Paquet</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
+    <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
     <div class="hand fan ${dealNow ? 'deal' : ''}" id="hand" style="height:${ch + (H >= 600 ? 26 : 14)}px">${hand}</div>
     <div class="bt-side"><div class="bt-hint" id="hint"><span class="ht">${hint}</span>${extra}</div>
-    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried} réserve</b>` : ''}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
+    <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried}</b>` : ''}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes">⟲ ${S.discards}</button><button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button><button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}</div>
     </div></div>
   </div>`;
@@ -4060,7 +4110,7 @@ function renderShop() {
   const crates = sh.crates.map((cr, i) => { const [k, col] = CRATE_ART[cr.id]; return shopTile('k', i, cr, `<span class="st-art st-crate">${spriteSVG(k, 'me', 40, col)}</span><b class="st-nm">${COMPOS[cr.id].name.replace('Caisse ', '')}</b>`); }).join('');
   const svcs = SVC.map(v => { const pr = v.price(), ok = v.ok() && C.loot >= pr; return `<button class="ssvc" data-act="${v.act}" ${ok ? '' : 'disabled'}><span class="sv-ic">${v.ic}</span><b>${v.name}</b><span class="st-price">${v.ok() ? '$' + pr : '—'}</span></button>`; }).join('');
   app.innerHTML = `<div class="shop2 land" lang="fr"><aside class="s2-side">
-    <header class="s2-top"><span class="ribbon sm">Intendance</span><span class="sb-hq"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg>${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></header>
+    <header class="s2-top"><span class="ribbon sm">Intendance</span><span class="sb-hq">${hqPic('me')}${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></header>
     <div class="s2-jok"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div>
     <div class="s2-buy" id="buyzone"><span class="bz-ic">🛒</span><span class="bz-tx"><b>Zone d'achat</b><span>Glissez un article ici pour l'acheter · touchez-le pour le détail</span></span></div>
     <div class="s2-tip"><b>L'intendant :</b> ${quartermasterTip()}</div>
@@ -4343,6 +4393,7 @@ document.addEventListener('click', e => {
   else if (a === 'coachoff') { const r = load(); r.tuto = { ...(r.tuto || {}), off: 1 }; save(r); showCoach(); toast('Tutoriel désactivé. Le bouton « ? » reste disponible.'); }
   else if (a === 'help') helpModal(false);
   else if (a === 'guide') guideModal();
+  else if (a === 'menu') menuModal();
   else if (a === 'close') { closeModal(); if (S && document.getElementById('hand') && !busy) showCoach(); }
   else if (a === 'deploy') doEnd();
   else if (a === 'fuse' || a === 'fusepick') doFusePick();
@@ -4379,6 +4430,10 @@ document.addEventListener('pointermove', e => {
 });
 document.addEventListener('pointerout', e => { const c = e.target.closest && e.target.closest('#hand .hc'); if (c && !c.contains(e.relatedTarget)) c.classList.remove('tilt'); });
 window.addEventListener('resize', () => { if (S && document.querySelector('.btl') && !busy) renderBattle(); });
+function menuModal() {
+  openModal(`<div class="hd"><span class="ribbon">Menu</span><button class="pill" data-act="close">Fermer</button></div>
+    <div class="menugrid"><button class="btn" data-act="guide">📖 Lire le plateau</button><button class="btn" data-act="help">? Comment jouer</button><button class="btn" data-act="deck">🂠 Voir le paquet</button><button class="btn" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>`);
+}
 function renderSoundButton() {
   let b = document.getElementById('snd');
   if (!b) {

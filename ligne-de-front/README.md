@@ -95,3 +95,5 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Musique d'ambiance.
 - Sauvegarde de la campagne en cours.
 - Plus de types d'unités, de couleurs mixtes aux effets propres, d'officiers et d'ennemis.
+
+- **Plateau** : le tableau de jeu occupe l'essentiel de l'écran (testé jusqu'à 765×298) ; colonne de droite réduite à la blinde illustrée, aux totaux, à votre QG, au conseil et aux commandes ; menu ⋯ pour le guide, l'aide, le paquet et le son.
