@@ -1,11 +1,10 @@
-// Simulation d'une campagne : un bot pose ses cartes secteur par secteur (meilleur bilan prévu), fusionne et achète en boutique (node sim.js [parties] [moteur])
+// Simulation d'une campagne : un bot pose ses cartes secteur par secteur (meilleur bilan prévu), et achète en boutique (node sim.js [parties] [moteur])
 const fs=require('fs');
 let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
 for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
-const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,fuseCards,canFuse,canFuseUnits,fuseUnits,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
+const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
-function fuseAllHand(S){let again=true;while(again){again=false;outer:for(let i=0;i<S.hand.length;i++)for(let j=i+1;j<S.hand.length;j++)if(E.canFuse(S.hand[i],S.hand[j])&&E.fuseCards(S,i,j)){again=true;break outer;}}}
 // Valeur d'une position : fraction du QG ennemi frappée ce tour, moins la fraction de votre QG perdue ; les unités qui restent comptent un peu
 function evalPos(S){
   if(S.over)return S.over==='win'?1e6:-1e6;
@@ -34,9 +33,6 @@ function bestMove(S){
 function botTurn(S){
   // défausse des cartes injouables (une fois par tour)
   if(S.discards>0){const bad=S.hand.map((c,i)=>i).filter(i=>{const c=S.hand[i];return E.TYPES[c.t].cost>S.supply+1||!E.deployTargets(S,c).length;});if(bad.length>=2)E.discardHand(S,bad.slice(0,5));}
-  if(!process.env.NOFUSE)fuseAllHand(S);
-  // fusion d'unités du même type dans un secteur (libère une place)
-  let again=true;while(again){again=false;const us=E.units(S,'me');outer2:for(const a of us)for(const b of us)if(E.canFuseUnits(S,a,b)){E.fuseUnits(S,a.uid,b.uid);again=true;break outer2;}}
   for(let g=0;g<20&&!S.over;g++){
     const m=bestMove(S);if(!m)break;
     const card=S.hand[m.hi],d=E.TYPES[card.t];

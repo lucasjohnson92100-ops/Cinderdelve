@@ -1,7 +1,7 @@
 # Ligne de Front
 
 Deckbuilder de guerre solo (1944), dans un style cartoon « Advance Wars ».
-Vous déployez des groupes d'unités dans les secteurs d'un plateau simple (sans déplacement), vous les fusionnez par couleur et vous enchaînez des « blindes » façon Balatro : 20 à vaincre pour gagner, puis l'infini.
+Vous déployez des groupes d'unités dans les secteurs d'un plateau simple (sans déplacement), vous les jouez en « mains » façon Balatro (plusieurs cartes posées ensemble dans un secteur, score visible avant la pose) et vous enchaînez des « blindes » façon Balatro : 20 à vaincre pour gagner, puis l'infini.
 
 ## Jouer
 
@@ -22,7 +22,7 @@ Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche*
 - **Renforts** : après chaque victoire, on choisit 1 carte parmi 3 (ou on passe pour garder un paquet court). Les types absents du paquet sortent deux fois plus souvent et portent le badge « Nouveau ». Les autres cartes arrivent aussi par l'intendance et les caisses.
 - **Terrains des couleurs** : chaque couleur a un terrain de **force ▲ (+50 % de dégâts)** et un de **faiblesse ▼ (−25 %)**, pour les unités terrestres (attaque et riposte) : jaune ▲ route ▼ forêt ; rouge ▲ champ ▼ rivière ; vert ▲ forêt ▼ route ; noir ▲ village ▼ champ. Une carte fusionnée cumule (jaune + vert en forêt : ×1,25). En glissant une carte, les cases affichent +50 % ou −25 % ; des pastilles en bas de chaque secteur le rappellent.
 - **L'ennemi n'est qu'un QG, comme une « blinde » de Balatro** : une grosse barre de PV à faire tomber, une **riposte** annoncée qui grimpe à chaque tour, et des **effets** qui changent la tactique. Seul le joueur a une tactique par secteur.
-- **Vos secteurs** : le front compte 5 colonnes (route, champ, forêt, village, rivière, et la côte). Chaque secteur accueille 3 unités terrestres et 1 appui (navire près de la côte, ou avion). Score d'un secteur = Attaque de ses unités (hommes × dégâts par tir, × terrain de la couleur) × ses combos.
+- **Vos secteurs** : le front compte 4 secteurs terrestres (couloirs) et la côte. Chaque secteur accueille **autant d'unités et d'appuis qu'on veut** (navires près de la côte, avions) ; ils s'y cumulent et leurs combos aussi.
 - **Fin du tour** : les scores de tous les secteurs **s'additionnent** et frappent le QG ennemi (décompte animé secteur par secteur, puis la frappe totale). Puis l'ennemi riposte d'un seul front : son Attaque − votre **Défense totale** = dégâts sur votre QG (au moins 25 % passe toujours).
 - **Usure** : chaque unité a une endurance (infanterie 2 tours, blindés, mitrailleuses, artillerie et navires 3, chasseurs 2) affichée en points sous elle ; elle perd 1 point par tour puis quitte le front. Vert +1, Retranchement +1, Relève +1 au secteur, infirmiers +1 aux voisins. **Repli** renvoie la carte en main.
 - **Effets du QG ennemi** (1 en bataille, 2 en élite, celui du boss + 1 ou 2 aux boss) : Bunker (frappe ×0,7 sauf secteurs avec génie ou paras), Division blindée (riposte +30 %, anti-chars ×2), Artillerie lourde (obus annoncé : −1 endurance au secteur, intercepté par fumée ou chasseur), Champs de mines, Tireurs d'élite, Nids de mitrailleuses (infanterie −25 %). Boss : Le Mammouth (seuil de blindage par secteur : concentrez vos forces), Train blindé (un secteur coupé chaque tour), Batterie côtière (navires −50 %, dégâts ÷2 au-dessus de la moitié des PV).
@@ -41,7 +41,7 @@ Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche*
 - **Jokers de composition** : Sergent Intendant (+2 défausses, chacune +1 ravitaillement de plus), Général Éclair (élan ×2), Major Radio (cibles marquées +4), Capitaine Sapeur (pièges +4, génie moins cher), Amiral Lebrun (navires +1 par autre navire), Major Faucon (paras moins chers, sabotage +6), Général de Fer (armes combinées +2), Sergent Ito (ordres −1, le premier ordre du tour pioche 1 carte), Commandant Silva (navires −1).
 - **Jokers génériques rééquilibrés** : Capitaine Moreau (+25 % de PV pour l'infanterie seulement), Docteur Meyer (10 % de soins par tour, infirmiers doublés), Lieutenant Dubois ($12).
 - **Quatre couleurs** : jaune (+1 dégât par tir), rouge (+50 % d'effectif), vert (+50 % de PV), noir (perce 1 blindage, agit dès l'arrivée).
-- **Fusion illimitée** : on fusionne autant de cartes du même type qu'on veut, de couleurs différentes ou non (jaune + rouge = orange ; 3 couleurs = tricolore ; 4 = arc-en-ciel), en main ou, sur la carte, entre groupes voisins dès le tour suivant leur arrivée. Les **soldats et les PV s'additionnent** (10 + 10 + 15 tireurs = 35) et les bonus de couleur valent pour tout le groupe. Une carte fusionnée coûte le prix de ses cartes, moins 1 par fusion.
+- **Jouer une main** (comme Balatro) : on touche plusieurs cartes, chaque secteur affiche alors son score après la pose (Attaque × Mult, combos déclenchés qui clignotent, ★ sur le meilleur) ; on touche le secteur (ou on y glisse les cartes) et toute la main s'y pose. Le score du secteur défile et claque. Les ordres sur unité (Retranchement, Repli, Sabotage) se jouent seuls. Il n'y a plus de fusion de cartes. Combos d'effectif : Paire (2 unités), Trio (3–4), Bataillon (5 et plus).
 - **Couleurs libres** : on peut déployer dans un même tour des cartes de couleurs différentes ; c'est le terrain de chaque secteur qui récompense ou pénalise une couleur.
 - **Courbe de difficulté** : les snipers arrivent dès la 2e bataille, les obus, panzers et obusiers dès la 3e ; le premier boss est plus abordable.
 - **Boss à mécaniques** : chaque campagne tire deux boss parmi trois — Le Mammouth (char lourd, obus guidé annoncé à l'avance), le Train blindé (traverse les secteurs) et la Batterie côtière (fortifiée, à l'arrière, protégée par un bouclier). Le boss final arrive avec une escorte de panzers. **Abattre le boss fait perdre 50 % de ses PV au QG ennemi**, ce qui raccourcit les combats de boss.
@@ -49,7 +49,7 @@ Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche*
 - **Sauvegarde automatique** : la campagne est enregistrée à chaque écran (carte, bataille, intendance, récompense, événement) ; le bouton **Continuer** de l'écran titre la reprend.
 - **Tutoriel guidé** : des bulles accompagnent les deux premières batailles (déploiement, terrains, ordres, défausse, fin de tour) ; on peut les passer.
 - **Écran de combat** : il tient entièrement dans l'écran en paysage (testé de 667×375 à 1366×1024) ; les cartes de la main sont en éventail, toutes visibles sans défiler.
-- **Annuler** : défait la dernière action (placement, fusion).
+- **Annuler** : défait la dernière action (pose d'une main, ordre).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
 - **Intendance façon Balatro** : tout tient sur un écran, sans défilement. Trois étagères de tuiles (recrues et ordres ; jokers et manuels tactiques ; caisses et services). **Toucher** une tuile affiche son détail, **la faire glisser vers la zone d'achat** l'achète (la zone s'illumine, et refuse si le butin manque). Les services (entraîner, ravitaillement, infirmerie, réformer) se touchent directement.
 - **Ravitaillement permanent** : +1 par tour (jusqu'à +3) en battant un boss ou à l'intendance ($14, puis $26, puis $38).
@@ -83,7 +83,7 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 ## Structure
 
 - `index.html` : le jeu complet (HTML, CSS et JS dans un seul fichier).
-  - bloc `// ==CORE==` : moteur (cartes, couleurs, fusion, combat, carte, équilibrage), sans accès au DOM ;
+  - bloc `// ==CORE==` : moteur (cartes, couleurs, mains, combat, carte, équilibrage), sans accès au DOM ;
   - bloc `// ==SPRITES==` : personnages, navires, avions et icônes en SVG ;
   - bloc `// ==AUDIO==` : les bruitages ;
   - reste du script : l'interface.

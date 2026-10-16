@@ -1649,8 +1649,10 @@ body:has(.mapscreen.h) .topbar { display: none; }
 .btl.land .board > .enhq { grid-column: 2; grid-row: 2; }
 .btl.land .board > .totals { grid-column: 2; grid-row: 3; }
 .btl.land .board > .hq.me { grid-column: 2; grid-row: 4; align-self: start; }
-.btl.land .bt-hint { grid-column: 2; grid-row: 5; min-height: 0; overflow: hidden; font-size: .62rem; line-height: 1.15; padding: 2px 6px; align-self: start; }
+.btl.land .bt-hint { grid-column: 2; grid-row: 5; min-height: 0; overflow: hidden; font-size: .62rem; line-height: 1.15; padding: 2px 6px; align-self: stretch; }
 .btl.land .bt-hint .ht { -webkit-line-clamp: 3; }
+@media (min-height: 360px) { .btl.land .bt-hint .ht { -webkit-line-clamp: 6; } }
+@media (min-height: 520px) { .btl.land .bt-hint .ht { -webkit-line-clamp: 10; } }
 .btl.land .hand.fan { grid-column: 1; grid-row: 6; }
 .btl.land .dock { grid-column: 2; grid-row: 6; }
 .btl.land .ln.sea { flex: .2 1 0; min-height: 13px; } .btl.land .ln.sea .coast { font-size: .52rem; }
@@ -1681,6 +1683,51 @@ body:has(.mapscreen.h) .topbar { display: none; }
 .btl.land .dock .supply > span:first-child { white-space: nowrap; font-size: .62rem; } .btl.land .dock .pip { width: 8px; height: 8px; } .btl.land .dock .pips.two { grid-template-rows: repeat(2, 8px); }
 .btl.land .treport { top: 8%; width: min(70%, 380px); padding: 5px 10px; font-size: .8rem; line-height: 1.25; } .btl.land .treport .rp-t { font-size: .9rem; } .btl.land .treport .tip, .btl.land .treport .muted { font-size: .66rem; }
 @media (max-height: 340px) { .btl.land .treport { font-size: .7rem; padding: 3px 8px; } .btl.land .treport > * { margin: 1px 0; } }
+
+/* ==== Secteurs sans cases : on y empile autant d'unités qu'on veut ; score façon Balatro ==== */
+.btl.land .ln { grid-template-columns: 56px minmax(0, 1fr) minmax(92px, 19%); }
+.lc.units { position: relative; display: flex; align-items: stretch; gap: 4px; padding: 2px 3px; overflow: hidden; }
+.lc.units > svg { position: absolute; right: 30%; top: 0; height: 100%; width: auto; opacity: .55; pointer-events: none; }
+.lc.units .toks { position: relative; z-index: 2; flex: 1; min-width: 0; display: flex; gap: 2px; align-items: stretch; }
+.lc.units .gu.tok { position: relative; inset: auto; flex: 0 1 clamp(56px, 15vh, 120px); min-width: 22px; height: 100%; border-radius: 8px; }
+.lc.units .gu.tok.sup { background: rgba(61, 134, 232, .28); box-shadow: inset 0 0 0 1.5px rgba(37, 89, 181, .55); }
+.lc.units .gu.tok.sup .gart svg { max-height: 100%; }
+.lc.units .gu.tok.tgt { box-shadow: 0 0 0 3px #ffd24a; animation: depulse .8s infinite alternate; }
+.lc.units .lph { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; font-family: var(--font-display); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(27, 37, 64, .35); pointer-events: none; }
+.ln.dep .lc.units .lph { color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.lc.units .cbs { position: relative; z-index: 3; flex: 0 1 auto; max-width: 46%; display: flex; flex-wrap: wrap; justify-content: flex-end; align-content: center; gap: 2px; pointer-events: none; }
+.cb { font-style: normal; font-family: var(--font-display); font-size: .47rem; line-height: 1; white-space: nowrap; padding: 1px 3px; border-radius: 5px; border: 1.5px solid #0d1218; background: #2d7ff0; color: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
+.cb.m { background: #e8463a; } .cb.d { background: #2f9a45; }
+.cb.new { animation: cbnew .55s infinite alternate; box-shadow: 0 0 0 2px #ffd24a, 0 0 8px #ffd24a; }
+@keyframes cbnew { from { transform: scale(1); } to { transform: scale(1.08); } }
+@media (min-height: 500px) { .cb { font-size: .6rem; padding: 2px 4px; } }
+/* le score du secteur : Attaque (bleu) × Mult (rouge) = frappe, en gros chiffres dorés */
+.btl.land .lc.foot { display: grid; grid-template-rows: auto 1fr; place-items: center; gap: 0; padding: 2px 4px; background: linear-gradient(180deg, #2c3240, #191d26); color: #fff; border-left: 2px solid #0d1218; position: relative; }
+.btl.land .lc.foot::after { border-left-color: #191d26; }
+.sc-eq { display: flex; align-items: center; gap: 2px; font-family: var(--font-display); font-size: .66rem; line-height: 1; }
+.sc-eq > i { font-style: normal; color: #cfd6e4; font-size: .6rem; }
+.sc-chips, .sc-mult { min-width: 18px; text-align: center; padding: 2px 4px; border-radius: 5px; color: #fff; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .3); }
+.sc-chips { background: #2d7ff0; } .sc-mult { background: #e8463a; }
+.sc-def { display: inline-flex; align-items: center; gap: 1px; margin-left: 3px; color: #8fe39a; font-size: .58rem; }
+.sc-tot { font-family: var(--font-stencil, var(--font-display)); font-weight: 400; font-size: clamp(1rem, 6vh, 1.7rem); line-height: 1; color: #ffe08a; text-shadow: 0 2px 0 #000, 0 0 10px rgba(255, 190, 60, .35); letter-spacing: .02em; }
+.sc-tot.zero { color: #5d6678; text-shadow: none; }
+.sc-tot.bump { animation: scbump .55s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes scbump { 0% { transform: scale(1); } 30% { transform: scale(1.7) rotate(-4deg); color: #fff; } 100% { transform: scale(1); } }
+.lc.foot.pv { background: linear-gradient(180deg, #3b3418, #1f1b0c); box-shadow: inset 0 0 0 2px #ffd24a; }
+.lc.foot.pv .sc-tot { color: #fff; animation: pvglow .7s infinite alternate; }
+@keyframes pvglow { from { text-shadow: 0 2px 0 #000; } to { text-shadow: 0 2px 0 #000, 0 0 12px #ffd24a; } }
+.sc-gain { position: absolute; right: 3px; top: 2px; font-style: normal; font-family: var(--font-display); font-size: .56rem; background: #52b34f; color: #fff; border: 1.5px solid #0d1218; border-radius: 6px; padding: 1px 3px; line-height: 1; }
+.btl.land .lc.foot .advtag { position: absolute; left: 2px; top: 1px; right: auto; font-size: .7rem; color: #ffd24a; background: none; border: 0; padding: 0; }
+.btl.land .lc.foot .nt { position: absolute; left: 3px; bottom: 1px; font-size: .5rem; color: #ff9d8a; font-style: normal; }
+.sc-fly { position: absolute; left: 50%; top: 30%; z-index: 30; transform: translate(-50%, 0); font-family: var(--font-stencil, var(--font-display)); font-size: 1.5rem; color: #ffe08a; -webkit-text-stroke: 1.5px #3b2a0d; pointer-events: none; animation: scfly 1.05s ease-out forwards; }
+@keyframes scfly { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -6px) scale(1.25); } 100% { opacity: 0; transform: translate(-50%, -40px) scale(1); } }
+#tot-strike.bump { display: inline-block; animation: scbump .55s cubic-bezier(.2, 1.6, .4, 1); }
+/* secteurs qui peuvent recevoir la main choisie */
+.btl.land .ln.dep { box-shadow: 0 0 0 2px #ffd24a !important; cursor: pointer; }
+.btl.land .ln.adv-best { box-shadow: 0 0 0 3px #ffd24a, 0 0 14px rgba(255, 210, 74, .7) !important; }
+.btl.land .ln.nodep { filter: saturate(.45) brightness(.82); }
+.btl.land .ln.drophover { box-shadow: 0 0 0 4px #fff, 0 0 18px #ffd24a !important; }
+.dragghost .grpn { position: absolute; right: -8px; top: -8px; z-index: 5; font-family: var(--font-display); font-size: 1rem; background: #e8463a; color: #fff; border: 2px solid #0d1218; border-radius: 99px; padding: 2px 7px; }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1866,7 +1913,7 @@ const JOKERS = [
   { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'Les ordres coûtent 1 de moins, et votre premier ordre de chaque tour pioche 1 carte.' },
   { id: 'silva', name: 'Commandant Silva', cost: 8, desc: 'Vos navires coûtent 1 de moins.' },
   { id: 'brandt', name: 'Général Brandt', cost: 9, desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
-  { id: 'peintre', name: 'Peintre de guerre', cost: 9, desc: 'Les cartes fusionnées font +1 dégât par tir.' },
+  { id: 'peintre', name: 'Peintre de guerre', cost: 9, desc: 'La combinaison « Même couleur » multiplie par 0,5 de plus.' },
   { id: 'soleil', name: 'Capitaine Soleil', cost: 8, desc: 'Les cartes jaunes ont +1 dégât par tir de plus.' },
   { id: 'braise', name: 'Commandant Braise', cost: 8, desc: "Les cartes rouges ont +25 % d'effectif de plus." },
   { id: 'mousse', name: 'Docteur Mousse', cost: 8, desc: 'Les cartes vertes ont +1 endurance de plus.' },
@@ -1883,7 +1930,7 @@ const JOKERS = [
   { id: 'fer', name: 'Général de Fer', cost: 8, desc: 'Armes combinées : +2 Mult de plus.' },
   { id: 'clairon', name: 'Sergent Clairon', cost: 7, desc: "Chaque secteur occupé : +1 Mult d'Attaque." },
   { id: 'tenaille', name: 'Colonel Tenaille', cost: 8, desc: "Appui : ×2 Mult d'Attaque au lieu de +1." },
-  { id: 'fanfare', name: 'Major Fanfare', cost: 8, desc: "Secteur à 3 unités terrestres : Attaque ×1,5." },
+  { id: 'fanfare', name: 'Major Fanfare', cost: 8, desc: "Secteur d'au moins 3 unités terrestres : Attaque ×1,5." },
   { id: 'triade', name: 'Amiral Triade', cost: 8, desc: 'Couverture aérienne : Défense ×2 au lieu de ×1,5.' },
 ];
 const OFFICERS = JOKERS;
@@ -1902,10 +1949,10 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const has = (S, id) => S.officers.includes(id);
 
 // ---- Le front : 5 secteurs (colonnes) au terrain fixe ; une mer sur un bord ----
-// Seul le joueur a une tactique par secteur : 3 unités terrestres et 1 appui (avion ou navire) par secteur.
+// Seul le joueur a une tactique par secteur : autant d'unités et d'appuis (avions, navires) qu'il veut dans chacun.
 // L'ennemi n'est qu'un QG, comme une « blinde » de Balatro : vos secteurs additionnent leur frappe sur lui, et il frappe
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
-const GW = 5, MAX_LAND = 3, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_KEEP = 2, MAX_CARRY = 3,
+const GW = 5, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_KEEP = 2, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
   ENEMY_GROWTH = 0.08, HQ_MULT = 20, HQ_GROW = 1.12, ENEMY_ATK = 0.75, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
@@ -1962,7 +2009,6 @@ function statsFor(def, cols, S, side, lv) {
     if (ch === 'V') vert = true;
     if (ch === 'N') pierce += 1 + (J('ombre') ? 1 : 0);
   }
-  if (J('peintre') && (cols || '').length >= 2) dmg += 1;
   const hp = hpm ? men * hpm : 0;
   if (vert) { dfn = Math.ceil(dfn * 1.25); stam += 1; if (J('mousse')) stam += 1; }
   if (me && !def.land && !def.order && J('amiral')) stam += 1;
@@ -2014,7 +2060,9 @@ const units = (S, side = 'me') => S.units.filter(u => u.side === side);
 const findUnit = (S, uid) => S.units.find(u => u.uid === uid);
 // Unités terrestres d'un secteur, par ordre d'arrivée
 const queue = (S, side, c) => S.units.filter(u => u.side === side && u.land && u.c === c).sort((a, b) => a.ord - b.ord);
-const supportAt = (S, c) => S.units.find(u => u.side === 'me' && !u.land && u.c === c) || null;
+// Appuis (navires, avions) d'un secteur : autant qu'on veut
+const supportsAt = (S, c) => S.units.filter(u => u.side === 'me' && !u.land && u.c === c).sort((a, b) => a.ord - b.ord);
+const supportAt = (S, c) => supportsAt(S, c)[0] || null;
 const villageIncome = S => S.lanes.reduce((n, t, c) => n + (t === 'village' && queue(S, 'me', c).length ? 1 : 0), 0);
 function startTurn(S) {
   S.supply = BASE_SUPPLY + (S.supplyBonus || 0) + villageIncome(S) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0) + (S.carry || 0);
@@ -2057,7 +2105,7 @@ function deployTargets(S, card) {
   }
   if (card.t === 'bombardier') { L.forEach(c => out.push({ c })); return out; }
   if (isSupport(def)) {
-    open.forEach(c => { if (supportAt(S, c)) return; if (def.cls === 'ship' && (S.seaCol < 0 || Math.abs(c - S.seaCol) > shipReach(def))) return; out.push({ c }); });
+    open.forEach(c => { if (def.cls === 'ship' && (S.seaCol < 0 || Math.abs(c - S.seaCol) > shipReach(def))) return; out.push({ c }); });
     return out;
   }
   open.forEach(c => { if (queue(S, 'me', c).length < MAX_LAND && canStand(def.cls, S.lanes[c])) out.push({ c }); });
@@ -2178,36 +2226,45 @@ function toggleKeep(S, hi) {
   c.kept = true; return true;
 }
 
-// ---- Fusion de cartes en main : autant de cartes du même type qu'on veut ----
-const canFuse = (a, b) => !!a && !!b && a !== b && a.t === b.t && !isOrder(a);
-function fuseCards(S, i, j) {
-  const a = S.hand[i], b = S.hand[j];
-  if (S.over || !canFuse(a, b)) return null;
-  const parts = [...(a.parts || [a]), ...(b.parts || [b])];
-  const card = { t: a.t, c: normCols(a.c + b.c), lv: Math.max(...parts.map(p => p.lv || 1)), parts };
-  if (a.kept || b.kept) card.kept = true;
-  parts.forEach(p => { delete p.kept; });
-  S.hand.splice(Math.max(i, j), 1); S.hand.splice(Math.min(i, j), 1, card);
-  return card;
+// ---- Jouer une « main » : plusieurs cartes posées ensemble dans un même secteur, comme dans Balatro ----
+// Les ordres qui visent une unité (Retranchement, Repli, Sabotage) se jouent seuls.
+const isUnitTargetOrder = card => !!card && isOrder(card) && ['myUnit', 'raider'].includes(TYPES[card.t].tgt);
+const groupCost = (S, cards) => cards.reduce((t, k) => t + cardCost(S, k), 0);
+// Secteurs où toute la main peut être posée
+function groupSectors(S, cards) {
+  if (!cards.length || (cards.length > 1 && cards.some(isUnitTargetOrder)) || isUnitTargetOrder(cards[0])) return [];
+  let out = landCols(S);
+  for (const k of cards) { const ok = new Set(deployTargets(S, k).filter(t => t.uid === undefined).map(t => t.c)); out = out.filter(c => ok.has(c)); }
+  return out;
 }
-function splitCard(S, i) {
-  const c = S.hand[i];
-  if (!c || !c.parts) return null;
-  S.hand.splice(i, 1, ...c.parts);
-  return c.parts;
+function canPlayGroup(S, cards) {
+  if (!cards.length || S.over) return { ok: false, reason: 'card' };
+  if (cards.length > 1 && cards.some(isUnitTargetOrder)) return { ok: false, reason: 'solo' };
+  if (groupCost(S, cards) > S.supply) return { ok: false, reason: 'supply' };
+  if (cards.length === 1 && isUnitTargetOrder(cards[0])) return canDeployNow(S, cards[0]);
+  if (!groupSectors(S, cards).length) { const k = cards[0]; return { ok: false, reason: cards.length > 1 ? 'nosector' : TYPES[k.t].order ? 'target' : TYPES[k.t].fam === 'mer' ? 'sea' : 'cells' }; }
+  return { ok: true };
 }
-// ---- Fusion de deux groupes du même type dans un même secteur : la place libérée sert à un renfort ----
-const canFuseUnits = (S, a, b) => !!a && !!b && a !== b && a.side === 'me' && b.side === 'me' && a.land && b.land && a.key === b.key && a.c === b.c && !S.over;
-function fuseUnits(S, uidA, uidB) {
-  const a = findUnit(S, uidA), b = findUnit(S, uidB);
-  if (!canFuseUnits(S, a, b)) return null;
-  const u = mkUnit(S, 'me', a.key, normCols(a.cols + b.cols), Math.max(a.lv, b.lv));
-  u.uid = a.uid; u.c = a.c; u.ord = Math.min(a.ord, b.ord); u.born = Math.min(a.born, b.born);
-  u.menMax = a.menMax + b.menMax; u.men = u.menMax; u.def = a.def + b.def; u.dig = Math.max(a.dig || 0, b.dig || 0);
-  u.stam = Math.max(a.stam, b.stam); u.stamMax = Math.max(a.stamMax, b.stamMax);
-  u.card = { t: a.key, c: u.cols, lv: u.lv, parts: [...((a.card && (a.card.parts || [a.card])) || []), ...((b.card && (b.card.parts || [b.card])) || [])] };
-  S.units = S.units.filter(x => x !== a && x !== b); S.units.push(u);
-  return u;
+// Pose la main : les unités terrestres d'abord, puis les appuis, les ordres et enfin le bombardier
+function playGroup(S, cards, c) {
+  if (!canPlayGroup(S, cards).ok || !groupSectors(S, cards).includes(c)) return null;
+  const rank = k => (k.t === 'bombardier' ? 3 : isOrder(k) ? 2 : TYPES[k.t].land ? 0 : 1), out = [];
+  for (const k of cards.slice().sort((a, b) => rank(a) - rank(b))) {
+    const hi = S.hand.indexOf(k); if (hi < 0) continue;
+    if (k.t === 'bombardier') out.push({ card: k, air: airStrike(S, hi, c) });
+    else if (isOrder(k)) out.push({ card: k, order: playOrder(S, hi, { c }) });
+    else out.push({ card: k, u: placeCard(S, hi, c) });
+    if (S.over) break;
+  }
+  return out;
+}
+// Aperçu sans rien toucher : on rejoue la main sur une copie de la bataille
+function previewGroup(S, cards, c) {
+  const T = JSON.parse(JSON.stringify({ ...S, rng: null })); T.rng = () => 0.5;
+  const idx = cards.map(k => S.hand.indexOf(k)); if (idx.some(i => i < 0)) return null;
+  const res = playGroup(T, idx.map(i => T.hand[i]), c); if (!res) return null;
+  const f = sectorForecast(T, c); f.F = frontForecast(T); f.over = T.over;
+  return f;
 }
 // Annuler : on garde une copie de l'état modifiable pendant le tour
 function snapshotState(S) { return JSON.stringify({ units: S.units, hand: S.hand, draw: S.draw, discard: S.discard, supply: S.supply, flags: S.flags, uid: S.uid, seq: S.seq, smoke: S.smoke, counterCols: S.counterCols, mineCol: S.mineCol, discards: S.discards, hq: S.hq, over: S.over }); }
@@ -2236,21 +2293,22 @@ function unitDef(S, u) {
 }
 // Combinaisons de secteur : en Attaque ou en Défense ; « + » s'additionnent, puis « × » multiplient
 const COMBOS = [
-  { id: 'binome', on: 'atk', name: 'Binôme', txt: '2 unités terrestres', add: 0.5, step: 0.5, test: g => g.land.length === 2 },
-  { id: 'trio', on: 'atk', name: 'Trio', txt: '3 unités terrestres', add: 1, step: 0.5, test: g => g.land.length === 3 },
-  { id: 'armes', on: 'atk', name: 'Armes combinées', txt: 'infanterie + véhicule', add: 1, step: 1, test: g => g.land.some(u => u.cls === 'foot') && g.land.some(isVehicle) },
-  { id: 'appui', on: 'atk', name: 'Appui', txt: 'un avion ou un navire appuie des troupes', add: 1, step: 1, test: g => !!g.sup && g.land.length > 0 },
-  { id: 'guide', on: 'atk', name: 'Tir guidé', txt: 'observateurs ou reconnaissance + artillerie ou navire', mul: 1.5, step: 0.25, test: g => g.all.some(u => u.kw.includes('spot') || u.kw.includes('recon')) && g.all.some(u => u.kw.includes('arty') || u.cls === 'ship') },
-  { id: 'couleur', on: 'atk', name: 'Même couleur', txt: '2 unités ou plus partageant une couleur', mul: 1.5, step: 0.25, test: g => g.all.length >= 2 && [...'JRVN'].some(ch => g.all.every(u => (u.cols || '').includes(ch))) },
-  { id: 'nid', on: 'def', name: 'Nid défensif', txt: 'mitrailleuse + autre infanterie', add: 1, step: 1, test: g => g.land.some(u => u.kw.includes('guard')) && g.land.some(u => u.cls === 'foot' && !u.kw.includes('guard')) },
-  { id: 'blindage', on: 'def', name: 'Rempart blindé', txt: '2 véhicules', add: 1, step: 1, test: g => g.land.filter(isVehicle).length >= 2 },
-  { id: 'soins', on: 'def', name: 'Soutien sanitaire', txt: 'infirmiers dans le secteur', add: 0.5, step: 0.5, test: g => g.land.some(u => u.kw.includes('heal')) },
-  { id: 'ligne', on: 'def', name: 'Ligne tenue', txt: '3 unités terrestres', add: 0.5, step: 0.5, test: g => g.land.length === 3 },
-  { id: 'couvert', on: 'def', name: 'Couverture aérienne', txt: 'un chasseur en appui', mul: 1.5, step: 0.25, test: g => !!g.sup && g.sup.kw.includes('cover') },
+  { id: 'binome', on: 'atk', name: 'Paire', short: 'Paire', txt: '2 unités', add: 0.5, step: 0.5, test: g => g.all.length === 2 },
+  { id: 'trio', on: 'atk', name: 'Trio', short: 'Trio', txt: '3 ou 4 unités', add: 1, step: 0.5, test: g => g.all.length >= 3 && g.all.length <= 4 },
+  { id: 'bataillon', on: 'atk', name: 'Bataillon', short: 'Bataillon', txt: '5 unités ou plus', add: 2, step: 0.5, test: g => g.all.length >= 5 },
+  { id: 'armes', on: 'atk', name: 'Armes combinées', short: 'Armes comb.', txt: 'infanterie + véhicule', add: 1, step: 1, test: g => g.land.some(u => u.cls === 'foot') && g.land.some(isVehicle) },
+  { id: 'appui', on: 'atk', name: 'Appui', short: 'Appui', txt: 'un avion ou un navire appuie des troupes', add: 1, step: 1, test: g => g.sups.length > 0 && g.land.length > 0 },
+  { id: 'guide', on: 'atk', name: 'Tir guidé', short: 'Tir guidé', txt: 'observateurs ou reconnaissance + artillerie ou navire', mul: 1.5, step: 0.25, test: g => g.all.some(u => u.kw.includes('spot') || u.kw.includes('recon')) && g.all.some(u => u.kw.includes('arty') || u.cls === 'ship') },
+  { id: 'couleur', on: 'atk', name: 'Même couleur', short: 'Couleur', txt: '2 unités ou plus, toutes d’une même couleur', mul: 1.5, step: 0.25, test: g => g.all.length >= 2 && [...'JRVN'].some(ch => g.all.every(u => (u.cols || '').includes(ch))) },
+  { id: 'nid', on: 'def', name: 'Nid défensif', short: 'Nid', txt: 'mitrailleuse + autre infanterie', add: 1, step: 1, test: g => g.land.some(u => u.kw.includes('guard')) && g.land.some(u => u.cls === 'foot' && !u.kw.includes('guard')) },
+  { id: 'blindage', on: 'def', name: 'Rempart blindé', short: 'Rempart', txt: '2 véhicules ou plus', add: 1, step: 1, test: g => g.land.filter(isVehicle).length >= 2 },
+  { id: 'soins', on: 'def', name: 'Soutien sanitaire', short: 'Soins', txt: 'infirmiers dans le secteur', add: 0.5, step: 0.5, test: g => g.land.some(u => u.kw.includes('heal')) },
+  { id: 'ligne', on: 'def', name: 'Ligne tenue', short: 'Ligne', txt: '3 unités terrestres ou plus', add: 0.5, step: 0.5, test: g => g.land.length >= 3 },
+  { id: 'couvert', on: 'def', name: 'Couverture aérienne', short: 'Couverture', txt: 'un chasseur en appui', mul: 1.5, step: 0.25, test: g => g.sups.some(u => u.kw.includes('cover')) },
 ];
 const comboLv = (S, id) => (S.comboLv && S.comboLv[id]) || 1;
 function sectorCombos(S, c) {
-  const land = queue(S, 'me', c), sup = supportAt(S, c), g = { land, sup, all: sup ? [...land, sup] : land };
+  const land = queue(S, 'me', c), sups = supportsAt(S, c), g = { land, sups, sup: sups[0] || null, all: [...land, ...sups] };
   const out = { atk: [], def: [] }, add = { atk: 0, def: 0 }, mul = { atk: 1, def: 1 };
   const push = (on, e) => { out[on].push(e); add[on] += e.add || 0; if (e.mul) mul[on] *= e.mul; };
   if (!g.all.length) return { list: out, mult: { atk: 1, def: 1 }, g };
@@ -2262,18 +2320,19 @@ function sectorCombos(S, c) {
     if (k.id === 'appui' && has(S, 'tenaille')) { a = 0; m = 2; }
     if (k.id === 'guide' && has(S, 'radio')) m += 0.5;
     if (k.id === 'couvert' && has(S, 'triade')) m += 0.5;
-    push(k.on, { id: k.id, name: k.name, lv, add: a, mul: m });
+    if (k.id === 'couleur' && has(S, 'peintre')) m += 0.5;
+    push(k.on, { id: k.id, name: k.name, short: k.short, lv, add: a, mul: m });
   }
-  if (has(S, 'clairon') && land.length) push('atk', { id: 'clairon', name: 'Sergent Clairon', add: 1 });
-  if (has(S, 'fanfare') && land.length === 3) push('atk', { id: 'fanfare', name: 'Major Fanfare', mul: 1.5 });
-  if (S.flags && S.flags.assault && S.flags.assault.includes(c)) push('atk', { id: 'assaut', name: 'Ordre : Assaut', mul: 1.5 });
-  if (S.counterCols && S.counterCols.includes(c)) push('def', { id: 'contre', name: 'Ordre : Contre-attaque', mul: 1.5 });
+  if (has(S, 'clairon') && land.length) push('atk', { id: 'clairon', name: 'Sergent Clairon', short: 'Clairon', add: 1 });
+  if (has(S, 'fanfare') && land.length >= 3) push('atk', { id: 'fanfare', name: 'Major Fanfare', short: 'Fanfare', mul: 1.5 });
+  if (S.flags && S.flags.assault && S.flags.assault.includes(c)) push('atk', { id: 'assaut', name: 'Ordre : Assaut', short: 'Assaut', mul: 1.5 });
+  if (S.counterCols && S.counterCols.includes(c)) push('def', { id: 'contre', name: 'Ordre : Contre-attaque', short: 'Contre-att.', mul: 1.5 });
   const r2 = x => Math.round(x * 100) / 100;
   return { list: out, mult: { atk: r2((1 + add.atk) * mul.atk), def: r2((1 + add.def) * mul.def) }, g };
 }
 // Bilan d'un secteur : Attaque (base × Mult), Défense, et sa frappe réelle sur le QG après ses protections
 function sectorForecast(S, c) {
-  const me = queue(S, 'me', c), sup = supportAt(S, c), cb = sectorCombos(S, c), mine = sup ? [...me, sup] : me;
+  const me = queue(S, 'me', c), sups = supportsAt(S, c), cb = sectorCombos(S, c), mine = [...me, ...sups];
   const barrage = (S.flags && S.flags.barrage && S.flags.barrage[c]) || 0;
   const baseAtk = mine.reduce((s, u) => s + unitAtk(S, u), 0) + barrage, baseDef = mine.reduce((s, u) => s + unitDef(S, u), 0);
   const atk = Math.round(baseAtk * cb.mult.atk), def = Math.round(baseDef * cb.mult.def);
@@ -2282,7 +2341,7 @@ function sectorForecast(S, c) {
   if (blocked && atk) notes.push('train');
   if (strike && hasFx(S, 'bunker') && !ignore) { strike = Math.round(strike * 0.7); notes.push('bunker'); }
   if (strike && hasFx(S, 'mammouth') && !ignore) { strike = Math.max(0, strike - mammothWall(S)); notes.push('mammouth'); }
-  return { c, baseAtk: Math.round(baseAtk), baseDef: Math.round(baseDef), barrage, atk, def, strike, blocked, notes, mult: cb.mult, combos: cb.list, me: me.map(u => u.uid), sup: sup ? sup.uid : null };
+  return { c, baseAtk: Math.round(baseAtk), baseDef: Math.round(baseDef), barrage, atk, def, strike, blocked, notes, mult: cb.mult, combos: cb.list, me: me.map(u => u.uid), sups: sups.map(u => u.uid) };
 }
 // Attaque ennemie du tour : annoncée, elle grimpe à chaque tour
 function enemyAtk(S, turn = S.turn) {
@@ -2328,7 +2387,7 @@ function endTurn(S) {
   // 3. usure : chaque unité perd 1 endurance ; obus et tireurs d'élite en retirent une de plus
   const worn = [];
   if (S.plan.shell !== undefined) {
-    const sup = supportAt(S, S.plan.shell), stop = S.smoke || (sup && sup.kw.includes('cover'));
+    const stop = S.smoke || supportsAt(S, S.plan.shell).some(u => u.kw.includes('cover'));
     steps.push({ ph: 'shell', c: S.plan.shell, cancel: !!stop });
     if (!stop) queue(S, 'me', S.plan.shell).forEach(u => { u.stam -= 1; worn.push(u.uid); });
   }
@@ -3125,13 +3184,13 @@ function startBattle(node) {
 const myUnits = () => S.units.filter(u => u.side === 'me');
 const TUTO = [
   { id: 'b-goal', stage: 1, info: true, sel: '#enhq', text: 'Votre cible : le QG ennemi. Sa barre de PV est la « blinde » à faire tomber. Chaque tour, il riposte avec l’Attaque annoncée ⚔ contre votre Défense. Le menu ⋯ (📖 Lire le plateau) réexplique tout.' },
-  { id: 'b-deploy', stage: 1, sel: '#hand', when: () => !myUnits().length, done: () => myUnits().length > 0, text: 'Touchez une carte (★ indique le meilleur secteur), puis glissez-la sur une colonne : son score ⚔ s’affiche en bas.' },
+  { id: 'b-deploy', stage: 1, sel: '#hand', when: () => !myUnits().length, done: () => myUnits().length > 0, text: 'Touchez une ou plusieurs cartes : chaque secteur affiche son score après la pose (★ = le meilleur). Touchez ensuite le secteur, ou glissez-y les cartes.' },
   { id: 'b-total', stage: 1, info: true, sel: '#totals', when: () => myUnits().length > 0, text: 'Vos secteurs s’additionnent : la Frappe totale part sur le QG ennemi en fin de tour. Votre Défense totale réduit sa riposte sur votre QG.' },
   { id: 'b-stam', stage: 1, info: true, sel: '.gu .pips', text: 'Les points sous une unité = son endurance. Elle perd 1 point par tour, puis quitte le front : il faut renouveler vos troupes.' },
   { id: 'b-end', stage: 1, sel: '#bend', when: () => myUnits().length >= 2, done: () => S.turn >= 2, text: 'Quand vous avez posé ce que vous voulez, touchez « Fin du tour » : décompte des secteurs, frappe sur le QG, riposte, puis usure.' },
-  { id: 'fuse', stage: 1, sel: '#hand', when: () => S.hand.some(a => S.hand.some(b => canFuse(a, b))), done: () => S.hand.some(c => c.parts), text: 'Deux cartes du même type ? Touchez l’une puis l’autre : elles fusionnent et leurs soldats s’additionnent.' },
+  { id: 'main', stage: 1, sel: '#hand', when: () => S.hand.filter(k => !isOrder(k)).length >= 2 && myUnits().length > 0, done: () => landCols(S).some(c => queue(S, 'me', c).length + supportsAt(S, c).length >= 2), text: 'Comme une main de Balatro : touchez plusieurs cartes, puis un secteur. Elles s’y posent ensemble, et le score du secteur (Attaque × Mult) s’affiche avant la pose.' },
   { id: 'b-fx', stage: 2, info: true, sel: '.fxchip', text: 'Ce QG a un effet spécial, comme les boss de Balatro. Touchez-le pour le lire : il change la meilleure tactique.' },
-  { id: 'b-combo', stage: 2, info: true, sel: '.lc.foot .xa', text: 'Combinaisons : infanterie + véhicule, même couleur, appui aérien ou naval… multiplient le score du secteur. Touchez un secteur pour le calcul.' },
+  { id: 'b-combo', stage: 2, info: true, sel: '.lc.units .cb', text: 'Combinaisons : chaque étiquette (Trio, Armes combinées, Même couleur…) augmente le Mult rouge du secteur. Plus la main est riche, plus le score grimpe.' },
   { id: 'terrain', stage: 2, info: true, sel: '.ln .ltag', text: 'Chaque couleur a un terrain fort (▲ +50 % d’Attaque) et faible (▼ −25 %). Les pastilles en tête de colonne le rappellent.' },
   { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes beiges sont des ordres : Barrage, Assaut, Fumigènes, Repli… Glissez-les sur leur cible.' },
   { id: 'discard', stage: 2, info: true, sel: '[data-act=discard]', text: 'Main mal fichue ? Le bouton ⟲ remplace jusqu’à 5 cartes et donne +1 ravitaillement, 3 fois par bataille.' },
@@ -3167,10 +3226,27 @@ function showCoach() {
     if (r.bottom > bx.top && r.top < bx.bottom) { const bd = document.getElementById('board'); box.style.bottom = 'auto'; box.style.top = ((bd ? bd.getBoundingClientRect().top : 60) + 4) + 'px'; }
   }
 }
-const pickFuse = () => Object.values(picked.reduce((g, c) => ((g[c.t] = g[c.t] || []).push(c), g), {})).filter(g => g.length > 1);
-const handPartners = card => S.hand.filter(h => h !== card && canFuse(card, h) && !picked.includes(h));
 const pickIdx = () => picked.map(c => S.hand.indexOf(c)).filter(i => i >= 0);
-const unitPartners = u => (u && u.side === 'me' ? S.units.filter(b => canFuseUnits(S, u, b)) : []);
+// Aperçu de la main choisie dans chaque secteur possible (mémorisé tant que rien ne change)
+let pvMemo = { key: '', val: null };
+function selPV() {
+  if (!S || !picked.length || busy || S.over || discardSel) return null;
+  const key = pickIdx().join(',') + '|' + S.uid + '|' + S.supply + '|' + S.hand.length + '|' + S.turn + '|' + S.seq + '|' + JSON.stringify(S.flags.assault || []) + JSON.stringify(S.flags.barrage || {});
+  if (pvMemo.key === key) return pvMemo.val;
+  const g = canPlayGroup(S, picked), out = { ok: g.ok, reason: g.reason, map: {}, best: null };
+  if (g.ok) {
+    const F0 = frontForecast(S);
+    for (const c of groupSectors(S, picked)) {
+      const p = previewGroup(S, picked, c); if (!p) continue;
+      const f0 = sectorForecast(S, c), had = new Set(f0.combos.atk.concat(f0.combos.def).map(k => k.id));
+      p.f0 = f0; p.nc = p.combos.atk.concat(p.combos.def).filter(k => !had.has(k.id)); p.gain = p.strike - f0.strike;
+      p.v = p.over === 'win' ? 1e6 : 100 * (p.F.toEn - F0.toEn) / Math.max(1, S.hq.en) + 100 * (F0.toMe - p.F.toMe) / Math.max(1, S.hq.me) + (p.mult.atk - f0.mult.atk) * 0.3;
+      out.map[c] = p; if (out.best === null || p.v > out.map[out.best].v) out.best = c;
+    }
+  }
+  pvMemo = { key, val: out };
+  return out;
+}
 
 // Décors des cases : un sol qui se raccorde aux voisins (routes, rivières, côtes), puis les objets (arbres, maisons, QG)
 const hash2 = (r, c, k = 0) => { const x = Math.sin(r * 127.1 + c * 311.7 + k * 74.7) * 43758.5453; return x - Math.floor(x); };
@@ -3243,15 +3319,19 @@ const SHIELD = '<svg class="ico" viewBox="0 0 12 14" aria-hidden="true"><path d=
 const SWORD = '<svg class="ico" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 12 L9 5 M8 3 L11 3 L11 6 M3 9 L5 11 M1.5 12.5 L3.5 10.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 const fmtN = n => (n >= 10000 ? (Math.round(n / 100) / 10 + 'k').replace('.', ',') : String(Math.round(n)));
 const pipsHTML = u => `<span class="pips" title="Endurance : encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>`;
-function slotUnitHTML(u, sel) {
-  const key = SPR_OF[u.key], um = u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1, canF = !busy && S.units.includes(u) && unitPartners(u).length;
-  return `<button class="gu me ${sel ? 'sel' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''}" data-uid="${u.uid}" aria-label="${u.name}" style="--d:${(u.uid * 37 % 10) / 10}">
-    <span class="gart">${squadSVG(key, 'me', u.menMax, u.menMax, 30, u.cols)}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
-    ${canF ? '<span class="gfz">⇄</span>' : ''}${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${um !== 1 ? `<span class="gtm ${um > 1 ? 'up' : 'dn'}">${um > 1 ? '▲' : '▼'}</span>` : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
+function slotUnitHTML(u, sel, tgt) {
+  const key = SPR_OF[u.key], um = u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1;
+  return `<button class="gu me tok ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
+    <span class="gart">${u.land ? squadSVG(key, 'me', u.menMax, u.menMax, 30, u.cols) : spriteSVG(key, 'me', 26, u.cols)}</span>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
+    ${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${um !== 1 ? `<span class="gtm ${um > 1 ? 'up' : 'dn'}">${um > 1 ? '▲' : '▼'}</span>` : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
     <span class="gst"><i class="a">${fmtN(unitAtk(S, u))}</i><i class="d">${fmtN(unitDef(S, u))}</i></span>${pipsHTML(u)}</button>`;
 }
-function supHTML(sup) {
-  return sup ? `<button class="gu me sup" data-uid="${sup.uid}" title="${sup.name} en appui">${spriteSVG(SPR_OF[sup.key], 'me', 26, sup.cols)}<span class="gst"><i class="a">${fmtN(unitAtk(S, sup))}</i><i class="d">${fmtN(unitDef(S, sup))}</i></span>${pipsHTML(sup)}</button>` : '<span class="supslot">Appui</span>';
+// Score d'un secteur, façon Balatro : Attaque (bleu) × Mult (rouge) = frappe ; avec l'aperçu de la main choisie
+const cbTag = (k, on, isNew) => `<i class="cb ${on} ${k.mul ? 'm' : ''} ${isNew ? 'new' : ''}" title="${k.name}">${k.short || k.name} ${k.mul ? '×' + fmtMult(k.mul) : '+' + fmtMult(k.add)}</i>`;
+function laneScoreHTML(f, p, best) {
+  const v = p || f, notes = v.notes.length ? `<i class="nt">${v.notes.map(n => ({ bunker: '−30 %', mammouth: '−' + mammothWall(S), train: 'coupé' }[n])).join(' ')}</i>` : '';
+  return `<span class="sc-eq"><b class="sc-chips">${fmtN(v.baseAtk)}</b><i>×</i><b class="sc-mult">${fmtMult(v.mult.atk)}</b><span class="sc-def" title="Défense du secteur">${SHIELD}${fmtN(v.def)}</span></span>
+    <b class="sc-tot ${v.strike ? '' : 'zero'}">${fmtN(v.strike)}</b>${p && p.gain > 0 ? `<em class="sc-gain">+${fmtN(p.gain)}</em>` : ''}${best ? '<span class="advtag">★</span>' : ''}${notes}`;
 }
 // Terrain fort (▲) ou faible (▼) d'une carte sur un secteur
 const tmodOf = (cols, ter) => { const m = terrainMult(cols, ter); return m > 1 ? 'up' : m < 1 ? 'dn' : ''; };
@@ -3273,27 +3353,24 @@ function enemyHQHTML(view, live, F) {
       <div class="enrow"><span class="enatk" title="Attaque ennemie de ce tour, contre votre Défense totale">${SWORD} Riposte <b>${fmtN(atk)}</b>${S.smoke ? ' <small>(fumée ÷2)</small>' : ''}</span>${fx}</div></div></div>`;
 }
 function boardHTML(view, live) {
-  const dep = live && !busy && picked.length === 1 && canDeployNow(S, picked[0]).ok ? deployTargets(S, picked[0]) : null;
-  const depC = dep ? new Set(dep.filter(t => t.uid === undefined).map(t => t.c)) : null, depU = dep ? new Set(dep.filter(t => t.uid !== undefined).map(t => t.uid)) : null;
+  const P = live ? selPV() : null, one = live && !busy && picked.length === 1 ? picked[0] : null;
+  const depU = one && isUnitTargetOrder(one) && canDeployNow(S, one).ok ? new Set(deployTargets(S, one).map(t => t.uid)) : null;
   const F = live ? frontForecast(S) : null, fc = F ? Object.fromEntries(F.sectors.map(f => [f.c, f])) : {};
-  const bst = live && !busy && picked.length === 1 ? bestSectorFor(picked[0]) : null;
   let lanes = '';
   for (let c = 0; c < GW; c++) {
     const ter = S.lanes[c];
     if (ter === 'mer') { lanes += `<div class="ln gc t-mer sea" data-c="${c}"><span class="coast">⚓ La côte · appui naval</span></div>`; continue; }
-    const q = view.units.filter(u => u.side === 'me' && u.land && u.c === c).sort((a, b) => a.ord - b.ord), sup = view.units.find(u => u.side === 'me' && !u.land && u.c === c);
-    const blocked = S.plan && S.plan.train === c, shell = S.plan && S.plan.shell === c, mined = S.mineCol === c, open = depC && depC.has(c);
-    const cell = (row, inner) => `<div class="lc ${['head', 'slot', 'slot', 'slot', 'supc', 'foot'][row]}" data-c="${c}" data-row="${row}">${inner}</div>`;
-    let h = cell(0, `<b class="tname">${TERRAIN[ter].name}</b>${laneTag(ter)}<span class="marks">${shell ? '<i class="mk shell" title="Obus annoncé : −1 endurance aux unités de ce secteur">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici perd 1 endurance">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`);
-    for (let k = 0; k < 3; k++) {
-      const u = q[k];
-      h += cell(k + 1, (k === 1 ? decoSVG(S.grid, 2, c, '', 1) : '') + (u ? slotUnitHTML(u, u.uid === selU || (depU && depU.has(u.uid))) + (depU && depU.has(u.uid) ? '<span class="tgring"></span>' : '') : `<span class="slotph ${open && k === q.length ? 'next' : ''}">${open && k === q.length ? '+' : ''}</span>`));
-    }
-    h += cell(4, supHTML(sup));
-    let foot = '';
-    if (live) { const f = fc[c]; foot = `<span class="score ${f.strike ? '' : 'zero'}">${SWORD}${fmtN(f.strike)}</span><span class="sdef">${SHIELD}${fmtN(f.def)}</span>${f.mult.atk > 1 ? `<i class="xa">×${fmtMult(f.mult.atk)}</i>` : ''}${f.notes.length ? `<i class="nt">${f.notes.map(n => ({ bunker: '−30 %', mammouth: '−' + mammothWall(S), train: 'coupé' }[n])).join(' ')}</i>` : ''}${bst && bst.c === c ? '<span class="advtag">★</span>' : ''}`; }
-    h += cell(5, foot);
-    lanes += `<div class="ln gc t-${ter} ${open ? 'dep' : ''} ${blocked ? 'blocked' : ''} ${bst && bst.c === c ? 'adv-best' : ''}" data-c="${c}">${h}</div>`;
+    const q = view.units.filter(u => u.side === 'me' && u.c === c).sort((a, b) => (b.land - a.land) || a.ord - b.ord);
+    const blocked = S.plan && S.plan.train === c, shell = S.plan && S.plan.shell === c, mined = S.mineCol === c, pv = P && P.map[c], open = !!pv, best = P && P.best === c;
+    const head = `<b class="tname">${TERRAIN[ter].name}</b>${laneTag(ter)}<span class="marks">${shell ? '<i class="mk shell" title="Obus annoncé : −1 endurance aux unités de ce secteur">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici perd 1 endurance">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`;
+    const toks = q.map(u => slotUnitHTML(u, u.uid === selU, depU && depU.has(u.uid))).join('');
+    const f = fc[c], cf = pv || f, nc = pv ? new Set(pv.nc.map(k => k.id)) : null;
+    const cbs = cf ? cf.combos.atk.map(k => cbTag(k, 'a', nc && nc.has(k.id))).join('') + cf.combos.def.map(k => cbTag(k, 'd', nc && nc.has(k.id))).join('') : '';
+    const ph = q.length ? '' : `<span class="lph">${open ? 'Posez ici' : blocked ? 'Coupé par le train' : ''}</span>`;
+    lanes += `<div class="ln gc t-${ter} ${open ? 'dep' : ''} ${P && P.ok && !open ? 'nodep' : ''} ${blocked ? 'blocked' : ''} ${best ? 'adv-best' : ''}" data-c="${c}">
+      <div class="lc head" data-c="${c}" data-row="0">${head}</div>
+      <div class="lc units" data-c="${c}" data-row="2">${decoSVG(S.grid, 2, c, '', 1)}<div class="toks" style="--n:${q.length}">${toks}</div>${ph}${cbs ? `<span class="cbs">${cbs}</span>` : ''}</div>
+      <div class="lc foot ${pv ? 'pv' : ''}" data-c="${c}" data-row="5">${f ? laneScoreHTML(f, pv, best) : ''}</div></div>`;
   }
   const tot = F ? `<div class="totals ${F.toMe > 0 ? 'hurt' : ''}" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def">Défense ${SHIELD}<b>${fmtN(F.def)}</b> contre ${SWORD}${fmtN(F.enAtk)} → <b class="dn">−${fmtN(F.toMe)}</b></span></div>`
     : `<div class="totals" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">0</b></span><span class="t-def" id="tot-def"></span></div>`;
@@ -3306,12 +3383,7 @@ function hqBar(side, label, cur, max, extra, tgt, aimed) {
 // Bilan si l'on posait cette carte dans ce secteur, sans rien modifier : le secteur et le front entier
 function previewPlace(card, c) {
   const def = TYPES[card.t]; if (!def || def.order || card.t === 'bombardier') return null;
-  const uid0 = S.uid, u = mkUnit(S, 'me', card.t, card.c, card.lv, card.parts); S.uid = uid0;
-  u.uid = -1; u.c = c; u.ord = S.seq; S.units.push(u);
-  const f = sectorForecast(S, c), F = frontForecast(S);
-  S.units.pop();
-  f.F = F;
-  return f;
+  return previewGroup(S, [card], c);
 }
 // ---- Conseils de l'état-major : où agir, et pourquoi ----
 const secName = c => TERRAIN[S.lanes[c]].name;
@@ -3390,27 +3462,25 @@ function objLine() {
 function hintText() {
   if (busy) return '';
   if (discardSel) return `Défausse : touchez jusqu'à ${MAX_DISCARD} cartes à remplacer (${discardSel.length} choisie${discardSel.length > 1 ? 's' : ''}). Chaque défausse donne +${DISCARD_SUPPLY + (has(S, 'intendant') ? 1 : 0)} ravitaillement ce tour. Il vous reste ${S.discards} défausse${S.discards > 1 ? 's' : ''} pour cette bataille.`;
-  if (picked.length === 1 && isOrder(picked[0])) { const k = picked[0], d = TYPES[k.t], dn = canDeployNow(S, k); return dn.ok ? `${d.name} : glissez-la sur ${TGT_TXT[d.tgt]}. ${d.txt}` : `${d.name} : ${WHY[dn.reason] || 'impossible maintenant.'}`; }
-  if (picked.length === 1) {
-    const k = picked[0], d = TYPES[k.t], st = cardStatsFor(k, S), dn = canDeployNow(S, k), mates = S.hand.filter(h => h !== k && canFuse(k, h)).length;
-    const what = `${d.name} ${colorName(k.c).toLowerCase()}${k.parts ? ` ×${k.parts.length}` : ''} (${st.men} ${noun(k.t, st.men)}, ${st.stam} tour${st.stam > 1 ? 's' : ''})`;
-    if (!dn.ok) return `${what} : ${WHY[dn.reason] || 'impossible à jouer.'}${mates ? ` Touchez une autre carte ${d.name} pour fusionner.` : ''}`;
-    if (k.t === 'bombardier') return `${what} : glissez-le sur le front : il frappe aussitôt le QG ennemi (${fmtN(st.dmg * st.men * 10)} dégâts).`;
-    if (!d.land) return `${what} : appui ${d.fam === 'mer' ? 'naval (secteurs proches de la côte)' : 'aérien'}, un seul par secteur.<br><b class="advl">${bestWhy(bestSectorFor(k))}</b>`;
-    const ups = [...new Set(S.lanes.filter(t => terrainMult(k.c, t) > 1).map(t => TERRAIN[t].name.toLowerCase()))], dns = [...new Set(S.lanes.filter(t => terrainMult(k.c, t) < 1).map(t => TERRAIN[t].name.toLowerCase()))];
-    return `${what}${ups.length ? ` · ▲ fort en ${ups.join(', ')}` : ''}${dns.length ? ` · ▼ faible en ${dns.join(', ')}` : ''}.<br><b class="advl">${bestWhy(bestSectorFor(k))}</b>`;
+  if (picked.length === 1 && isUnitTargetOrder(picked[0])) { const k = picked[0], d = TYPES[k.t], dn = canDeployNow(S, k); return dn.ok ? `${d.name} : touchez ${TGT_TXT[d.tgt]}. ${d.txt}` : `${d.name} : ${WHY[dn.reason] || 'impossible maintenant.'}`; }
+  if (picked.length) {
+    const P = selPV(), cost = groupCost(S, picked), k = picked[0], d = TYPES[k.t];
+    const what = picked.length > 1 ? `Main de ${picked.length} cartes · coût ${cost}` : isOrder(k) ? `${d.name} · coût ${cost}` : `${d.name} ${colorName(k.c).toLowerCase()} · coût ${cost}`;
+    if (!P || !P.ok) return `<b class="advl">${what}</b> : ${WHY_DEP(P ? P.reason : 'card')}`;
+    const b = P.best !== null ? P.map[P.best] : null;
+    const tip = picked.length === 1 ? ` ${d.txt}` : ' Ajoutez d’autres cartes pour un plus gros combo.';
+    return `<b class="advl">${what}</b> : touchez un secteur pour tout y poser.${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}${tip}`;
   }
-  if (pickFuse().length) { const g = pickFuse()[0]; return `Ces ${g.length} cartes ${TYPES[g[0].t].name} peuvent fusionner : leurs soldats s'additionnent.`; }
   const F = frontForecast(S), tired = units(S, 'me').filter(u => u.stam <= 1).length;
   const fore = `<span class="fore">Fin du tour maintenant : QG ennemi <b class="up">−${fmtN(F.toEn)}</b> · votre QG <b class="dn">−${fmtN(F.toMe)}</b>${tired ? ` · ${tired} unité${tired > 1 ? 's' : ''} usée${tired > 1 ? 's' : ''} après ce tour` : ''}</span>`;
-  if (S.turn === 1 && !units(S, 'me').length) return `<b class="advl">Touchez une carte, puis glissez-la sur un secteur.</b> Chaque secteur additionne l'Attaque de ses unités (× ses combos) ; tous les secteurs frappent ensemble le QG ennemi en fin de tour.${fore}`;
+  if (S.turn === 1 && !units(S, 'me').length) return `<b class="advl">Touchez une ou plusieurs cartes, puis un secteur.</b> Dans chaque secteur, Attaque × Mult (combos) = sa frappe ; tous les secteurs frappent ensemble le QG ennemi en fin de tour.${fore}`;
   if (F.toMe > Math.ceil(F.enAtk * MIN_THROUGH)) return `<b class="advl dn">⚠ La riposte ennemie (${SWORD}${fmtN(F.enAtk)}) dépasse votre Défense (${SHIELD}${fmtN(F.def)}) : votre QG perdra ${F.toMe}.</b> Ajoutez de la Défense (mitrailleuse, blindé, chasseur, Contre-attaque) ou jouez Fumigènes.${fore}`;
-  return `<b class="advl">✔ Votre Défense tient.</b> Renforcez votre frappe : posez vos cartes là où le ★ l'indique. Touchez un secteur pour son calcul.${fore}`;
+  return `<b class="advl">✔ Votre Défense tient.</b> Choisissez plusieurs cartes pour un gros combo : le ★ montre le meilleur secteur.${fore}`;
 }
 // Largeur de la colonne de droite (blinde, totaux, commandes) en paysage
 const sideW = () => Math.round(Math.max(176, Math.min(300, Math.min(window.innerWidth, 1400) * 0.235)));
 function renderBattle() {
-  const reserved = picked.length === 1 ? cardCost(S, picked[0]) : 0;
+  const reserved = picked.length ? groupCost(S, picked) : 0;
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
   // main en éventail : toutes les cartes sont visibles sans défiler
   // paysage : la main occupe le bas gauche, sous votre plateau ; la colonne de droite garde la blinde et les commandes
@@ -3418,15 +3488,14 @@ function renderBattle() {
   const short = H < 500, cw = Math.round(Math.max(60, Math.min(104, H * 0.195, W * 0.2))), ch = Math.round(cw * 1.28);
   const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
-    const on = picked.includes(k), partner = !on && picked.length === 1 && canFuse(picked[0], k), off = !on && !partner && !canDeployNow(S, k).ok;
-    const mid = (n - 1) / 2, rot = on || partner ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : partner ? -12 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
+    const on = picked.includes(k), off = !on && (cardCost(S, k) > S.supply - reserved || (picked.length > 0 && (isUnitTargetOrder(k) || picked.some(isUnitTargetOrder))) || !canDeployNow(S, k).ok);
+    const mid = (n - 1) / 2, rot = on ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
     const ds = discardSel && discardSel.includes(k);
-    return handCardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (ds ? 'dsel ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
+    return handCardHTML(k, (on ? 'sel ' : '') + (ds ? 'dsel ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
   }).join('');
   const dealKey = S.lvl.name + S.turn, dealNow = window.__dealKey !== dealKey; window.__dealKey = dealKey;
-  const hint = hintText(), fz = pickFuse(), hasFused = picked.some(c => c.parts), one = picked.length === 1 ? picked[0] : null;
-
-  const extra = hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : fz.length ? '<button class="btn go sm" data-act="fuse">Fusionner</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
+  const hint = hintText(), one = picked.length === 1 ? picked[0] : null;
+  const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
   app.innerHTML = `<div class="btl land" style="--rw:${rw}px">
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
@@ -3470,7 +3539,7 @@ const spotEl = (r, c) => (r < 0 ? document.querySelector('.hq.en') : r >= GH ? d
 // Élément d'un secteur : la case de devant de votre file (ou de la file ennemie), sinon le bilan
 // Éléments du plateau : pied de colonne (score d'un secteur), unité
 const secEl = (c, row = 5) => document.querySelector(`.lc[data-c="${c}"][data-row="${row}"]`);
-const unitEl = uid => document.querySelector(`.gu[data-uid="${uid}"]`)?.parentElement || null;
+const unitEl = uid => document.querySelector(`.gu[data-uid="${uid}"]`) || null;
 // Poses peintes (planche C) jouées comme petites animations : tir, chute, course
 const poseImg = (kind, side) => { const src = typeof PAINT !== 'undefined' && PAINT[kind + '_' + side]; return src ? `<img class="pose p-${kind} ${side}" src="${src}" alt="">` : ''; };
 function poseAt(el, kind, side, ms = 900) { if (!el) return; const h = poseImg(kind, side); if (!h) return; el.insertAdjacentHTML('beforeend', h); const p = el.lastElementChild; setTimeout(() => p.remove(), fast ? 250 : ms); }
@@ -3483,26 +3552,50 @@ function showHits(hits) {
 }
 
 // ---- Actions ----
-const WHY = { target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour cette carte en plus.', sea: 'Aucun secteur assez proche de la côte sans appui.', cells: 'Aucun secteur avec de la place (3 unités au plus) et un terrain praticable.', };
+const WHY = { target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour cette carte en plus.', sea: 'Aucun secteur assez proche de la côte sans appui.', cells: 'Aucun secteur au terrain praticable pour cette carte.', solo: 'Retranchement, Repli et Sabotage se jouent seuls, sur une unité.', nosector: 'Aucun secteur ne peut recevoir toute cette main (navires : près de la côte ; certains terrains sont impraticables). Retirez une carte.', };
 const WHY_DEP = r => WHY[r] || 'Impossible de jouer cette carte.';
-// Toucher une carte : la choisir ; toucher ensuite une carte du même type : les deux fusionnent (soldats additionnés)
+// Toucher une carte : l'ajouter à la main choisie (ou l'en retirer), comme dans Balatro
 function onCard(i) {
   if (busy || S.over || Date.now() < (window.__dragEnd || 0)) return;
   selU = null;
   const card = S.hand[i]; if (!card) return;
   if (discardSel) { const k = discardSel.indexOf(card); if (k >= 0) discardSel.splice(k, 1); else if (discardSel.length < MAX_DISCARD) discardSel.push(card); SFX.play(k >= 0 ? 'deselect' : 'select'); return renderBattle(); }
-  if (picked.includes(card)) { picked = []; SFX.play('deselect'); return renderBattle(); }
-  const cur = picked.length === 1 ? picked[0] : null;
-  if (cur && canFuse(cur, card)) {
-    undo.push(snapshotState(S));
-    const nc = fuseCards(S, S.hand.indexOf(cur), S.hand.indexOf(card)); picked = [nc];
-    const st = cardStatsFor(nc, S);
-    SFX.play('fuse'); renderBattle();
-    const el = document.querySelector(`#hand .hc[data-hi="${S.hand.indexOf(nc)}"]`); if (el) { el.classList.add('justfused'); popAt(el, `${st.men}`, '#2559b5'); }
-    toast(`Fusion : ${st.men} ${noun(nc.t, st.men)} ${colorName(nc.c).toLowerCase()} !`);
-    return;
-  }
-  picked = [card]; SFX.play('select'); renderBattle();
+  if (picked.includes(card)) { picked.splice(picked.indexOf(card), 1); SFX.play('deselect'); return renderBattle(); }
+  // un ordre sur unité se joue seul ; sinon on l'ajoute à la main
+  if (isUnitTargetOrder(card) || picked.some(isUnitTargetOrder)) picked = [card]; else picked.push(card);
+  if (groupCost(S, picked) > S.supply && picked.length > 1) { picked.pop(); SFX.play('deny'); toast(`Pas assez de ravitaillement : il en reste ${S.supply - groupCost(S, picked)} pour cette main.`); return renderBattle(); }
+  SFX.play('select'); renderBattle();
+}
+// Pose la main choisie dans un secteur, puis fait claquer son score
+function deployGroupAt(cards, c) {
+  const g = canPlayGroup(S, cards);
+  if (!g.ok) { SFX.play('deny'); toast(WHY_DEP(g.reason)); return false; }
+  if (!groupSectors(S, cards).includes(c)) { SFX.play('deny'); toast(blockedCol(S) === c ? 'Ce secteur est coupé par le train blindé ce tour.' : 'Ce secteur ne peut pas recevoir toute cette main : posez-la sur un secteur en surbrillance.'); return false; }
+  const before = sectorForecast(S, c).strike, tot0 = frontForecast(S).toEn;
+  undo.push(snapshotState(S));
+  const res = playGroup(S, cards, c);
+  if (!res || !res.length) { undo.pop(); SFX.play('deny'); toast('Impossible ici.'); return false; }
+  if (res.some(r => r.air)) undo = [];
+  picked = []; selU = null; pvMemo.key = '';
+  renderBattle();
+  const us = res.filter(r => r.u).map(r => r.u);
+  if (us.length) { const d = TYPES[us[0].key]; SFX.play(d.fam === 'mer' ? 'sea' : d.fam === 'air' ? 'air' : 'land'); us.forEach((u, k) => setTimeout(() => { showHits([{ uid: u.uid, spawn: true }]); dustAt(unitEl(u.uid), 1); }, k * 90)); }
+  us.filter(u => u.mineHit).forEach(u => { setTimeout(() => { SFX.play('boom'); boomAt(unitEl(u.uid)); popAt(unitEl(u.uid), '−1 endurance'); }, 250); toast(`Champ de mines : ${u.name} perd 1 endurance.`); });
+  if (us.some(u => u.cleared)) toast('Le génie déminé ce secteur.');
+  res.filter(r => r.order).forEach(r => orderFx(r.order));
+  res.filter(r => r.air).forEach(r => { SFX.play('bomb'); setTimeout(() => SFX.play('hqhit'), 200); boomAt(document.getElementById('enhq')); showHits(r.air.hits); toast(`Bombardier : ${fmtN(r.air.hits[0].dmg)} dégâts au QG ennemi.`); });
+  setTimeout(() => scoreBump(c, before, sectorForecast(S, c).strike, tot0), us.length ? 220 : 60);
+  if (S.over) finishBattle();
+  return true;
+}
+// Le score du secteur défile et claque ; la frappe totale suit
+function scoreBump(c, from, to, tot0) {
+  const foot = secEl(c), el = foot && foot.querySelector('.sc-tot'); if (!el || to === from) return;
+  const steps = 10;
+  for (let i = 1; i <= steps; i++) setTimeout(() => { el.textContent = fmtN(from + ((to - from) * i) / steps); }, i * 38);
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  if (to > from) { const fl = document.createElement('span'); fl.className = 'sc-fly'; fl.textContent = '+' + fmtN(to - from); foot.appendChild(fl); setTimeout(() => fl.remove(), 1100); SFX.play('coins'); }
+  const ts = document.getElementById('tot-strike'); if (ts && tot0 !== undefined) { const t1 = frontForecast(S).toEn; for (let i = 1; i <= steps; i++) setTimeout(() => { ts.textContent = fmtN(tot0 + ((t1 - tot0) * i) / steps); }, i * 38); ts.classList.remove('bump'); void ts.offsetWidth; ts.classList.add('bump'); }
 }
 // Jouer une carte sur une cible : { c } (secteur) ou { uid } (unité)
 function deployCardAt(card, tg) {
@@ -3510,8 +3603,8 @@ function deployCardAt(card, tg) {
   if (!dn.ok) { SFX.play('deny'); toast(WHY_DEP(dn.reason)); return false; }
   const ok = deployTargets(S, card).find(x => (tg.uid !== undefined && x.uid !== undefined ? x.uid === tg.uid : x.uid === undefined && x.c === tg.c));
   if (!ok) { SFX.play('deny'); toast(TYPES[card.t].tgt === 'myUnit' || TYPES[card.t].tgt === 'raider' ? `Déposez la carte sur ${TGT_TXT[TYPES[card.t].tgt]}.` : blockedCol(S) === tg.c ? 'Ce secteur est coupé par le train blindé ce tour.' : 'Déposez la carte sur un secteur en surbrillance.'); return false; }
-  if (card.t === 'bombardier') { doAirStrike(card, ok.c); return true; }
-  if (isOrder(card)) { doOrder(card, ok); return true; }
+  if (isUnitTargetOrder(card)) { doOrder(card, ok); return true; }
+  return deployGroupAt([card], ok.c);
   undo.push(snapshotState(S));
   const u = placeCard(S, S.hand.indexOf(card), ok.c);
   if (!u) { undo.pop(); SFX.play('deny'); toast('Impossible ici.'); return false; }
@@ -3523,25 +3616,15 @@ function deployCardAt(card, tg) {
   if (u.kw.includes('heal') && queue(S, 'me', u.c).length > 1) toast('Infirmiers : +1 endurance aux autres unités du secteur.');
   return true;
 }
-// Frappe aérienne : le bombardier traverse le plateau et frappe le QG ennemi
-async function doAirStrike(card, c) {
-  const res = airStrike(S, S.hand.indexOf(card), c); if (!res) { SFX.play('deny'); return; }
-  busy = true; picked = []; selU = null; undo = [];
-  const grid = document.getElementById('bgrid'), hq = document.getElementById('enhq');
-  if (grid) {
-    const pl = document.createElement('div'); pl.className = 'flyover'; pl.innerHTML = spriteSVG('bombardier', 'me', 64, card.c); pl.style.top = '-10px'; grid.appendChild(pl);
-    SFX.play('air'); pl.animate([{ transform: 'translateX(-90px)' }, { transform: `translateX(${grid.getBoundingClientRect().width + 30}px)` }], { duration: fast ? 200 : 900, easing: 'linear', fill: 'forwards' });
-    await sleep(fast ? 80 : 450); SFX.play('bomb'); boomAt(hq); await sleep(fast ? 80 : 450); pl.remove();
-  }
-  busy = false; renderBattle(); showHits(res.hits); toast(`Bombardier : ${fmtN(res.hits[0].dmg)} dégâts au QG ennemi${res.hits[0].dmg < res.raw ? ' (moitié absorbée par la batterie)' : ''}.`);
-  if (S.over) return finishBattle();
-}
 // Ordres : effet immédiat et petite animation sur le plateau
 function doOrder(card, tg) {
   undo.push(snapshotState(S));
   const res = playOrder(S, S.hand.indexOf(card), tg);
   if (!res) { undo.pop(); SFX.play('deny'); return toast(WHY_DEP(canDeployNow(S, card).reason)); }
-  picked = []; selU = null; renderBattle();
+  picked = []; selU = null; renderBattle(); orderFx(res);
+  if (S.over) return finishBattle();
+}
+function orderFx(res) {
   const c = res.c;
   if (res.order === 'barrage') { SFX.play('shell'); setTimeout(() => SFX.play('boom'), 180); boomAt(secEl(c, 2)); popAt(secEl(c), `+${BARRAGE_ATK} Attaque`, '#2559b5'); }
   else if (res.order === 'fumigenes') { SFX.play('intercept'); popAt(document.getElementById('enhq'), 'Fumée ÷2', '#2559b5'); toast("Fumigènes : l'Attaque ennemie est divisée par deux ce tour, et l'obus est perdu."); }
@@ -3552,8 +3635,7 @@ function doOrder(card, tg) {
   else if (res.order === 'ravitaillement') { SFX.play('reform'); toast('+2 ravitaillement et 1 carte piochée.'); }
   else if (res.order === 'embuscade') { SFX.play('reform'); popAt(secEl(c), '+1 endurance', '#2559b5'); }
   else if (res.order === 'sabotage') { undo = []; SFX.play('bomb'); setTimeout(() => SFX.play('hqhit'), 200); showHits(res.hits); }
-  else if (res.order === 'debarquement') { undo = []; SFX.play('sea'); if (res.uid) { showHits([{ uid: res.uid, spawn: true }]); toast(`Débarquement : ${TYPES[res.landed].name} rejoint le secteur !`); } }
-  if (S.over) return finishBattle();
+  else if (res.order === 'debarquement') { SFX.play('sea'); if (res.uid) { showHits([{ uid: res.uid, spawn: true }]); toast(`Débarquement : ${TYPES[res.landed].name} rejoint le secteur !`); } }
 }
 // Défausse : les cartes choisies partent, de nouvelles arrivent
 function doDiscard() {
@@ -3567,9 +3649,8 @@ function doDiscard() {
 // Cible sous le doigt pendant un glisser-déposer : une unité (ordres sur unité) ou un secteur
 function dropTarget(x, y, card) {
   const el = document.elementFromPoint(x, y); if (!el) return null;
-  const t = TYPES[card.t].tgt;
+  const t = isUnitTargetOrder(card) ? TYPES[card.t].tgt : '';
   if (t === 'myUnit' || t === 'raider') { const g = el.closest('.gu[data-uid]'); return g ? { uid: +g.dataset.uid, el: g.parentElement } : null; }
-  if (t === 'any' && el.closest('#board')) return { c: landCols(S)[0], el: document.getElementById('bgrid') };
   const gc = el.closest('.gc[data-c]'); return gc ? { c: +gc.dataset.c, el: gc } : null;
 }
 // Glisser-déposer des cartes de la main vers un secteur, avec le bilan avant → après
@@ -3584,30 +3665,28 @@ document.addEventListener('pointermove', e => {
   if (!drag) return;
   if (!drag.on) {
     if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 9) return;
-    drag.on = true; selU = null; picked = [drag.card];
+    drag.on = true; selU = null;
+    if (!picked.includes(drag.card) || isUnitTargetOrder(drag.card)) picked = [drag.card];
+    drag.grp = picked.slice();
     const r = drag.el.getBoundingClientRect(), g = drag.el.cloneNode(true);
-    g.className = drag.el.className.replace(/\b(sel|tilt|fusible|off)\b/g, '') + ' dragghost'; g.removeAttribute('data-hi'); g.style.cssText = `width:${r.width}px;height:${r.height}px;left:0;top:0;`;
+    g.className = drag.el.className.replace(/\b(sel|tilt|off)\b/g, '') + ' dragghost'; g.removeAttribute('data-hi'); g.style.cssText = `width:${r.width}px;height:${r.height}px;left:0;top:0;`;
+    if (drag.grp.length > 1) g.insertAdjacentHTML('beforeend', `<span class="grpn">×${drag.grp.length}</span>`);
     document.body.appendChild(g); drag.ghost = g; drag.w = r.width; drag.h = r.height;
-    drag.ok = canDeployNow(S, drag.card);
+    drag.ok = canPlayGroup(S, drag.grp);
     document.getElementById('board').innerHTML = boardHTML({ units: S.units, hq: S.hq }, true);
-    drag.el.classList.add('dragging');
-    $('#hint').querySelector('.ht').innerHTML = drag.ok.ok ? (isOrder(drag.card) ? `${TYPES[drag.card.t].name} : déposez-la sur ${TGT_TXT[TYPES[drag.card.t].tgt]}.` : drag.card.t === 'bombardier' ? 'Lâchez le bombardier sur le front : il frappe aussitôt le QG ennemi.' : 'Survolez un secteur : son score et votre frappe totale après la pose s’affichent.') : WHY_DEP(drag.ok.reason);
+    document.querySelectorAll('#hand .hc').forEach(x => { if (drag.grp.includes(S.hand[+x.dataset.hi])) x.classList.add('dragging'); });
+    $('#hint').querySelector('.ht').innerHTML = drag.ok.ok ? (isUnitTargetOrder(drag.card) ? `${TYPES[drag.card.t].name} : déposez-la sur ${TGT_TXT[TYPES[drag.card.t].tgt]}.` : 'Survolez un secteur : son score après la pose s’affiche.') : WHY_DEP(drag.ok.reason);
     SFX.play('select');
   }
   drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.75}px) rotate(${Math.max(-12, Math.min(12, (e.clientX - drag.x) / 12))}deg) scale(.78)`;
   const tg = dropTarget(e.clientX, e.clientY, drag.card), key = tg ? (tg.uid !== undefined ? 'u' + tg.uid : 'c' + tg.c) : '';
   if (drag.key !== key) {
     drag.key = key;
-    document.querySelectorAll('.drophover').forEach(x => x.classList.remove('drophover')); document.querySelectorAll('.pvw').forEach(x => x.remove());
+    document.querySelectorAll('.drophover').forEach(x => x.classList.remove('drophover'));
     if (tg) {
-      document.querySelectorAll(tg.uid !== undefined ? `.gu[data-uid="${tg.uid}"]` : `.gc[data-c="${tg.c}"]`).forEach(x => (x.classList.contains('gu') ? x.parentElement : x).classList.add('drophover'));
-      const f = tg.uid === undefined && drag.ok.ok && deploySectors(S, drag.card).includes(tg.c) ? previewPlace(drag.card, tg.c) : null, foot = secEl(tg.c);
-      if (f && foot) {
-        const b0 = nowForecast(tg.c), nc = f.combos.atk.concat(f.combos.def).filter(k => !b0.combos.atk.concat(b0.combos.def).some(x => x.id === k.id));
-        foot.insertAdjacentHTML('beforeend', `<span class="pvw"><b class="pa">${SWORD}${fmtN(b0.strike)}→${fmtN(f.strike)}</b><b class="pd">${SHIELD}${fmtN(b0.def)}→${fmtN(f.def)}</b>${nc.length ? `<em>+ ${nc.map(k => k.name).join(' + ')}</em>` : ''}</span>`);
-        const ht = $('#hint .ht'), saved = b0.F.toMe - f.F.toMe;
-        if (ht) ht.innerHTML = `<b class="advl">${secName(tg.c)} :</b> score ${fmtN(b0.strike)} → <b class="up">${fmtN(f.strike)}</b> · frappe totale ${fmtN(b0.F.toEn)} → <b class="up">${fmtN(f.F.toEn)}</b>${saved > 0 ? ` · votre QG perd ${saved} de moins` : ''}${nc.length ? ` · nouveau combo : ${nc.map(k => k.name).join(', ')} !` : ''}`;
-      }
+      document.querySelectorAll(tg.uid !== undefined ? `.gu[data-uid="${tg.uid}"]` : `.ln[data-c="${tg.c}"]`).forEach(x => x.classList.add('drophover'));
+      const P = selPV(), p = tg.uid === undefined && P && P.map[tg.c], ht = $('#hint .ht');
+      if (p && ht) ht.innerHTML = `<b class="advl">${secName(tg.c)} :</b> ${fmtN(p.baseAtk)} × ${fmtMult(p.mult.atk)} = <b class="up">${fmtN(p.strike)}</b> (avant ${fmtN(p.f0.strike)}) · frappe totale <b class="up">${fmtN(p.F.toEn)}</b>${p.nc.length ? ` · nouveau combo : ${p.nc.map(k => k.name).join(', ')} !` : ''}`;
     }
   }
   e.preventDefault();
@@ -3618,29 +3697,12 @@ document.addEventListener('pointerup', e => {
   if (!d.on) return;
   window.__dragEnd = Date.now() + 350;
   const tg = dropTarget(e.clientX, e.clientY, d.card);
-  const ok = tg && deployCardAt(d.card, tg);
+  const ok = tg && (tg.uid !== undefined ? deployCardAt(d.card, tg) : deployGroupAt(d.grp, tg.c));
   d.ghost.remove();
   if (ok) return;
-  picked = []; d.el.classList.remove('dragging'); renderBattle();
+  renderBattle();
 });
-document.addEventListener('pointercancel', () => { if (drag && drag.ghost) drag.ghost.remove(); if (drag) drag.el.classList.remove('dragging'); drag = null; });
-function doFusePick() {
-  const groups = pickFuse(); if (!groups.length || busy) return;
-  undo.push(snapshotState(S));
-  let last = null;
-  groups.forEach(g => {
-    let card = g[0];
-    for (const other of g.slice(1)) { const nc = fuseCards(S, S.hand.indexOf(card), S.hand.indexOf(other)); picked.splice(picked.indexOf(other), 1); picked[picked.indexOf(card)] = nc; card = nc; }
-    last = card;
-  });
-  const st = cardStatsFor(last, S);
-  SFX.play('fuse'); renderBattle(); toast(`Fusion : ${st.men} ${noun(last.t, st.men)} ${colorName(last.c).toLowerCase()} !`);
-}
-function doSplitPicked() {
-  if (busy) return;
-  picked.filter(c => c.parts).forEach(c => { splitCard(S, S.hand.indexOf(c)); picked.splice(picked.indexOf(c), 1); });
-  SFX.play('split'); renderBattle();
-}
+document.addEventListener('pointercancel', () => { if (drag && drag.ghost) drag.ghost.remove(); drag = null; if (S && document.getElementById('hand')) renderBattle(); });
 function doUndo() {
   if (busy || !undo.length) return;
   restoreState(S, undo.pop()); picked = []; selU = null; SFX.play('deselect'); renderBattle();
@@ -3648,31 +3710,26 @@ function doUndo() {
 // Toucher un secteur : y jouer la carte choisie, sinon voir son calcul
 function onSector(c) {
   if (busy || S.over) return;
-  if (picked.length === 1 && canDeployNow(S, picked[0]).ok && deploySectors(S, picked[0]).includes(c) && TYPES[picked[0].t].tgt !== 'myUnit' && TYPES[picked[0].t].tgt !== 'raider') return deployCardAt(picked[0], { c });
+  if (picked.length && !(picked.length === 1 && isUnitTargetOrder(picked[0]))) return deployGroupAt(picked.slice(), c);
   if (S.lanes[c] === 'mer') return toast(TERRAIN.mer.txt);
   sectorSheet(c);
 }
 function onUnit(uid) {
   if (busy) return;
   const u = findUnit(S, uid); if (!u) return;
-  if (picked.length === 1 && deployTargets(S, picked[0]).some(t => t.uid === uid)) return deployCardAt(picked[0], { uid });
+  if (picked.length === 1 && isUnitTargetOrder(picked[0])) { if (deployTargets(S, picked[0]).some(t => t.uid === uid)) return deployCardAt(picked[0], { uid }); }
+  else if (picked.length) return deployGroupAt(picked.slice(), u.c);
   picked = []; selU = uid; SFX.play('tap'); renderBattle(); unitSheet(uid);
-}
-function doUnitFuse(uid) {
-  const u = findUnit(S, uid), p = unitPartners(u)[0]; if (!u || !p) return;
-  undo.push(snapshotState(S));
-  const nu = fuseUnits(S, u.uid, p.uid); selU = nu.uid; closeModal();
-  renderBattle(); SFX.play('fuse'); showHits([{ uid: nu.uid, spawn: true }]); toast(`Fusion : ${nu.name} ${colorName(nu.cols).toLowerCase()} ! Une place se libère dans le secteur.`);
 }
 const comboRow = (k, on) => `<li class="${on}"><b>${k.name}${k.lv > 1 ? ' niv. ' + k.lv : ''}</b><span>${k.mul ? '×' + fmtMult(k.mul) : '+' + fmtMult(k.add)}</span></li>`;
 // Fiche d'un secteur : unités, combinaisons, calcul de sa frappe
 function sectorSheet(c) {
-  const f = sectorForecast(S, c), ter = TERRAIN[S.lanes[c]], me = queue(S, 'me', c), sup = supportAt(S, c);
+  const f = sectorForecast(S, c), ter = TERRAIN[S.lanes[c]], me = queue(S, 'me', c), sups = supportsAt(S, c);
   const line = u => `<li>${u.name}${u.cols ? ' ' + colorName(u.cols).toLowerCase() : ''}<span class="small muted"> · ${SWORD}${fmtN(unitAtk(S, u))} ${SHIELD}${fmtN(unitDef(S, u))} · ${u.stam} tour${u.stam > 1 ? 's' : ''}</span></li>`;
   const notes = [f.barrage ? `Barrage : +${f.barrage} d'Attaque de base` : '', f.notes.includes('bunker') ? 'Bunker : frappe ×0,7 (génie ou paras l’ignorent)' : '', f.notes.includes('mammouth') ? `Mammouth : −${mammothWall(S)} (seuil de blindage)` : '', f.notes.includes('train') ? 'Coupé par le train : ce secteur ne frappe pas ce tour' : ''].filter(Boolean);
   openModal(`<div class="hd"><span class="ribbon">Secteur ${ter.name}</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="secsheet">
-      <div class="ss-side me"><ol>${me.map(line).join('') || '<li class="muted">Aucune unité terrestre</li>'}${sup ? line(sup).replace('<li>', '<li>Appui : ') : ''}</ol>
+      <div class="ss-side me"><ol>${me.map(line).join('') || '<li class="muted">Aucune unité terrestre</li>'}${sups.map(u => line(u).replace('<li>', '<li>Appui : ')).join('')}</ol>
         <p class="calc">${SWORD} Attaque ${fmtN(f.baseAtk)} × ${fmtMult(f.mult.atk)} = <b>${fmtN(f.atk)}</b>${f.strike !== f.atk ? ` → frappe réelle <b>${fmtN(f.strike)}</b>` : ''}<br>${SHIELD} Défense ${fmtN(f.baseDef)} × ${fmtMult(f.mult.def)} = <b>${fmtN(f.def)}</b></p>
         ${notes.length ? `<p class="small">${notes.join('<br>')}</p>` : ''}
         <ul class="cmb">${f.combos.atk.map(k => comboRow(k, 'a')).join('')}${f.combos.def.map(k => comboRow(k, 'd')).join('')}${!f.combos.atk.length && !f.combos.def.length ? '<li class="muted">Aucune combinaison : regroupez des unités complémentaires.</li>' : ''}</ul></div>
@@ -3680,7 +3737,7 @@ function sectorSheet(c) {
 }
 function unitSheet(uid) {
   const u = findUnit(S, uid); if (!u) return;
-  const key = SPR_OF[u.key], partners = unitPartners(u);
+  const key = SPR_OF[u.key];
   const eff = [...(u.cols || '')].map(ch => `<li><i class="dot" style="background:${COLORS[ch].hex}"></i> <b>${COLORS[ch].name}</b> : ${COLORS[ch].txt}${u.land ? ` · ▲ ${TERRAIN[COLOR_TERRAIN[ch].fort].name.toLowerCase()}, ▼ ${TERRAIN[COLOR_TERRAIN[ch].faible].name.toLowerCase()}` : ''}</li>`).join('');
   const kws = (u.kw || []).map(k => KW_DESC[k]).filter(Boolean);
   openModal(`<div class="hd"><span class="ribbon">${u.name}${u.cols ? ' ' + colorName(u.cols).toLowerCase() : ''}</span><button class="pill" data-act="close">Fermer</button></div>
@@ -3690,7 +3747,6 @@ function unitSheet(uid) {
       <span>Secteur <b>${TERRAIN[S.lanes[u.c]].name}</b>${u.land ? '' : ' (appui)'}</span>
       ${unitMult(S, u) !== 1 ? `<span>${unitMult(S, u) > 1 ? '▲ terrain fort' : '▼ terrain faible'} : ${tmodTxt(unitMult(S, u))} d'Attaque</span>` : ''}${u.elan ? `<span><b>Élan</b> : +${u.elan} dégât${u.elan > 1 ? 's' : ''} par tir</span>` : ''}${u.dig ? `<span><b>Retranché</b> : +${Math.round(u.dig * 100)} % de Défense</span>` : ''}${u.lv > 1 ? `<span class="star">Niveau ${u.lv}</span>` : ''}</div></div>
     ${kws.length ? `<p>${kws.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(' · ')}.</p>` : ''}${eff ? `<ul class="effl">${eff}</ul>` : ''}
-    ${partners.length ? `<button class="btn go sm" data-ufuse="${u.uid}">Fusionner avec ${partners[0].name.toLowerCase()} ${colorName(partners[0].cols).toLowerCase()}</button>` : ''}
     <p class="small muted">Chaque fin de tour, l'unité ajoute son Attaque à la frappe de son secteur et sa Défense à votre défense totale, puis perd 1 endurance. À 0, elle quitte le front. L'ordre « Repli » renvoie sa carte en main.</p>`);
 }
 // Fiche d'un effet du QG ennemi
@@ -4046,7 +4102,7 @@ function cardStep(rareOnly) {
   saveRun('depot');
   window.__opts = rewardCards(Math.random, rareOnly ? 2 : 1);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Dépôt de ravitaillement</span><span class="num">QG ${C.hq} / ${C.hqMax}</span></div>
-    <div class="panel">Choisissez une carte pour renforcer votre paquet. Chaque couleur donne un avantage, et deux cartes du même type de couleurs différentes peuvent fusionner.</div>
+    <div class="panel">Choisissez une carte pour renforcer votre paquet. Chaque couleur donne un avantage, et des unités d'une même couleur dans un secteur forment un combo.</div>
     <div class="cardrow">${window.__opts.map((c, i) => cardHTML(c, 'pick', `data-add="${i}"`)).join('')}</div>
     <button class="btn ghost" data-act="skipcard">Ne rien prendre</button></div>`;
 }
@@ -4245,7 +4301,7 @@ function guideModal() {
     </div>
     <ol class="gm-l">
       <li><b class="dn">En haut, le QG ennemi</b> : sa barre de PV est la « blinde » à faire tomber. Il riposte chaque tour avec l'Attaque annoncée ${SWORD}, qui grimpe de tour en tour. Ses <b>effets</b> (touchez-les) changent les règles.</li>
-      <li><b>Vos secteurs</b> (colonnes) : 3 unités terrestres et 1 appui chacun. Leur score ${SWORD} en bas = Attaque des unités × combos du secteur.</li>
+      <li><b>Vos secteurs</b> (couloirs) : posez-y autant de cartes que vous voulez, ensemble ou au fil du tour. À droite, leur score : Attaque (bleu) × Mult des combos (rouge).</li>
       <li><b>Les points</b> sous une unité = son endurance : elle perd 1 point par tour, puis rentre (sa carte est déjà dans la défausse).</li>
     </ol></div>
     <div class="gm-calc"><b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
@@ -4257,18 +4313,22 @@ function guideModal() {
 const HELP_PAGES = () => [
   { t: 'Le but', l: [
     '<b>Faire tomber le QG ennemi</b> à 0 PV (sa « blinde », comme dans Balatro) avant que <b>votre QG</b> tombe. Vos PV de QG vous suivent de bataille en bataille.',
-    '<b>Le front</b> : 4 secteurs terrestres (couloirs) et la côte. Chaque secteur accueille <b>3 unités terrestres</b> et <b>1 appui</b> (navire près de la côte, ou avion).',
+    '<b>Le front</b> : 4 secteurs terrestres (couloirs) et la côte. Chaque secteur accueille <b>autant d\'unités et d\'appuis</b> (navires près de la côte, avions) que vous voulez.',
     '<b>Score d\'un secteur</b> : Attaque de ses unités × ses <b>combos</b>. Les scores de tous les secteurs <b>s\'additionnent</b> et frappent le QG ennemi en fin de tour.',
     `<b>Riposte</b> : l'ennemi attaque d'un seul front, avec une Attaque annoncée qui grimpe. Votre <b>Défense totale</b> la réduit ; au moins ${Math.round(MIN_THROUGH * 100)} % passe toujours.`] },
+  { t: 'Jouer une main', l: [
+    '<b>Jouer une main</b>, comme dans Balatro : touchez plusieurs cartes, chaque secteur affiche alors son score <b>après</b> la pose (★ = le meilleur). Touchez le secteur : toutes s\'y posent et s\'ajoutent à ce qui s\'y trouve déjà.',
+    '<b>Lire le score</b> : à droite de chaque secteur, Attaque (bleu) × Mult (rouge) = sa frappe, en gros chiffres dorés. Les étiquettes du secteur montrent ses combos ; une étiquette qui clignote est un combo que la main va déclencher.',
+    '<b>Ordres</b> : la plupart se jouent dans la main (Barrage, Assaut, Fumigènes…). Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
   { t: 'Vos unités', l: [
     '<b>Usure</b> : chaque unité a une <b>endurance</b> (les points sous elle) : infanterie 2 tours, blindés, mitrailleuses et navires 3. Elle perd 1 point par tour, puis quitte le front.',
     '<b>Prolonger</b> : couleur verte (+1), ordres Retranchement et Relève (+1), infirmiers (+1 aux voisins). <b>Repli</b> renvoie la carte dans votre main.',
     '<b>Couleurs</b> : <i class="dot" style="background:#ffd24a"></i> jaune +1 dégât · <i class="dot" style="background:#e5543f"></i> rouge +50 % d\'hommes · <i class="dot" style="background:#52b34f"></i> vert +25 % Défense, +1 tour · <i class="dot" style="background:#39404f"></i> noir perçage.',
     '<b>Terrains</b> (▲ +50 % d\'Attaque, ▼ −25 %) : <i class="dot" style="background:#ffd24a"></i> route ▲ forêt ▼ · <i class="dot" style="background:#e5543f"></i> champ ▲ rivière ▼ · <i class="dot" style="background:#52b34f"></i> forêt ▲ route ▼ · <i class="dot" style="background:#39404f"></i> village ▲ champ ▼.'] },
   { t: 'Les combos', l: [
-    '<b>Attaque</b> : Binôme +0,5 (2 unités) · Trio +1 (3 unités) · Armes combinées +1 (infanterie + véhicule) · Appui +1 (avion ou navire).',
-    '<b>Multiplicateurs</b> : Tir guidé ×1,5 (observateur + artillerie ou navire) · Même couleur ×1,5.',
-    '<b>Défense</b> : Nid défensif +1 (mitrailleuse + infanterie) · Rempart blindé +1 (2 véhicules) · Soutien sanitaire +0,5 · Ligne tenue +0,5 (3 unités) · Couverture aérienne ×1,5 (chasseur).',
+    '<b>Attaque</b> : Paire +0,5 (2 unités) · Trio +1 (3–4 unités) · Bataillon +2 (5 et plus) · Armes combinées +1 (infanterie + véhicule) · Appui +1 (avion ou navire).',
+    '<b>Multiplicateurs</b> : Tir guidé ×1,5 (observateur + artillerie ou navire) · Même couleur ×1,5 (toutes les unités du secteur partagent une couleur).',
+    '<b>Défense</b> : Nid défensif +1 (mitrailleuse + infanterie) · Rempart blindé +1 (2 véhicules ou plus) · Soutien sanitaire +0,5 · Ligne tenue +0,5 (3 unités terrestres ou plus) · Couverture aérienne ×1,5 (chasseur).',
     'Les <b>manuels tactiques</b> de l\'intendance font monter un combo de niveau ; certains <b>jokers</b> en ajoutent.'] },
   { t: 'Ordres et effets du QG', l: [
     '<b>Ordres</b> (cartes beiges) : Barrage +20 Attaque · Assaut ×1,5 · Contre-attaque (Défense ×1,5) · Fumigènes (riposte ÷2) · Retranchement · Relève · Repli · Ravitaillement · Débarquement · Sabotage (−8 % au QG).',
@@ -4280,7 +4340,6 @@ const HELP_PAGES = () => [
     '<b>Passer une blinde</b> (sauf le boss) : vous la franchissez sans combattre et prenez un <b>bonus</b> (butin, carte, joker, soins, événement)… mais sans butin, renfort ni intendance.',
     '<b>Après la 20e blinde</b>, la guerre est gagnée, mais vous pouvez continuer à l\'infini : les blindes grossissent et leurs effets se multiplient.'] },
   { t: 'Cartes et butin', l: [
-    '<b>Fusionner</b> : touchez une carte puis une autre du même type : soldats additionnés, couleurs cumulées. Deux unités du même type d\'un secteur peuvent aussi fusionner (⇄).',
     '<b>Défausse ⟲</b> : 3 par bataille, jusqu\'à 5 cartes, +1 ravitaillement. <b>Réserve</b> : 📌 garde 2 cartes ; jusqu\'à 3 de ravitaillement est reporté.',
     '<b>Objectifs</b> : détruire le QG, tenir N tours, ou <b>Frappe décisive</b> (30 % de ses PV en un seul tour).',
     '<b>Butin</b> : après chaque bataille, achetez jokers, cartes, manuels, entraînement ou +1 ravitaillement. Vaincre un <b>boss</b> offre un joker.'] },
@@ -4372,7 +4431,6 @@ document.addEventListener('click', e => {
     const kp = t.closest('[data-keep]');
     if (kp && !busy && !discardSel) { const hc = kp.closest('.card[data-hi]'); if (hc && toggleKeep(S, +hc.dataset.hi)) { SFX.play('select'); renderBattle(); } else toast(`Vous gardez ${MAX_KEEP} cartes au plus.`); return; }
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
-    const uf = t.closest('[data-ufuse]'); if (uf) return doUnitFuse(+uf.dataset.ufuse);
     const fxb = t.closest('[data-fx]'); if (fxb && !busy) { SFX.play('tap'); return fxModal(fxb.dataset.fx); }
     if (!t.closest('.modal')) {
       const gu = t.closest('.gu[data-uid]'); if (gu) return onUnit(+gu.dataset.uid);
@@ -4396,14 +4454,13 @@ document.addEventListener('click', e => {
   else if (a === 'menu') menuModal();
   else if (a === 'close') { closeModal(); if (S && document.getElementById('hand') && !busy) showCoach(); }
   else if (a === 'deploy') doEnd();
-  else if (a === 'fuse' || a === 'fusepick') doFusePick();
+  else if (a === 'unpick') { picked = []; SFX.play('deselect'); renderBattle(); }
   else if (a === 'detail') { if (picked.length === 1) cardModal(CARD_REG.indexOf(picked[0])); }
   else if (a === 'snd') { SFX.setMuted(!SFX.isMuted()); renderSoundButton(); const b2 = document.getElementById('snd2'); if (b2) b2.textContent = SFX.isMuted() ? 'Son : non' : 'Son : oui'; if (!SFX.isMuted()) SFX.play('tap'); }
   else if (a === 'undo') doUndo();
   else if (a === 'discard') { if (!busy && S.discards > 0) { discardSel = []; picked = []; selU = null; renderBattle(); } }
   else if (a === 'discardno') { discardSel = null; renderBattle(); }
   else if (a === 'discardgo') doDiscard();
-  else if (a === 'split') doSplitPicked();
   else if (a === 'deck') deckModal(false);
   else if (a === 'skipcard') finishNode();
   else if (a === 'heal') { C.hq = Math.min(C.hqMax, C.hq + 16); finishNode(); }

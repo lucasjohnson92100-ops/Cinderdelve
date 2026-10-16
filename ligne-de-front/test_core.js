@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,fuseCards,splitCard,canFuse,canFuseUnits,fuseUnits,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -22,8 +22,8 @@ check('tireurs : partout sauf la mer',tg(S.hand[0]),'1,2,3,4');check('blindé : 
 check('navire : près de la côte',tg(S.hand[1]),'1,2');check('chasseur : partout',tg(S.hand[2]),'1,2,3,4');
 let u1=E.placeCard(S,0,1);check('pose',!!u1&&u1.c===1,true);check('coût payé',S.supply,38);check('carte gardée sur l\'unité (repli)',u1.card.t,'tireurs');
 S.hand=[E.mkCard('tireurs','R'),E.mkCard('tireurs','V'),E.mkCard('tireurs','N')];E.placeCard(S,0,1);E.placeCard(S,0,1);
-check('3 unités au plus',E.placeCard(S,0,1),null);
-S.hand=[E.mkCard('chasseur','J'),E.mkCard('chasseur','R')];const sup=E.placeCard(S,0,2);check('appui posé',E.supportAt(S,2)===sup,true);check('un seul appui par secteur',tg(S.hand[0]).includes('2'),false);
+check('autant d\'unités qu\'on veut',!!E.placeCard(S,0,1)&&E.queue(S,'me',1).length,4);
+S.hand=[E.mkCard('chasseur','J'),E.mkCard('chasseur','R')];const sup=E.placeCard(S,0,2);check('appui posé',E.supportAt(S,2)===sup,true);check('plusieurs appuis par secteur',tg(S.hand[0]).includes('2'),true);
 // endurance
 check('infanterie : 2 tours',E.statsFor(E.TYPES.tireurs,'J',S,'me').stam,2);check('blindé : 3 tours',E.statsFor(E.TYPES.blinde,'R',S,'me').stam,3);
 check('vert : +1 tour',E.statsFor(E.TYPES.tireurs,'V',S,'me').stam,3);check('chasseur : 2 tours',E.statsFor(E.TYPES.chasseur,'J',S,'me').stam,2);
@@ -82,12 +82,14 @@ S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;const p=E.placeUni
 S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;S.hand=[E.mkCard('bombardier','J')];const br=E.airStrike(S,0,1);check('bombardier : frappe directe',1000-S.hq.en,br.raw);
 // infirmiers
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('infirmiers','J')];const t0=E.placeCard(S,0,1);E.placeCard(S,0,1);check('infirmiers : +1 tour aux voisins',t0.stam,3);
-// fusions
-S=blank(['mer','champ','champ','champ','champ']);let f1=E.mkUnit(S,'me','tireurs','J'),f2=E.mkUnit(S,'me','tireurs','R');E.placeUnit(S,f1,1);E.placeUnit(S,f2,1);
-const fu=E.fuseUnits(S,f1.uid,f2.uid);check('fusion d\'unités',fu.cols+'/'+fu.menMax,'JR/25');check('une place libérée',E.queue(S,'me',1).length,1);
-{const Sx=mk();Sx.hand=[E.mkCard('tireurs','J'),E.mkCard('tireurs','J'),E.mkCard('tireurs','R'),E.mkCard('blinde','J')];
- let c=E.fuseCards(Sx,0,1);c=E.fuseCards(Sx,0,1);check('3 cartes fusionnées',c.parts.length,3);const s2=E.cardStatsFor(c,Sx);check('10 + 10 + 15 soldats',s2.men,35);check('coût 2+2+2-2',E.cardCost(Sx,c),4);
- E.splitCard(Sx,0);check('séparer',Sx.hand.length,4);}
+// mains : plusieurs cartes posées ensemble dans un secteur
+{const Sx=blank(['mer','champ','route','champ','champ']);Sx.supply=20;Sx.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','J'),E.mkCard('chasseur','J'),E.mkCard('assaut',''),E.mkCard('retranchement','')];
+ const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+2+2+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3,4');
+ check('ordre sur unité : seul',E.canPlayGroup(Sx,[Sx.hand[0],Sx.hand[4]]).reason,'solo');
+ const pv=E.previewGroup(Sx,g,2);check('aperçu sans rien toucher',Sx.units.length+'/'+Sx.hand.length+'/'+Sx.supply,'0/5/20');
+ const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('3 unités dans le secteur',E.queue(Sx,'me',2).length+E.supportsAt(Sx,2).length,3);check('ravitaillement payé',Sx.supply,12);
+ const f=E.sectorForecast(Sx,2);check('aperçu = résultat',pv.strike,f.strike);check('combos de la main : trio, armes, appui, couleur, assaut',f.combos.atk.map(k=>k.id).sort().join(),'appui,armes,assaut,couleur,trio');
+ Sx.hand.push(E.mkCard('tireurs','J'),E.mkCard('tireurs','J'));E.playGroup(Sx,[Sx.hand[1],Sx.hand[2]],2);check('bataillon dès 5 unités',E.sectorCombos(Sx,2).list.atk.some(k=>k.id==='bataillon'),true);}
 // annuler, réserve, défausse
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')];const sn=E.snapshotState(S);E.placeCard(S,0,1);E.restoreState(S,sn);check('annulé',S.units.length+'/'+S.hand.length,'0/1');
 S=mk();const k0=S.hand[0];E.toggleKeep(S,0);E.toggleKeep(S,1);check('épingle 3 refusée',E.toggleKeep(S,2),false);S.supply=5;E.endTurn(S);check('carte gardée',S.hand.includes(k0),true);check('ravitaillement reporté',S.supply>=E.BASE_SUPPLY+E.MAX_CARRY,true);
