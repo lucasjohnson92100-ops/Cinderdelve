@@ -9565,7 +9565,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     sv_ban: { name: "Parchemin d'exil", desc: "+1 bannissement pour les choix de niveau", icon: "scroll", base: 12, step: 4,
       block: function () { return null; }, apply: function () { state.survBanLeft = (state.survBanLeft || 0) + 1; } }
   };
-  var ultNames = null;
+  var ultNames = null, scyAnims = [];
   var survBooms = [];
   var SURV_CLASS_DESC = {
     warrior: "Robuste (+4 PV) : ses coups repoussent et portent plus loin",
@@ -9931,7 +9931,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (survNearEnemies(3.6 * ar).length) {
           state.xScT = Math.max(1.6, 3.2 - 0.2 * SW.scythe); var sr = 2.6 * ar, sdm = (1 + 0.12 * (SW.scythe - 1)) * 1.6; dmgSrc = survWName("scythe");
           for (var q = 0; q < 4; q++) AFX.add("slash", p.vx + Math.cos(q * 1.571 + 0.4) * sr * 0.55, p.vy + Math.sin(q * 1.571 + 0.4) * sr * 0.55, 420, { R: sr * 0.7, pal: P.cheval, flip: q % 2, delay: q * 60 });
-          AFX.add("shock", p.vx, p.vy, 520, { R: sr, pal: P.cheval }); sfx("slash");
+          AFX.add("shock", p.vx, p.vy, 520, { R: sr, pal: P.cheval }); sfx("slash"); scyAnims.push({ t0: now(), dur: 420, R: sr, a0: Math.random() * 6.283 });
           survNearEnemies(sr).forEach(function (o) { if (dmgEnemy(o, survWDmg(sdm), "La faux fauche")) return; survPush(o, p.vx, p.vy, 0.7); });
           if (mode !== "play") return;
         } else state.xScT = 0.3;
@@ -11112,8 +11112,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function pL() { return (state && state.farmPwLv) || 1; }
   function pS() { return 1 + 0.15 * (pL() - 1); }
   function pEvo() { return pL() >= 4; }
-  var PW_NERF = {"ane":0.6,"bouc":0.63,"chat":1.6,"cochon":0.63,"coq":0.9,"dinde":0.6,"lapin":0.9,"meuh":0.8,"oie":1.6,"paon":1.6,"taureau":0.85}, ULT_NERF = {"ane":1.28,"bouc":0.69,"canard":0.85,"chat":0.24,"cheval":0.69,"cochon":0.8,"cocotte":1.36,"coq":0.85,"dinde":0.47,"lama":1.6,"meuh":0.8,"mouton":0.4,"oie":1.6};
-  function fmDmg(m) { m *= PW_NERF[state.variant] || 1; return Math.max(2, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * m * (1 + 0.25 * (pL() - 1)) * (state.farmPwMul || 1))); }
+  var PW_NERF = {"ane":0.6,"bouc":0.63,"chat":1.6,"cochon":0.63,"coq":0.9,"dinde":0.6,"lapin":0.9,"meuh":0.8,"oie":1.6,"paon":1.6,"taureau":0.85}, ULT_NERF = {"ane":1.28,"bouc":0.689,"canard":0.849,"chat":0.24,"cheval":0.689,"cochon":0.8,"cocotte":1.36,"coq":0.849,"dinde":0.469,"lama":1.6,"meuh":0.8,"mouton":0.4,"oie":1.6};
+  function fmDmg(m) { m *= (PW_NERF[state.variant] || 1) * 0.7; return Math.max(2, Math.round((state.atk * 3 + 4 + 2 * (state.survCycle || 0)) * m * (1 + 0.25 * (pL() - 1)) * (state.farmPwMul || 1))); }
   function fmNear(r, cx, cy) {
     cx = cx == null ? p.vx : cx; cy = cy == null ? p.vy : cy;
     return enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - cx, e.vy - cy) < r; });
@@ -11339,7 +11339,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       } }
   };
   /* ---- ULTIMES propres à chaque animal ---- */
-  function ulD(m) { m *= ULT_NERF[state.variant] || 1; return Math.max(3, Math.round((state.atk * 5 + 6 + 3 * (state.survCycle || 0)) * m)); }
+  function ulD(m) { m *= (ULT_NERF[state.variant] || 1) * 0.65; return Math.max(3, Math.round((state.atk * 5 + 6 + 3 * (state.survCycle || 0)) * m)); }
   function ulAll(r, m, verb, kb, stun, slow) {
     fmNear(r).forEach(function (e) { fmHit(e, ulD(m), verb, kb, stun); if (slow && e.hp > 0) { e.slowT = slow; e.slowF = 0.3; } });
   }
@@ -11809,9 +11809,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function famCounts() {
     var t = now();
-    if (state.famC && t - (state.famT || 0) < 600) return state.famC;
+    if (state.famC && t - (state.famCT || 0) < 600) return state.famC;
     var c = {}; survActiveIds().forEach(function (id) { var f = id.charAt(0) === "w" ? FAM_W[id.slice(2)] : FAM_S[id.slice(2)]; if (f) c[f] = (c[f] || 0) + 1; });
-    state.famC = c; state.famT = t; return c;
+    state.famC = c; state.famCT = t; return c;
   }
   function famBonus(n) { return n >= 4 ? 0.45 : n >= 3 ? 0.3 : n >= 2 ? 0.15 : 0; }
   function famMul(src) { var f = famOfSrc(src); return f ? 1 + famBonus(famCounts()[f] || 0) : 1; }
@@ -12091,10 +12091,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!inb(ex, ey) || g[ey][ex] !== 0) { var fb2 = survFreeNear(p.x, p.y - 3); ex = fb2[0]; ey = fb2[1]; }
     var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true; e.scale = (e.scale || 1) * 1.85; e.r += 0.35; /* un boss doit en imposer : bien plus gros qu'un monstre */
     var cyc = survCyc();
-    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.8 + cyc * 0.6)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
+    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.1 + cyc * 0.35)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
-      e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.3 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.5; e.r += 0.25;
+      e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.1 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.5; e.r += 0.25;
       var lti = LT.info(state.survMapTheme || 0);
       if (lti) { e.skin = "lt_" + lti.id; e.title = lti.name; if (lti.big) { e.hp = e.maxHp = Math.round(e.hp * 1.3); e.scale *= 1.15; } }
       shake(6, 600);
@@ -14989,6 +14989,18 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.globalAlpha = 1 - rk;
       ctx.strokeStyle = rg.c; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(rg.x * TILE + 8, rg.y * TILE + 8, 6 + rk * (rg.R || 22), 0, Math.PI * 2); ctx.stroke();
+    }
+    /* faux de moisson : une grande faux visible qui fauche un tour complet autour du héros */
+    for (i = scyAnims.length - 1; i >= 0; i--) {
+      var sa = scyAnims[i], sk = (t - sa.t0) / sa.dur;
+      if (sk >= 1) { scyAnims.splice(i, 1); continue; }
+      if (sk < 0) continue;
+      var sang = sa.a0 + sk * 6.9, sL = sa.R * TILE * 0.95, scx = p.vx * TILE + 8, scy2 = p.vy * TILE + 8, sal = sk < 0.8 ? 1 : (1 - sk) / 0.2;
+      ctx.save(); ctx.translate(scx, scy2);
+      ctx.globalAlpha = 0.55 * sal; ctx.strokeStyle = "#e8f0ff"; ctx.lineWidth = 3.2; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(0, 0, sL * 0.82, sang - 1.5, sang); ctx.stroke();
+      ctx.globalAlpha = 0.25 * sal; ctx.lineWidth = 6; ctx.strokeStyle = "#9fd0ff"; ctx.beginPath(); ctx.arc(0, 0, sL * 0.82, sang - 1.2, sang); ctx.stroke();
+      ctx.globalAlpha = sal; ctx.rotate(sang); ctx.imageSmoothingEnabled = false; ctx.drawImage(loadIcon("pi_scythe"), 0, -sL * 0.62, sL * 1.02, sL * 1.02);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     var sm = smallScr(); if (sm) ctx.globalAlpha = 0.55;
