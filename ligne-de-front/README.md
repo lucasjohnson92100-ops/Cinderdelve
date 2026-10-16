@@ -7,6 +7,10 @@ Vous déployez des groupes d'unités dans les secteurs d'un plateau simple (sans
 
 Ouvrez `index.html` dans un navigateur (aucune installation). Les polices viennent de Google Fonts.
 
+## Mode paysage
+
+Tout le jeu se joue téléphone couché. En bataille, **votre jeu est à gauche** (les secteurs, puis votre main en dessous) et **la blinde à battre est à droite** (le QG ennemi, ses effets et sa riposte, puis les totaux, votre QG, les conseils et « Fin du tour »). La carte de campagne se lit de gauche à droite, de la plage du débarquement à la capitale ennemie ; l'intendance range ses étagères à gauche et la zone d'achat à droite. Un téléphone tenu en portrait affiche « Tournez votre téléphone ».
+
 ## Règles en bref
 
 - **Paquet de départ court : 15 cartes** (6 tireurs, 2 jeeps, 1 blindé, 2 destroyers, 1 chasseur, et 3 ordres : barrage, fumigènes, ravitaillement), plus une **doctrine** choisie parmi 3 au début de la campagne, qui ajoute 3 cartes : Blitz (half-track, jeeps, assaut), Artillerie (artillerie, observateurs, reconnaissance), Défense (mitrailleuse, génie, infirmiers), Commandos (2 parachutistes, sabotage) ou Marine (croiseur, sous-marin, débarquement).
@@ -39,7 +43,7 @@ Ouvrez `index.html` dans un navigateur (aucune installation). Les polices vienne
 - **Événements de campagne** : nœuds « ? » sur la carte (convoi, déserteurs, pont, correspondant de guerre, parachutage, hôpital, espion) avec un choix et ses conséquences (renseignement, ravitaillement, défausses, combat plus dur…).
 - **Sauvegarde automatique** : la campagne est enregistrée à chaque écran (carte, bataille, intendance, récompense, événement) ; le bouton **Continuer** de l'écran titre la reprend.
 - **Tutoriel guidé** : des bulles accompagnent les deux premières batailles (déploiement, terrains, ordres, défausse, fin de tour) ; on peut les passer.
-- **Écran de combat** : il tient entièrement dans l'écran en portrait ; les cartes de la main sont en éventail, toutes visibles sans défiler.
+- **Écran de combat** : il tient entièrement dans l'écran en paysage (testé de 667×375 à 1366×1024) ; les cartes de la main sont en éventail, toutes visibles sans défiler.
 - **Annuler** : défait la dernière action (placement, fusion).
 - **Butin de guerre** : après chaque bataille, du butin ($) à dépenser à l'intendance.
 - **Intendance façon Balatro** : tout tient sur un écran, sans défilement. Trois étagères de tuiles (recrues et ordres ; jokers et manuels tactiques ; caisses et services). **Toucher** une tuile affiche son détail, **la faire glisser vers la zone d'achat** l'achète (la zone s'illumine, et refuse si le butin manque). Les services (entraîner, ravitaillement, infirmerie, réformer) se touchent directement.

@@ -1304,6 +1304,114 @@ button.tag { cursor: pointer; padding-left: 16px; } button.tag:disabled { opacit
 @media (max-height: 700px) { .enhq .enfort { display: none; } .enhq .fxchip b { display: none; } .enhq .enrow { flex-wrap: nowrap; } .totals { font-size: .64rem; padding: 1px 6px; } .totals .t-strike b { font-size: .85rem; } .bgrid.front .gc.head { min-height: 14px; } }
 @media (max-height: 600px) { .totals .t-def { display: none; } }
 @media (max-height: 700px) { .bgrid.front { --suprow: .5fr; } }
+/* ==== Mode paysage : tout le jeu se joue téléphone couché ==== */
+#app:has(.btl) { max-width: 1400px; padding: 0; height: 100dvh; }
+.btl.land { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)); }
+.btl.land .bt-head { gap: 5px; min-width: 0; }
+.btl.land .bt-head .objline { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .68rem; padding: 2px 8px; }
+.btl.land .bt-head .jbar { flex: none; }
+.btl.land .board { display: grid; grid-template-columns: minmax(0, 1fr) var(--rw); grid-template-rows: auto auto auto minmax(0, 1fr); gap: 4px 6px; min-height: 0; flex: none; }
+.btl.land .board > .bgrid { grid-column: 1; grid-row: 1 / -1; min-height: 0; height: 100%; }
+.btl.land .board > .enhq { grid-column: 2; grid-row: 1; }
+.btl.land .board > .totals { grid-column: 2; grid-row: 2; flex-direction: column; gap: 1px; }
+.btl.land .board > .hq.me { grid-column: 2; grid-row: 3; align-self: start; }
+.btl.land .enhq { flex-wrap: wrap; align-items: center; padding: 4px 8px 6px; }
+.btl.land .enhq .enfort { width: 54px; height: 62px; }
+.btl.land .bt-bottom { display: grid; grid-template-columns: minmax(0, 1fr) var(--rw); gap: 6px; align-items: end; min-height: 0; }
+.btl.land .bt-side { display: grid; gap: 4px; min-width: 0; }
+.btl.land .bt-hint { min-height: 0; font-size: .7rem; line-height: 1.2; padding: 3px 7px; }
+.btl.land .bt-hint .ht { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.btl.land .bt-hint .fore { font-size: .64rem; }
+.btl.land .dock { display: grid; grid-template-columns: 1fr auto auto; gap: 4px; padding: 4px 6px; }
+.btl.land .dock #bend, .btl.land .dock [data-act=discardgo] { grid-column: 1 / -1; padding: 6px 10px; font-size: .9rem; }
+.btl.land .dock .pill { min-height: 28px; padding: 2px 9px; }
+.btl.land .hand.fan { align-self: end; }
+.btl.land ~ .coach, .coach.land { left: 12px; right: calc(var(--rw, 260px) + 26px); max-width: none; margin: 0; font-size: .82rem; }
+.btl.land .treport { top: 18%; }
+/* téléphone tenu en portrait : on demande de le tourner */
+.rotate { display: none; }
+@media (orientation: portrait) and (max-width: 900px) {
+  .rotate { display: grid; position: fixed; inset: 0; z-index: 999; place-items: center; align-content: center; gap: 18px; padding: 24px; text-align: center; background: linear-gradient(180deg, #223042, #161d27); color: #f6ecd2; font-family: var(--font-display); }
+  .rotate .ph { width: 70px; height: 110px; border: 5px solid #f6ecd2; border-radius: 14px; position: relative; animation: rotph 2.4s ease-in-out infinite; }
+  .rotate .ph::after { content: ""; position: absolute; left: 50%; bottom: 6px; width: 16px; height: 4px; margin-left: -8px; border-radius: 4px; background: #f6ecd2; }
+  .rotate b { font-size: 1.3rem; } .rotate span { font-family: inherit; font-size: .95rem; opacity: .85; max-width: 300px; }
+}
+@keyframes rotph { 0%, 20% { transform: rotate(0); } 50%, 80% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+/* paysage, placement final : à gauche le plateau puis la main ; à droite la blinde, les totaux, votre QG, les conseils et les commandes */
+.btl.land { grid-template-columns: minmax(0, 1fr) var(--rw); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; column-gap: 8px; row-gap: 4px; }
+.btl.land .board, .btl.land .bt-bottom, .btl.land .bt-side { display: contents; }
+.btl.land > .bt-head { grid-column: 1 / -1; grid-row: 1; }
+.btl.land .board > .bgrid { grid-column: 1; grid-row: 2 / 6; height: auto; min-height: 0; }
+.btl.land .board > .enhq { grid-column: 2; grid-row: 2; }
+.btl.land .board > .totals { grid-column: 2; grid-row: 3; }
+.btl.land .board > .hq.me { grid-column: 2; grid-row: 4; align-self: start; }
+.btl.land .bt-hint { grid-column: 2; grid-row: 5; align-self: stretch; align-items: flex-start; overflow: hidden; }
+.btl.land .hand.fan { grid-column: 1; grid-row: 6; }
+.btl.land .dock { grid-column: 2; grid-row: 6; align-self: end; }
+.btl.land .strikefly { left: 38%; }
+.btl.land .enstrike { left: 38%; top: 30%; }
+.btl.land .enhq .enfort { display: block; } .btl.land .enhq .fxchip b { display: inline; } .btl.land .enhq .enrow { flex-wrap: wrap; }
+.btl.land .totals .t-def { display: inline-flex; } .btl.land .totals { font-size: .7rem; padding: 3px 8px; } .btl.land .totals .t-strike b { font-size: 1rem; }
+.btl.land .bgrid.front { --suprow: .7fr; }
+/* carte de campagne en paysage */
+#app:has(.mapscreen.h) { max-width: none; padding: 0; height: 100dvh; overflow: hidden; }
+.mapscreen.h { display: grid; grid-template-columns: 210px minmax(0, 1fr); height: 100dvh; gap: 0; }
+.mapbar.side { position: static; margin: 0; height: 100dvh; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-bottom: 0; border-right: 2px solid #0d1218; overflow-y: auto; }
+.mapbar.side .mrow { display: flex; gap: 6px; align-items: center; } .mapbar.side .mstep { margin-left: 0; }
+.mapbar.side .hqbar { flex-wrap: wrap; }
+.mapbar.side .mb3 .jbar { flex-wrap: wrap; }
+.mapbar.side .mhint { text-align: left; margin-top: auto; }
+.mapscroll { overflow-x: auto; overflow-y: hidden; height: 100dvh; padding: 8px 0; -webkit-overflow-scrolling: touch; }
+.map.h { margin: 0 12px; flex: none; }
+.map .mreg.h { top: auto; bottom: 4px; height: 18px; }
+.map .mreg.h i { transform: none !important; writing-mode: horizontal-tb !important; }
+.map.h .node .lb { white-space: nowrap; }
+/* paysage : base commune à tous les écrans */
+.topbar { position: fixed; top: 6px; right: 8px; margin: 0; z-index: 60; max-width: none; }
+.topbar .pill { font-size: .72rem; padding: 1px 9px; opacity: .9; }
+body:has(.mapscreen.h), body:has(.btl), body:has(.shop2) { padding: 0; }
+body:has(.mapscreen.h) .topbar { top: auto; bottom: 8px; right: auto; left: 10px; }
+#app { max-width: 1000px; }
+.briefing:has(.doctrine) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.briefing:has(.doctrine) > :not(.doctrine) { grid-column: 1 / -1; }
+.briefing .doctrine .dchips { flex-wrap: wrap; }
+.modal .box { max-width: min(860px, 94vw); max-height: 94dvh; }
+.modal .box > ol { columns: 2 300px; column-gap: 22px; }
+.modal .box > ol > li { break-inside: avoid; }
+@media (max-height: 520px) {
+  html { font-size: 14px; } body { font-size: 14px; padding: 6px 12px; }
+  .stack { gap: 7px; } .panel { padding: 7px 11px; } .hd { min-height: 0; }
+  .ribbon { font-size: .95rem; padding: 3px 12px; }
+  .btn { padding: 8px 16px; font-size: 1rem; }
+  .title h1 { font-size: clamp(2rem, 13vh, 3.6rem); margin: 4px 0; }
+  .title .tag { font-size: .85rem; } .title .armies { display: none; } .title .parade { display: none; }
+  .modal .box { padding: 10px 14px; gap: 8px; } .modal .box > ol { font-size: .86rem; }
+  .cardrow { gap: 10px; }
+}
+/* paysage : titre plein écran, carte */
+body:has(.title) { padding: 0; overflow: hidden; }
+#app:has(.title) { max-width: none; }
+.title { margin: 0 !important; min-height: 100dvh !important; height: 100dvh; box-sizing: border-box; justify-content: center; padding: 3vh 18px 3vh !important; }
+.mapbar.side { padding-bottom: 46px; }
+.mapbar.side .ribbon { max-width: none; white-space: nowrap; }
+/* intendance en paysage : étagères à gauche, achat et commandes à droite */
+#app:has(.shop2) { max-width: none; }
+.shop2.land { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) 240px; grid-template-rows: minmax(0, 1fr); gap: 8px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); }
+.shop2.land .s2-shelves { grid-column: 1; grid-row: 1; display: grid; grid-template-rows: minmax(0, 1.3fr) minmax(0, 1.05fr) minmax(0, .95fr); gap: 6px; min-height: 0; order: 1; }
+.shop2.land .s2-side { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 6px; min-height: 0; order: 2; }
+.shop2.land .s2-buy { flex: 1; min-height: 70px; flex-direction: column; justify-content: center; text-align: center; }
+.shop2.land .s2-buy .bz-tx span { display: block; }
+.shop2.land .s2-tip { display: block; font-size: .72rem; }
+.shop2.land .s2-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.shop2.land .s2-foot .btn { grid-column: 1 / -1; }
+.shop2.land .s2-top { flex-wrap: wrap; }
+.shop2.land .s2-jok .jbar { flex-wrap: wrap; }
+.shop2.land .s2-top { padding-right: 100px; }
+@media (max-height: 520px) { .cardrow { zoom: .8; } .officers { zoom: .9; } }
+.btl.land .enhq .enmain { min-width: 0; flex: 1 1 110px; } .btl.land .enhq .enl { flex-wrap: wrap; row-gap: 0; } .btl.land .enhq .enl b { white-space: normal; }
+.btl.land { overflow: hidden; }
+.btl.land .strikefly { left: 30%; bottom: 35%; animation: strikeright .5s ease-in forwards; }
+@keyframes strikeright { from { left: 30%; bottom: 35%; } to { left: calc(100% - var(--rw) / 2 - 40px); bottom: 78%; transform: translateX(-50%) scale(.7); opacity: .9; } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -1345,6 +1453,7 @@ button.tag { cursor: pointer; padding-left: 16px; } button.tag:disabled { opacit
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="rotate" aria-live="polite"><div class="ph"></div><b>Tournez votre téléphone</b><span>Ligne de Front se joue en mode paysage : votre plateau à gauche, la blinde à battre à droite.</span></div>
 <div id="app"></div>
 
 <script id="paint">
@@ -2690,8 +2799,92 @@ function mapTerrainSVG(W, total, yL, H, nodesXY) {
   }
   return `<svg class="mapterr" viewBox="0 0 ${W} ${total}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
 }
+// ---- Carte de campagne en paysage : de la plage (à gauche) à la capitale ennemie (à droite) ----
+function mapTerrainH(total, Hh, xL, Wl, nodesXY) {
+  const near = (x, y, dx = 46, dy = 42) => nodesXY.some(p => Math.abs(p.x - x) < dx && Math.abs(p.y - y) < dy);
+  const xL0 = l => xL(l) - Wl / 2, xR = l => xL(l) + Wl / 2;
+  let s = `<rect width="${total}" height="${Hh}" fill="#8cc35a"/>`;
+  // champs en damier bordés de haies
+  const cw = 58, ch = 50, cols = ['#9fcf63', '#b8d46c', '#d8c46e', '#86bd55', '#a9cd62', '#cdbd66'];
+  for (let x = xR(0) - 10; x < xL0(8); x += cw) for (let y = -10; y < Hh; y += ch) {
+    const k = hash2(Math.round(x), Math.round(y), 2), j = (a, b) => (hash2(a, b, 5) - 0.5) * 10;
+    const pts = [[x + j(x, y), y + j(y, x)], [x + cw + j(x + 1, y), y + j(y, x + 1)], [x + cw + j(x + 2, y), y + ch + j(y + 1, x)], [x + j(x + 3, y), y + ch + j(y + 2, x)]];
+    s += `<path d="M${pts.map(p => p.map(v => v.toFixed(1)).join(' ')).join(' L')} Z" fill="${cols[Math.floor(k * cols.length)]}" stroke="#4f8a37" stroke-width="3" stroke-linejoin="round" opacity="${x > xL0(1) && x < xR(3) ? 1 : 0.75}"/>`;
+    if (k > 0.55 && k < 0.8) for (let r = 0; r < 4; r++) s += `<path d="M${x + 8} ${y + 8 + r * 9} h${cw - 16}" stroke="rgba(110,80,30,.22)" stroke-width="2"/>`;
+  }
+  // mer et plage à gauche (départ), avec écume et péniches
+  const beach = xR(0) - 30, sea = beach - 34;
+  s += `<path d="M${beach} 0 Q${beach + 12} ${Hh * 0.3} ${beach + 2} ${Hh * 0.55} T${beach + 8} ${Hh} H0 V0 Z" fill="#ecd59a" stroke="#c9a85e" stroke-width="3"/>`;
+  s += `<path d="M${sea} 0 Q${sea + 10} ${Hh * 0.25} ${sea} ${Hh * 0.5} T${sea + 4} ${Hh} H0 V0 Z" fill="#3f9bdc"/><path d="M${sea} 0 Q${sea + 10} ${Hh * 0.25} ${sea} ${Hh * 0.5} T${sea + 4} ${Hh}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+  for (let i = 0; i < 6; i++) { const y = 20 + i * (Hh - 40) / 5, x = sea - 18 - (i % 2) * 12; s += `<path d="M${x - 10} ${y} q5 -5 10 0 t10 0" fill="none" stroke="#bfe5fb" stroke-width="2.4" stroke-linecap="round"/>`; }
+  [[0.2, 22], [0.78, 30]].forEach(([fy, dx]) => { const y = Hh * fy, x = sea - dx; s += `<g transform="translate(${x} ${y})"><path d="M-14 0 H14 L10 9 H-10 Z" fill="#7d8692" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/><rect x="-10" y="-5" width="20" height="6" rx="2" fill="#6c7480" stroke="#1b2540" stroke-width="1.6"/></g>`; });
+  // le fleuve qui traverse la carte à l'étape du pont
+  const rx = xL(4);
+  const river = `M${rx + 18} -10 C${rx - 26} ${Hh * 0.2} ${rx + 40} ${Hh * 0.35} ${rx + 6} ${Hh * 0.5} S${rx - 30} ${Hh * 0.8} ${rx + 10} ${Hh + 10}`;
+  s += `<path d="${river}" fill="none" stroke="#e8d79f" stroke-width="40" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#3f9bdc" stroke-width="28" stroke-linecap="round"/><path d="${river}" fill="none" stroke="#8fd0f5" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 14"/>`;
+  // forêts des Ardennes et bosquets épars
+  for (let i = 0; i < 60; i++) { const fx = xL0(5) + hash2(i, 3, 1) * (xR(6) - xL0(5)), fy = hash2(i, 9, 2) * Hh; if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.3 + hash2(i, 1, 4) * 0.5); }
+  for (let i = 0; i < 22; i++) { const fx = xL0(1) + hash2(i, 5, 7) * (xR(3) - xL0(1)), fy = hash2(i, 2, 8) * Hh; if (!near(fx, fy)) s += TREE(fx.toFixed(1), fy.toFixed(1), 1.05); }
+  // ligne fortifiée : barbelés et dents de dragon
+  const fx = xR(7) + 8;
+  s += `<path d="M${fx} 0 ${Array.from({ length: 16 }, (_, i) => `L${fx + (i % 2 ? -6 : 6)} ${(i + 1) * Hh / 16}`).join(' ')}" fill="none" stroke="#5a4a3a" stroke-width="2"/>`;
+  for (let y = 8; y < Hh; y += 20) if (!near(fx - 14, y, 30, 34)) s += `<path d="M${fx - 22} ${y + 6} L${fx - 10} ${y} L${fx - 22} ${y - 6} Z" fill="#c9c3b2" stroke="#1b2540" stroke-width="1.6" stroke-linejoin="round"/>`;
+  // capitale ennemie : immeubles en ruine à droite
+  s += `<rect x="${xL0(8) + 6}" y="0" width="${total}" height="${Hh}" fill="#b8b2a2" opacity=".55"/>`;
+  for (let i = 0; i < 12; i++) {
+    const x = xL0(8) + 10 + hash2(i, 4, 4) * (Wl - 30), h = 22 + hash2(i, 6, 1) * 34, y = (i * Hh) / 11 - 10 + hash2(i, 8, 3) * 10, w = 18 + hash2(i, 2, 2) * 12;
+    if (near(x + w / 2, y + h / 2, 50, 50)) continue;
+    s += `<path d="M${x} ${y + h} V${y + 6} L${x + w * 0.35} ${y} L${x + w * 0.6} ${y + 8} L${x + w} ${y + 3} V${y + h} Z" fill="${['#9b9484', '#8a8474', '#a9a291'][i % 3]}" stroke="#1b2540" stroke-width="2" stroke-linejoin="round"/>`;
+    for (let r = 0; r < 3; r++) s += `<rect x="${x + 4}" y="${y + 12 + r * 9}" width="4" height="4" fill="#4a4639"/><rect x="${x + w - 9}" y="${y + 14 + r * 9}" width="4" height="4" fill="#4a4639"/>`;
+  }
+  return `<svg class="mapterr" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
+}
+function toMapH() {
+  clearCoach();
+  const L = C.map, Wl = 150, LEFT = 70, total = LEFT + L.length * Wl + 50, reach = mapReach(), Hh = Math.max(240, window.innerHeight - 16);
+  const xL = l => LEFT + l * Wl + Wl / 2;
+  const yP = n => ((n.i + 1) / (L[n.layer].length + 1)) * Hh;
+  const px = n => ({ x: xL(n.layer), y: yP(n) });
+  C.trail = C.trail || {};
+  let edges = '';
+  L.forEach((layer, l) => layer.forEach(n => n.next.forEach(j => {
+    const a = px(n), b = px(L[l + 1][j]);
+    const taken = C.trail[l] === n.i && (C.trail[l + 1] === j || (C.pos && C.pos.layer === l + 1 && C.pos.i === j));
+    const open = C.pos ? C.pos.layer === l && C.pos.i === n.i : false;
+    const d = `M${a.x} ${a.y.toFixed(1)} C${a.x + Wl * 0.5} ${a.y.toFixed(1)} ${b.x - Wl * 0.5} ${b.y.toFixed(1)} ${b.x} ${b.y.toFixed(1)}`;
+    edges += `<path d="${d}" class="road-o"/><path d="${d}" class="road-i ${taken ? 'taken' : ''} ${open ? 'open' : ''}"/>`;
+  })));
+  const nodesXY = L.flat().map(px);
+  const regions = MAP_REGIONS.map(([a, b, name]) => `<span class="mreg h" style="left:${xL(a) - Wl / 2 + 4}px;width:${(b - a + 1) * Wl - 8}px"><i>${name}</i></span>`).join('');
+  const nodes = L.flatMap(layer => layer.map(n => {
+    const p = px(n), isReach = n.layer === reach.layer && reach.idx.includes(n.i);
+    const isDone = C.trail[n.layer] === n.i && !(C.pos && C.pos.layer === n.layer && C.pos.i === n.i);
+    const isCur = C.pos && C.pos.layer === n.layer && C.pos.i === n.i;
+    const past = C.pos ? n.layer <= C.pos.layer && !isCur && !isDone : false;
+    const cls = ['node', n.type, isReach ? 'reach' : '', isDone ? 'done' : '', isCur ? 'cur' : '', past ? 'past' : '', !isReach && !isDone && !isCur && !past ? 'later' : ''].join(' ');
+    const tag = n.obj && OBJ_SHORT[n.obj.type] ? `<span class="otag">${OBJ_SHORT[n.obj.type]}</span>` : n.type === 'elite' ? '<span class="otag el">Élite</span>' : '';
+    return `<button class="${cls}" data-node="${n.layer}-${n.i}" style="left:${p.x}px;top:${p.y}px" ${isReach ? '' : 'tabindex="-1"'}><span class="ic">${nodeIcon(n)}</span>${tag}<span class="lb">${n.name}</span></button>`;
+  })).join('');
+  const cur = C.pos ? px(C.map[C.pos.layer][C.pos.i]) : { x: LEFT - 22, y: Hh / 2 };
+  const step = C.pos ? Math.min(9, C.pos.layer + 2) : 1, hqPct = (C.hq / C.hqMax) * 100;
+  app.innerHTML = `<div class="mapscreen h">
+    <div class="mapbar side">
+      <span class="ribbon sm">Carte du front</span>
+      <div class="mrow"><span class="mstep"><b>Étape ${step}</b>/9</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
+      <div class="hq me hqbar compact"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg><span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
+      <div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button></div>
+      ${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}
+      <div class="mhint">▶ Touchez une étape qui clignote pour avancer vers la capitale ennemie</div>
+    </div>
+    <div class="mapscroll" id="mapscroll"><div class="map h" style="width:${total}px;height:${Hh}px">${mapTerrainH(total, Hh, xL, Wl, nodesXY)}<svg class="mapsvg" viewBox="0 0 ${total} ${Hh}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${regions}${nodes}
+      <span class="armytok ${C.pos ? '' : 'atstart'}" style="left:${cur.x}px;top:${cur.y}px" aria-hidden="true">${spriteSVG('jeep', 'me', 40, 'J')}<i>Vous</i></span></div></div>
+  </div>`;
+  setTimeout(() => { const t = document.querySelector('.node.reach'), sc = document.getElementById('mapscroll'); if (t && sc) sc.scrollTo({ left: Math.max(0, t.offsetLeft - sc.clientWidth / 2), behavior: 'smooth' }); }, 60);
+  saveRun('map');
+}
 const clearCoach = () => document.querySelectorAll('.coach').forEach(x => x.remove());
 function toMap() {
+  if (window.innerWidth >= window.innerHeight) return toMapH();
   clearCoach();
   const L = C.map, H = 132, TOP = 58, total = TOP + L.length * H + 70, reach = mapReach(), W = 360;
   const yL = l => TOP + (L.length - 1 - l) * H + H / 2;
@@ -2833,11 +3026,11 @@ function showCoach() {
   document.querySelectorAll('.coach').forEach(x => x.remove()); document.querySelectorAll('.coach-hl').forEach(x => x.classList.remove('coach-hl'));
   const step = currentCoach(); if (!step) return;
   const tgt = step.sel && document.querySelector(step.sel); if (tgt) tgt.classList.add('coach-hl');
-  const box = document.createElement('div'); box.className = 'coach';
+  const box = document.createElement('div'); box.className = 'coach' + (document.querySelector('.btl.land') ? ' land' : ''); box.style.setProperty('--rw', sideW() + 'px');
   box.innerHTML = `<span class="co-tag">Conseil</span><span class="co-tx">${step.text}</span><span class="co-btns">${step.info ? '<button class="pill sm" data-act="coachok">Compris</button>' : ''}<button class="co-skip" data-act="coachoff">Passer le tutoriel</button></span>`;
   document.body.appendChild(box);
   // au-dessus de la barre de conseil (qui reste lisible), ou en haut du plateau si la bulle cacherait sa cible
-  const hint = document.getElementById('hint') || document.getElementById('hand'), top = hint ? hint.getBoundingClientRect().top : window.innerHeight - 200;
+  const land = !!document.querySelector('.btl.land'), hint = (land ? document.getElementById('hand') : document.getElementById('hint')) || document.getElementById('hand'), top = hint ? hint.getBoundingClientRect().top : window.innerHeight - 200;
   box.style.bottom = Math.max(8, window.innerHeight - top + 6) + 'px';
   if (tgt) {
     const r = tgt.getBoundingClientRect(), bx = box.getBoundingClientRect();
@@ -3082,35 +3275,37 @@ function hintText() {
   if (F.toMe > Math.ceil(F.enAtk * MIN_THROUGH)) return `<b class="advl dn">⚠ La riposte ennemie (${SWORD}${fmtN(F.enAtk)}) dépasse votre Défense (${SHIELD}${fmtN(F.def)}) : votre QG perdra ${F.toMe}.</b> Ajoutez de la Défense (mitrailleuse, blindé, chasseur, Contre-attaque) ou jouez Fumigènes.${fore}`;
   return `<b class="advl">✔ Votre Défense tient.</b> Renforcez votre frappe : posez vos cartes là où le ★ l'indique. Touchez un secteur pour son calcul.${fore}`;
 }
+// Largeur de la colonne de droite (blinde, totaux, commandes) en paysage
+const sideW = () => Math.round(Math.max(220, Math.min(340, Math.min(window.innerWidth, 1400) * 0.3)));
 function renderBattle() {
   const reserved = picked.length === 1 ? cardCost(S, picked[0]) : 0;
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
   // main en éventail : toutes les cartes sont visibles sans défiler
-  const W = Math.min(window.innerWidth, 560) - 28, H = window.innerHeight, n = S.hand.length;
-  const short = H < 700, cw = Math.round(Math.max(short ? 54 : 66, Math.min(100, W * 0.27, H * (short ? 0.09 : 0.105)))), ch = Math.round(cw * 1.28);
+  // paysage : la main occupe le bas gauche, sous votre plateau ; la colonne de droite garde la blinde et les commandes
+  const H = window.innerHeight, rw = sideW(), W = Math.min(window.innerWidth, 1400) - rw - 34, n = S.hand.length;
+  const short = H < 500, cw = Math.round(Math.max(50, Math.min(96, H * 0.17, W * 0.2))), ch = Math.round(cw * 1.28);
   const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
     const on = picked.includes(k), partner = !on && picked.length === 1 && canFuse(picked[0], k), off = !on && !partner && !canDeployNow(S, k).ok;
     const mid = (n - 1) / 2, rot = on || partner ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : partner ? -12 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
     const ds = discardSel && discardSel.includes(k);
-    return handCardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (ds ? 'dsel ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round(22 + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
+    return handCardHTML(k, (on ? 'sel ' : '') + (partner ? 'fusible ' : '') + (ds ? 'dsel ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
   }).join('');
   const dealKey = S.lvl.name + S.turn, dealNow = window.__dealKey !== dealKey; window.__dealKey = dealKey;
   const hint = hintText(), fz = pickFuse(), hasFused = picked.some(c => c.parts), one = picked.length === 1 ? picked[0] : null;
 
   const extra = hasFused ? '<button class="pill sm" data-act="split">Séparer</button>' : fz.length ? '<button class="btn go sm" data-act="fuse">Fusionner</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
-  app.innerHTML = `<div class="btl">
-    <div class="birds" aria-hidden="true"><svg viewBox="0 0 60 14" width="46"><path d="M2 8 q5 -6 10 0 q5 -6 10 0 M30 5 q4 -5 8 0 q4 -5 8 0" fill="none" stroke="#1b2540" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-    <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><span class="sp"></span>
+  app.innerHTML = `<div class="btl land" style="--rw:${rw}px">
+    <div class="bt-head"><span class="ribbon sm ${S.lvl.boss ? 'red' : ''}">${S.lvl.name}</span><span class="num tour">Tour ${S.turn}</span><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}<span class="sp"></span>
       <button class="pill sm" data-act="guide" aria-label="Lire le plateau">📖</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="deck">Paquet</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>
-    <div class="bt-info"><div class="objline sm" id="obj">${objLine()}</div>${jokerBar()}</div>
-    <div class="phase" id="phase"></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
-    <div class="bt-hint" id="hint"><span class="ht">${hint}</span>${extra}</div>
-    <div class="hand fan ${dealNow ? 'deal' : ''}" id="hand" style="height:${ch + (short ? 16 : 34)}px">${hand}</div>
+    <div class="bt-bottom">
+    <div class="hand fan ${dealNow ? 'deal' : ''}" id="hand" style="height:${ch + (short ? 18 : 24)}px">${hand}</div>
+    <div class="bt-side"><div class="bt-hint" id="hint"><span class="ht">${hint}</span>${extra}</div>
     <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried} réserve</b>` : ''}</span><span class="pips ${total > 5 ? 'two' : ''}">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes">⟲ ${S.discards}</button><button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button><button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}</div>
+    </div></div>
   </div>`;
   if (!busy && !S.over) saveRun('battle');
   if (S.turn === 1 && tutoStage() === 1 && !tutoState().guide && !busy && !document.querySelector('.modal')) { tutoMark('guide'); setTimeout(guideModal, 300); }
@@ -3783,15 +3978,17 @@ function renderShop() {
   const mans = sh.manuals.map((m, i) => { const c = COMBOS.find(x => x.id === m.id), lv = (C.comboLv || {})[m.id] || 1; return shopTile('m', i, m, `<span class="st-art st-book">📘<i>niv. ${lv + 1}</i></span><b class="st-nm">${c.name}</b>`); }).join('');
   const crates = sh.crates.map((cr, i) => { const [k, col] = CRATE_ART[cr.id]; return shopTile('k', i, cr, `<span class="st-art st-crate">${spriteSVG(k, 'me', 40, col)}</span><b class="st-nm">${COMPOS[cr.id].name.replace('Caisse ', '')}</b>`); }).join('');
   const svcs = SVC.map(v => { const pr = v.price(), ok = v.ok() && C.loot >= pr; return `<button class="ssvc" data-act="${v.act}" ${ok ? '' : 'disabled'}><span class="sv-ic">${v.ic}</span><b>${v.name}</b><span class="st-price">${v.ok() ? '$' + pr : '—'}</span></button>`; }).join('');
-  app.innerHTML = `<div class="shop2" lang="fr">
+  app.innerHTML = `<div class="shop2 land" lang="fr"><aside class="s2-side">
     <header class="s2-top"><span class="ribbon sm">Intendance</span><span class="sb-hq"><svg class="hqmini" viewBox="0 -12 40 52" aria-hidden="true">${hqArt('me', C.hq / C.hqMax)}</svg>${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></header>
     <div class="s2-jok"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div>
-    <section class="s2-shelf"><h3>Recrues et ordres</h3><div class="s2-row">${cards}</div></section>
-    <section class="s2-shelf"><h3>État-major · Manuels tactiques</h3><div class="s2-row">${joks}${mans}</div></section>
-    <section class="s2-shelf"><h3>Caisses · Services</h3><div class="s2-row six">${crates}${svcs}</div></section>
     <div class="s2-buy" id="buyzone"><span class="bz-ic">🛒</span><span class="bz-tx"><b>Zone d'achat</b><span>Glissez un article ici pour l'acheter · touchez-le pour le détail</span></span></div>
     <div class="s2-tip"><b>L'intendant :</b> ${quartermasterTip()}</div>
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouvelles recrues, jokers et manuels">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
+    </aside><div class="s2-shelves">
+    <section class="s2-shelf"><h3>Recrues et ordres</h3><div class="s2-row">${cards}</div></section>
+    <section class="s2-shelf"><h3>État-major · Manuels tactiques</h3><div class="s2-row">${joks}${mans}</div></section>
+    <section class="s2-shelf"><h3>Caisses · Services</h3><div class="s2-row six">${crates}${svcs}</div></section></div>
+
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
