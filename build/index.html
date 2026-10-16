@@ -8335,7 +8335,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var bolts = [];
   function spL(id) { return (state.spellLv && state.spellLv[id]) || 1; }
   function pick5(arr, id) { if (state && state.survival) return arr[0]; return arr[Math.min(4, spL(id) - 1)]; }
-  var castMul = 1, SURV_SP_MAX = 12, SPELL_MUL = {"barrier":[0.77,1,1],"eggs":[6,1,1],"feathers":[0.74,1,1],"manure":[0.63,1,1],"milk":[1,1,1],"pitch":[3.53,1,1],"poison":[0.76,1,1],"scare":[1,1,1],"vortex":[0.7,1,1]};
+  var castMul = 1, SURV_SP_MAX = 12, SPELL_MUL = {"barrier":[0.77,1,1],"chain":[0.811,3.326,2.898],"eggs":[3.568,0.525,0.077],"feathers":[0.439,1.359,1.603],"fire":[6,0.301,0.73],"heal":[1,1,1],"ice":[2.872,0.688,0.425],"manure":[0.53,4,2.44],"meteor":[1.227,1.238,1.259],"milk":[0.415,1.235,0.613],"pitch":[1.288,0.666,0.27],"poison":[1.244,4,0.43],"scare":[1.436,1.807,0.711],"shock":[0.232,2.452,1.574],"vortex":[0.31,1.463,3.307]};
   /* coefficients [niveaux 1-7, niveaux 8-11, niveau 12 ou évolué] issus de mesures de dégâts par seconde, pour que tous les sorts jouent dans la même fourchette */
   /* progression des sorts : la puissance moyenne suit une courbe régulière (niv. 3 = 1, +16 % par niveau, niv. 12 = 2,6, évolué = 2,9), quelle que soit la façon dont le sort gagne ses niveaux ; SPELL_MUL = [réglage du sort au niv. 3, correction niv. 8-11, correction niv. 12/évolué] */
   var SP_GLOB = 1, SP_TS = 0.16, SP_T12 = 2.6, SP_TEVO = 2.9;
@@ -9812,7 +9812,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     });
     return L;
   }
-  var WNERF = {"aura":0.9,"bees":2.11,"boom":0.24,"cleaver":1.9,"cone":1.25,"crows":1.41,"eggbomb":1.62,"hedgehog":0.43,"meteor":2.98,"mines":0.56,"orbit":0.66,"peck":1.38,"plumes":1.28,"scythe":0.72,"spikes":0.45,"storm":0.58,"trail":0.86,"turret":1.89}, WEVO = { spikes: 0.6 }, WNERFN = null;
+  var WNERF = {"acorns":1.07,"aura":0.713,"bees":5.855,"bell":1.597,"boom":0.197,"cleaver":2.057,"cone":1.641,"crows":2.615,"eggbomb":1.084,"fireworks":3.064,"frost":0.896,"gust":0.544,"haybale":1.296,"hedgehog":0.288,"leech":1.474,"lucky":0.903,"meteor":2.06,"mines":0.472,"orbit":0.471,"peck":1.201,"pillar":5.0,"plumes":3.952,"quake":0.657,"scythe":0.474,"sling":2.662,"sonar":0.552,"spikes":0.362,"storm":0.461,"summon":3.442,"thorns":2.689,"trail":1.799,"turret":5.096,"whip":0.738,"wolves":2.514}, WEVO = {"spikes":0.581,"aura":1.212,"boom":0.896,"orbit":0.945,"plumes":0.924,"storm":0.765,"summon":1.52,"wolves":1.395}, WNERFN = null;
   function survWDmg(mult) {
     if (!WNERFN) { WNERFN = {}; Object.keys(WNERF).forEach(function (k) { if (SURV_WEAPONS[k]) WNERFN[SURV_WEAPONS[k].name] = WNERF[k]; if (SURV_WEVOS[k]) WNERFN[SURV_WEVOS[k].name] = WNERF[k] * (WEVO[k] || 1); }); }
     if (!WKEYN) { WKEYN = {}; Object.keys(SURV_WEAPONS).forEach(function (k) { WKEYN[SURV_WEAPONS[k].name] = k; if (SURV_WEVOS[k]) WKEYN[SURV_WEVOS[k].name] = k; }); }
