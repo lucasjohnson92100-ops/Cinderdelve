@@ -108,3 +108,8 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Plus de types d'unités, de couleurs mixtes aux effets propres, d'officiers et d'ennemis.
 
 - **Plateau** : le tableau de jeu occupe l'essentiel de l'écran (testé jusqu'à 765×298) ; colonne de droite réduite à la blinde illustrée, aux totaux, à votre QG, au conseil et aux commandes ; menu ⋯ pour le guide, l'aide, le paquet et le son.
+
+### Illustrations et effets IA (lot 3)
+- `art/qg3.webp` : la forteresse ennemie en ruines, drapeau blanc au sommet — fin de l'assaut victorieux (zoom lent) et fond de l'écran « Butin de guerre » et de la victoire finale.
+- `art/splash.webp` (gerbes d'eau, 4 images) et `art/flak.webp` (éclats de DCA, 4 images) : la mer et le ciel ont leurs propres impacts pendant l'assaut et la riposte.
+- `art/pk_*.webp` : illustrations des 5 packs de l'intendance (reflet métallisé animé) ; un pack acheté se déchire à l'écran avant de révéler ses cartes.
