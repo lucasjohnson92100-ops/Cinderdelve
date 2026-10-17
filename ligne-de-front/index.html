@@ -2188,7 +2188,7 @@ const TYPES = {
   antichar: { cls: 'track', rng: [1, 2], fam: 'terre', land: true, name: 'Chasseur de chars', cost: 4, men: 1, dmg: 17, hpm: 12, def: 8, stam: 2, pierce: 2, kw: ['antitank', 'elan'], rar: 2, txt: 'Canon antichar : Attaque 18, Défense 8, doublée contre une Division blindée. Élan.' },
   reco: { cls: 'air', rng: [1, 3], fam: 'air', name: 'Reconnaissance', cost: 1, men: 1, dmg: 1, def: 0, stam: 3, kw: ['recon'], rar: 1, txt: "Avion d'observation en appui : avec artillerie ou navire, combo Tir guidé (Attaque ×1,5). 3 tours." },
   // ---- Ordres : des cartes qui ne posent pas d'unité ----
-  barrage: { order: true, tgt: 'myCol', fam: 'ordre', name: "Barrage d'artillerie", cost: 3, rar: 1, txt: "Ce tour, +20 d'Attaque de base dans un de vos secteurs (avant ses combos)." },
+  barrage: { order: true, tgt: 'myCol', fam: 'ordre', name: 'Barrage', cost: 3, rar: 1, txt: "Ce tour, +20 d'Attaque de base dans un de vos secteurs (avant ses combos)." },
   fumigenes: { order: true, tgt: 'any', fam: 'ordre', name: 'Fumigènes', cost: 1, rar: 1, txt: "Ce tour, l'Attaque ennemie est divisée par deux et l'obus annoncé est perdu." },
   ravitaillement: { order: true, tgt: 'any', fam: 'ordre', name: 'Ravitaillement', cost: 0, rar: 1, txt: '+2 ravitaillement, et piochez 1 carte.' },
   retranchement: { order: true, tgt: 'myUnit', fam: 'ordre', name: 'Retranchement', cost: 1, rar: 1, txt: "Une de vos unités terrestres : +50 % de Défense et +1 endurance." },
@@ -2259,7 +2259,7 @@ const LEVELS = [
 const HQFX = {
   bunker: { name: 'Bunker', icon: 'bunker', min: 1, txt: "Fortifié : chaque secteur ne fait que 70 % de sa frappe. Le génie et les parachutistes ignorent cette protection dans leur secteur." },
   panzer: { name: 'Division blindée', icon: 'panzer', min: 2, txt: "Attaque ennemie +30 %. Vos chasseurs de chars ont Attaque ×2." },
-  artillerie: { name: 'Artillerie lourde', icon: 'howitzer', min: 2, txt: "Chaque tour, un obus vise un secteur annoncé (◎) : ses unités perdent 1 endurance. Les fumigènes ou un chasseur l'interceptent." },
+  artillerie: { name: 'Obusiers', icon: 'howitzer', min: 2, txt: "Chaque tour, un obus vise un secteur annoncé (◎) : ses unités perdent 1 endurance. Les fumigènes ou un chasseur l'interceptent." },
   mines: { name: 'Champs de mines', icon: 'mgnest', min: 1, txt: "Un secteur est miné (☠) : la prochaine unité posée là perd 1 endurance. Le génie le déminé en y entrant." },
   snipers: { name: "Tireurs d'élite", icon: 'sniper', min: 1, txt: "Fin de chaque tour : votre unité terrestre la plus forte perd 1 endurance de plus." },
   nids: { name: 'Nids de mitrailleuses', icon: 'mgnest', min: 2, txt: "Votre infanterie fait −25 % d'Attaque. Les véhicules ne sont pas gênés." },
@@ -5100,7 +5100,7 @@ const HELP_PAGES = () => [
   { t: 'Ordres et effets du QG', l: [
     '<b>Ordres</b> (cartes blanches) : Barrage +20 Attaque · Assaut ×1,5 · Contre-attaque (Défense ×1,5) · Fumigènes (riposte ÷2) · Retranchement · Relève · Repli · Ravitaillement · Débarquement · Sabotage (−8 % au QG).',
     '<b>Bombardier</b> : frappe aussitôt le QG ennemi.',
-    '<b>Effets du QG</b> (annoncés, comme les boss de Balatro) : Bunker (frappe ×0,7 sauf génie et paras), Division blindée (riposte +30 %), Artillerie lourde (obus ◎), Champs de mines (☠), Tireurs d\'élite, Nids de mitrailleuses.',
+    '<b>Effets du QG</b> (annoncés, comme les boss de Balatro) : Bunker (frappe ×0,7 sauf génie et paras), Division blindée (riposte +30 %), Obusiers (obus ◎), Champs de mines (☠), Tireurs d\'élite, Nids de mitrailleuses.',
     '<b>Boss</b> : Le Mammouth (seuil de blindage par secteur), Train blindé (un secteur coupé 🚂), Batterie côtière (navires −50 %).'] },
   { t: 'La campagne', l: [
     `<b>20 blindes</b> à vaincre pour gagner, par manches de 4 : Petite, Moyenne, Grosse blinde, puis un <b>Boss</b>. Chaque blinde est plus forte que la précédente.`,
