@@ -129,3 +129,8 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Chasseur : piqué, éclairs des mitrailleuses d'aile (`art/wingmuz.webp`), balles traçantes, gerbes d'impacts au sol sur le QG (`art/strafe.webp`, 4 images), puis pose « roquettes » (`art/rkt_chasseur.webp`) et deux roquettes peintes (`art/rocket.webp`) qui explosent.
 - Reconnaissance : nouvel avion à aile haute (`art/idle_recon.webp`), photo au flash (`art/fire_recon.webp`, `art/flash.webp`) et réticule rouge qui marque la cible.
 - Bombardier : à la pose, il traverse l'écran au-dessus du QG ennemi et largue 4 bombes peintes (`art/bomb.webp`) qui explosent en tapis, avec secousse.
+
+### Engins terrestres animés (IA)
+- Chars et chasseurs de chars : recul, onde de choc à la bouche, nuage de poussière des chenilles (`art/dust.webp`, 4 images), obus perforant traçant, gerbe d'étincelles et explosion sur le QG.
+- Artillerie : recul appuyé, bouche à feu levée, deux obus en cloche qui soulèvent la terre (`art/earth.webp`, 4 images : éclair, gerbe de terre, colonne de débris, cratère fumant).
+- Jeeps et half-tracks : avancée saccadée en mitraillant, traçantes et impacts au sol, petite poussière derrière les roues.
