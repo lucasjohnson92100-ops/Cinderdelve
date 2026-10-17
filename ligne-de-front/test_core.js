@@ -52,7 +52,7 @@ check('usure : −1 endurance',E.units(S,'me').every(u=>u.stam===1),true);
 E.endTurn(S);check('usées après 2 tours : elles quittent le front',E.units(S,'me').length,0);
 // riposte : la Défense réduit, la fumée divise par deux
 S=blank(['mer','champ','champ','champ','champ']);E.placeUnit(S,E.mkUnit(S,'me','blinde','V'),1);
-F=E.frontForecast(S);check('Défense du blindé vert',F.def,Math.ceil(9*1.25));S.smoke=true;check('fumigènes : riposte ÷2',E.frontForecast(S).enAtk,Math.round(E.enemyAtk(S)/2));
+F=E.frontForecast(S);check('Défense du blindé vert',F.def,Math.ceil(16*1.25));S.smoke=true;check('fumigènes : riposte ÷2',E.frontForecast(S).enAtk,Math.round(E.enemyAtk(S)/2));
 // effets du QG ennemi
 S=blank(['mer','champ','champ','champ','champ']);E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),1);
 S.fx=['bunker'];check('Bunker : frappe ×0,7',E.sectorForecast(S,1).strike,14);
@@ -64,8 +64,8 @@ S=blank(['mer','champ','champ','champ','champ']);S.fx=['train'];S.plan={train:2}
 S=blank(['mer','champ','champ','champ','champ']);S.fx=['batterie'];S.hq.en=S.lvl.hq;check('batterie : dégâts ÷2 au-dessus de la moitié',E.hqTake(S,'en',10),5);S.hq.en=1;check('batterie : plus sous la moitié',E.hqTake(S,'en',10),10);
 S=blank(['mer','champ','champ','champ','champ']);S.mineCol=2;S.hand=[E.mkCard('tireurs','J'),E.mkCard('genie','J')];let mu=E.placeCard(S,0,2);check('mines : −1 endurance',mu.stam,1);check('mines déclenchées',S.mineCol,undefined);
 S.mineCol=3;const gu=E.placeCard(S,0,3);check('génie : déminé sans perte',gu.stam+'/'+S.mineCol,gu.stamMax+'/undefined');
-S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.plan={shell:1};E.endTurn(S);check('obus : −1 endurance de plus',E.units(S,'me')[0].stam,1);
-S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.plan={shell:1};S.smoke=true;E.endTurn(S);check('obus intercepté par la fumée',E.units(S,'me')[0].stam,2);
+S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.hq.en=1e6;S.plan={shell:1};E.endTurn(S);check('obus : −1 endurance de plus',E.units(S,'me')[0].stam,1);
+S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.hq.en=1e6;S.plan={shell:1};S.smoke=true;E.endTurn(S);check('obus intercepté par la fumée',E.units(S,'me')[0].stam,2);
 // tirage des effets
 check('tutoriel : aucun effet',E.pickFx({levelIdx:0,tutorial:true}).length,0);check('bataille : 1 effet',E.pickFx({levelIdx:3}).length,1);check('élite : 2 effets',E.pickFx({levelIdx:3,elite:true}).length,2);
 check('boss : son effet + 1',E.pickFx({levelIdx:3,boss:'train'}).join().startsWith('train')&&E.pickFx({levelIdx:3,boss:'train'}).length===2,true);check('boss final : 3 effets',E.pickFx({levelIdx:7,boss:'tank',final:true}).length,3);
@@ -84,10 +84,10 @@ S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;S.hand=[E.mkCard('
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('infirmiers','J')];const t0=E.placeCard(S,0,1);E.placeCard(S,0,1);check('infirmiers : +1 tour aux voisins',t0.stam,3);
 // mains : plusieurs cartes posées ensemble dans un secteur
 {const Sx=blank(['mer','champ','route','champ','champ']);Sx.supply=20;Sx.capLv={route:4};Sx.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','J'),E.mkCard('chasseur','J'),E.mkCard('assaut',''),E.mkCard('retranchement','')];
- const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+2+2+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3,4');
+ const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+3+3+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3,4');
  check('ordre sur unité : seul',E.canPlayGroup(Sx,[Sx.hand[0],Sx.hand[4]]).reason,'solo');
  const pv=E.previewGroup(Sx,g,2);check('aperçu sans rien toucher',Sx.units.length+'/'+Sx.hand.length+'/'+Sx.supply,'0/5/20');
- const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('2 unités terrestres dans le secteur, 1 avion dans le ciel',E.queue(Sx,'me',2).length+'/'+E.supportsAt(Sx,E.AIRC).length+'/'+E.supportsAt(Sx,2).length,'2/1/0');check('ravitaillement payé',Sx.supply,12);
+ const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('2 unités terrestres dans le secteur, 1 avion dans le ciel',E.queue(Sx,'me',2).length+'/'+E.supportsAt(Sx,E.AIRC).length+'/'+E.supportsAt(Sx,2).length,'2/1/0');check('ravitaillement payé',Sx.supply,10);
  const f=E.sectorForecast(Sx,2);check('aperçu = résultat',pv.strike,f.strike);check('combos de la main : trio→paire (2 terrestres), armes, appui aérien, couleur, assaut',f.combos.atk.map(k=>k.id).sort().join(),'appui,armes,assaut,binome,couleur');
  Sx.hand.push(E.mkCard('tireurs','J'),E.mkCard('tireurs','J'),E.mkCard('tireurs','J'));E.playGroup(Sx,[Sx.hand[1],Sx.hand[2],Sx.hand[3]],2);check('bataillon dès 5 unités',E.sectorCombos(Sx,2).list.atk.some(k=>k.id==='bataillon'),true);
  // zones : navires → mer, avions → ciel, avec leurs combos

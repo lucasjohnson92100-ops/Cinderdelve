@@ -113,3 +113,8 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - `art/qg3.webp` : la forteresse ennemie en ruines, drapeau blanc au sommet — fin de l'assaut victorieux (zoom lent) et fond de l'écran « Butin de guerre » et de la victoire finale.
 - `art/splash.webp` (gerbes d'eau, 4 images) et `art/flak.webp` (éclats de DCA, 4 images) : la mer et le ciel ont leurs propres impacts pendant l'assaut et la riposte.
 - `art/pk_*.webp` : illustrations des 5 packs de l'intendance (reflet métallisé animé) ; un pack acheté se déchire à l'écran avant de révéler ses cartes.
+
+### Défausse en un bouton, unités lourdes renforcées
+- Sélection libre façon Balatro : on touche les cartes, puis on les **pose** (toucher un secteur) **ou** on les **défausse** (le bouton « Fin du tour » devient « ⟲ Défausser N » tant qu'une sélection est active ; max 5 cartes, 3 défausses par bataille).
+- Engins, avions et navires plus forts et plus chers : Jeeps 3 (Att 16), Blindé 4 (Att 18 / Déf 16), Half-track 4 (10 / 12), Antichar 4 (18), Artillerie 4 (18), Destroyer 3 (16), Croiseur 5 (24), Sous-marin 4 (18), Chasseur 3 (12 / 7), Bombardier 5 (60 directs). Entraînements ajustés.
+- Rééquilibrage : `HQ_MULT` 21 (bot ≈ 45–50 % de campagnes terminées).
