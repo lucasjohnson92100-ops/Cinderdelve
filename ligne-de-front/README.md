@@ -124,3 +124,8 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - `art/fire_croiseur.webp`, `art/fire_sousmarin.webp` : poses de tir peintes (tourelles en feu ; torpille lancée), recolorées à la couleur de la carte.
 - Obus de marine en vraie parabole (traînée de fumée), qui explosent sur le QG.
 - `art/torp.webp` + `art/torpboom.webp` : le sous-marin lance ses torpilles au ras de l'eau ; gerbe d'eau et de feu (3 images) au pied du QG.
+
+### Passes aériennes animées (IA)
+- Chasseur : piqué, éclairs des mitrailleuses d'aile (`art/wingmuz.webp`), balles traçantes, gerbes d'impacts au sol sur le QG (`art/strafe.webp`, 4 images), puis pose « roquettes » (`art/rkt_chasseur.webp`) et deux roquettes peintes (`art/rocket.webp`) qui explosent.
+- Reconnaissance : nouvel avion à aile haute (`art/idle_recon.webp`), photo au flash (`art/fire_recon.webp`, `art/flash.webp`) et réticule rouge qui marque la cible.
+- Bombardier : à la pose, il traverse l'écran au-dessus du QG ennemi et largue 4 bombes peintes (`art/bomb.webp`) qui explosent en tapis, avec secousse.
