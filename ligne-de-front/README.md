@@ -145,3 +145,6 @@ Sur le plateau comme dans la scène d'assaut, chaque unité reste vivante, avec 
 
 ### Animations d'attente peintes (planches 2 × 2 fournies)
 Planches de 4 images détourées, mises à la même échelle et alignées (`art/idle_<sprite>.webp`), jouées en boucle (`IDLE` dans le code) et recolorées par couleur de carte : Tireurs, Parachutistes, Observateurs, Infirmiers, Génie, Mitrailleuse, Blindé, Chasseur de chars, Jeeps, Half-track (2 images), Artillerie, Destroyer, Sous-marin, Chasseur, Bombardier, Reconnaissance (2 images). Il manque encore le Croiseur.
+
+### Poses de tir peintes (infanterie de base)
+`art/fire_inf.webp` : 4 poses (debout, à genou en visée, tir avec éclair, réarmement) jouées une fois à chaque tir des Tireurs dans la scène d'assaut (`IDLE.inf_fire`, `once`). Même principe pour les autres unités quand leurs planches arrivent.
