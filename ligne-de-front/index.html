@@ -2988,7 +2988,7 @@ SPRITES.tank0 = SPRITES.tank;
 const TANK_KEYS = ['tank', 'panzer', 'heavy'];
 // Couleurs d'une carte (ex. 'J' ou 'JR') -> accents appliqués aux sprites
 function teamFor(side, cols) {
-  const t = { ...TEAM[side], side };
+  const t = { ...TEAM[side], side, cols };
   if (cols) { t.acc = colorHexLite(cols[0]); if (cols[1]) t.acc2 = colorHexLite(cols[1]); }
   return t;
 }
@@ -3007,14 +3007,51 @@ if (typeof PAINT !== 'undefined') {
 }
 const fireKey = key => (typeof PAINT !== 'undefined' && PAINT['me:' + key + '_fire'] ? key + '_fire' : null);
 const HEAVY_GUN = { tank: 1, arty: 1, td: 1, destroyer: 1, croiseur: 1 };
+// Recoloration des sprites peints : seules les teintes bleues (uniformes, casques, carrosseries) prennent la couleur de la carte ; la peau, le bois, le métal gardent les leurs
+const TINT = new Map(), TINT_HUE = { J: 46, R: 4, V: 112 };
+function tintPixels(d, ch) {
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 8) continue;
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
+    if (c < 0.12 || mx !== b && !(mx === g && b > r && b > 0.8 * g)) continue;
+    let h = mx === b ? 60 * ((r - g) / c) + 240 : 60 * ((b - r) / c) + 120;
+    if (h < 185 || h > 265) continue; // pas bleu : on laisse
+    let v = mx, sat = c / mx;
+    if (ch === 'N') { sat *= 0.12; v *= 0.62; h = 220; }
+    else { h = TINT_HUE[ch]; if (ch === 'J') { v = Math.min(1, v * 1.18 + 0.05); sat = Math.min(1, sat * 1.05); } }
+    const k = n => (n + h / 60) % 6, f = n => v - v * sat * Math.max(0, Math.min(k(n), 4 - k(n), 1));
+    d[i] = f(5) * 255; d[i + 1] = f(3) * 255; d[i + 2] = f(1) * 255;
+  }
+}
+function buildTints() {
+  if (typeof PAINT === 'undefined' || typeof document === 'undefined') return;
+  const srcs = [...new Set(Object.entries(PAINT).filter(([k]) => !k.startsWith('en') && !k.endsWith('_en')).map(([, v]) => v))];
+  let left = srcs.length;
+  srcs.forEach(src => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+        const base = cx.getImageData(0, 0, cv.width, cv.height), out = {};
+        for (const ch of 'JRVN') { const d = new ImageData(new Uint8ClampedArray(base.data), cv.width, cv.height); tintPixels(d.data, ch); cx.putImageData(d, 0, 0); out[ch] = cv.toDataURL('image/webp', 0.85); }
+        TINT.set(src, out);
+      } catch (e) { /* image illisible : on garde le filtre */ }
+      if (--left === 0) { window.__tintReady = true; if (S && document.getElementById('hand') && !busy) renderBattle(); }
+    };
+    img.onerror = () => { if (--left === 0) window.__tintReady = true; };
+    img.src = src;
+  });
+}
+const tintedSrc = (src, side, t) => (side === 'me' && t && t.cols && TINT.get(src) ? TINT.get(src)[t.cols[0]] : null);
 function spriteInner(key, side, t) {
-  const src = paintOf(key, side);
+  const src0 = paintOf(key, side), src = src0 && (tintedSrc(src0, side, t) || src0);
   if (!src) return SPRITES[key](t);
   const air = kindOf(key) === 'air';
   const ring = t.acc ? `<ellipse cx="32" cy="58.5" rx="18" ry="4" fill="none" stroke="${t.acc}" stroke-width="2.4" opacity=".95"/>` : '';
   return `${air ? '' : ring}<image class="pimg" href="${src}" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet"/>`;
 }
-const sprCls = (key, side, cols) => `spr k-${kindOf(key)}${paintOf(key, side) ? ' painted' : ''}${side === 'me' && cols ? ' tint-' + cols[0] : ''}`;
+const sprCls = (key, side, cols) => `spr k-${kindOf(key)}${paintOf(key, side) ? ' painted' : ''}${side === 'me' && cols && !(paintOf(key, side) && TINT.get(paintOf(key, side))) ? ' tint-' + cols[0] : ''}`;
 function spriteSVG(key, side, size, cols) {
   const t = teamFor(side, cols);
   const inner = mirror(side, key, spriteInner(key, side, t));
@@ -4945,5 +4982,6 @@ function fitHome() {
   c.style.transform = k < 1 ? `scale(${k.toFixed(3)}) translateY(${(-par / 2 / k).toFixed(1)}px)` : (par ? `translateY(${-par / 2}px)` : 'none');
 }
 addEventListener('resize', () => { if (document.querySelector('.home')) fitHome(); });
+buildTints();
 showTitle();
 </script>
