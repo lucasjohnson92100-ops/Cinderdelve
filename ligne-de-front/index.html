@@ -1789,6 +1789,66 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .hc.ordre .cband { background: repeating-linear-gradient(135deg, #9aa3b2 0 6px, #7e8798 6px 12px) !important; }
 .hc.ordre .cbig .a { background: #2b3342; color: #fff; }
 .mc.ordre .mc-art { background: #eef0f2 !important; }
+
+/* ==== Scène d'assaut façon Advance Wars ==== */
+.aws { position: fixed; inset: 0; z-index: 85; display: grid; grid-template-columns: minmax(0, 1fr) clamp(140px, 26vw, 300px); background: #0b0f16; opacity: 0; transition: opacity .2s; }
+.aws.in { opacity: 1; } .aws.out { opacity: 0; transition: opacity .25s; }
+.aws.quake { animation: bigshake .45s 1; }
+.aws-bands { display: flex; flex-direction: column; gap: 3px; padding: 3px 0 3px 3px; min-height: 0; }
+.awb { position: relative; flex: 1 1 0; min-height: 0; overflow: hidden; border: 2px solid #0d1218; border-radius: 8px; transform: translateX(-110%); animation: awbin .45s cubic-bezier(.2, 1.1, .4, 1) forwards; animation-delay: var(--d); transition: filter .25s; }
+@keyframes awbin { to { transform: none; } }
+.awb.dim { filter: brightness(.5) saturate(.6); }
+.awb.act { box-shadow: 0 0 0 2px #ffd24a, 0 0 18px rgba(255, 200, 60, .6); z-index: 2; }
+.awb-bg { position: absolute; inset: 0; background: #6aa84f center 62% / cover no-repeat; }
+.awb.t-route .awb-bg { background-image: var(--art-route); } .awb.t-champ .awb-bg { background-image: var(--art-champ); } .awb.t-foret .awb-bg { background-image: var(--art-foret); }
+.awb.t-village .awb-bg { background-image: var(--art-village); } .awb.t-riviere .awb-bg { background-image: var(--art-riviere); }
+.awb-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 14, 22, .55), rgba(10, 14, 22, 0) 30%, rgba(10, 14, 22, 0) 70%, rgba(10, 14, 22, .5)); }
+.awb-lab { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3; width: 74px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; background: rgba(13, 18, 24, .82); border-right: 2px solid #0d1218; color: #fff; }
+.awb-lab > b { font-family: var(--font-display); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; }
+.awb-eq { display: flex; align-items: center; gap: 2px; font-family: var(--font-display); font-size: .7rem; } .awb-eq i { font-style: normal; color: #cfd6e4; }
+.awb-eq .ch, .awb-eq .mu { min-width: 18px; text-align: center; padding: 1px 4px; border-radius: 5px; color: #fff; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .3); } .awb-eq .ch { background: #2d7ff0; } .awb-eq .mu { background: #e8463a; }
+.awb-eq .bump, .awb-def.bump { animation: scbump .35s cubic-bezier(.2, 1.6, .4, 1); }
+.awb-def { display: inline-flex; gap: 1px; align-items: center; font-family: var(--font-display); font-size: .58rem; color: #8fe39a; opacity: .5; } .awb-def.on { opacity: 1; color: #52e07a; filter: drop-shadow(0 0 5px #52e07a); }
+.awb-def svg { width: 10px; height: 11px; }
+.awb-units { position: absolute; left: 80px; right: 30%; top: 4%; bottom: 4%; z-index: 2; display: flex; align-items: flex-end; gap: 2%; transition: transform .35s cubic-bezier(.3, 1.2, .5, 1); }
+.awb.adv .awb-units { transform: translateX(6%); }
+.awu { position: relative; flex: 0 1 auto; height: 100%; display: flex; align-items: flex-end; }
+.awu svg { height: 100%; width: auto; max-width: 100%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.sup { align-self: flex-start; height: 70%; }
+.awu .awn { position: absolute; left: 0; bottom: 6%; z-index: 3; font-style: normal; font-family: var(--font-display); font-size: .62rem; color: #fff; background: #1b2540; border: 1.5px solid #fff; border-radius: 99px; padding: 0 5px; }
+.awu.fire { animation: recoil .14s 3; }
+@keyframes recoil { 50% { transform: translateX(-4px); } }
+.awu.fire::after { content: ""; position: absolute; right: -10px; top: 40%; width: 24px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #ffe28a 35%, #ff9a2a 55%, rgba(255, 120, 0, 0) 72%); animation: muzzle .1s steps(2) 5; z-index: 4; }
+.awu .pop { font-size: 1.05rem; }
+.awb-cbs { position: absolute; right: 31%; top: 4px; z-index: 3; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 40%; }
+.awb-cbs .cb { font-size: .5rem; } .awb-cbs .cb.lit { transform: none; animation: cbpop .35s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes cbpop { from { transform: scale(1.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.awb-tot { position: absolute; right: 8px; top: 50%; z-index: 4; transform: translateY(-50%) scale(.4); opacity: 0; font-family: var(--font-stencil, var(--font-display)); font-weight: 400; font-size: clamp(1.2rem, 9vh, 2.4rem); line-height: 1; color: #ffe08a; text-shadow: 0 3px 0 #000, 0 0 14px rgba(255, 190, 60, .7); transition: transform .25s cubic-bezier(.2, 1.6, .4, 1), opacity .2s; }
+.awb-tot.on { opacity: 1; transform: translateY(-50%) scale(1); } .awb-tot.bump { animation: scbump .5s cubic-bezier(.2, 1.6, .4, 1); } .awb-tot.cut { color: #ff9d8a; }
+.awb-note, .awb-train { position: absolute; right: 8px; bottom: 3px; z-index: 4; font-family: var(--font-display); font-size: .56rem; color: #fff; background: #b3351f; border-radius: 6px; padding: 1px 6px; }
+.awb-train { left: 80px; right: auto; top: 50%; bottom: auto; transform: translateY(-50%); font-size: .75rem; padding: 3px 10px; }
+.aws-hq { position: relative; overflow: hidden; border-left: 3px solid #0d1218; background: #1a1210; }
+.aws-pic { position: absolute; inset: 0; background: var(--art-qg) 50% 20% / cover no-repeat; transition: filter .4s; }
+.aws-hq::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 6, 6, .55), transparent 40%); pointer-events: none; }
+.aws-hq.hit .aws-pic { animation: hqhit .35s; } @keyframes hqhit { 0% { filter: brightness(2.2) saturate(.3); transform: translateX(6px); } 50% { transform: translateX(-5px); } 100% { filter: none; transform: none; } }
+.aws-hq.firing .aws-pic { filter: brightness(1.3) sepia(.4) hue-rotate(-20deg); }
+.aws-hq.down .aws-pic { filter: brightness(.45) grayscale(.6); transform: translateY(6%) rotate(-2deg); transition: filter .8s, transform .8s; }
+.aws-mk { position: absolute; left: 22%; width: 2px; height: 2px; z-index: 3; }
+.aws-mk .pop { font-size: 1.4rem; }
+.aws-hp { position: absolute; left: 6px; right: 6px; top: 6px; z-index: 5; display: grid; gap: 2px; padding: 4px 6px; border-radius: 8px; background: rgba(13, 18, 24, .82); color: #fff; font-family: var(--font-display); }
+.aws-hp b { font-size: .64rem; color: #ffe08a; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .aws-hp span { font-size: .6rem; text-align: right; }
+.aws-hp .bar { height: 10px; border: 2px solid #0d1218; border-radius: 99px; background: #4a1d14; overflow: hidden; } .aws-hp .bar i { display: block; height: 100%; background: linear-gradient(180deg, #ff7b61, #c9341d); transition: width .45s; }
+.awboom { position: absolute; left: 50%; top: 50%; z-index: 6; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #ffe28a 25%, #ff8a2a 50%, rgba(180, 40, 10, .6) 70%, rgba(0, 0, 0, 0) 75%); animation: awboom .55s ease-out forwards; pointer-events: none; }
+.awboom.big { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+@keyframes awboom { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.aws-banner { position: absolute; left: 0; right: 0; top: 50%; z-index: 20; transform: translateY(-50%) scaleY(0); display: grid; justify-items: center; padding: 6px 0; background: linear-gradient(90deg, transparent, rgba(37, 89, 181, .92) 15%, rgba(37, 89, 181, .92) 85%, transparent); color: #fff; pointer-events: none; transition: transform .18s; }
+.aws-banner.on { transform: translateY(-50%) scaleY(1); }
+.aws-banner b { font-family: var(--font-stencil, var(--font-display)); font-weight: 400; font-size: clamp(1.6rem, 11vh, 3rem); line-height: 1; text-shadow: 0 3px 0 #0d1218; letter-spacing: .04em; text-transform: uppercase; }
+.aws-banner small { font-family: var(--font-display); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
+.aws-banner.gold { background: linear-gradient(90deg, transparent, rgba(30, 24, 8, .94) 15%, rgba(30, 24, 8, .94) 85%, transparent); } .aws-banner.gold b { color: #ffe08a; }
+.aws-banner.red { background: linear-gradient(90deg, transparent, rgba(179, 53, 31, .94) 15%, rgba(179, 53, 31, .94) 85%, transparent); }
+.aws-banner.green { background: linear-gradient(90deg, transparent, rgba(47, 125, 58, .94) 15%, rgba(47, 125, 58, .94) 85%, transparent); }
+@media (max-height: 340px) { .awb-lab { width: 62px; } .awb-units { left: 66px; } .awu .awn { font-size: .52rem; } }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -4080,6 +4140,105 @@ function flyFx(from, to, cls, ms, html = '') {
 }
 function shakeBoard(big) { const b = document.querySelector('.btl'); if (!b) return; b.classList.remove('shake', 'shakebig'); void b.offsetWidth; b.classList.add(big ? 'shakebig' : 'shake'); }
 const hqEl = () => document.getElementById('enhq');
+// ---- Scène d'assaut façon Advance Wars : l'écran se coupe en bandes, une par secteur qui attaque ; à droite, le QG ennemi ----
+async function awScene(secs, stk, en, live, hq0, slow) {
+  const T = ms => sleep(fast ? Math.min(35, ms) : ms * slow);
+  const max = S.lvl.hq || 1, hold = S.obj.type === 'hold';
+  const rows = secs.filter(st => !st.f.blocked || st.f.me.length);
+  const n = Math.max(1, rows.length);
+  const unitHTML = uid => { const u = live.find(x => x.uid === uid); if (!u) return ''; return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(SPR_OF[u.key])}" data-uid="${uid}">${squadSVG(SPR_OF[u.key], 'me', u.menMax, u.menMax, 64, u.cols)}<i class="awn">${u.menMax}</i></span>`; };
+  const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]}" data-i="${i}" style="--d:${i * 90}ms">
+      <div class="awb-bg"></div>
+      <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
+      <div class="awb-units">${[...st.f.me, ...(st.f.sups || [])].map(unitHTML).join('')}</div>
+      <div class="awb-cbs"></div>
+      <b class="awb-tot">0</b></div>`).join('');
+  const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
+  const sc = document.createElement('div'); sc.className = 'aws';
+  sc.innerHTML = `<div class="aws-bands">${bands}</div>
+    <div class="aws-hq"><i class="aws-pic"></i>${marks}<div class="aws-hp"><b>${hold ? 'Tenir' : S.lvl.name}</b><div class="bar"><i style="width:${hold ? 100 : (hq0.en / max) * 100}%"></i></div><span>${hold ? '' : `${fmtN(hq0.en)} / ${fmtN(max)}`}</span></div></div>
+    <div class="aws-banner"><b>Assaut !</b></div>`;
+  document.body.appendChild(sc);
+  const hpBar = sc.querySelector('.aws-hp .bar i'), hpTx = sc.querySelector('.aws-hp span'), hqBox = sc.querySelector('.aws-hq');
+  let hpNow = hq0.en;
+  const banner = async (html, cls = '', ms = 700) => { const b = sc.querySelector('.aws-banner'); b.className = 'aws-banner on ' + cls; b.innerHTML = html; await T(ms); b.className = 'aws-banner'; };
+  const bump = el => { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+  const boomOn = (el, big) => { const b = document.createElement('span'); b.className = 'awboom' + (big ? ' big' : ''); el.appendChild(b); setTimeout(() => b.remove(), 700); };
+  SFX.play('go');
+  await T(80); sc.classList.add('in');
+  await banner('<b>Assaut !</b><small>' + rows.length + ' secteur' + (rows.length > 1 ? 's' : '') + ' à l’attaque</small>', '', 750);
+  // chaque secteur attaque à son tour
+  for (let i = 0; i < rows.length; i++) {
+    const st = rows[i], f = st.f, band = sc.querySelector(`.awb[data-i="${i}"]`), mk = sc.querySelector(`.aws-mk[data-i="${i}"]`);
+    const chEl = band.querySelector('.ch'), muEl = band.querySelector('.mu'), toEl = band.querySelector('.awb-tot'), cbs = band.querySelector('.awb-cbs');
+    sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band)); band.classList.add('act');
+    if (f.blocked) { toEl.textContent = 'Coupé'; toEl.classList.add('cut', 'on'); SFX.play('deny'); band.insertAdjacentHTML('beforeend', '<span class="awb-train">🚂 Le train blindé coupe ce secteur</span>'); await T(800); band.classList.remove('act'); continue; }
+    // les unités avancent puis tirent, une à une
+    band.classList.add('adv'); SFX.play('land'); await T(200);
+    const toks = [...band.querySelectorAll('.awu')], per = Math.max(100, Math.min(230, 900 / Math.max(1, toks.length)));
+    let chips = 0;
+    for (const tk of toks) {
+      const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) continue;
+      const a = unitAtk(S, u); if (!a) continue;
+      tk.classList.add('fire'); SFX.play(SND_OF[u.key] || 'rifle', Math.min(u.menMax, 10));
+      const shots = Math.min(6, Math.max(2, Math.ceil(u.menMax / 4)));
+      for (let k = 0; k < shots; k++) setTimeout(() => flyFx(tk, mk, u.cls === 'ship' || u.kw.includes('arty') ? 'shell' : u.cls === 'air' ? 'bullet air' : 'bullet', 300 + k * 30), k * 50);
+      popAt(tk, '+' + fmtN(a), '#2559b5');
+      await T(per * 0.55);
+      chips += a; chEl.textContent = fmtN(chips); bump(chEl);
+      setTimeout(() => { boomOn(mk); }, 120);
+      await T(per * 0.45); tk.classList.remove('fire');
+    }
+    if (f.barrage) { SFX.play('shell'); boomOn(mk, true); chips += f.barrage; chEl.textContent = fmtN(chips); bump(chEl); cbs.insertAdjacentHTML('beforeend', `<i class="cb a lit">Barrage +${f.barrage}</i>`); await T(320); }
+    chEl.textContent = fmtN(f.baseAtk);
+    // les combos s'allument et le Mult grimpe
+    let add = 1, mul = 1;
+    for (const k of f.combos.atk.slice().sort((x, y) => (x.mul ? 1 : 0) - (y.mul ? 1 : 0))) {
+      if (k.mul) mul *= k.mul; else add += k.add || 0;
+      cbs.insertAdjacentHTML('beforeend', cbTag(k, 'a').replace('class="cb', 'class="cb lit'));
+      muEl.textContent = fmtMult(Math.round(add * mul * 100) / 100); bump(muEl); SFX.play(k.mul ? 'upgrade' : 'select');
+      await T(k.mul ? 260 : 180);
+    }
+    muEl.textContent = fmtMult(f.mult.atk);
+    // le calcul claque
+    toEl.classList.add('on'); countUp(toEl, 0, f.atk, fast ? 40 : 320); bump(toEl); SFX.play('coins'); await T(380);
+    if (f.strike !== f.atk) { toEl.classList.add('cut'); band.insertAdjacentHTML('beforeend', `<span class="awb-note">${f.notes.includes('bunker') ? 'Bunker ×0,7' : `Blindage −${mammothWall(S)}`}</span>`); countUp(toEl, f.atk, f.strike, fast ? 40 : 260); SFX.play('intercept'); await T(320); }
+    // la salve du secteur frappe le QG
+    if (f.strike > 0) {
+      SFX.play('bigcannon');
+      await flyFx(toEl, mk, 'salvo', 360, `<b>${SWORD}${fmtN(f.strike)}</b>`);
+      boomOn(mk, true); SFX.play('hqhit'); hqBox.classList.remove('hit'); void hqBox.offsetWidth; hqBox.classList.add('hit');
+      sc.classList.remove('quake'); void sc.offsetWidth; sc.classList.add('quake');
+      popAt(mk, '−' + fmtN(f.strike));
+      hpNow = Math.max(0, hpNow - f.strike);
+      if (!hold) { hpBar.style.width = (hpNow / max) * 100 + '%'; hpTx.textContent = `${fmtN(hpNow)} / ${fmtN(max)}`; }
+      await T(300);
+    }
+    band.classList.remove('act', 'adv');
+  }
+  sc.querySelectorAll('.awb').forEach(b => b.classList.remove('dim'));
+  // frappe totale
+  if (stk) {
+    if (!hold) { hpBar.style.width = Math.max(0, (stk.hqAfter.en / max) * 100) + '%'; hpTx.textContent = `${fmtN(Math.max(0, stk.hqAfter.en))} / ${fmtN(max)}`; }
+    await banner(`<small>Frappe totale</small><b>${SWORD} ${fmtN(stk.total)}</b>${stk.shielded ? `<small>Batterie côtière : −${fmtN(stk.total - stk.dmg)}</small>` : ''}`, 'gold', 950);
+  }
+  if (S.over === 'win') {
+    hqBox.classList.add('down'); for (let k = 0; k < 5; k++) setTimeout(() => { boomOn(hqBox, true); SFX.play('boom'); }, k * 160);
+    await banner('<b>QG détruit !</b>', 'gold', 1300);
+  } else if (en) {
+    // riposte : le QG tire sur chaque secteur ; les boucliers arrêtent une partie
+    await banner(`<small>Riposte ennemie</small><b>${SWORD} ${fmtN(en.atk)}</b>${en.smoke ? '<small>Fumigènes : ÷2</small>' : ''}`, 'red', 750);
+    hqBox.classList.add('firing');
+    sc.querySelectorAll('.awb').forEach((band, i) => setTimeout(() => {
+      const lab = band.querySelector('.awb-lab'), mk = sc.querySelector(`.aws-mk[data-i="${i}"]`);
+      SFX.play('shell'); flyFx(mk, lab, 'shell en', 480).then(() => { boomOn(lab); const d = band.querySelector('.awb-def'); d.classList.add('on'); bump(d); });
+    }, i * 150));
+    await T(500 + rows.length * 150);
+    hqBox.classList.remove('firing');
+    await banner(`<small>Riposte ${fmtN(en.atk)} − Défense ${fmtN(en.def)}</small><b>${en.dmg ? '−' + fmtN(en.dmg) + ' à votre QG' : 'Riposte bloquée !'}</b>`, en.dmg ? 'red' : 'green', 950);
+  }
+  sc.classList.add('out'); await T(260); sc.remove();
+}
 // Un secteur au combat : chaque unité tire (Attaque qui s'ajoute), les combos font grimper le Mult, puis la salve part sur le QG ennemi
 async function secAnim(st, slow, live) {
   const f = st.f, ln = document.querySelector(`.ln[data-c="${st.c}"]`), foot = secEl(st.c), T = ms => sleep(fast ? Math.min(40, ms) : ms * slow);
@@ -4148,7 +4307,17 @@ async function doEnd() {
   $('#bend').disabled = true; $('#hand').innerHTML = '<p class="muted" style="padding:24px 6px">Résolution du front…</p>'; $('#hint').textContent = '';
   const board = $('#board'), info = { strike: 0, dEn: 0, dMe: 0, gone: [] };
   board.innerHTML = boardHTML({ units: live0, hq: hq0 }, false);
+  const secs = steps.filter(x => x.ph === 'sec'), stk = steps.find(x => x.ph === 'strike'), enS = steps.find(x => x.ph === 'enemy'), aw = secs.length > 0;
+  if (aw) {
+    await awScene(secs, stk, enS, live0, hq0, slow);
+    if (stk) { info.strike = stk.total; info.dEn = stk.dmg; }
+    if (enS) info.dMe = enS.dmg;
+    const ehq = document.getElementById('enhq'), max = S.lvl.hq || 1, ebar = ehq?.querySelector('.bar i'), ehp = document.getElementById('enhp');
+    if (stk && S.obj.type !== 'hold') { if (ebar) ebar.style.width = Math.max(0, (stk.hqAfter.en / max) * 100) + '%'; if (ehp) ehp.textContent = `${fmtN(Math.max(0, stk.hqAfter.en))} / ${fmtN(max)} PV`; }
+    const my = board.querySelector('.hq.me'); if (enS && my) { const bar = my.querySelector('.bar i'), num = my.querySelector('.num'); if (bar) bar.style.width = Math.max(0, (enS.hqAfter.me / C.hqMax) * 100) + '%'; if (num) num.textContent = `${Math.max(0, enS.hqAfter.me)}/${C.hqMax}`; if (enS.dmg) { my.classList.add('hit'); popAt(my, '−' + enS.dmg); } }
+  }
   for (const st of steps) {
+    if (aw && (st.ph === 'sec' || st.ph === 'strike' || st.ph === 'enemy')) continue;
     if (st.ph === 'sec') { st.hq0 = hq0.en; await secAnim(st, slow, live0); continue; }
     if (st.ph === 'strike') {
       info.strike = st.total; info.dEn = st.dmg; document.querySelectorAll('.sectally').forEach(x => x.remove());
