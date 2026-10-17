@@ -1766,6 +1766,20 @@ body:has(.mapscreen.h) .topbar { display: none; }
 .btl.land .strikefly.total small { font-family: var(--font-display); font-size: .7rem; color: #fff; letter-spacing: .1em; text-transform: uppercase; }
 .enhq .pop, .lc.foot .pop { z-index: 40; }
 .lc.foot .pop { font-size: 1rem; white-space: nowrap; } .gu.tok .pop { font-size: 1.05rem; }
+
+/* ==== Les cartes et les troupes prennent leur couleur ==== */
+.card.col-J { background: linear-gradient(180deg, #fff7cc, #ffe27a 60%, #f3c53a) !important; }
+.card.col-R { background: linear-gradient(180deg, #ffe3dc, #ffad9a 60%, #ee7a62) !important; }
+.card.col-V { background: linear-gradient(180deg, #e4f8d8, #ace290 60%, #72c457) !important; }
+.card.col-N { background: linear-gradient(180deg, #646b7a, #3d4250 60%, #252932) !important; color: #fff; }
+.card.col-N .cn, .card.col-N .cn b { color: #fff; text-shadow: 0 1px 0 #000; }
+.card.col-N .chp i { color: #fff; text-shadow: 0 1px 0 #000; } .card.col-N .chp .ca { color: #9cc8ff; } .card.col-N .chp .cd { color: #8fe39a; }
+.mc.col-J { background: linear-gradient(180deg, #fff7cc, #ffd84f) !important; } .mc.col-R { background: linear-gradient(180deg, #ffe3dc, #f59a84) !important; }
+.mc.col-V { background: linear-gradient(180deg, #e4f8d8, #96d97a) !important; } .mc.col-N { background: linear-gradient(180deg, #646b7a, #2e323c) !important; } .mc.col-N .mc-nm { color: #fff; }
+svg.spr.tint-J { filter: sepia(1) saturate(3.2) hue-rotate(8deg) brightness(1.1) drop-shadow(0 2px 1px rgba(10, 20, 30, .35)) !important; }
+svg.spr.tint-R { filter: sepia(1) saturate(4.5) hue-rotate(-38deg) brightness(.95) drop-shadow(0 2px 1px rgba(10, 20, 30, .35)) !important; }
+svg.spr.tint-V { filter: sepia(1) saturate(2.8) hue-rotate(62deg) brightness(.95) drop-shadow(0 2px 1px rgba(10, 20, 30, .35)) !important; }
+svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow(0 2px 1px rgba(255, 255, 255, .25)) !important; }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -2894,12 +2908,12 @@ function spriteInner(key, side, t) {
   const ring = t.acc ? `<ellipse cx="32" cy="58.5" rx="18" ry="4" fill="none" stroke="${t.acc}" stroke-width="2.4" opacity=".95"/>` : '';
   return `${air ? '' : ring}<image class="pimg" href="${src}" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet"/>`;
 }
-const sprCls = (key, side) => `spr k-${kindOf(key)}${paintOf(key, side) ? ' painted' : ''}`;
+const sprCls = (key, side, cols) => `spr k-${kindOf(key)}${paintOf(key, side) ? ' painted' : ''}${side === 'me' && cols ? ' tint-' + cols[0] : ''}`;
 function spriteSVG(key, side, size, cols) {
   const t = teamFor(side, cols);
   const inner = mirror(side, key, spriteInner(key, side, t));
   const flat = ['destroyer', 'croiseur', 'sousmarin'].includes(key) || (kindOf(key) === 'air' && paintOf(key, side));
-  return `<svg viewBox="-4 -4 72 68" width="${size || 56}" height="${size || 56}" class="${sprCls(key, side)}" aria-hidden="true">${flat ? '' : shadow}${inner}</svg>`;
+  return `<svg viewBox="-4 -4 72 68" width="${size || 56}" height="${size || 56}" class="${sprCls(key, side, cols)}" aria-hidden="true">${flat ? '' : shadow}${inner}</svg>`;
 }
 
 // Groupe d'unités : plusieurs figurines selon l'effectif restant (n sur nMax)
@@ -2918,7 +2932,7 @@ function squadSVG(key, side, n, nMax, size, cols) {
     const x0 = (100 - ((m - 1) * gap + fig)) / 2;
     for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${one}</g>`;
   });
-  return `<svg viewBox="0 0 100 66" width="${Math.round(size * 1.5)}" height="${size}" class="${sprCls(key, side)}" aria-hidden="true">${g}</svg>`;
+  return `<svg viewBox="0 0 100 66" width="${Math.round(size * 1.5)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
 }
 
 // Icônes des ordres
@@ -3504,7 +3518,7 @@ function cardHTML(card, extra = '', attrs = '') {
   const tags = [isOrder(card) ? ORDER_SHORT[card.t] : SHORT_TAG[card.t]].filter(Boolean).join(' · ');
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
   const ord = inB ? picked.indexOf(card) : -1;
-  return `<button class="card ${d.fam} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
+  return `<button class="card ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
     <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? TGT_TXT[d.tgt].replace(/^(un|une|le) /, '') : FAM_SHORT[d.fam]}</small></span>
     <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 46).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
@@ -3512,7 +3526,7 @@ function cardHTML(card, extra = '', attrs = '') {
 }
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} ${card.parts ? 'fused' : ''} ${card.kept ? 'kept' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span><span class="kpin ${card.kept ? 'on' : ''}" data-keep="1" role="button" aria-label="${card.kept ? 'Ne plus garder' : 'Garder pour le tour suivant'}">📌</span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${card.kept ? 'kept' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span><span class="kpin ${card.kept ? 'on' : ''}" data-keep="1" role="button" aria-label="${card.kept ? 'Ne plus garder' : 'Garder pour le tour suivant'}">📌</span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>
     <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
@@ -4288,7 +4302,7 @@ const fmtMult = m => String(Math.round(m * 100) / 100).replace('.', ',');
 function miniCardHTML(card) {
   const d = TYPES[card.t], cs = cardStats(card);
   const art = isOrder(card) ? iconSVG(ORDER_ICON[card.t], 40).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c);
-  return `<span class="mc ${d.fam}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
+  return `<span class="mc ${d.fam} col-${(card.c || "o")[0]}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
 }
 const SVC = [
   { act: 'train', ic: '★', name: 'Entraîner', price: () => Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), ok: () => C.deck.some(canUpgrade) },
