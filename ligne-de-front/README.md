@@ -118,3 +118,9 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Sélection libre façon Balatro : on touche les cartes, puis on les **pose** (toucher un secteur) **ou** on les **défausse** (le bouton « Fin du tour » devient « ⟲ Défausser N » tant qu'une sélection est active ; max 5 cartes, 3 défausses par bataille).
 - Engins, avions et navires plus forts et plus chers : Jeeps 3 (Att 16), Blindé 4 (Att 18 / Déf 16), Half-track 4 (10 / 12), Antichar 4 (18), Artillerie 4 (18), Destroyer 3 (16), Croiseur 5 (24), Sous-marin 4 (18), Chasseur 3 (12 / 7), Bombardier 5 (60 directs). Entraînements ajustés.
 - Rééquilibrage : `HQ_MULT` 21 (bot ≈ 45–50 % de campagnes terminées).
+
+### Tir naval animé (IA)
+- `art/broad.webp` : bordée peinte en 4 images (éclair, souffle, fumée de cordite) à la proue du navire qui tire ; le navire recule et tangue, un remous se forme sous la coque.
+- `art/fire_croiseur.webp`, `art/fire_sousmarin.webp` : poses de tir peintes (tourelles en feu ; torpille lancée), recolorées à la couleur de la carte.
+- Obus de marine en vraie parabole (traînée de fumée), qui explosent sur le QG.
+- `art/torp.webp` + `art/torpboom.webp` : le sous-marin lance ses torpilles au ras de l'eau ; gerbe d'eau et de feu (3 images) au pied du QG.
