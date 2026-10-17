@@ -3,14 +3,14 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='AIRC,genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
 // plateau : 5 secteurs, une mer au bord
 for(let k=0;k<200;k++){const t=E.genTerrain(Math.random),L=t.lanes;check('5 secteurs',L.length,GW);check('une mer au bord',L.filter(x=>x==='mer').length===1&&(L[0]==='mer'||L[GW-1]==='mer'),true);}
 const mk=(o={},cfg)=>E.newBattle({level:0,deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],...o},()=>0.5,cfg);
-const blank=(lanes,o)=>{const S=mk(o);S.units=[];S.lanes=lanes;S.grid=[lanes.slice()];S.seaCol=lanes.indexOf('mer');S.supply=40;S.hand=[];S.fx=[];S.plan={};delete S.mineCol;return S;};
+const blank=(lanes,o)=>{const S=mk(o);S.units=[];S.lanes=lanes;S.lanes=[...lanes,'air'];S.grid=[lanes.slice()];S.seaCol=lanes.indexOf('mer');S.supply=40;S.hand=[];S.fx=[];S.plan={};delete S.mineCol;return S;};
 let S=mk();
 check('ravitaillement de base',S.supply,E.BASE_SUPPLY);check('main de 6',S.hand.length,6);check('pas d\'unités ennemies',S.units.length,0);
 check('QG ennemi = blinde du niveau',S.hq.en,E.LEVELS[0].hq);
@@ -19,11 +19,11 @@ S=blank(['mer','route','foret','riviere','champ']);
 S.hand=[E.mkCard('tireurs','J'),E.mkCard('destroyer','J'),E.mkCard('chasseur','J'),E.mkCard('blinde','J'),E.mkCard('jeep','J')];
 const tg=c=>E.deployTargets(S,c).map(x=>x.c).join(',');
 check('tireurs : partout sauf la mer',tg(S.hand[0]),'1,2,3,4');check('blindé : ni forêt ni rivière',tg(S.hand[3]),'1,4');check('jeep : pas la rivière',tg(S.hand[4]),'1,2,4');
-check('navire : près de la côte',tg(S.hand[1]),'1,2');check('chasseur : partout',tg(S.hand[2]),'1,2,3,4');
+check('navire : toujours en mer',tg(S.hand[1]),'0');check('chasseur : toujours dans le ciel',tg(S.hand[2]),String(E.AIRC));
 let u1=E.placeCard(S,0,1);check('pose',!!u1&&u1.c===1,true);check('coût payé',S.supply,38);check('carte gardée sur l\'unité (repli)',u1.card.t,'tireurs');
 S.hand=[E.mkCard('tireurs','R'),E.mkCard('tireurs','V'),E.mkCard('tireurs','N')];E.placeCard(S,0,1);E.placeCard(S,0,1);
 check('3 places par secteur',E.placeCard(S,0,1),null);S.capLv={[S.lanes[1]]:1};check('Fortification : 4e place',!!E.placeCard(S,0,1)&&E.queue(S,'me',1).length,4);
-S.hand=[E.mkCard('chasseur','J'),E.mkCard('chasseur','R')];const sup=E.placeCard(S,0,2);check('appui posé',E.supportAt(S,2)===sup,true);check('plusieurs appuis par secteur',tg(S.hand[0]).includes('2'),true);
+S.hand=[E.mkCard('chasseur','J'),E.mkCard('chasseur','R')];const sup=E.placeCard(S,0,E.AIRC);check('avion posé dans le ciel',E.supportAt(S,E.AIRC)===sup,true);check('plusieurs avions dans le ciel',tg(S.hand[0]),String(E.AIRC));
 // endurance
 check('infanterie : 2 tours',E.statsFor(E.TYPES.tireurs,'J',S,'me').stam,2);check('blindé : 3 tours',E.statsFor(E.TYPES.blinde,'R',S,'me').stam,3);
 check('vert : +1 tour',E.statsFor(E.TYPES.tireurs,'V',S,'me').stam,3);check('chasseur : 2 tours',E.statsFor(E.TYPES.chasseur,'J',S,'me').stam,2);
@@ -79,7 +79,7 @@ const ru=E.queue(S,'me',1)[0];S.hand=[E.mkCard('retranchement','')];E.playOrder(
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('repli','')];const rp=E.placeCard(S,0,2);
 E.playOrder(S,0,{uid:rp.uid});check('repli : la carte revient en main',S.hand.length===1&&S.hand[0].t==='tireurs',true);check('repli : l\'unité quitte le front',E.units(S,'me').length,0);check('repli : retirée de la défausse',S.discard.filter(c=>c.t==='tireurs').length,0);
 S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;const p=E.placeUnit(S,E.mkUnit(S,'me','paras',''),1);S.hand=[E.mkCard('sabotage','')];E.playOrder(S,0,{uid:p.uid});check('sabotage : 8 %',1000-S.hq.en,Math.ceil(S.lvl.hq*0.08));
-S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;S.hand=[E.mkCard('bombardier','J')];const br=E.airStrike(S,0,1);check('bombardier : frappe directe',1000-S.hq.en,br.raw);
+S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;S.hand=[E.mkCard('bombardier','J')];const br=E.airStrike(S,0,E.AIRC);check('bombardier : frappe directe',1000-S.hq.en,br.raw);
 // infirmiers
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('infirmiers','J')];const t0=E.placeCard(S,0,1);E.placeCard(S,0,1);check('infirmiers : +1 tour aux voisins',t0.stam,3);
 // mains : plusieurs cartes posées ensemble dans un secteur
@@ -87,9 +87,19 @@ S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')
  const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+2+2+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3,4');
  check('ordre sur unité : seul',E.canPlayGroup(Sx,[Sx.hand[0],Sx.hand[4]]).reason,'solo');
  const pv=E.previewGroup(Sx,g,2);check('aperçu sans rien toucher',Sx.units.length+'/'+Sx.hand.length+'/'+Sx.supply,'0/5/20');
- const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('3 unités dans le secteur',E.queue(Sx,'me',2).length+E.supportsAt(Sx,2).length,3);check('ravitaillement payé',Sx.supply,12);
- const f=E.sectorForecast(Sx,2);check('aperçu = résultat',pv.strike,f.strike);check('combos de la main : trio, armes, appui, couleur, assaut',f.combos.atk.map(k=>k.id).sort().join(),'appui,armes,assaut,couleur,trio');
- Sx.hand.push(E.mkCard('tireurs','J'),E.mkCard('tireurs','J'));E.playGroup(Sx,[Sx.hand[1],Sx.hand[2]],2);check('bataillon dès 5 unités',E.sectorCombos(Sx,2).list.atk.some(k=>k.id==='bataillon'),true);
+ const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('2 unités terrestres dans le secteur, 1 avion dans le ciel',E.queue(Sx,'me',2).length+'/'+E.supportsAt(Sx,E.AIRC).length+'/'+E.supportsAt(Sx,2).length,'2/1/0');check('ravitaillement payé',Sx.supply,12);
+ const f=E.sectorForecast(Sx,2);check('aperçu = résultat',pv.strike,f.strike);check('combos de la main : trio→paire (2 terrestres), armes, appui aérien, couleur, assaut',f.combos.atk.map(k=>k.id).sort().join(),'appui,armes,assaut,binome,couleur');
+ Sx.hand.push(E.mkCard('tireurs','J'),E.mkCard('tireurs','J'),E.mkCard('tireurs','J'));E.playGroup(Sx,[Sx.hand[1],Sx.hand[2],Sx.hand[3]],2);check('bataillon dès 5 unités',E.sectorCombos(Sx,2).list.atk.some(k=>k.id==='bataillon'),true);
+ // zones : navires → mer, avions → ciel, avec leurs combos
+ {const Sz=blank(['mer','champ','route','champ','champ']);Sz.supply=40;Sz.hand=[E.mkCard('destroyer','J'),E.mkCard('croiseur','J'),E.mkCard('chasseur','J'),E.mkCard('chasseur','J'),E.mkCard('tireurs','J')];
+  check('navires seuls : la mer',E.groupSectors(Sz,[Sz.hand[0],Sz.hand[1]]).join(),'0');check('navires + avions : mer et ciel',E.groupSectors(Sz,[Sz.hand[0],Sz.hand[2]]).sort().join(),[0,E.AIRC].sort().join());
+  check('avec des troupes : un secteur terrestre',E.groupSectors(Sz,[Sz.hand[4],Sz.hand[0],Sz.hand[2]]).join(),'1,2,3,4');
+  E.playGroup(Sz,[Sz.hand[0],Sz.hand[1],Sz.hand[2],Sz.hand[3],Sz.hand[4]],2);
+  check('2 navires en mer',E.supportsAt(Sz,0).length,2);check('2 avions dans le ciel',E.supportsAt(Sz,E.AIRC).length,2);check('1 fantassin en secteur',E.queue(Sz,'me',2).length,1);
+  check('Flotte en mer',E.sectorCombos(Sz,0).list.atk.some(k=>k.id==='flotte'),true);check('Escadrille dans le ciel',E.sectorCombos(Sz,E.AIRC).list.atk.some(k=>k.id==='escadrille'),true);
+  check('Appui aérien et naval sur le secteur terrestre',E.sectorCombos(Sz,2).list.atk.some(k=>k.id==='appui'),true);check('Couverture aérienne sur le secteur terrestre',E.sectorCombos(Sz,2).list.def.some(k=>k.id==='couvert'),true);
+  check('les zones comptent dans le front',E.frontForecast(Sz).sectors.some(f=>f.c===0&&f.strike>0)&&E.frontForecast(Sz).sectors.some(f=>f.c===E.AIRC&&f.strike>0),true);
+  const Sw=blank(['mer','champ','route','champ','champ']);Sw.supply=40;Sw.hand=[1,2,3,4].map(()=>E.mkCard('destroyer','J'));check('mer pleine à 3 navires',E.canPlayGroup(Sw,Sw.hand.slice()).reason,'full');}
  const Sy=blank(['mer','champ','route','champ','champ']);Sy.supply=20;Sy.hand=['tireurs','tireurs','tireurs','tireurs'].map(t=>E.mkCard(t,'J'));check('main trop grosse pour 3 places',E.canPlayGroup(Sy,Sy.hand.slice()).reason,'full');check('3 cartes : ok',E.canPlayGroup(Sy,Sy.hand.slice(0,3)).ok,true);
  const u=E.placeCard(Sy,0,1),a0=E.unitAtk(Sy,u),d0=E.unitDef(Sy,u);Sy.catLv={foot:2};check('niveau Infanterie +40 % Attaque',Math.round(E.unitAtk(Sy,u)*10),Math.round(a0*14));check('… et Défense',E.unitDef(Sy,u)>d0,true);
  const Cc={capLv:{},catLv:{}};check('prix amélioration',E.upgPrice(Cc,'t','foret'),5);E.applyUpgrade(Cc,'t','foret');check('Fortification niv. 1',Cc.capLv.foret,1);check('prix qui monte',E.upgPrice(Cc,'t','foret'),7);for(let i=0;i<9;i++)E.applyUpgrade(Cc,'t','foret');check('7 places au plus',Cc.capLv.foret,4);}
