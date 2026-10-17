@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,toggleKeep,MAX_KEEP,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -93,6 +93,15 @@ S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')
  const Sy=blank(['mer','champ','route','champ','champ']);Sy.supply=20;Sy.hand=['tireurs','tireurs','tireurs','tireurs'].map(t=>E.mkCard(t,'J'));check('main trop grosse pour 3 places',E.canPlayGroup(Sy,Sy.hand.slice()).reason,'full');check('3 cartes : ok',E.canPlayGroup(Sy,Sy.hand.slice(0,3)).ok,true);
  const u=E.placeCard(Sy,0,1),a0=E.unitAtk(Sy,u),d0=E.unitDef(Sy,u);Sy.catLv={foot:2};check('niveau Infanterie +40 % Attaque',Math.round(E.unitAtk(Sy,u)*10),Math.round(a0*14));check('… et Défense',E.unitDef(Sy,u)>d0,true);
  const Cc={capLv:{},catLv:{}};check('prix amélioration',E.upgPrice(Cc,'t','foret'),5);E.applyUpgrade(Cc,'t','foret');check('Fortification niv. 1',Cc.capLv.foret,1);check('prix qui monte',E.upgPrice(Cc,'t','foret'),7);for(let i=0;i<9;i++)E.applyUpgrade(Cc,'t','foret');check('7 places au plus',Cc.capLv.foret,4);}
+// packs façon Balatro
+const lcg=(x=7)=>()=>(x=(x*16807)%2147483647)/2147483647;
+{const Cp={deck:E.START_DECK.map(c=>({...c})),officers:[],hq:60,hqMax:60,loot:20,capLv:{},catLv:{},comboLv:{}};
+ for(const k of Object.keys(E.PACKS)){const o=E.packOptions(Cp,k,lcg());check('pack '+k+' : '+E.PACKS[k].n+' choix',o.length,E.PACKS[k].n);}
+ check('pack recrues : que des unités',E.packOptions(Cp,'recrues').every(o=>o.k==='card'&&!E.isOrder(o.card)),true);check('pack ordres : que des ordres',E.packOptions(Cp,'ordres').every(o=>E.isOrder(o.card)),true);
+ const n0=Cp.deck.length;E.applyPackPick(Cp,{k:'card',card:E.mkCard('blinde','R')});check('carte ajoutée',Cp.deck.length,n0+1);E.applyPackPick(Cp,{k:'joker',id:'moreau'});check('joker ajouté',Cp.officers.join(),'moreau');
+ E.applyPackPick(Cp,{k:'up',kind:'c',id:'foot'});check('niveau infanterie',Cp.catLv.foot,1);E.applyPackPick(Cp,{k:'manual',id:'trio'});check('manuel trio niv.2',Cp.comboLv.trio,2);
+ check('pack staff sans doublon',E.packOptions(Cp,'staff').every(o=>o.id!=='moreau'),true);
+ const gp=E.genPacks(Cp);check('4 packs',gp.length,4);Cp.officers=['moreau','dubois','ashby','kowalski','meyer'];check('joker plein : pas de pack état-major',E.genPacks(Cp).some(p=>p.kind==='staff'),false);}
 // annuler, réserve, défausse
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')];const sn=E.snapshotState(S);E.placeCard(S,0,1);E.restoreState(S,sn);check('annulé',S.units.length+'/'+S.hand.length,'0/1');
 S=mk();const k0=S.hand[0];E.toggleKeep(S,0);E.toggleKeep(S,1);check('épingle 3 refusée',E.toggleKeep(S,2),false);S.supply=5;E.endTurn(S);check('carte gardée',S.hand.includes(k0),true);check('ravitaillement reporté',S.supply>=E.BASE_SUPPLY+E.MAX_CARRY,true);

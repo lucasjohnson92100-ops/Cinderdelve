@@ -3,7 +3,7 @@ const fs=require('fs');
 let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
 for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
-const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,applyUpgrade,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
+const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,toggleKeep,MAX_KEEP,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,applyUpgrade,packOptions,applyPackPick,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
 // Valeur d'une position : fraction du QG ennemi frappée ce tour, moins la fraction de votre QG perdue ; les unités qui restent comptent un peu
 function evalPos(S){
@@ -61,14 +61,17 @@ for(let r=0;r<N;r++){
     {const opts=E.rewardCards(rnd,type==='battle'?1:2,C.deck);const own=new Set(C.deck.map(c=>c.t));const pick=opts.find(c=>!own.has(c.t)&&!E.isOrder(c))||opts.find(c=>!E.isOrder(c))||opts[0];if(pick&&!process.env.NOREWARD)C.deck.push({...pick});}
     let shop=E.genShop(C,rnd,type!=='battle');
     while(C.hq<C.hqMax*0.6&&C.loot>=4&&!process.env.NOHEAL){C.loot-=4;C.hq=Math.min(C.hqMax,C.hq+12);}
-    for(let tries=0;tries<6;tries++){
-      const cheapJ=shop.jokers.filter(j=>j.price<=C.loot).sort((a,b)=>b.price-a.price)[0];
-      if(cheapJ&&C.officers.length<E.MAX_JOKERS){C.loot-=cheapJ.price;C.officers.push(cheapJ.id);if(cheapJ.id==='brandt'){C.hqMax+=20;C.hq+=20;}shop.jokers=shop.jokers.filter(j=>j!==cheapJ);continue;}
+    // packs : le bot achète par ordre de priorité et garde la meilleure carte
+    const prio={staff:0,amelio:1,mega:2,recrues:3,ordres:4},score=o=>o.k==='joker'?9:o.k==='up'?(o.kind==='c'?7:6):o.k==='manual'?5:E.isOrder(o.card)?(['assaut','barrage','contreattaque'].includes(o.card.t)?3:1):(C.deck.some(c=>c.t===o.card.t)?2:4)+(E.TYPES[o.card.t].rar||0);
+    for(const pk of shop.packs.slice().sort((x,y)=>prio[x.kind]-prio[y.kind])){
+      if(pk.price>C.loot)continue;if(pk.kind==='ordres'&&C.loot<10)continue;
+      const opts=E.packOptions(C,pk.kind,rnd,type!=='battle');if(!opts.length)continue;C.loot-=pk.price;
+      for(let k=0;k<(pk.kind==='mega'?2:1);k++){const live=opts.filter(Boolean).sort((x,y)=>score(y)-score(x));if(!live.length)break;const o=live[0];opts[opts.indexOf(o)]=null;E.applyPackPick(C,o);}
+    }
+    for(let tries=0;tries<4;tries++){
       if((C.supplyBonus||0)<E.MAX_SUPPLY_BONUS&&C.loot>=E.supplyBonusCost(C)){C.loot-=E.supplyBonusCost(C);E.addSupplyBonus(C);continue;}
-      const ug=(shop.upgrades||[]).find(u=>!u.sold&&u.price<=C.loot&&!process.env.NOUPG);if(ug){C.loot-=ug.price;ug.sold=true;E.applyUpgrade(C,ug.kind,ug.id);continue;}
       const up=C.deck.filter(E.canUpgrade).sort((a,b)=>(a.lv||1)-(b.lv||1));
       if(up.length&&E.upgradeCost(up[0])<=C.loot&&C.loot>=6){const t=up.find(c=>c.t==='tireurs'||c.t==='blinde'||c.t==='croiseur')||up[0];C.loot-=E.upgradeCost(t);t.lv=(t.lv||1)+1;continue;}
-      const cc=shop.cards.filter(c=>c.price<=C.loot)[0];if(cc){C.loot-=cc.price;C.deck.push({...cc.card});shop.cards=shop.cards.filter(c=>c!==cc);continue;}
       break;}
   }
   if(ok)done++;stats.jok+=C.officers.length;stats.lv+=C.deck.reduce((s,c)=>s+(c.lv||1)-1,0);
