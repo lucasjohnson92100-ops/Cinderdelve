@@ -1780,6 +1780,15 @@ svg.spr.tint-J { filter: sepia(1) saturate(3.2) hue-rotate(8deg) brightness(1.1)
 svg.spr.tint-R { filter: sepia(1) saturate(4.5) hue-rotate(-38deg) brightness(.95) drop-shadow(0 2px 1px rgba(10, 20, 30, .35)) !important; }
 svg.spr.tint-V { filter: sepia(1) saturate(2.8) hue-rotate(62deg) brightness(.95) drop-shadow(0 2px 1px rgba(10, 20, 30, .35)) !important; }
 svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow(0 2px 1px rgba(255, 255, 255, .25)) !important; }
+.card.col-o { background: linear-gradient(180deg, #ffffff, #f4f4f2 60%, #e3e3e0) !important; }
+.mc.col-o { background: linear-gradient(180deg, #ffffff, #e9e9e6) !important; }
+.hc.col-o .art, .card.col-o .art { background: #eef0f2; }
+.card.ordre { background: linear-gradient(180deg, #ffffff, #f6f6f4 55%, #e6e6e3) !important; }
+.card.ordre .art, .hc.ordre .art { background: radial-gradient(circle at 50% 45%, #ffffff, #e9ebee 70%) !important; }
+.card.ordre .cn, .hc.ordre .cn, .hc.ordre .chp { color: #2b3342; }
+.hc.ordre .cband { background: repeating-linear-gradient(135deg, #9aa3b2 0 6px, #7e8798 6px 12px) !important; }
+.hc.ordre .cbig .a { background: #2b3342; color: #fff; }
+.mc.ordre .mc-art { background: #eef0f2 !important; }
 </style>
 <style id="art">
 /* Illustrations générées par IA (WEBP intégrés) */
@@ -3276,7 +3285,7 @@ const TUTO = [
   { id: 'b-fx', stage: 2, info: true, sel: '.fxchip', text: 'Ce QG a un effet spécial, comme les boss de Balatro. Touchez-le pour le lire : il change la meilleure tactique.' },
   { id: 'b-combo', stage: 2, info: true, sel: '.lc.units .cb', text: 'Combinaisons : chaque étiquette (Trio, Armes combinées, Même couleur…) augmente le Mult rouge du secteur. Plus la main est riche, plus le score grimpe.' },
   { id: 'terrain', stage: 2, info: true, sel: '.ln .ltag', text: 'Chaque couleur a un terrain fort (▲ +50 % d’Attaque) et faible (▼ −25 %). Les pastilles en tête de colonne le rappellent.' },
-  { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes beiges sont des ordres : Barrage, Assaut, Fumigènes, Repli… Glissez-les sur leur cible.' },
+  { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes blanches sont des ordres : Barrage, Assaut, Fumigènes, Repli… Glissez-les sur leur cible.' },
   { id: 'discard', stage: 2, info: true, sel: '[data-act=discard]', text: 'Main mal fichue ? Le bouton ⟲ remplace jusqu’à 5 cartes et donne +1 ravitaillement, 3 fois par bataille.' },
   { id: 'keep', stage: 2, info: true, sel: '#hand .kpin', text: 'Réserve : l’épingle 📌 garde une carte au tour suivant (2 au plus). Le ravitaillement non dépensé est reporté, jusqu’à 3.' },
 ];
@@ -4499,7 +4508,7 @@ const HELP_PAGES = () => [
     '<b>Défense</b> : Nid défensif +1 (mitrailleuse + infanterie) · Rempart blindé +1 (2 véhicules ou plus) · Soutien sanitaire +0,5 · Ligne tenue +0,5 (3 unités terrestres ou plus) · Couverture aérienne ×1,5 (chasseur).',
     'Les <b>manuels tactiques</b> de l\'intendance font monter un combo de niveau ; certains <b>jokers</b> en ajoutent.'] },
   { t: 'Ordres et effets du QG', l: [
-    '<b>Ordres</b> (cartes beiges) : Barrage +20 Attaque · Assaut ×1,5 · Contre-attaque (Défense ×1,5) · Fumigènes (riposte ÷2) · Retranchement · Relève · Repli · Ravitaillement · Débarquement · Sabotage (−8 % au QG).',
+    '<b>Ordres</b> (cartes blanches) : Barrage +20 Attaque · Assaut ×1,5 · Contre-attaque (Défense ×1,5) · Fumigènes (riposte ÷2) · Retranchement · Relève · Repli · Ravitaillement · Débarquement · Sabotage (−8 % au QG).',
     '<b>Bombardier</b> : frappe aussitôt le QG ennemi.',
     '<b>Effets du QG</b> (annoncés, comme les boss de Balatro) : Bunker (frappe ×0,7 sauf génie et paras), Division blindée (riposte +30 %), Artillerie lourde (obus ◎), Champs de mines (☠), Tireurs d\'élite, Nids de mitrailleuses.',
     '<b>Boss</b> : Le Mammouth (seuil de blindage par secteur), Train blindé (un secteur coupé 🚂), Batterie côtière (navires −50 %).'] },
