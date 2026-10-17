@@ -142,3 +142,6 @@ Sur le plateau comme dans la scène d'assaut, chaque unité reste vivante, avec 
 - navires : tangage, écume à la ligne de flottaison, fumée de cheminée ;
 - avions : vol en ondulant et traînées de vent.
 (Désactivées si le système demande de réduire les animations.)
+
+### Animations d'attente peintes (planches 2 × 2 fournies)
+Planches de 4 images détourées, mises à la même échelle et alignées (`art/idle_<sprite>.webp`), jouées en boucle (`IDLE` dans le code) et recolorées par couleur de carte : Tireurs, Parachutistes, Observateurs, Infirmiers, Génie, Mitrailleuse, Blindé, Chasseur de chars, Jeeps, Half-track (2 images), Artillerie, Destroyer, Sous-marin, Chasseur, Bombardier, Reconnaissance (2 images). Il manque encore le Croiseur.
