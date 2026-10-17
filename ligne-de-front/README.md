@@ -148,3 +148,6 @@ Planches de 4 images détourées, mises à la même échelle et alignées (`art/
 
 ### Poses de tir peintes (infanterie de base)
 `art/fire_inf.webp` : 4 poses (debout, à genou en visée, tir avec éclair, réarmement) jouées une fois à chaque tir des Tireurs dans la scène d'assaut (`IDLE.inf_fire`, `once`). Même principe pour les autres unités quand leurs planches arrivent.
+
+### Échelle relative des unités
+Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait environ les 3/4 de la hauteur d'un char, une jeep est plus courte qu'un char, l'artillerie et le half-track entre les deux ; les avions et les navires sont agrandis. Plus de véhicules ou de soldats de la même longueur par construction.
