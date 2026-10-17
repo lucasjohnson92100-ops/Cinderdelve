@@ -2150,7 +2150,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .gu .gart { animation: none; }
 .gu .gart > svg, .awu .awu-idle > svg, .awu .awu-fire > svg, .awu .awu-rkt > svg { animation: var(--idle, ifoot) var(--idur, 2s) ease-in-out infinite; animation-delay: calc(var(--d, 0) * -2s); transform-origin: 50% 100%; will-change: transform; }
 .k-air { --idle: iair; --idur: 2.6s; } .k-ship { --idle: iship; --idur: 3.4s; } .k-veh { --idle: iveh; --idur: .26s; } .k-gun { --idle: igun; --idur: 2.8s; } .k-fort { --idle: none; }
-@keyframes ifoot { 0%, 100% { transform: none; } 30% { transform: translateY(-3%) scaleY(1.05) rotate(1.5deg); } 65% { transform: translateY(-1%) scaleY(1.02) rotate(-1.2deg); } }
+@keyframes ifoot { 0%, 100% { transform: none; } 50% { transform: scaleY(1.018); } }
 @keyframes iair { 0%, 100% { transform: translate(0, 0) rotate(-2.5deg); } 35% { transform: translate(3%, -14%) rotate(3deg); } 70% { transform: translate(-2%, -5%) rotate(-1deg); } }
 @keyframes iship { 0%, 100% { transform: rotate(-3.5deg) translateY(0); } 50% { transform: rotate(3deg) translateY(6%); } }
 @keyframes iveh { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-1.3px) rotate(-.4deg); } }
@@ -3383,7 +3383,7 @@ function buildTints() {
   });
 }
 // Planches d'animation d'attente peintes : clé du sprite → { n images, taille d'une image, durée d'un cycle }
-const IDLE = {"inf": {n: 4, fw: 120, fh: 227, ms: 1600}, "recon": {n: 2, fw: 150, fh: 86, ms: 420}, "bombardier": {n: 4, fw: 150, fh: 75, ms: 480}, "sousmarin": {n: 4, fw: 150, fh: 65, ms: 2000}, "arty": {n: 4, fw: 150, fh: 94, ms: 2200}, "destroyer": {n: 4, fw: 150, fh: 86, ms: 2000}, "chasseur": {n: 4, fw: 150, fh: 75, ms: 360}, "td": {n: 4, fw: 150, fh: 83, ms: 1600}, "halftrack": {n: 2, fw: 150, fh: 68, ms: 700}, "jeep": {n: 4, fw: 150, fh: 96, ms: 1100}, "medic": {n: 4, fw: 110, fh: 143, ms: 2000}, "mgnest": {n: 4, fw: 150, fh: 90, ms: 1800}, "para": {n: 4, fw: 110, fh: 120, ms: 1800}, "sapper": {n: 4, fw: 110, fh: 128, ms: 1800}, "tank": {n: 4, fw: 150, fh: 121, ms: 1000}, "obs": {n: 4, fw: 110, fh: 157, ms: 2400}};
+const IDLE = {"inf": {n: 4, fw: 120, fh: 227, ms: 1600, seq: [[0, 2800], [1, 450], [0, 1900], [1, 350]]}, "recon": {n: 2, fw: 150, fh: 86, ms: 420}, "bombardier": {n: 4, fw: 150, fh: 75, ms: 480}, "sousmarin": {n: 4, fw: 150, fh: 65, ms: 2000}, "arty": {n: 4, fw: 150, fh: 94, ms: 2200, seq: [[0, 2400], [1, 1200], [2, 1300], [1, 700]]}, "destroyer": {n: 4, fw: 150, fh: 86, ms: 2000}, "chasseur": {n: 4, fw: 150, fh: 75, ms: 360}, "td": {n: 4, fw: 150, fh: 83, ms: 1600}, "halftrack": {n: 2, fw: 150, fh: 68, ms: 700}, "jeep": {n: 4, fw: 150, fh: 96, ms: 1100}, "medic": {n: 4, fw: 110, fh: 143, ms: 2000, seq: [[0, 2500], [1, 1500], [0, 1300], [3, 1100]]}, "mgnest": {n: 4, fw: 150, fh: 90, ms: 1800, seq: [[0, 2400], [1, 1300], [0, 1600], [3, 1000]]}, "para": {n: 4, fw: 110, fh: 120, ms: 1800, seq: [[0, 2400], [1, 500], [0, 1700], [3, 700]]}, "sapper": {n: 4, fw: 110, fh: 128, ms: 1800, seq: [[0, 2000], [1, 700], [0, 1500], [3, 700]]}, "tank": {n: 4, fw: 150, fh: 121, ms: 1000}, "obs": {n: 4, fw: 110, fh: 157, ms: 2400, seq: [[0, 2600], [3, 1500], [0, 1700], [1, 1600]]}};
 const tintedSrc = (src, side, t) => (side === 'me' && t && t.cols && TINT.get(src) ? TINT.get(src)[t.cols[0]] : null);
 function spriteInner(key, side, t) {
   const src0 = paintOf(key, side), src = src0 && (tintedSrc(src0, side, t) || src0);
@@ -3393,8 +3393,13 @@ function spriteInner(key, side, t) {
   // planche d'animation d'attente (n images côte à côte) : on fait défiler les images en boucle
   const sh = side === 'me' && IDLE[key] && typeof PAINT !== 'undefined' && PAINT['me:' + key + '_idle'];
   if (sh) {
-    const m = IDLE[key], s = tintedSrc(sh, side, t) || sh, vals = Array.from({ length: m.n }, (_, i) => -i * m.fw).join(';');
-    return `${air ? '' : ring}<svg class="shv" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" style="width:70px;height:${air ? 48 : 61}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${m.fh}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" calcMode="discrete" dur="${m.ms}ms" begin="-${Math.round(Math.random() * m.ms)}ms" repeatCount="indefinite"/></image></svg>`;
+    const m = IDLE[key], s = tintedSrc(sh, side, t) || sh, seq = m.seq || Array.from({ length: m.n }, (_, i) => [i, m.ms / m.n]);
+    const dur = seq.reduce((a, [, d]) => a + d, 0), vals = seq.map(([f]) => -f * m.fw).join(';');
+    let acc = 0; const kt = seq.map(([, d]) => { const v = acc / dur; acc += d; return v.toFixed(4); }).join(';');
+    // la fenêtre a exactement les proportions d'une image : on ne voit jamais les images voisines de la planche
+    const BW = 70, BH = air ? 48 : 61, k = Math.min(BW / m.fw, BH / m.fh), w = +(m.fw * k).toFixed(2), h = +(m.fh * k).toFixed(2);
+    const x = +(-3 + (BW - w) / 2).toFixed(2), y = +((air ? 6 : -2) + (air ? (BH - h) / 2 : BH - h)).toFixed(2);
+    return `${air ? '' : ring}<svg class="shv" x="${x}" y="${y}" width="${w}" height="${h}" style="width:${w}px;height:${h}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${m.fh}" preserveAspectRatio="none" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" keyTimes="${kt}" calcMode="discrete" dur="${dur}ms" begin="-__B__ms" data-d="${dur}" repeatCount="indefinite"/></image></svg>`;
   }
   return `${air ? '' : ring}<image class="pimg" href="${src}" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet"/>`;
 }
@@ -3403,24 +3408,26 @@ function spriteSVG(key, side, size, cols) {
   const t = teamFor(side, cols);
   const inner = mirror(side, key, spriteInner(key, side, t));
   const flat = ['destroyer', 'croiseur', 'sousmarin'].includes(key) || (kindOf(key) === 'air' && paintOf(key, side));
-  return `<svg viewBox="-4 -4 72 68" width="${size || 56}" height="${size || 56}" class="${sprCls(key, side, cols)}" aria-hidden="true">${flat ? '' : shadow}${inner}</svg>`;
+  return desync(`<svg viewBox="-4 -4 72 68" width="${size || 56}" height="${size || 56}" class="${sprCls(key, side, cols)}" aria-hidden="true">${flat ? '' : shadow}${inner}</svg>`);
 }
 
 // Groupe d'unités : plusieurs figurines selon l'effectif restant (n sur nMax)
 const FIGS = { train: 1, battery: 1, howitzer: 2, bunker: 1, inf: 5, jeep: 2, para: 2, rifle: 5, gren: 3, sniper: 2, mgnest: 2, obs: 2, medic: 2, sapper: 3, arty: 2, halftrack: 2 };
 const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destroyer', croiseur: 'croiseur', sousmarin: 'sousmarin', chasseur: 'chasseur', bombardier: 'bombardier', paras: 'para',
   observateur: 'obs', infirmiers: 'medic', genie: 'sapper', mitrailleuse: 'mgnest', artillerie: 'arty', halftrack: 'halftrack', antichar: 'td', reco: 'recon' };
+// décalage aléatoire du départ d'une animation d'attente peinte (pour que les figurines ne bougent pas toutes ensemble)
+const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="(\d+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
   const one = mirror(side, key, (paintOf(key, side) && kindOf(key) !== 'air' ? shadow : '') + spriteInner(key, side, t));
-  if (k === 1) return spriteSVG(key, side, size, cols);
+  if (k === 1) return desync(spriteSVG(key, side, size, cols));
   const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : 0.58, fig = 64 * sc;
   let g = '';
   rows.forEach((m, r) => {
     const y = rows.length === 1 ? (64 - fig) / 2 : r === 0 ? 0 : 64 - fig, gap = Math.min(fig * 0.9, 96 / m);
     const x0 = (100 - ((m - 1) * gap + fig)) / 2;
-    for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${one}</g>`;
+    for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${desync(one)}</g>`;
   });
   return `<svg viewBox="0 0 100 66" width="${Math.round(size * 1.5)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
 }
