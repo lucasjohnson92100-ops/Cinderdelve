@@ -1850,7 +1850,7 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .awu-fire { display: none; height: 100%; } .awu-idle { display: contents; }
 .awu.has-fire.fire .awu-idle { display: none; } .awu.has-fire.fire .awu-fire { display: flex; align-items: flex-end; height: 100%; }
 .awu-fire svg { height: 100%; width: auto; max-width: 100%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .45)) brightness(1.08); }
-.awu.has-fire.fire::after { display: none; }
+.awu.fire::after, .awu.has-fire.fire::after { display: none; }
 .vmuz { position: absolute; right: -16px; top: 30%; z-index: 5; width: 34px; height: 34px; background: var(--vfx-muzzle) center / contain no-repeat; animation: vmuz .12s steps(2) 2; pointer-events: none; }
 @keyframes vmuz { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(1.2); opacity: .6; } }
 .vblast { position: absolute; right: -54px; top: 4%; z-index: 5; width: 86px; height: 66px; background: var(--vfx-blast) left center / contain no-repeat; animation: vblast .4s ease-out forwards; pointer-events: none; transform-origin: left center; }
@@ -3344,7 +3344,7 @@ if (typeof PAINT !== 'undefined') {
   ['inf', 'rifle', 'gren', 'para', 'obs', 'medic', 'sapper', 'sniper'].forEach(k => { if (PAINT.fire_me) { PAINT['me:' + k + '_fire'] = PAINT.fire_me; KIND_OF[k + '_fire'] = 'foot'; } });
 }
 if (typeof VFX !== 'undefined') Object.entries(VFX).forEach(([k, v]) => document.documentElement.style.setProperty('--vfx-' + k, `url(${v})`));
-const fireKey = key => (typeof PAINT !== 'undefined' && PAINT['me:' + key + '_fire'] ? key + '_fire' : null);
+const fireKey = key => (typeof PAINT !== 'undefined' && PAINT['me:' + key + '_fire'] && (typeof IDLE === 'undefined' || !IDLE[key] || IDLE[key + '_fire']) ? key + '_fire' : null);
 const HEAVY_GUN = { tank: 1, arty: 1, td: 1, destroyer: 1, croiseur: 1 };
 // Recoloration des sprites peints : seules les teintes bleues (uniformes, casques, carrosseries) prennent la couleur de la carte ; la peau, le bois, le métal gardent les leurs
 const TINT = new Map(), TINT_HUE = { J: 46, R: 4, V: 112 };
@@ -4603,7 +4603,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const unitHTML = uid => {
     const u = live.find(x => x.uid === uid); if (!u) return '';
     const k = SPR_OF[u.key], fk = fireKey(k);
-    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}${k === 'chasseur' && typeof PAINT !== 'undefined' && PAINT['me:chasseur_rkt'] ? `<span class="awu-rkt">${squadSVG('chasseur_rkt', 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}<i class="awn">${u.menMax}</i></span>`;
+    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}<i class="awn">${u.menMax}</i></span>`;
   };
   const hasAir = () => false;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
@@ -4684,7 +4684,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       add('vwingmuz', 460);
       for (let j = 0; j < 9; j++) setTimeout(() => flyFx(tk, { left: mr.left + (Math.random() - .3) * 70, top: mr.top + 10 + Math.random() * 40, width: 0, height: 0 }, 'bullet tracer', 240), j * 40);
       setTimeout(() => { fxOn(mk, 'strafe', false, -10, 22); SFX.play('mg'); }, 300);
-      if (tk.querySelector('.awu-rkt')) setTimeout(() => {
+      if (k === 'chasseur') setTimeout(() => {
         tk.classList.add('rkt'); SFX.play('shell');
         for (let j = 0; j < 2; j++) setTimeout(() => flyFx(tk, mk, 'rocket', 430).then(() => boomOn(mk, j === 1, (Math.random() - .5) * 34, (Math.random() - .5) * 30)), j * 120);
       }, 420);
