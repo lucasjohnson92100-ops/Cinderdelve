@@ -134,3 +134,11 @@ Les bruitages sont synthétisés par le navigateur (Web Audio), sans fichier aud
 - Chars et chasseurs de chars : recul, onde de choc à la bouche, nuage de poussière des chenilles (`art/dust.webp`, 4 images), obus perforant traçant, gerbe d'étincelles et explosion sur le QG.
 - Artillerie : recul appuyé, bouche à feu levée, deux obus en cloche qui soulèvent la terre (`art/earth.webp`, 4 images : éclair, gerbe de terre, colonne de débris, cratère fumant).
 - Jeeps et half-tracks : avancée saccadée en mitraillant, traçantes et impacts au sol, petite poussière derrière les roues.
+
+### Animations d'attente
+Sur le plateau comme dans la scène d'assaut, chaque unité reste vivante, avec un décalage propre à chacune :
+- soldats : respiration et léger balancement ;
+- engins et canons : moteur qui tourne (vibration) et bouffées d'échappement à l'arrière ;
+- navires : tangage, écume à la ligne de flottaison, fumée de cheminée ;
+- avions : vol en ondulant et traînées de vent.
+(Désactivées si le système demande de réduire les animations.)
