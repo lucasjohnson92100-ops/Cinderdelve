@@ -151,3 +151,6 @@ Planches de 4 images détourées, mises à la même échelle et alignées (`art/
 
 ### Échelle relative des unités
 Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait environ les 3/4 de la hauteur d'un char, une jeep est plus courte qu'un char, l'artillerie et le half-track entre les deux ; les avions et les navires sont agrandis. Plus de véhicules ou de soldats de la même longueur par construction.
+
+### Portraits peints des jokers
+`art/jokers/*.webp` (256 px) : Moreau, Dubois, Ashby, Kowalski, Meyer, Ito, Silva, Brandt, Peintre de guerre, Soleil, Braise. Affichés en médaillon rond (`JOKER_ART` / `officerSVG`) partout où le joker apparaît ; les autres jokers gardent leur petit dessin en attendant leur portrait.
