@@ -157,3 +157,6 @@ Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait 
 
 ### Fonds peints de la scène d'assaut
 `art/scene/*.webp` (route, champ, forêt, village, rivière, mer, ciel, + ruines en réserve) : panoramas vus de côté, horizon à mi-hauteur, bande de sol dégagée dans le bas où se tiennent les unités. Cadrage par terrain dans le CSS (`background-position`). Le plateau (hors assaut) garde ses anciens fonds.
+
+### Ambiances de la scène d'assaut
+`art/scene/<terrain>_<ambiance>.webp` : jour, crépuscule, pluie, nuit. Choix selon la blinde (`sceneMood`) : jour au début, crépuscule à partir du niveau 6, pluie pour les élites, nuit pour les boss et à partir du niveau 12. Quand une ambiance n'existe pas pour un terrain, la version de jour est utilisée (manquent : route pluie/nuit, champ nuit, forêt crépuscule). Le terrain « ruines » est en réserve (`ruines_*`), non intégré.
