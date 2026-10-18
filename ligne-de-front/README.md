@@ -165,3 +165,6 @@ Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait 
 - Pendant l'avancée et à chaque tir, les unités terrestres soulèvent des effets propres au terrain : poussière (route, champ), boue et feuilles qui tombent (forêt), gravats (village), ronds d'eau (rivière) — plus gros pour les engins.
 - Marche : les fantassins avancent en balançant le pas (plus lent en forêt et au village), les engins vibrent plus fort.
 - Lumière de l'ambiance sur les unités (crépuscule chaud, pluie terne, nuit sombre) uniquement quand le décor de ce terrain existe dans cette ambiance ; voile de pluie animé sur les décors de pluie.
+
+## Effets de sol peints (pas, roulage, impact)
+Planches IA 2×2 détourées (noir ; blanc pour « rivière pas ») et assemblées en bandes de 4 images, intégrées à `VFX` sous `sol_<terrain>_<pas|roulage|impact>` : pas sous l'infanterie qui avance ou tire, nuage de roulage derrière chars, jeeps, half-tracks et artillerie, gerbe d'impact là où tombent les obus. Le village réutilise le « pas » de la route ; sans planche, les effets CSS `.ffx` restent en secours.
