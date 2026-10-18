@@ -168,3 +168,9 @@ Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait 
 
 ## Effets de sol peints (pas, roulage, impact)
 Planches IA 2×2 détourées (noir ; blanc pour « rivière pas ») et assemblées en bandes de 4 images, intégrées à `VFX` sous `sol_<terrain>_<pas|roulage|impact>` : pas sous l'infanterie qui avance ou tire, nuage de roulage derrière chars, jeeps, half-tracks et artillerie, gerbe d'impact là où tombent les obus. Le village réutilise le « pas » de la route ; sans planche, les effets CSS `.ffx` restent en secours.
+
+### Effets dans leur contexte
+- Le contexte est lu sur l'élément touché : terrain du secteur, ou QG ennemi (bâtiment). Sur le QG : boule de feu peinte (`sol_expl`) pour les gros coups, gravats pour l'artillerie, petits éclats de poussière pour les balles d'infanterie — jamais de gerbe d'eau ni d'herbe.
+- Pendant l'avance, deux obus ennemis tombent devant les unités avec l'impact du terrain (`shellFall`) ; la riposte frappe avec le terrain de son propre secteur.
+- Pas d'empreintes pour les avions et navires d'appui ; plus de bouffée de poussière quand un fantassin tire ; l'artillerie soulève un souffle de poussière au lieu d'un nuage de roulage.
+- Pluie (fonds avec ambiance) : route, champ et village passent aux flaques et gerbes d'eau ; nuit et crépuscule assombrissent ou dorent la poussière ; le village grise la poussière de route.
