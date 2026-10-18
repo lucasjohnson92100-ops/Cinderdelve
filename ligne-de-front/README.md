@@ -154,3 +154,6 @@ Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait 
 
 ### Portraits peints des jokers
 `art/jokers/*.webp` (256 px) : Moreau, Dubois, Ashby, Kowalski, Meyer, Ito, Silva, Brandt, Peintre de guerre, Soleil, Braise. Affichés en médaillon rond (`JOKER_ART` / `officerSVG`) partout où le joker apparaît ; les autres jokers gardent leur petit dessin en attendant leur portrait.
+
+### Fonds peints de la scène d'assaut
+`art/scene/*.webp` (route, champ, forêt, village, rivière, mer, ciel, + ruines en réserve) : panoramas vus de côté, horizon à mi-hauteur, bande de sol dégagée dans le bas où se tiennent les unités. Cadrage par terrain dans le CSS (`background-position`). Le plateau (hors assaut) garde ses anciens fonds.
