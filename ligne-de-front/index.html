@@ -1788,6 +1788,14 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 
 /* ==== Scène d'assaut façon Advance Wars ==== */
 .aws { position: fixed; inset: 0; z-index: 85; display: grid; grid-template-columns: minmax(0, 1fr) clamp(140px, 26vw, 300px); background: #0b0f16; opacity: 0; transition: opacity .2s; }
+.aws.focus .aws-bands { display: block; position: relative; }
+.aws.focus .awb { position: absolute; inset: 3px 0 3px 3px; animation: none; visibility: hidden; opacity: 0; transform: translateX(14%) scale(.97); transition: transform .5s cubic-bezier(.2, 1, .3, 1), opacity .35s, filter .25s, visibility 0s .5s; }
+.aws.focus .awb.cur { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; z-index: 2; }
+.aws.focus .awb.gone { visibility: visible; opacity: 0; transform: translateX(-14%) scale(.97); transition-delay: 0s; }
+.aws.focus .aws-mk { top: 52% !important; }
+.aws.focus .awb-lab > b { font-size: .74rem; }
+.aws-wipe { position: absolute; inset: 0; z-index: 15; pointer-events: none; background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-120%); mix-blend-mode: screen; }
+.aws.flash .aws-wipe { animation: awwipe .6s ease-out; } @keyframes awwipe { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
 .aws.in { opacity: 1; } .aws.out { opacity: 0; transition: opacity .25s; }
 .aws.quake { animation: bigshake .45s 1; }
 .aws-bands { display: flex; flex-direction: column; gap: 3px; padding: 3px 0 3px 3px; min-height: 0; }
@@ -4797,13 +4805,16 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const sc = document.createElement('div'); sc.className = 'aws'; sc.style.setProperty('--rw', sideW() + 'px'); sc.dataset.amb = sceneMood(S.lvl);
   sc.innerHTML = `<div class="aws-bands">${bands}</div>
     <div class="aws-hq"><i class="aws-pic"></i>${marks}<div class="aws-hp"><b>${hold ? 'Tenir' : S.lvl.name}</b><div class="bar"><i style="width:${hold ? 100 : (hq0.en / max) * 100}%"></i></div><span>${hold ? '' : `${fmtN(hq0.en)} / ${fmtN(max)}`}</span></div></div>
-    <div class="aws-banner"><b>Assaut !</b></div>`;
+    <div class="aws-wipe"></div><div class="aws-banner"><b>Assaut !</b></div>`;
   document.body.appendChild(sc);
+  sc.classList.add('focus');   // un seul secteur affiché à la fois, en grand ; vue d'ensemble pour le bilan
   // taille commune des unités : la même pour tous les secteurs, calée sur la bande la plus contrainte (hauteur et largeur)
   sc.querySelectorAll('.awb').forEach(b => { const t = (b.className.match(/t-(\w+)/) || [])[1]; b.dataset.ambok = ambHas(t, sc.dataset.amb) ? '1' : '0'; });
-  const bs = [...sc.querySelectorAll('.awb')], bh = Math.min(...bs.map(b => b.clientHeight)), most = Math.max(...bs.map(b => b.querySelectorAll('.awu').length)), uw = Math.min(...bs.map(b => b.clientWidth)) - 74 - 16;
-  const uh = Math.max(34, Math.min(100, bh * 0.58, (uw * 0.72) / Math.max(1, most * 1.7)));
-  sc.style.setProperty('--uh', uh.toFixed(0) + 'px');
+  const bs = [...sc.querySelectorAll('.awb')], bands0 = sc.querySelector('.aws-bands'), bhF = bands0.clientHeight - 6, bwF = bands0.clientWidth - 3;
+  // chaque secteur a la place de toute la scène : ses unités sont dimensionnées selon leur nombre, pas selon le secteur le plus chargé
+  bs.forEach(b => { const cnt = b.querySelectorAll('.awu').length, u = Math.max(40, Math.min(124, bhF * 0.34, ((bwF - 74 - 16) * 0.82) / Math.max(1, cnt * 1.6))); b.style.setProperty('--uh', u.toFixed(0) + 'px'); });
+  sc.style.setProperty('--uh', '60px');
+  if (bs[0]) bs[0].classList.add('cur');
   const hpBar = sc.querySelector('.aws-hp .bar i'), hpTx = sc.querySelector('.aws-hp span'), hqBox = sc.querySelector('.aws-hq');
   let hpNow = hq0.en;
   const banner = async (html, cls = '', ms = 700) => { const b = sc.querySelector('.aws-banner'); b.className = 'aws-banner on ' + cls; b.innerHTML = html; await T(ms); b.className = 'aws-banner'; };
@@ -4953,7 +4964,14 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   for (let i = 0; i < rows.length; i++) {
     const st = rows[i], f = st.f, band = sc.querySelector(`.awb[data-i="${i}"]`), mk = sc.querySelector(`.aws-mk[data-i="${i}"]`);
     const chEl = band.querySelector('.ch'), muEl = band.querySelector('.mu'), toEl = band.querySelector('.awb-tot'), cbs = band.querySelector('.awb-cbs');
-    sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band)); band.classList.add('act');
+    if (i > 0 && sc.classList.contains('focus')) {
+      // transition : le secteur précédent glisse vers la gauche, un éclair balaie l'écran, le suivant arrive de la droite
+      const prev = sc.querySelector(`.awb[data-i="${i - 1}"]`); prev.classList.remove('cur', 'act'); prev.classList.add('gone'); band.classList.add('cur');
+      sc.classList.remove('flash'); void sc.offsetWidth; sc.classList.add('flash'); SFX.play('go');
+      await banner(`<small>Secteur ${i + 1} / ${n}</small><b>${TERRAIN[S.lanes[st.c]].name}</b>`, '', 620);
+      prev.classList.remove('gone');
+    }
+    sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band && !sc.classList.contains('focus'))); band.classList.add('act');
     if (f.blocked) { toEl.textContent = 'Coupé'; toEl.classList.add('cut', 'on'); SFX.play('deny'); band.insertAdjacentHTML('beforeend', '<span class="awb-train">🚂 Le train blindé coupe ce secteur</span>'); await T(800); band.classList.remove('act'); continue; }
     // les unités avancent puis tirent, une à une
     band.classList.add('adv'); SFX.play('land'); if (!fast) { harass(band, 4, 170); shellFall(band, 2); footFx(band, 5, 70); } await T(200);
@@ -5009,6 +5027,11 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     band.classList.remove('act', 'adv');
   }
   sc.querySelectorAll('.awb').forEach(b => b.classList.remove('dim'));
+  if (n > 1) {   // le plan se resserre : tous les secteurs reviennent pour le bilan de la frappe
+    sc.classList.add('overview'); sc.classList.remove('focus'); sc.classList.remove('flash'); void sc.offsetWidth; sc.classList.add('flash');
+    sc.querySelectorAll('.awb').forEach(b => b.classList.remove('cur', 'gone', 'act'));
+    await T(480 + n * 90);
+  }
   // frappe totale
   if (stk) {
     if (!hold) { hpBar.style.width = Math.max(0, (stk.hqAfter.en / max) * 100) + '%'; hpTx.textContent = `${fmtN(Math.max(0, stk.hqAfter.en))} / ${fmtN(max)}`; }

@@ -201,3 +201,6 @@ Vidéo Dreamina d'un fantassin dans l'eau (coupé à la taille, ondes autour du 
 
 ### Unités plus grandes sur le plateau
 Les jetons d'unités des couloirs passent de 82 % à 96 % de la hauteur du couloir (74 % → 86 % pour les unités d'appui dans un secteur terrestre, 82 % → 96 % pour le ciel et la mer). Tous les types grandissent ensemble : les proportions entre fantassins, véhicules, avions et navires et la taille des couloirs ne changent pas, seule la place perdue au-dessus des figurines est reprise.
+
+### Assaut : un secteur à la fois
+`awScene` passe en mode `focus` : un seul secteur occupe toute la scène (unités dimensionnées selon leur nombre, jusqu'à 124 px, panorama du terrain visible en entier). Entre deux secteurs : le précédent glisse vers la gauche, un éclair balaie l'écran (`.aws-wipe`), une bannière « Secteur n / N » annonce le terrain et le suivant arrive de la droite. Les cibles d'impact du QG sont centrées pendant le focus. Avant la frappe totale et la riposte, la scène revient en vue d'ensemble (tous les secteurs s'empilent, comme avant) ; avec un seul secteur, le focus reste jusqu'au bout.
