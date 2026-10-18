@@ -186,3 +186,6 @@ Même chaîne que pour les tireurs (chroma vert → boucle d'attente choisie là
 
 ### Animations vidéo : parachutistes, mitrailleuse, artillerie, half-track
 Parachutistes et mitrailleuse : attente en boucle + séquence de tir (flash de bouche, 85 ms par image, cadre identique à l'attente). Artillerie et half-track : attente seule (leurs tirs restent ceux du code). Échelle plafonnée à 1 pour que la fenêtre ne dépasse pas la case de l'unité.
+
+### Animations vidéo : char, chasseur de chars, jeep, bombardier, avion de reconnaissance
+Attente seule (les tirs restent ceux du code). La jeep avait un fond vert terne : détourage par distance à la couleur de fond (médiane des bords) au lieu de la dominance du vert. Bombardier et reconnaissance : la boucle s'arrête avant l'ouverture de la soute et le flash photo.
