@@ -160,3 +160,8 @@ Chaque planche d'animation a un coefficient `sc` (dans `IDLE`) : un soldat fait 
 
 ### Ambiances de la scène d'assaut
 `art/scene/<terrain>_<ambiance>.webp` : jour, crépuscule, pluie, nuit. Choix selon la blinde (`sceneMood`) : jour au début, crépuscule à partir du niveau 6, pluie pour les élites, nuit pour les boss et à partir du niveau 12. Quand une ambiance n'existe pas pour un terrain, la version de jour est utilisée (manquent : route pluie/nuit, champ nuit, forêt crépuscule). Le terrain « ruines » est en réserve (`ruines_*`), non intégré.
+
+### Animations par lieu (infanterie et véhicules)
+- Pendant l'avancée et à chaque tir, les unités terrestres soulèvent des effets propres au terrain : poussière (route, champ), boue et feuilles qui tombent (forêt), gravats (village), ronds d'eau (rivière) — plus gros pour les engins.
+- Marche : les fantassins avancent en balançant le pas (plus lent en forêt et au village), les engins vibrent plus fort.
+- Lumière de l'ambiance sur les unités (crépuscule chaud, pluie terne, nuit sombre) uniquement quand le décor de ce terrain existe dans cette ambiance ; voile de pluie animé sur les décors de pluie.
