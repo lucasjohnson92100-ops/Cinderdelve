@@ -180,3 +180,6 @@ Planches IA 2×2 détourées (noir ; blanc pour « rivière pas ») et assemblé
 
 ### Animation vidéo des tireurs (Dreamina)
 Première unité animée par vidéo IA : clip de 5 s sur fond vert → détourage chroma (`g − max(r,b)`, despill, filigrane masqué) → 24 images d'attente (boucle de 2,8 s choisie là où la pose de départ et d'arrivée coïncident) et 7 images de tir (flash de bouche, 85 ms par image) en bandes `PAINT["me:inf_idle"]` / `PAINT["me:inf_fire_idle"]`, mêmes dimensions de cadre pour que la figurine ne bouge pas au passage attente → tir. Recoloration par couleur de carte inchangée.
+
+### Animations vidéo (Dreamina) : chasseur, croiseur, sous-marin, destroyer, infirmiers
+Même chaîne que pour les tireurs (chroma vert → boucle d'attente choisie là où début et fin coïncident, aller-retour si l'écart reste visible) ; seule la phase d'attente de chaque clip est utilisée, les tirs des navires et des avions restent ceux du code (`navalFire`, `airFire`) pour ne pas doubler les effets. Le croiseur reçoit sa première animation d'attente.
