@@ -3520,7 +3520,7 @@ function spriteInner(key, side, t) {
   const sh = side === 'me' && IDLE[key] && typeof PAINT !== 'undefined' && PAINT['me:' + key + '_idle'];
   if (sh) {
     const m = IDLE[key], s = tintedSrc(sh, side, t) || sh, seq = m.seq || Array.from({ length: m.n }, (_, i) => [i, m.ms / m.n]);
-    const dur = seq.reduce((a, [, d]) => a + d, 0), vals = seq.map(([f]) => -f * m.fw).join(';');
+    const dur = Math.round(seq.reduce((a, [, d]) => a + d, 0)), vals = seq.map(([f]) => -f * m.fw).join(';');
     let acc = 0; const kt = seq.map(([, d]) => { const v = acc / dur; acc += d; return v.toFixed(4); }).join(';');
     // la fenêtre a exactement les proportions d'une image : on ne voit jamais les images voisines de la planche
     const sc = m.sc || 1, BW = 70, BH = air ? 48 : 61, k = Math.min(BW * sc / m.fw, BH * sc / m.fh), w = +(m.fw * k).toFixed(2), h = +(m.fh * k).toFixed(2);
@@ -3542,7 +3542,7 @@ const FIGS = { train: 1, battery: 1, howitzer: 2, bunker: 1, inf: 5, jeep: 2, pa
 const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destroyer', croiseur: 'croiseur', sousmarin: 'sousmarin', chasseur: 'chasseur', bombardier: 'bombardier', paras: 'para',
   observateur: 'obs', infirmiers: 'medic', genie: 'sapper', mitrailleuse: 'mgnest', artillerie: 'arty', halftrack: 'halftrack', antichar: 'td', reco: 'recon' };
 // décalage aléatoire du départ d'une animation d'attente peinte (pour que les figurines ne bougent pas toutes ensemble)
-const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="(\d+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
+const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
