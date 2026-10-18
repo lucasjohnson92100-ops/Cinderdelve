@@ -2283,7 +2283,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 @keyframes ffxrip { 0% { transform: translate(var(--dx, 0), 0) scale(.3); opacity: .9; } 100% { transform: translate(var(--dx, 0), 0) scale(2.2); opacity: 0; } }
 .ffx.shot { left: 70%; bottom: 0; width: calc(var(--uh, 60px) * .4); height: calc(var(--uh, 60px) * .22); animation-duration: .6s; }
 /* marche : les fantassins avancent en balançant le pas, les engins vibrent plus fort */
-.awb.adv .awu.k-foot .awu-idle > svg, .awb.adv .awu.k-foot .awu-fire > svg, .awb.adv .awu.k-foot > .awu-idle { animation: march .26s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.awu.k-foot.fire { animation: none; } /* l'infanterie ne se balance plus à l'attaque : ses images animées suffisent */
 @keyframes march { from { transform: translateY(0) rotate(-2.2deg); } to { transform: translateY(-5%) rotate(2.2deg); } }
 .awb.adv .awu.k-veh svg, .awb.adv .awu.k-gun svg { animation: vroll .16s linear infinite alternate; }
 @keyframes vroll { from { transform: translateY(0); } to { transform: translateY(-1.8%) rotate(-.4deg); } }
