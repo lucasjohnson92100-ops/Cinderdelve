@@ -174,3 +174,6 @@ Planches IA 2×2 détourées (noir ; blanc pour « rivière pas ») et assemblé
 - Pendant l'avance, deux obus ennemis tombent devant les unités avec l'impact du terrain (`shellFall`) ; la riposte frappe avec le terrain de son propre secteur.
 - Pas d'empreintes pour les avions et navires d'appui ; plus de bouffée de poussière quand un fantassin tire ; l'artillerie soulève un souffle de poussière au lieu d'un nuage de roulage.
 - Pluie (fonds avec ambiance) : route, champ et village passent aux flaques et gerbes d'eau ; nuit et crépuscule assombrissent ou dorent la poussière ; le village grise la poussière de route.
+
+### Avant-plan de terrain (accessoires peints)
+`AVANT[terrain]` : 4 accessoires peints par terrain (route : monticules et cailloux ; champ : herbe, trèfle, blé, gazon arraché ; forêt : fougères, racine moussue, feuilles, branche ; village : briques, pavés, tuile, poutre), issus de planches 2×2 détourées. Chaque unité terrestre de l'assaut en reçoit deux devant ses pieds ou ses chenilles (`avantHTML`, classe `.av`), plus petits pour l'infanterie que pour les véhicules, teintés comme les unités selon l'ambiance. Rivière : pas d'accessoires (les soldats sont sur la berge) en attendant les fantassins dans l'eau.
