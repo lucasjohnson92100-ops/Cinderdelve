@@ -192,3 +192,6 @@ Attente seule (les tirs restent ceux du code). La jeep avait un fond vert terne 
 
 ### Animations vidéo : observateurs, génie
 Dernières unités terrestres converties : attente en boucle (observateurs : jumelles, regard qui tourne ; génie : détecteur de mines balayé). Toutes les unités du jeu ont désormais une animation d'attente issue d'une vidéo ; les tirs peints existent pour l'infanterie de base, les parachutistes et la mitrailleuse, les autres tirs restent ceux du code.
+
+### Tirs vidéo branchés (char, chasseur de chars, jeep, half-track, artillerie, destroyer, croiseur, chasseur)
+Les clips contiennent le flash, la fumée et le recul : ils sont découpés en planches de tir `PAINT["me:<unité>_fire_idle"]` à la même échelle que l'attente. Comme la fumée dépasse de l'image d'attente, `IDLE[<unité>_fire].ref` donne le cadre de la planche de tir en fractions de l'image d'attente (`base`) : la figurine reste exactement au même endroit et le reste déborde (`overflow: visible`). Le code ne dessine plus le flash, le nuage de roulage, le recul ni l'inclinaison de piqué pour ces unités (test `animate[data-once]`) ; il garde les projectiles, les impacts et les secousses d'écran. Sous-marin, bombardier et reconnaissance gardent leurs effets codés.
