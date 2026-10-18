@@ -177,3 +177,6 @@ Planches IA 2×2 détourées (noir ; blanc pour « rivière pas ») et assemblé
 
 ### Avant-plan de terrain (accessoires peints)
 `AVANT[terrain]` : 4 accessoires peints par terrain (route : monticules et cailloux ; champ : herbe, trèfle, blé, gazon arraché ; forêt : fougères, racine moussue, feuilles, branche ; village : briques, pavés, tuile, poutre), issus de planches 2×2 détourées. Chaque unité terrestre de l'assaut en reçoit deux devant ses pieds ou ses chenilles (`avantHTML`, classe `.av`), plus petits pour l'infanterie que pour les véhicules, teintés comme les unités selon l'ambiance. Rivière : pas d'accessoires (les soldats sont sur la berge) en attendant les fantassins dans l'eau.
+
+### Animation vidéo des tireurs (Dreamina)
+Première unité animée par vidéo IA : clip de 5 s sur fond vert → détourage chroma (`g − max(r,b)`, despill, filigrane masqué) → 24 images d'attente (boucle de 2,8 s choisie là où la pose de départ et d'arrivée coïncident) et 7 images de tir (flash de bouche, 85 ms par image) en bandes `PAINT["me:inf_idle"]` / `PAINT["me:inf_fire_idle"]`, mêmes dimensions de cadre pour que la figurine ne bouge pas au passage attente → tir. Recoloration par couleur de carte inchangée.
