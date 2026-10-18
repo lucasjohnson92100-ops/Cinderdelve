@@ -4757,7 +4757,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const rows = secs.filter(st => !st.f.blocked || st.f.me.length);
   const n = Math.max(1, rows.length);
   // avant-plan du terrain : 2 accessoires peints (touffes, gravats, vagues…) devant les pieds ou les chenilles, pour ancrer chaque unité dans le décor
-  const AV_W = { route: [.42, .68], champ: [.36, .6], foret: [.42, .64], village: [.42, .64] }; // rivière : les soldats se tiennent sur la berge, les vagues flottantes n'y vont pas (réservées aux soldats dans l'eau)
+  const AV_W = {}; // accessoires de sol désactivés (rendu « autocollant » jugé laid) ; AVANT reste prêt si on les retravaille
   const avantHTML = (u, ter) => {
     const set = typeof AVANT !== 'undefined' && AV_W[ter] && AVANT[ter]; if (!set || !u.land) return '';
     const big = ['veh', 'gun'].includes(kindOf(SPR_OF[u.key])), w = AV_W[ter][big ? 1 : 0];
