@@ -198,3 +198,6 @@ Les clips contiennent le flash, la fumée et le recul : ils sont découpés en p
 
 ### Fantassins dans la rivière
 Vidéo Dreamina d'un fantassin dans l'eau (coupé à la taille, ondes autour du buste) : planches `me:inf_eau` (attente, 24 images) et `me:inf_eau_fire` (tir, flash et fumée, cadre plus large positionné par `ref`). Dans un secteur Rivière, les tireurs de la rangée de devant utilisent ces planches (`unitHTML` remplace `inf` par `inf_eau`), la rangée de derrière reste sur la berge avec le sprite normal. Les autres fantassins (paras, observateurs, infirmiers, génie) sont coupés à la taille par un masque avec vaguelettes animées (`.wtr`, `WADE_ON`) ; la mitrailleuse reste sur la berge. Les unités d'un secteur Rivière sont descendues dans la bande d'eau (`.wading`).
+
+### Unités plus grandes sur le plateau
+Les jetons d'unités des couloirs passent de 82 % à 96 % de la hauteur du couloir (74 % → 86 % pour les unités d'appui dans un secteur terrestre, 82 % → 96 % pour le ciel et la mer). Tous les types grandissent ensemble : les proportions entre fantassins, véhicules, avions et navires et la taille des couloirs ne changent pas, seule la place perdue au-dessus des figurines est reprise.
