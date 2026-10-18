@@ -2141,6 +2141,13 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 @keyframes mgjit { 0% { transform: none; } 10%, 30%, 50%, 70% { transform: translate(4%, -1px); } 20%, 40%, 60%, 80% { transform: translate(6%, 1px); } 100% { transform: none; } }
 .vdust { position: absolute; z-index: -1; left: -55%; bottom: -10%; width: calc(var(--uh, 60px) * 1.25); aspect-ratio: 200 / 121; background: var(--vfx-dust) 0 0 / 400% 100% no-repeat; animation: vboom .85s steps(1) forwards; pointer-events: none; }
 .vdust.sm { width: calc(var(--uh, 60px) * .85); left: -40%; }
+.awb.t-riviere.wading .awb-units { bottom: 5% !important; }
+svg.shv.wade { -webkit-mask-image: linear-gradient(#000 0, #000 66%, transparent 76%); mask-image: linear-gradient(#000 0, #000 66%, transparent 76%); }
+.wtr { fill: var(--wtr, rgba(115, 180, 208, .62)); stroke: rgba(255, 255, 255, .85); stroke-width: .7; transform-box: fill-box; transform-origin: center; animation: wtrw 1.7s ease-in-out infinite alternate; }
+.wtr.w2 { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: .5; animation: wtrr 1.7s ease-out infinite; }
+@keyframes wtrw { from { transform: translateX(-1.5%) scaleY(1); } to { transform: translateX(1.5%) scaleY(1.18); } }
+@keyframes wtrr { from { transform: scale(.7); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+.aws[data-amb="crepuscule"] { --wtr: rgba(235, 190, 160, .7); } .aws[data-amb="pluie"] { --wtr: rgba(105, 135, 155, .75); } .aws[data-amb="nuit"] { --wtr: rgba(45, 85, 120, .8); }
 .awu .av { position: absolute; bottom: -3%; z-index: 3; width: calc(var(--uh, 60px) * var(--aw, .5)); aspect-ratio: var(--ar, 1.4); max-height: calc(var(--uh, 60px) * .34); background-position: 50% 100%; background-size: contain; background-repeat: no-repeat; pointer-events: none; }
 .awu .av.l { left: 2%; } .awu .av.r { right: 4%; }
 .awu.k-veh .av.l, .awu.k-gun .av.l { left: -8%; } .awu.k-veh .av.r, .awu.k-gun .av.r { right: -6%; }
@@ -3529,7 +3536,9 @@ function spriteInner(key, side, t) {
     const xb = -3 + (BW - wb) / 2, yb = (air ? 6 : -2) + (air ? (BH - hb) / 2 : BH - hb);
     const w = +(m.ref ? m.ref[2] * wb : wb).toFixed(2), h = +(m.ref ? m.ref[3] * hb : hb).toFixed(2);   // la planche de tir peut déborder de l'image d'attente (fumée, flash)
     const x = +(m.ref ? xb + m.ref[0] * wb : xb).toFixed(2), y = +(m.ref ? yb + m.ref[1] * hb : yb).toFixed(2);
-    return `${air ? '' : ring}<svg class="shv" x="${x}" y="${y}" width="${w}" height="${h}" style="width:${w}px;height:${h}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${m.fh}" preserveAspectRatio="none" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" keyTimes="${kt}" calcMode="discrete" dur="${dur}ms" ${m.once ? 'begin="indefinite" repeatCount="1" fill="freeze" data-once="1"' : `begin="-__B__ms" data-d="${dur}" repeatCount="indefinite"`}/></image></svg>`;
+    const wade = window.__wade && side === 'me' && kindOf(key.replace(/_fire$/, '')) === 'foot';
+    const water = wade ? `<ellipse class="wtr" cx="${+(x + w / 2).toFixed(2)}" cy="${+(y + h * 0.74).toFixed(2)}" rx="${+(w * 0.5).toFixed(2)}" ry="${+(h * 0.085).toFixed(2)}"/><ellipse class="wtr w2" cx="${+(x + w / 2).toFixed(2)}" cy="${+(y + h * 0.74).toFixed(2)}" rx="${+(w * 0.42).toFixed(2)}" ry="${+(h * 0.06).toFixed(2)}"/>` : '';
+    return `${air || wade ? '' : ring}<svg class="shv${wade ? ' wade' : ''}" x="${x}" y="${y}" width="${w}" height="${h}" style="width:${w}px;height:${h}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${m.fh}" preserveAspectRatio="none" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" keyTimes="${kt}" calcMode="discrete" dur="${dur}ms" ${m.once ? 'begin="indefinite" repeatCount="1" fill="freeze" data-once="1"' : `begin="-__B__ms" data-d="${dur}" repeatCount="indefinite"`}/></image></svg>${water}`;
   }
   return `${air ? '' : ring}<image class="pimg" href="${src}" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet"/>`;
 }
@@ -3551,13 +3560,15 @@ function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
   const one = mirror(side, key, (paintOf(key, side) && kindOf(key) !== 'air' ? shadow : '') + spriteInner(key, side, t));
+  // rivière : seule la rangée de devant a les pieds dans l'eau, celle de derrière reste sur la berge
+  const w0 = window.__wade; window.__wade = false; const oneDry = w0 ? mirror(side, key, (paintOf(key, side) && kindOf(key) !== 'air' ? shadow : '') + spriteInner(key, side, t)) : one; window.__wade = w0;
   if (k === 1) return desync(spriteSVG(key, side, size, cols));
   const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : 0.58, fig = 64 * sc;
   let g = '';
   rows.forEach((m, r) => {
     const y = rows.length === 1 ? (64 - fig) / 2 : r === 0 ? 0 : 64 - fig, gap = Math.min(fig * 0.9, 96 / m);
     const x0 = (100 - ((m - 1) * gap + fig)) / 2;
-    for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${desync(one)}</g>`;
+    for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${desync(r === rows.length - 1 ? one : oneDry)}</g>`;
   });
   return `<svg viewBox="0 0 100 66" width="${Math.round(size * 1.5)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
 }
@@ -4761,6 +4772,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const rows = secs.filter(st => !st.f.blocked || st.f.me.length);
   const n = Math.max(1, rows.length);
   // avant-plan du terrain : 2 accessoires peints (touffes, gravats, vagues…) devant les pieds ou les chenilles, pour ancrer chaque unité dans le décor
+  const WADE_ON = false;
   const AV_W = {}; // accessoires de sol désactivés (rendu « autocollant » jugé laid) ; AVANT reste prêt si on les retravaille
   const avantHTML = (u, ter) => {
     const set = typeof AVANT !== 'undefined' && AV_W[ter] && AVANT[ter]; if (!set || !u.land) return '';
@@ -4769,6 +4781,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   };
   const unitHTML = (uid, ter) => {
     const u = live.find(x => x.uid === uid); if (!u) return '';
+    window.__wade = WADE_ON && ter === 'riviere';   // les fantassins d'une rivière sont dessinés dans l'eau (désactivé en attendant une vraie vidéo)
     const k = SPR_OF[u.key], fk = fireKey(k);
     return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
   };
@@ -4779,6 +4792,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       <div class="awb-units">${[...st.f.me, ...(st.f.sups || [])].map(id => unitHTML(id, S.lanes[st.c])).join('')}</div>
       <div class="awb-cbs"></div>
       <b class="awb-tot">0</b></div>`).join('');
+  window.__wade = false;
   const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
   const sc = document.createElement('div'); sc.className = 'aws'; sc.style.setProperty('--rw', sideW() + 'px'); sc.dataset.amb = sceneMood(S.lvl);
   sc.innerHTML = `<div class="aws-bands">${bands}</div>
