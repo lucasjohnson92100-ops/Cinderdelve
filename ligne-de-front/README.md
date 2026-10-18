@@ -183,3 +183,6 @@ Première unité animée par vidéo IA : clip de 5 s sur fond vert → détourag
 
 ### Animations vidéo (Dreamina) : chasseur, croiseur, sous-marin, destroyer, infirmiers
 Même chaîne que pour les tireurs (chroma vert → boucle d'attente choisie là où début et fin coïncident, aller-retour si l'écart reste visible) ; seule la phase d'attente de chaque clip est utilisée, les tirs des navires et des avions restent ceux du code (`navalFire`, `airFire`) pour ne pas doubler les effets. Le croiseur reçoit sa première animation d'attente.
+
+### Animations vidéo : parachutistes, mitrailleuse, artillerie, half-track
+Parachutistes et mitrailleuse : attente en boucle + séquence de tir (flash de bouche, 85 ms par image, cadre identique à l'attente). Artillerie et half-track : attente seule (leurs tirs restent ceux du code). Échelle plafonnée à 1 pour que la fenêtre ne dépasse pas la case de l'unité.
