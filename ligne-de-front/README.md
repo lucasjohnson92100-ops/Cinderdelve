@@ -189,3 +189,6 @@ Parachutistes et mitrailleuse : attente en boucle + séquence de tir (flash de b
 
 ### Animations vidéo : char, chasseur de chars, jeep, bombardier, avion de reconnaissance
 Attente seule (les tirs restent ceux du code). La jeep avait un fond vert terne : détourage par distance à la couleur de fond (médiane des bords) au lieu de la dominance du vert. Bombardier et reconnaissance : la boucle s'arrête avant l'ouverture de la soute et le flash photo.
+
+### Animations vidéo : observateurs, génie
+Dernières unités terrestres converties : attente en boucle (observateurs : jumelles, regard qui tourne ; génie : détecteur de mines balayé). Toutes les unités du jeu ont désormais une animation d'attente issue d'une vidéo ; les tirs peints existent pour l'infanterie de base, les parachutistes et la mitrailleuse, les autres tirs restent ceux du code.
