@@ -215,3 +215,9 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 ### Assaut : unités bien lisibles en focus
 - Taille calculée par secteur selon le nombre d'unités et la place du sol dans le décor (`--gt` : route 38 %, champ 34 %, forêt 42 %, village 40 %, rivière 46 % de la hauteur) : plus de rétrécissement dû au secteur le plus chargé.
 - Au-delà de 4 unités, la ligne se replie sur deux rangées décalées (profondeur) ; les groupes de fantassins sont agrandis (×1,7) et se chevauchent légèrement, centrés sans déborder (`safe center`).
+
+### Même taille pour tous les soldats
+- `squadSVG` : pour les fantassins, chaque soldat est dessiné à l'échelle fixe `FOOT_FIG` (0,6) quel que soit l'effectif du groupe (avant : 1 seul soldat en grand, 2 à 0,74, 3 et plus à 0,58). Seule la largeur du groupe varie ; une seule rangée pose ses pieds au sol, deux rangées sont décalées en profondeur.
+- Proportions des sprites peints alignées sur le tireur (taille du casque) : `IDLE.sc` des parachutistes, observateurs, infirmiers, génie, mitrailleuse et fantassin dans l'eau recalés.
+- Scène d'assaut : la même taille d'unité pour tous les secteurs terrestres (la plus petite des tailles calculées) ; la rangée du fond se rapproche de celle de devant.
+- Observateurs et infirmiers (`UNARMED`) ne tirent plus : ni flash de bouche, ni balles, ni impacts.

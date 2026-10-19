@@ -1794,7 +1794,8 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb.cur { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; z-index: 2; }
 .aws.focus .awb.gone { visibility: visible; opacity: 0; transform: translateX(-14%) scale(.97); transition-delay: 0s; }
 .aws.focus .aws-mk { top: 52% !important; }
-.aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units { flex-wrap: wrap; align-content: flex-end; justify-content: center; row-gap: calc(var(--uh, 60px) * .02); }
+.aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units { flex-wrap: wrap; align-content: flex-end; justify-content: center; row-gap: 0; }
+.aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units .awu.k-foot { margin-top: calc(var(--uh, 60px) * -.55); }   /* la rangée du fond se rapproche : les deux rangées forment un même groupe */
 .aws.focus .awb[data-rows="2"] .awb-units .awu:nth-child(even) { margin-left: calc(var(--uh, 60px) * .18); }
 .aws.focus .awb-units { justify-content: safe center; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
@@ -3540,7 +3541,7 @@ function buildTints() {
   });
 }
 // Planches d'animation d'attente peintes : clé du sprite → { n images, taille d'une image, durée d'un cycle }
-const IDLE = {"inf_eau": {sc: 1, n: 24, fw: 170, fh: 96, ms: 5000}, "inf_eau_fire": {sc: 1, n: 10, fw: 233, fh: 97, once: true, base: "inf_eau", ref: [0.0,0.0,1.3699,1.0063], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "tank_fire": {sc: 1.0, n: 11, fw: 255, fh: 100, once: true, base: "tank", ref: [-0.1411,-0.133,1.5,1.133], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "td_fire": {sc: 1.0, n: 10, fw: 175, fh: 67, once: true, base: "td", ref: [-0.0316,0.0,1.0316,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "jeep_fire": {sc: 0.94, n: 11, fw: 220, fh: 98, once: true, base: "jeep", ref: [0.0,-0.0554,1.2938,1.0554], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "halftrack_fire": {sc: 1.0, n: 9, fw: 222, fh: 73, once: true, base: "halftrack", ref: [0.0,0.0,1.3041,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83]]}, "arty_fire": {sc: 1.0, n: 11, fw: 219, fh: 117, once: true, base: "arty", ref: [-0.0074,-0.4456,1.2899,1.4456], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "destroyer_fire": {sc: 1, n: 11, fw: 228, fh: 80, once: true, base: "destroyer", ref: [-0.1006,0.0,1.3417,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "croiseur_fire": {sc: 1, n: 11, fw: 258, fh: 89, once: true, base: "croiseur", ref: [-0.2266,0.0,1.5148,1.0191], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "chasseur_fire": {sc: 1, n: 11, fw: 219, fh: 74, once: true, base: "chasseur", ref: [0.0,0.0,1.2882,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "mgnest_fire": {sc: 1.0, n: 8, fw: 170, fh: 54, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "para_fire": {sc: 1.0, n: 8, fw: 170, fh: 111, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "croiseur": {sc: 1, n: 13, fw: 170, fh: 88, ms: 1700}, "inf_fire": {sc: 0.92, n: 7, fw: 170, fh: 118, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85]]}, "inf": {sc: 0.92, n: 24, fw: 170, fh: 118, ms: 2800}, "recon": {sc: 0.95, n: 24, fw: 170, fh: 95, ms: 2333}, "bombardier": {sc: 1.0, n: 14, fw: 170, fh: 83, ms: 1167}, "sousmarin": {sc: 0.9, n: 13, fw: 170, fh: 70, ms: 1700}, "arty": {sc: 1.0, n: 12, fw: 170, fh: 81, ms: 1000}, "destroyer": {sc: 1, n: 24, fw: 170, fh: 80, ms: 2333}, "chasseur": {sc: 1, n: 13, fw: 170, fh: 74, ms: 1083}, "td": {sc: 1.0, n: 12, fw: 170, fh: 67, ms: 1000}, "halftrack": {sc: 1.0, n: 18, fw: 170, fh: 73, ms: 1500}, "jeep": {sc: 0.94, n: 14, fw: 170, fh: 93, ms: 1167}, "medic": {sc: 0.74, n: 24, fw: 170, fh: 295, ms: 3167}, "mgnest": {sc: 1.0, n: 12, fw: 170, fh: 54, ms: 1000}, "para": {sc: 1.0, n: 22, fw: 170, fh: 111, ms: 1833}, "sapper": {sc: 0.76, n: 24, fw: 170, fh: 203, ms: 2167}, "tank": {sc: 1.0, n: 12, fw: 170, fh: 89, ms: 1000}, "obs": {sc: 0.76, n: 17, fw: 170, fh: 242, ms: 1417}};
+const IDLE = {"inf_eau": {sc: 0.84, n: 24, fw: 170, fh: 96, ms: 5000}, "inf_eau_fire": {sc: 1, n: 10, fw: 233, fh: 97, once: true, base: "inf_eau", ref: [0.0,0.0,1.3699,1.0063], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "tank_fire": {sc: 1.0, n: 11, fw: 255, fh: 100, once: true, base: "tank", ref: [-0.1411,-0.133,1.5,1.133], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "td_fire": {sc: 1.0, n: 10, fw: 175, fh: 67, once: true, base: "td", ref: [-0.0316,0.0,1.0316,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "jeep_fire": {sc: 0.94, n: 11, fw: 220, fh: 98, once: true, base: "jeep", ref: [0.0,-0.0554,1.2938,1.0554], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "halftrack_fire": {sc: 1.0, n: 9, fw: 222, fh: 73, once: true, base: "halftrack", ref: [0.0,0.0,1.3041,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83]]}, "arty_fire": {sc: 1.0, n: 11, fw: 219, fh: 117, once: true, base: "arty", ref: [-0.0074,-0.4456,1.2899,1.4456], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "destroyer_fire": {sc: 1, n: 11, fw: 228, fh: 80, once: true, base: "destroyer", ref: [-0.1006,0.0,1.3417,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "croiseur_fire": {sc: 1, n: 11, fw: 258, fh: 89, once: true, base: "croiseur", ref: [-0.2266,0.0,1.5148,1.0191], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "chasseur_fire": {sc: 1, n: 11, fw: 219, fh: 74, once: true, base: "chasseur", ref: [0.0,0.0,1.2882,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "mgnest_fire": {sc: 1.3, n: 8, fw: 170, fh: 54, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "para_fire": {sc: 1, n: 8, fw: 170, fh: 111, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "croiseur": {sc: 1, n: 13, fw: 170, fh: 88, ms: 1700}, "inf_fire": {sc: 0.92, n: 7, fw: 170, fh: 118, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85]]}, "inf": {sc: 0.92, n: 24, fw: 170, fh: 118, ms: 2800}, "recon": {sc: 0.95, n: 24, fw: 170, fh: 95, ms: 2333}, "bombardier": {sc: 1.0, n: 14, fw: 170, fh: 83, ms: 1167}, "sousmarin": {sc: 0.9, n: 13, fw: 170, fh: 70, ms: 1700}, "arty": {sc: 1.0, n: 12, fw: 170, fh: 81, ms: 1000}, "destroyer": {sc: 1, n: 24, fw: 170, fh: 80, ms: 2333}, "chasseur": {sc: 1, n: 13, fw: 170, fh: 74, ms: 1083}, "td": {sc: 1.0, n: 12, fw: 170, fh: 67, ms: 1000}, "halftrack": {sc: 1.0, n: 18, fw: 170, fh: 73, ms: 1500}, "jeep": {sc: 0.94, n: 14, fw: 170, fh: 93, ms: 1167}, "medic": {sc: 0.79, n: 24, fw: 170, fh: 295, ms: 3167}, "mgnest": {sc: 1.3, n: 12, fw: 170, fh: 54, ms: 1000}, "para": {sc: 1, n: 22, fw: 170, fh: 111, ms: 1833}, "sapper": {sc: 0.84, n: 24, fw: 170, fh: 203, ms: 2167}, "tank": {sc: 1.0, n: 12, fw: 170, fh: 89, ms: 1000}, "obs": {sc: 0.98, n: 17, fw: 170, fh: 242, ms: 1417}};
 const tintedSrc = (src, side, t) => (side === 'me' && t && t.cols && TINT.get(src) ? TINT.get(src)[t.cols[0]] : null);
 function spriteInner(key, side, t) {
   const src0 = paintOf(key, side), src = src0 && (tintedSrc(src0, side, t) || src0);
@@ -3578,12 +3579,25 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
   observateur: 'obs', infirmiers: 'medic', genie: 'sapper', mitrailleuse: 'mgnest', artillerie: 'arty', halftrack: 'halftrack', antichar: 'td', reco: 'recon' };
 // décalage aléatoire du départ d'une animation d'attente peinte (pour que les figurines ne bougent pas toutes ensemble)
 const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
+const UNARMED = { obs: 1, medic: 1 };
+const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
   const k = max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
   const one = mirror(side, key, (paintOf(key, side) && kindOf(key) !== 'air' ? shadow : '') + spriteInner(key, side, t));
   // rivière : seule la rangée de devant a les pieds dans l'eau, celle de derrière reste sur la berge
   const w0 = window.__wade; window.__wade = false; const dk = key.replace(/^inf_eau/, 'inf'), oneDry = w0 || dk !== key ? mirror(side, dk, (paintOf(dk, side) && kindOf(dk) !== 'air' ? shadow : '') + spriteInner(dk, side, t)) : one; window.__wade = w0;
+  // fantassins : chaque soldat a toujours la même taille, quel que soit l'effectif du groupe ; seule la largeur du groupe change
+  if (kindOf(key.replace(/_(fire|rkt)$/, '')) === 'foot' && FOOT_FIG) {
+    const fig = 64 * FOOT_FIG, gap = fig * 0.74, rws = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], wMax = Math.max(...rws.map((m, r) => (m - 1) * gap + fig + (rws.length === 2 && r === 0 ? gap / 2 : 0)));
+    const W = +(wMax + 4).toFixed(1);
+    let g = '';
+    rws.forEach((m, r) => {
+      const y = rws.length === 1 || r === 1 ? 64 - fig : 64 - fig * 1.62, x0 = 2 + (rws.length === 2 && r === 0 ? gap / 2 : 0);
+      for (let i = 0; i < m; i++) g += `<g transform="translate(${(x0 + i * gap).toFixed(1)} ${y.toFixed(1)}) scale(${FOOT_FIG})">${desync(r === rws.length - 1 ? one : oneDry)}</g>`;
+    });
+    return `<svg viewBox="0 0 ${W} 66" width="${Math.round(size * W / 66)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
+  }
   if (k === 1) return desync(spriteSVG(key, side, size, cols));
   const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : 0.58, fig = 64 * sc;
   let g = '';
@@ -4834,8 +4848,11 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const room = air ? 0.9 : 0.96 - (gt || 0.4), footK = foot ? 1.4 : 1;
     if (!air) b.style.setProperty('--gt', ((gt || 0.4) * 100).toFixed(0) + '%');
     const u = Math.max(44, Math.min(rowsN === 2 ? 118 : 138, (bhF * room) / (rowsN * (foot >= cnt ? 1.7 : 1.1)), usable / Math.max(1, per * 1.55)));
-    b.style.setProperty('--uh', u.toFixed(0) + 'px'); b.dataset.rows = rowsN;
+    b.style.setProperty('--uh', u.toFixed(0) + 'px'); b.dataset.rows = rowsN; b.dataset.u = u;
   });
+  // même taille de soldat d'un secteur terrestre à l'autre : on garde la plus petite des tailles calculées
+  const landB = bs.filter(b => !/t-(mer|air)\b/.test(b.className)), uMin = Math.min(...landB.map(b => +b.dataset.u));
+  landB.forEach(b => b.style.setProperty('--uh', uMin.toFixed(0) + 'px'));
   sc.style.setProperty('--uh', '60px');
   if (bs[0]) bs[0].classList.add('cur');
   const hpBar = sc.querySelector('.aws-hp .bar i'), hpTx = sc.querySelector('.aws-hp span'), hqBox = sc.querySelector('.aws-hq');
@@ -5012,13 +5029,14 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       else if (aerial) airFire(tk, u, mk);
       else if (rolling) landFire(tk, u, mk);
       else if (heavy) { const bl = document.createElement('i'); bl.className = 'vblast'; tk.appendChild(bl); setTimeout(() => bl.remove(), 420); sc.classList.remove('kick'); void sc.offsetWidth; sc.classList.add('kick'); }
+      else if (UNARMED[SPR_OF[u.key]]) { /* observateurs et infirmiers ne tirent pas : ni flash ni balles, juste leur apport */ }
       else if (!tk.classList.contains('has-fire') || u.cls === 'air') { const mz = document.createElement('i'); mz.className = 'vmuz'; tk.appendChild(mz); setTimeout(() => mz.remove(), 260); }
-      const special = naval || aerial || rolling, poses = !special && !!tk.querySelector('animate[data-once]'), shots = special ? 0 : Math.min(6, Math.max(2, Math.ceil(u.menMax / 4)));
+      const special = naval || aerial || rolling, poses = !special && !!tk.querySelector('animate[data-once]'), shots = special || UNARMED[SPR_OF[u.key]] ? 0 : Math.min(6, Math.max(2, Math.ceil(u.menMax / 4)));
       for (let k = 0; k < shots; k++) setTimeout(() => flyFx(tk, mk, u.cls === 'ship' || u.kw.includes('arty') ? 'shell' : u.cls === 'air' ? 'bullet air' : 'bullet', 300 + k * 30), k * 50);
       popAt(tk, '+' + fmtN(a), '#2559b5');
       await T(special ? Math.max(per * 0.55, 500) : poses ? Math.max(per * 0.55, 480) : per * 0.55);
       chips += a; chEl.textContent = fmtN(chips); bump(chEl);
-      if (!special) setTimeout(() => { if (u.cls === 'foot' && !heavy) bulletHits(mk, 3); else boomOn(mk, false, (Math.random() - .5) * 40, (Math.random() - .5) * 30); }, 120);
+      if (!special && !UNARMED[SPR_OF[u.key]]) setTimeout(() => { if (u.cls === 'foot' && !heavy) bulletHits(mk, 3); else boomOn(mk, false, (Math.random() - .5) * 40, (Math.random() - .5) * 30); }, 120);
       await T(special ? Math.max(per * 0.45, 380) : poses ? Math.max(per * 0.45, 340) : per * 0.45); tk.classList.remove('fire');
     }
     if (f.barrage) { SFX.play('shell'); boomOn(mk, true); chips += f.barrage; chEl.textContent = fmtN(chips); bump(chEl); cbs.insertAdjacentHTML('beforeend', `<i class="cb a lit">Barrage +${f.barrage}</i>`); await T(320); }
