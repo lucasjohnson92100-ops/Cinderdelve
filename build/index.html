@@ -1972,7 +1972,7 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
     var x = cv.getContext("2d");
     x.clearRect(0, 0, NS, NS);
     if (GFX === "toon") { x.imageSmoothingEnabled = true; x.drawImage(sp.h, 0, 0, NS, NS); }
-    else { x.imageSmoothingEnabled = false; x.drawImage(sp.native ? sp.ph : sp.c, 0, 0, NS, NS); }
+    else { x.imageSmoothingEnabled = !!sp.smooth; x.drawImage(sp.native ? sp.ph : sp.c, 0, 0, NS, NS); }
   }
   function epx(src) {
     var w = src.width, h = src.height, sd = src.getContext("2d").getImageData(0, 0, w, h).data;
@@ -5709,6 +5709,25 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
       }
     };
     Object.keys(D).forEach(function (sl) { TP.forEach(function (t, i) { try { var c = mk(function (x) { D[sl](x, t, i); }), w = silh(c, "#ffffff"), r = silh(c, "#ff2d3d"); SP["ar_" + sl + "_" + (i + 1)] = { c: c, ph: c, h: c, hw: w, hr: r, white: w, red: r, native: true }; } catch (e) { if (window.console) console.warn("armure", sl, i, e); } }); });
+  })();
+  /* illustrations des équipements : elles remplacent l'icône dessinée quand l'image existe (les pièces sans image gardent l'icône dessinée) */
+  (function armorArt() {
+    var AR = ["img/ar_head_3.webp", "img/ar_head_4.webp", "img/ar_head_5.webp", "img/ar_head_6.webp",
+      "img/ar_chest_2.webp", "img/ar_chest_3.webp", "img/ar_chest_4.webp", "img/ar_chest_5.webp", "img/ar_chest_6.webp",
+      "img/ar_hands_2.webp", "img/ar_hands_3.webp", "img/ar_hands_4.webp", "img/ar_hands_5.webp", "img/ar_hands_6.webp",
+      "img/ar_legs_2.webp", "img/ar_legs_3.webp", "img/ar_legs_4.webp", "img/ar_legs_5.webp", "img/ar_legs_6.webp",
+      "img/ar_feet_2.webp"];
+    AR.forEach(function (u) {
+      var key = u.replace(/^img\//, "").replace(/\.webp$/, ""), im = new Image();
+      im.onload = function () {
+        var sp = SP[key]; if (!sp) return;
+        var c = mkCanvas(128, 128), x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(im, 0, 0, 128, 128);
+        var w = silh(c, "#ffffff"), r = silh(c, "#ff2d3d");
+        SP[key] = { c: c, ph: c, h: c, hw: w, hr: r, white: w, red: r, native: true, smooth: true };
+        try { paintIcons(); if (typeof armPaint === "function") armPaint(document); } catch (e) {}
+      };
+      im.src = u;
+    });
   })();
 
   /* icônes des sorts de la ferme */
