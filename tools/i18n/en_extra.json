@@ -598,5 +598,11 @@
  "Ton attaque de base": "Your basic attack",
  "Évolution du pouvoir spécial !": "Special power evolution!",
  "Ce qui change": "What changes",
- "Une évolution est proposée : elle transforme un sort, une arme ou ton pouvoir spécial en version surpuissante.": "An evolution is offered: it turns a spell, a weapon or your special power into a much stronger version."
+ "Une évolution est proposée : elle transforme un sort, une arme ou ton pouvoir spécial en version surpuissante.": "An evolution is offered: it turns a spell, a weapon or your special power into a much stronger version.",
+ "Tu es tombé !": "You have fallen!",
+ "Une seule résurrection par partie : tu te relèves avec la moitié de ta vie, protégé un court instant, et les monstres proches sont repoussés.": "One resurrection per run: you get back up with half your health, briefly protected, and nearby monsters are pushed back.",
+ "✨ Ressusciter (1 seule fois)": "✨ Resurrect (once only)",
+ "Abandonner": "Give up",
+ "Résurrection !": "Resurrection!",
+ "Tu te relèves ! C'était ta seule résurrection.": "You get back up! That was your only resurrection."
 }
