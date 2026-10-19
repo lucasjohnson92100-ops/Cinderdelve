@@ -595,5 +595,8 @@
  "Tire quatre balles sur les monstres proches": "Fires four bullets at nearby monsters",
  "Tire vite sur les trois monstres les plus proches": "Fires fast at the three nearest monsters",
  "+12 % de dégâts, +6 % de portée, +5 % de vitesse d'attaque": "+12% damage, +6% range, +5% attack speed",
- "Ton attaque de base": "Your basic attack"
+ "Ton attaque de base": "Your basic attack",
+ "Évolution du pouvoir spécial !": "Special power evolution!",
+ "Ce qui change": "What changes",
+ "Une évolution est proposée : elle transforme un sort, une arme ou ton pouvoir spécial en version surpuissante.": "An evolution is offered: it turns a spell, a weapon or your special power into a much stronger version."
 }
