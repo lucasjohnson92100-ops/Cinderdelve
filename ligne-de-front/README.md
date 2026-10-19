@@ -206,7 +206,7 @@ Les jetons d'unités des couloirs passent de 82 % à 96 % de la hauteur du coulo
 `awScene` passe en mode `focus` : un seul secteur occupe toute la scène (unités dimensionnées selon leur nombre, jusqu'à 124 px, panorama du terrain visible en entier). Entre deux secteurs : le précédent glisse vers la gauche, un éclair balaie l'écran (`.aws-wipe`), une bannière « Secteur n / N » annonce le terrain et le suivant arrive de la droite. Les cibles d'impact du QG sont centrées pendant le focus. Avant la frappe totale et la riposte, la scène revient en vue d'ensemble (tous les secteurs s'empilent, comme avant) ; avec un seul secteur, le focus reste jusqu'au bout.
 
 ### Fonds ajoutés : route (pluie, nuit) et champ (nuit)
-Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`, variables `--sc-route-pluie`, `--sc-route-nuit`, `--sc-champ-nuit`) : plateau et scène d'assaut les utilisent, l'éclairage d'ambiance s'active pour ces combinaisons. Il manque encore la forêt au crépuscule (quota d'images gratuit atteint) ; elle retombe sur la forêt de jour.
+Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`, variables `--sc-route-pluie`, `--sc-route-nuit`, `--sc-champ-nuit`) : plateau et scène d'assaut les utilisent, l'éclairage d'ambiance s'active pour ces combinaisons. La forêt au crépuscule (`foret_crepuscule.webp`) a été ajoutée ensuite : tous les secteurs ont maintenant un fond pour chacune des 4 ambiances (jour, crépuscule, pluie, nuit), sauf les ambiances qui retombent sur le jour pour route (rien) — plus aucun manque.
 
 ### Corrections d'affichage
 - Assaut en focus : les unités se posent au niveau du sol du décor (route, pavés), plus au milieu de la scène.
