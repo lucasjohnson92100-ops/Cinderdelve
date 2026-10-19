@@ -350,6 +350,7 @@ h2 { font-weight: 600; letter-spacing: 0; }
 /* ===== Écran de combat : tient dans l'écran en portrait, main en éventail (façon Balatro) ===== */
 body:has(.btl) { padding: 0; overflow: hidden; background-attachment: scroll; }
 body:has(.btl) .topbar { display: none; }
+body:has(.shop2) .topbar { display: none; }   /* le bouton Son recouvrait le montant d'argent de l'intendance */
 body:has(.btl) .toast { bottom: 84px; }
 #app:has(.btl) { max-width: 560px; padding-bottom: 0; height: 100dvh; }
 .btl { height: 100dvh; display: flex; flex-direction: column; gap: 5px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); position: relative; }
@@ -1793,6 +1794,7 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb.cur { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; z-index: 2; }
 .aws.focus .awb.gone { visibility: visible; opacity: 0; transform: translateX(-14%) scale(.97); transition-delay: 0s; }
 .aws.focus .aws-mk { top: 52% !important; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: 8%; bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
 .aws.focus .awb-lab > b { font-size: .74rem; }
 .aws-wipe { position: absolute; inset: 0; z-index: 15; pointer-events: none; background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-120%); mix-blend-mode: screen; }
 .aws.flash .aws-wipe { animation: awwipe .6s ease-out; } @keyframes awwipe { from { transform: translateX(-120%); } to { transform: translateX(120%); } }

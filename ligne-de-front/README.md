@@ -207,3 +207,7 @@ Les jetons d'unités des couloirs passent de 82 % à 96 % de la hauteur du coulo
 
 ### Fonds ajoutés : route (pluie, nuit) et champ (nuit)
 Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`, variables `--sc-route-pluie`, `--sc-route-nuit`, `--sc-champ-nuit`) : plateau et scène d'assaut les utilisent, l'éclairage d'ambiance s'active pour ces combinaisons. Il manque encore la forêt au crépuscule (quota d'images gratuit atteint) ; elle retombe sur la forêt de jour.
+
+### Corrections d'affichage
+- Assaut en focus : les unités se posent au niveau du sol du décor (route, pavés), plus au milieu de la scène.
+- Intendance : le bouton Son flottant n'est plus affiché, il recouvrait le montant d'argent ($) ; le son reste réglable dans le menu.
