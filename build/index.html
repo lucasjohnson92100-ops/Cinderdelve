@@ -9003,12 +9003,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (state.survival) {
       survDeathFx();
       var banked = Math.round((state.gold || 0) * (1 + 0.3 * survCurseCount())); survBankAdd(banked); checkChallenges(); survChSave();
-      var mn = Math.floor(state.survT / 60), sc = Math.floor(state.survT % 60), cyc = (state.survCycle || 0) + 1;
+      var runT = Math.round(state.survTotalT || state.survT || 0), mn = Math.floor(runT / 60), sc = runT % 60, cyc = (state.survCycle || 0) + 1;
       var bestKey = "donjon-surv-best-" + (state.variant || state.cls), prevBest = 0;
       try { prevBest = parseInt(localStorage.getItem(bestKey) || "0", 10); } catch (err) {}
-      var scoreVal = Math.round(state.survT) + cyc * 200 + state.lvl * 40;
+      var scoreVal = runT + cyc * 200 + state.lvl * 40;
       var isNew = scoreVal > prevBest;
-      if (isNew) { try { localStorage.setItem(bestKey, String(scoreVal)); localStorage.setItem(bestKey + "-txt", cyc + "|" + state.lvl + "|" + Math.round(state.survT)); } catch (err) {} }
+      if (isNew) { try { localStorage.setItem(bestKey, String(scoreVal)); localStorage.setItem(bestKey + "-txt", cyc + "|" + state.lvl + "|" + runT); } catch (err) {} }
       try {
         var maxWave = parseInt(localStorage.getItem("donjon-surv-maxwave") || "0", 10);
         if (cyc > maxWave) localStorage.setItem("donjon-surv-maxwave", String(cyc));
@@ -9025,7 +9025,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           { label: "Partager mon score", alt: true, fn: function () { doShare("J'ai survécu " + mn + " min " + sc + "s (vague " + cyc + ") dans Cinderdelve !"); } },
           { label: "Changer de héros", alt: true, fn: showIntro }
         ]);
-        recapCard({ wave: state.survEndless ? cyc + " ∞" : cyc + "/" + SURV_WAVES, waveN: cyc, win: false, endless: !!state.survEndless, secs: Math.round(state.survT || 0) + (cyc - 1) * 120, time: mn + ":" + (sc < 10 ? "0" : "") + sc, gold: banked, record: isNew, tip: "Conseil de la basse-cour : " + farmTip() });
+        recapCard({ wave: state.survEndless ? cyc + " ∞" : cyc + "/" + SURV_WAVES, waveN: cyc, win: false, endless: !!state.survEndless, secs: runT, time: mn + ":" + (sc < 10 ? "0" : "") + sc, gold: banked, record: isNew, tip: "Conseil de la basse-cour : " + farmTip() });
       }, 2100);
       return;
     }
@@ -9715,8 +9715,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         { label: "Mode infini ∞", fn: function () { document.getElementById("ov").classList.remove("show"); state.survEndless = true; mode = "play"; setTrack(wantedTrack(false)); banner("MODE INFINI", "#ff9a3c", 2600, 40); say("Les vagues ne s'arrêteront plus. Tiens le plus longtemps possible !"); haltInput(); openShop(); } },
         { label: "Retour au menu", alt: true, fn: function () { showIntro(); } }
       ]);
-      var lti3 = LT.info(state.survMapTheme || 0), stv = Math.round(state.survT || 0);
-      recapCard({ wave: SURV_WAVES + "/" + SURV_WAVES, waveN: SURV_WAVES, win: true, secs: stv + SURV_WAVES * 120, time: Math.floor(stv / 60) + ":" + (stv % 60 < 10 ? "0" : "") + (stv % 60), gold: bk, lt: (lti3 && lti3.big ? "Le Grand Boucher est vaincu. La ferme est libre !" : (lti3 ? lti3.name + " est tombé" : "")) + (newMap ? " · Nouveau lieu : " + newMap.name : "") });
+      var lti3 = LT.info(state.survMapTheme || 0), stv = Math.round(state.survTotalT || state.survT || 0);
+      recapCard({ wave: SURV_WAVES + "/" + SURV_WAVES, waveN: SURV_WAVES, win: true, secs: stv, time: Math.floor(stv / 60) + ":" + (stv % 60 < 10 ? "0" : "") + (stv % 60), gold: bk, lt: (lti3 && lti3.big ? "Le Grand Boucher est vaincu. La ferme est libre !" : (lti3 ? lti3.name + " est tombé" : "")) + (newMap ? " · Nouveau lieu : " + newMap.name : "") });
     }, 900);
   }
   /* ---- boutique de survie ---- */
