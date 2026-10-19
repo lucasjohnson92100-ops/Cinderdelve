@@ -1794,7 +1794,11 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb.cur { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; z-index: 2; }
 .aws.focus .awb.gone { visibility: visible; opacity: 0; transform: translateX(-14%) scale(.97); transition-delay: 0s; }
 .aws.focus .aws-mk { top: 52% !important; }
-.aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: 8%; bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
+.aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units { flex-wrap: wrap; align-content: flex-end; justify-content: center; row-gap: calc(var(--uh, 60px) * .02); }
+.aws.focus .awb[data-rows="2"] .awb-units .awu:nth-child(even) { margin-left: calc(var(--uh, 60px) * .18); }
+.aws.focus .awb-units { justify-content: safe center; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: var(--gt, 8%); bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
 .aws.focus .awb-lab > b { font-size: .74rem; }
 .aws-wipe { position: absolute; inset: 0; z-index: 15; pointer-events: none; background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-120%); mix-blend-mode: screen; }
 .aws.flash .aws-wipe { animation: awwipe .6s ease-out; } @keyframes awwipe { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
@@ -4822,7 +4826,16 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   sc.querySelectorAll('.awb').forEach(b => { const t = (b.className.match(/t-(\w+)/) || [])[1]; b.dataset.ambok = ambHas(t, sc.dataset.amb) ? '1' : '0'; });
   const bs = [...sc.querySelectorAll('.awb')], bands0 = sc.querySelector('.aws-bands'), bhF = bands0.clientHeight - 6, bwF = bands0.clientWidth - 3;
   // chaque secteur a la place de toute la scène : ses unités sont dimensionnées selon leur nombre, pas selon le secteur le plus chargé
-  bs.forEach(b => { const cnt = b.querySelectorAll('.awu').length, u = Math.max(40, Math.min(124, bhF * 0.34, ((bwF - 74 - 16) * 0.82) / Math.max(1, cnt * 1.6))); b.style.setProperty('--uh', u.toFixed(0) + 'px'); });
+  bs.forEach(b => {
+    // au-delà de 4 unités, la ligne se replie sur deux rangées : chaque unité reste grande au lieu de rétrécir
+    const cnt = b.querySelectorAll('.awu').length, foot = b.querySelectorAll('.awu.k-foot').length, rowsN = cnt > 4 ? 2 : 1, per = Math.ceil(cnt / rowsN) * (1 + 0.2 * foot / Math.max(1, cnt)), usable = (bwF - 74 - 16) * (foot ? 0.7 : 0.8);
+    // les unités n'occupent que la bande de sol du décor (route, pavés, herbe), pas le ciel
+    const ter = (b.className.match(/t-(\w+)/) || [])[1], gt = { route: 0.38, champ: 0.34, foret: 0.42, village: 0.4, riviere: 0.46 }[ter], air = ter === 'mer' || ter === 'air';
+    const room = air ? 0.9 : 0.96 - (gt || 0.4), footK = foot ? 1.4 : 1;
+    if (!air) b.style.setProperty('--gt', ((gt || 0.4) * 100).toFixed(0) + '%');
+    const u = Math.max(44, Math.min(rowsN === 2 ? 118 : 138, (bhF * room) / (rowsN * (foot >= cnt ? 1.7 : 1.1)), usable / Math.max(1, per * 1.55)));
+    b.style.setProperty('--uh', u.toFixed(0) + 'px'); b.dataset.rows = rowsN;
+  });
   sc.style.setProperty('--uh', '60px');
   if (bs[0]) bs[0].classList.add('cur');
   const hpBar = sc.querySelector('.aws-hp .bar i'), hpTx = sc.querySelector('.aws-hp span'), hqBox = sc.querySelector('.aws-hq');

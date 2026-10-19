@@ -211,3 +211,7 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 ### Corrections d'affichage
 - Assaut en focus : les unités se posent au niveau du sol du décor (route, pavés), plus au milieu de la scène.
 - Intendance : le bouton Son flottant n'est plus affiché, il recouvrait le montant d'argent ($) ; le son reste réglable dans le menu.
+
+### Assaut : unités bien lisibles en focus
+- Taille calculée par secteur selon le nombre d'unités et la place du sol dans le décor (`--gt` : route 38 %, champ 34 %, forêt 42 %, village 40 %, rivière 46 % de la hauteur) : plus de rétrécissement dû au secteur le plus chargé.
+- Au-delà de 4 unités, la ligne se replie sur deux rangées décalées (profondeur) ; les groupes de fantassins sont agrandis (×1,7) et se chevauchent légèrement, centrés sans déborder (`safe center`).
