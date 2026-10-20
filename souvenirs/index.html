@@ -84,24 +84,109 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .done{color:var(--ok);font-weight:600}
 footer{text-align:center;color:var(--muted);padding:24px;border-top:1px solid var(--line);font-size:.88rem}
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+@keyframes m-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes m-fade{from{opacity:0}to{opacity:1}}
+@keyframes m-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes m-pop{0%{opacity:0;transform:scale(.3) translateY(8px)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:none}}
+@keyframes m-grow{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+@keyframes m-slideL{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes m-slideR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes m-sel{0%{transform:scale(.85)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes m-bump{0%{transform:scale(1)}40%{transform:scale(1.07,.94)}100%{transform:scale(1)}}
+@keyframes m-wiggle{25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+@keyframes m-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes m-glow{0%,100%{box-shadow:0 0 0 0 rgba(154,91,60,0)}50%{box-shadow:0 0 0 9px rgba(154,91,60,.16)}}
+@keyframes m-ring{0%{box-shadow:0 0 0 0 rgba(154,91,60,.45)}100%{box-shadow:0 0 0 8px rgba(154,91,60,0)}}
+@keyframes m-confetti{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+/* affiche qui se dessine */
+.m-ev,.m-end{transform-box:fill-box;transform-origin:50% 60%}
+.m-tree{transform-box:fill-box;transform-origin:50% 100%}
+.intro .m-road{stroke-dasharray:1;animation:m-draw 1.8s cubic-bezier(.55,.1,.35,1) both}
+.intro .m-dash{animation:m-fade .6s 1.6s both}
+.intro .m-ev{animation:m-pop .6s cubic-bezier(.2,1.3,.4,1) var(--d) both}
+.intro .m-tree{animation:m-grow .5s ease-out var(--d) both}
+.intro .m-end{animation:m-pop .5s cubic-bezier(.2,1.3,.4,1) var(--d) both}
+.intro .m-ttl{animation:m-up .8s .1s both}
+.m-ev.pop{animation:m-pop .55s cubic-bezier(.2,1.3,.4,1) both}
+.m-walk{opacity:0;animation:m-fade .5s 2.3s forwards}
+.m-swap svg{animation:m-fade .45s ease both}
+/* changement d'étape */
+.go-next>*{animation:m-slideL .45s cubic-bezier(.2,.8,.3,1) calc(var(--k,0)*45ms) both}
+.go-prev>*{animation:m-slideR .45s cubic-bezier(.2,.8,.3,1) calc(var(--k,0)*45ms) both}
+.go-next>.prog,.go-prev>.prog,.go-next>.stepper,.go-prev>.stepper{animation:none}
+.prog i{transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.stepper{display:flex;justify-content:space-between;position:relative;margin:12px 0 4px}
+.stepper:before{content:"";position:absolute;left:14px;right:14px;top:50%;height:2px;background:var(--line);transform:translateY(-50%)}
+.sd{position:relative;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--muted);font:600 .78rem system-ui,sans-serif;cursor:pointer;padding:0;transition:transform .2s,background-color .3s,border-color .3s,color .3s}
+.sd.done{background:var(--acc);border-color:var(--acc);color:#fff}
+.sd.cur{border-color:var(--acc);color:var(--acc);animation:m-ring 1.6s ease-out infinite}
+.sd:not(:disabled):hover{transform:scale(1.15)}
+.sd:disabled{cursor:default}
+/* micro-interactions */
+.btn{transition:transform .18s ease,box-shadow .18s ease,background-color .18s}
+.btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(154,91,60,.28)}
+.btn.ghost:not(:disabled):hover{box-shadow:0 6px 14px rgba(74,54,35,.12)}
+.btn:not(:disabled):active{transform:scale(.97)}
+.btn .arr{display:inline-block;transition:transform .2s}.btn:hover .arr{transform:translateX(4px)}
+.cta{animation:m-glow 2.8s ease-in-out 2.6s infinite}
+.chip,.sw,.occ{transition:transform .15s,background-color .2s,border-color .2s,box-shadow .2s,color .2s}
+.chip:not(:disabled):hover{border-color:var(--acc)}
+.chip:active,.sw:active,.occ:active{transform:scale(.94)}
+.sw:hover{transform:scale(1.12)}
+.occ:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(74,54,35,.12)}.occ:hover svg{animation:m-wiggle .5s}
+.just{animation:m-sel .35s cubic-bezier(.2,1.5,.4,1)}
+.bump{animation:m-bump .45s cubic-bezier(.2,1.5,.4,1)}
+.meter i{transition:width .6s cubic-bezier(.2,.8,.3,1)}
+.meter.full i{background:linear-gradient(90deg,var(--ok),#d8a85c);animation:m-glow 1.6s ease-out 1}
+input:focus,select:focus{transition:box-shadow .2s;box-shadow:0 0 0 4px rgba(154,91,60,.12)}
+/* défilement */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease var(--rd,0s),transform .7s cubic-bezier(.2,.8,.3,1) var(--rd,0s)}
+.rv.in{opacity:1;transform:none}
+/* comment ça marche */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1040px;margin:0 auto 40px;padding:0 20px}
+@media(max-width:800px){.how{grid-template-columns:1fr}}
+.hw{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;grid-template-columns:72px 1fr;gap:4px 14px;align-items:center}
+.hw b{font:1.2rem var(--serif);font-weight:400}.hw p{grid-column:2;margin:0;color:var(--muted);font-size:.93rem}
+.hwi{grid-row:1/3;width:72px;height:72px;background:#f4e8c8;border-radius:12px;display:grid;place-items:center}.hwi svg{width:66px;height:66px}
+.hw:hover .hwi svg{animation:m-float 1.4s ease-in-out infinite}
+/* affiche : inclinaison et reflet */
+.tilt{position:relative;transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.3,1)}
+.tilt:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,30%),rgba(255,255,255,.28),transparent 55%);opacity:0;transition:opacity .35s}
+.tilt.on:after{opacity:1}
+.art{cursor:pointer}
+.stats{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:12px 0 0;font:1rem var(--serif);color:var(--ink)}
+.stats span{display:inline-block}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confetti i{position:absolute;width:8px;height:12px;border-radius:2px;animation:m-confetti 1.2s cubic-bezier(.15,.7,.3,1) forwards}
+dialog .confetti{position:absolute}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.m-walk{display:none}}
 </style>
 </head>
 <body>
 <header class="top"><a class="logo" href="#">La route du temps</a><span>Maquette</span></header>
 
 <section class="hero">
-  <div>
+  <div class="rv">
     <h1>Toute une histoire, <em>une seule route</em>.</h1>
     <p>Choisissez deux dates : celle du début et celle de la fin. Racontez les moments qui comptent entre les deux. Nous les dessinons le long d'un chemin, sur une affiche à encadrer.</p>
-    <p><a class="btn" href="#creer">Créer mon affiche</a> &nbsp; <button class="link" id="sample" type="button">Voir un exemple complet</button></p>
+    <p><a class="btn cta" href="#creer">Créer mon affiche <span class="arr">→</span></a> &nbsp; <button class="link" id="sample" type="button">Voir un exemple complet</button></p>
   </div>
-  <div class="art" id="heroArt" aria-label="Exemple d'affiche"></div>
+  <div class="art tilt rv" id="heroArt" style="--rd:.15s" role="button" tabindex="0" aria-label="Exemple d'affiche : cliquez pour la voir se dessiner à nouveau"></div>
+</section>
+
+<section class="how" aria-label="Comment ça marche">
+  <div class="hw rv"><span class="hwi" id="hw1"></span><b>1. Racontez</b><p>Deux dates, puis les moments qui comptent entre les deux.</p></div>
+  <div class="hw rv" style="--rd:.12s"><span class="hwi" id="hw2"></span><b>2. Personnalisez</b><p>Vos proches, leurs couleurs, les petits détails qui vous ressemblent.</p></div>
+  <div class="hw rv" style="--rd:.24s"><span class="hwi" id="hw3"></span><b>3. Recevez</b><p>Une affiche illustrée, prête à encadrer.</p></div>
 </section>
 
 <main id="creer" class="app">
-  <div class="panel" id="journey" aria-live="polite"></div>
-  <aside class="side">
-    <div class="poster" id="poster"></div>
+  <div class="panel rv" id="journey" aria-live="polite"></div>
+  <aside class="side rv" style="--rd:.12s">
+    <div class="poster tilt" id="poster"></div>
+    <p class="stats" id="stats" aria-live="polite"></p>
     <p class="cap">Maquette : l'aperçu montre les couleurs choisies. Les autres détails (prénoms, objets, lieux…) sont transmis dans un brief à notre illustrateur, qui dessine la version personnalisée, dans le même style de carte ancienne douce.</p>
   </aside>
 </main>
@@ -513,13 +598,12 @@ const blank = () => ({ people: [], step: 0, occ: '', names: '', title: '', title
 let S = blank();
 
 const SAMPLE = () => {
-  personSeq = 0;
   const lea = newPerson({ name: 'Léa', link: 'Notre fille', sex: 'Féminin', birth: '2025-03-12', build: 'Moyenne', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', top: 'rose' });
   const maman = newPerson({ name: 'Maman', link: 'Ma femme', sex: 'Féminin', birth: '1990-06-02', build: 'Mince', skin: 's2', hairstyle: 'Longs', haircolor: 'chatain', glasses: 'Oui', top: 'bleu', bottom: 'gris' });
   const papa = newPerson({ name: 'Papa', link: 'Moi', sex: 'Masculin', birth: '1987-01-20', build: 'Forte', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', beard: 'Barbe', glasses: 'Oui', top: 'gris', bottom: 'marron' });
   lea.open = maman.open = papa.open = false;
   const ev = (date, title, icon, a, people, open = false) => ({ date, title, icon, a, people: people.map((p) => p.id), open });
-  return { ...blank(), people: [lea, maman, papa], step: 5, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
+  return { ...blank(), people: [lea, maman, papa], step: 5, maxStep: 6, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
     events: [ev('2025-04-20', 'Premier sourire', 'cradle', { blanket: 'bleu', toy: 'Un lapin gris nommé Bunny', time: 'Nuit', pose: 'Dans les bras' }, [lea, maman]),
       ev('2025-06-08', 'Baptême', 'chapel', { venue: 'Église', roof: 'bleu', pose: 'Debout' }, [lea, maman, papa]),
       ev('2025-07-14', 'Premier voyage', 'ship', { dest: 'Lisbonne', mode: 'Bateau', sails: 'rouge' }, [lea, papa]),
@@ -542,7 +626,7 @@ function wrap(t, n) {
   return lines;
 }
 
-let posterId = 0;
+let posterId = 0, evSeq = 0;
 const PF = 44; // taille d'un personnage sur l'affiche (2,2 cm de boîte)
 const VSIZE = 80; // taille d'une vignette sur l'affiche, en unités (4 cm)
 const tint = (body, pre, ink, paper, repl = []) => {
@@ -555,9 +639,12 @@ const vigKey = (k) => (VIG[k] ? k : 'ship');
 let thumbId = 0;
 const thumb = (e) => `<svg viewBox="0 0 240 240" aria-hidden="true">${tint(VIG[vigKey(e.icon)].body, 't' + thumbId++ + '-', '#5a432b', '#f4e8c8', recolor(e))}</svg>`;
 
-function poster(s) {
+function poster(s, o = {}) {
+  const pop = o.pop || new Set();
   const th = THEMES[s.theme], oc = OCC[s.occ] || OCC.autre, id = 'p' + posterId++, F = FORMATS[s.format], W = F.w, H = F.h, CX = W / 2;
   const evs = shownEvents(s), n = evs.length, Y0 = H - Y_MARGIN, Y1 = Y_END;
+  evs.forEach((e) => (e.id ||= 'e' + ++evSeq));
+  const delay = (u) => (0.25 + 1.5 * u).toFixed(2) + 's'; // apparition au moment où la route passe
   const small = W < 500, amp = small ? 38 : W < 700 ? 66 : 100, colX = small ? 82 : W < 700 ? 105 : 150, wrapN = small ? 15 : 20, waves = (Y0 - Y1) / 260;
   const at = (u) => ({ x: CX + amp * Math.sin(u * Math.PI * 2 * waves + 0.5), y: Y0 - u * (Y0 - Y1) });
   const N = Math.ceil(waves * 60), pts = Array.from({ length: N + 1 }, (_, i) => at(i / N));
@@ -574,19 +661,21 @@ function poster(s) {
   let g = `<defs>${[...pvars.values()].map((v) => `<symbol id="${id}-q${v.n}" viewBox="0 0 240 240">${personBody(v.p, v.cat, `${id}-q${v.n}-`, ink, th.bg)}</symbol>`).join('')}${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
   g += `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
+  g += '<g class="m-ttl">';
   g += `<text x="${CX}" y="86" text-anchor="middle" font-family="${SERIF}" font-size="${ts.toFixed(1)}" fill="${ink}">${esc(title)}</text>`;
   if (s.start && s.end) g += `<text x="${CX}" y="116" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="15" fill="${ink}" opacity=".85">du ${esc(fmt(s.start))} au ${esc(fmt(s.end))}</text>`;
-  g += `<path d="M${CX - 110} 134H${CX + 110}M${CX} 128v12" stroke="${ink}" stroke-width="1" fill="none" opacity=".6"/>`;
+  g += `<path d="M${CX - 110} 134H${CX + 110}M${CX} 128v12" stroke="${ink}" stroke-width="1" fill="none" opacity=".6"/></g>`;
   // décor : petits arbres entre les repères
   for (let i = 0; i <= n; i++) {
     const p = at((i + 0.5) / (n + 1)), x = p.x + (i % 2 ? 54 : -54);
-    g += `<g transform="translate(${x.toFixed(1)} ${p.y.toFixed(1)}) scale(.9)" stroke="${ink}" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M0 -2V9"/><path d="M0 -17C-10 -17 -11 -2 0 -2C11 -2 10 -17 0 -17Z" fill="${th.wash[i % 4]}"/></g>`;
+    g += `<g class="m-tree" style="--d:${delay((i + 0.5) / (n + 1))}"><g transform="translate(${x.toFixed(1)} ${p.y.toFixed(1)}) scale(.9)" stroke="${ink}" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M0 -2V9"/><path d="M0 -17C-10 -17 -11 -2 0 -2C11 -2 10 -17 0 -17Z" fill="${th.wash[i % 4]}"/></g></g>`;
   }
-  g += `<path d="${d}" fill="none" stroke="${ink}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${th.road}" stroke-width="12.5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${ink}" stroke-width="1.3" stroke-dasharray="6 7" opacity=".7"/>`;
+  g += `<path class="m-road" pathLength="1" d="${d}" fill="none" stroke="${ink}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/><path class="m-road" id="${id}-road" pathLength="1" d="${d}" fill="none" stroke="${th.road}" stroke-width="12.5" stroke-linecap="round" stroke-linejoin="round"/><path class="m-dash" d="${d}" fill="none" stroke="${ink}" stroke-width="1.3" stroke-dasharray="6 7" opacity=".7"/>`;
   evs.forEach((e, i) => {
     const p = at((i + 1) / (n + 1)), left = i % 2 === 0, cx = left ? colX : W - colX, y = p.y;
     const ex = left ? cx + 35 : cx - 35, rx = left ? p.x - 9 : p.x + 9;
     const lines = wrap(e.title.trim(), wrapN);
+    g += `<g class="m-ev${pop.has(e.id) ? ' pop' : ''}" style="--d:${delay((i + 1) / (n + 1))}">`;
     g += `<path d="M${rx.toFixed(1)} ${y.toFixed(1)}L${ex} ${y.toFixed(1)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="2 4" opacity=".8"/>`;
     g += `<circle cx="${p.x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${th.road}" stroke="${ink}" stroke-width="1.6"/>`;
     g += `<use href="#${ids[i]}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
@@ -594,14 +683,17 @@ function poster(s) {
     crowd[i].forEach(({ sid, z }, k) => { const w = PF * z; g += `<use href="#${sid}" x="${(cx + offs[k] - w / 2).toFixed(1)}" y="${(y + 30 - w * 0.86).toFixed(1)}" width="${w.toFixed(1)}" height="${w.toFixed(1)}"/>`; });
     g += `<text x="${cx}" y="${(y + 49).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="11" fill="${ink}" opacity=".85">${esc(fmt(e.date))}</text>`;
     lines.forEach((ln, k) => { g += `<text x="${cx}" y="${(y + 62 + k * 14).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="${ink}">${esc(ln)}</text>`; });
+    g += '</g>';
   });
   const a = at(0), b = at(1);
-  g += `<circle cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="7" fill="${th.wash[3]}" stroke="${ink}" stroke-width="1.8"/><circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="7" fill="${th.wash[1]}" stroke="${ink}" stroke-width="1.8"/>`;
+  g += `<circle class="m-end" style="--d:.1s" cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="7" fill="${th.wash[3]}" stroke="${ink}" stroke-width="1.8"/><circle class="m-end" style="--d:1.75s" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="7" fill="${th.wash[1]}" stroke="${ink}" stroke-width="1.8"/>`;
+  // petit cœur voyageur qui suit la route (affiche d'accueil)
+  if (o.walker) g += `<g class="m-walk"><path d="M0 4.5C-9 -1.5 -6 -9 0 -4.5C6 -9 9 -1.5 0 4.5Z" fill="${th.wash[1]}" stroke="${ink}" stroke-width="1.4"/><animateMotion dur="9s" begin="2.3s" repeatCount="indefinite" calcMode="linear"><mpath href="#${id}-road"/></animateMotion></g>`;
   g += `<text x="${CX}" y="${Y0 + 42}" text-anchor="middle" font-family="${SERIF}" font-size="15" fill="${ink}">${esc(oc.start)}${s.start ? ' · ' + esc(fmt(s.start)) : ''}</text>`;
   g += `<text x="${CX}" y="${Y1 - 22}" text-anchor="middle" font-family="${SERIF}" font-size="15" fill="${ink}">${esc(oc.end)}${s.end ? ' · ' + esc(fmt(s.end)) : ''}</text>`;
   g += `<g transform="translate(56 ${H - 44})" stroke="${ink}" stroke-width="1" fill="none"><circle r="12"/><path d="M0 -16V16M-16 0H16"/><path d="M0 -16L3 -3L0 0L-3 -3Z" fill="${ink}"/></g>`;
   g += `<rect width="${W}" height="${H}" fill="url(#${id})"/>`; // bords vieillis, par-dessus tout
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aperçu de l'affiche : ${esc(title)}">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="${o.intro ? 'intro' : ''}" role="img" aria-label="Aperçu de l'affiche : ${esc(title)}">${g}</svg>`;
 }
 
 function photoBlock(p) {
@@ -629,6 +721,8 @@ function peopleStepHTML() {
 }
 
 const STEPS = 7;
+const STEP_NAMES = ['Occasion', 'Pour qui', 'Dates', 'Personnages', 'Format', 'Souvenirs', 'Style'];
+let lastStep = 0;
 function stepError() {
   if (S.step === 1 && !S.names.trim()) return 'Indiquez au moins un prénom.';
   if (S.step === 2) {
@@ -647,7 +741,10 @@ function stepError() {
 
 function renderJourney() {
   const oc = OCC[S.occ];
-  let h = `<div class="prog"><i style="width:${((S.step + 1) / STEPS) * 100}%"></i></div><p class="step">Étape ${S.step + 1} sur ${STEPS}</p>`;
+  S.maxStep = Math.max(S.maxStep || 0, S.step);
+  let h = `<div class="prog"><i style="width:${((S.step + 1) / STEPS) * 100}%"></i></div>
+    <div class="stepper">${STEP_NAMES.map((nm, i) => `<button type="button" class="sd${i < S.step ? ' done' : ''}${i === S.step ? ' cur' : ''}" data-goto="${i}" title="${nm}" aria-label="Étape ${i + 1} : ${nm}" ${i <= S.maxStep && i !== S.step ? '' : 'disabled'}>${i < S.step ? '✓' : i + 1}</button>`).join('')}</div>
+    <p class="step">Étape ${S.step + 1} sur ${STEPS} · ${STEP_NAMES[S.step]}</p>`;
   if (S.step === 0) {
     h += `<h2>Quelle occasion fêtez-vous ?</h2><div class="occs">${Object.entries(OCC).map(([k, o]) => `<button type="button" class="occ" data-occ="${k}" aria-pressed="${S.occ === k}">${iconSvg(o.ic)}<span>${o.label}</span></button>`).join('')}</div>`;
   } else if (S.step === 1) {
@@ -671,15 +768,26 @@ function renderJourney() {
       <label class="fmt" style="margin-top:12px;display:flex"><span style="display:flex;gap:8px;align-items:center;width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:400"><input type="checkbox" id="frame" ${S.frame ? 'checked' : ''} style="width:auto">Avec cadre (+ ${FRAME_PRICE} €)</span></label>
       <p class="hint">${FORMATS[S.format].label}, ${S.events.length} souvenir${S.events.length > 1 ? 's' : ''}.</p><div class="total"><span>Total</span><span>${price} €</span></div>`;
   }
-  h += `<p class="err" id="err" role="alert"></p><div class="nav"><button type="button" class="btn ghost" id="prev" ${S.step === 0 ? 'hidden' : ''}>Retour</button>${S.step === 0 ? '<span></span>' : ''}<button type="button" class="btn" id="next" ${S.step === 0 ? 'hidden' : ''}>${S.step === STEPS - 1 ? 'Commander' : 'Continuer'}</button></div>`;
-  $('#journey').innerHTML = h;
+  h += `<p class="err" id="err" role="alert"></p><div class="nav"><button type="button" class="btn ghost" id="prev" ${S.step === 0 ? 'hidden' : ''}>Retour</button>${S.step === 0 ? '<span></span>' : ''}<button type="button" class="btn" id="next" ${S.step === 0 ? 'hidden' : ''}>${S.step === STEPS - 1 ? 'Commander' : 'Continuer'} <span class="arr">→</span></button></div>`;
+  const jn = $('#journey');
+  jn.innerHTML = h;
   if (S.step === 5) { renderEvents(); }
   wire();
+  // transition orientée : on avance (vers la gauche) ou on revient (vers la droite)
+  if (S.step !== lastStep) {
+    [...jn.children].forEach((c, i) => c.style.setProperty('--k', i));
+    jn.classList.remove('go-next', 'go-prev'); void jn.offsetWidth; jn.classList.add(S.step > lastStep ? 'go-next' : 'go-prev');
+    if (jn.getBoundingClientRect().top < 0) jn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    lastStep = S.step;
+  }
 }
 
 function briefHTML(e) {
-  const n = answeredCount(e), tot = totalQ(e), bf = brief(e);
-  return `<div class="brief" data-brief><b>Brief du dessin</b> <span class="count">${n} / ${tot} détails</span><div class="meter"><i style="width:${(n / tot) * 100}%"></i></div>
+  const n = answeredCount(e), tot = totalQ(e), bf = brief(e), id = (e.id ||= 'e' + ++evSeq), pct = Math.round((n / tot) * 100);
+  const from = lastPct[id] ?? pct, full = n === tot && from < 100;
+  lastPct[id] = pct;
+  if (full) setTimeout(() => confetti(document.querySelector(`.evw[data-i="${S.events.indexOf(e)}"] .meter`), 24), 350);
+  return `<div class="brief" data-brief><b>Brief du dessin</b> <span class="count">${n} / ${tot} détails</span><div class="meter${n === tot ? ' full' : ''}"><i style="width:${from}%" data-to="${pct}"></i></div>
     ${bf.lines.length ? `<ul>${bf.lines.map(([l, v]) => `<li>${esc(l)} : <b>${esc(v)}</b></li>`).join('')}</ul>` : '<p class="hint">Aucune précision pour l\'instant : nous dessinerons la version standard.</p>'}
     <details><summary>Texte transmis à l'illustrateur</summary><pre>${esc(bf.prompt)}</pre></details></div>`;
 }
@@ -717,7 +825,22 @@ function renderEvents() {
   document.querySelectorAll('#sugs .chip').forEach((c) => (c.disabled = full));
 }
 
-function update() { $('#poster').innerHTML = poster(S); }
+let shownKeys = new Set(), lastStats = '';
+// Redessine l'aperçu : les souvenirs nouvellement visibles « poussent » ; intro = l'affiche se redessine entièrement.
+function update(o = {}) {
+  const keys = shownEvents(S).map((e) => (e.id ||= 'e' + ++evSeq));
+  const pop = o.intro ? new Set() : new Set(keys.filter((k) => !shownKeys.has(k)));
+  shownKeys = new Set(keys);
+  const box = $('#poster');
+  box.innerHTML = poster(S, { intro: o.intro, pop });
+  if (o.swap) { box.classList.remove('m-swap'); void box.offsetWidth; box.classList.add('m-swap'); }
+  const n = keys.length, np = S.people.length, price = FORMATS[S.format].price + (S.frame ? FRAME_PRICE : 0);
+  const st = [`${n} souvenir${n > 1 ? 's' : ''}`, `${np} personnage${np > 1 ? 's' : ''}`, FORMATS[S.format].label, `${price} €`];
+  const el = $('#stats'), sig = st.join('|');
+  el.innerHTML = st.map((t) => `<span>${t}</span>`).join('<span aria-hidden="true">·</span>');
+  if (lastStats && sig !== lastStats) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  lastStats = sig;
+}
 const err = (m) => { const e = $('#err'); if (e) e.textContent = m; };
 
 function wire() {
@@ -743,6 +866,7 @@ function wire() {
     w.querySelectorAll('input[data-q]').forEach((f) => (f.oninput = () => {
       ansOf(e)[f.dataset.q] = f.value;
       w.querySelector('[data-brief]').outerHTML = briefHTML(e);
+      animateMeters();
       w.querySelector('[data-more]').textContent = `Masquer · ${answeredCount(e)} / ${totalQ(e)} détails`;
       w.querySelector('.ei').innerHTML = thumb(e);
       update();
@@ -790,15 +914,48 @@ function wire() {
     if (i >= 0) sel.splice(i, 1); else if (sel.length < 3) sel.push(b.dataset.ep);
     renderEvents(); wire(); update();
   }));
-  j.querySelectorAll('[data-theme]').forEach((b) => (b.onclick = () => { S.theme = b.dataset.theme; renderJourney(); update(); }));
-  j.querySelectorAll('[name=fmt]').forEach((r) => (r.onchange = () => { S.format = r.value; renderJourney(); update(); }));
-  on('#frame', 'change', (e) => { S.frame = e.target.checked; renderJourney(); });
+  j.querySelectorAll('[data-theme]').forEach((b) => (b.onclick = () => { S.theme = b.dataset.theme; renderJourney(); update({ swap: true }); }));
+  j.querySelectorAll('[name=fmt]').forEach((r) => (r.onchange = () => { S.format = r.value; renderJourney(); update({ intro: true }); }));
+  on('#frame', 'change', (e) => { S.frame = e.target.checked; renderJourney(); update(); });
   on('#prev', 'click', () => { S.step--; renderJourney(); });
+  j.querySelectorAll('[data-goto]').forEach((b) => (b.onclick = () => {
+    const t = +b.dataset.goto;
+    if (t > S.step) { const m = stepError(); if (m) return err(m); }
+    S.step = t; renderJourney();
+  }));
   on('#next', 'click', () => {
     const m = stepError(); if (m) return err(m);
     if (S.step === STEPS - 1) return openOrder();
     S.step++; renderJourney();
   });
+  applyJust();
+  animateMeters();
+}
+
+// Retour visuel : le bouton choisi « rebondit » et l'aperçu concerné aussi, même après le réaffichage du formulaire.
+let just = null;
+$('#journey').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button');
+  if (!b || b.disabled) return;
+  const sel = Object.entries(b.dataset).map(([k, v]) => `[data-${k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())}="${CSS.escape(v)}"]`).join('');
+  if (!sel) return;
+  const sc = b.closest('.evw,.pcard');
+  just = { sel, scope: sc ? (sc.classList.contains('evw') ? `.evw[data-i="${sc.dataset.i}"]` : `.pcard[data-p="${sc.dataset.p}"]`) : '' };
+}, true);
+function applyJust() {
+  if (!just) return;
+  const root = just.scope ? $('#journey').querySelector(just.scope) : $('#journey');
+  if (root) {
+    root.querySelector('button' + just.sel)?.classList.add('just');
+    if (just.scope.startsWith('.pcard')) root.querySelectorAll('.pbig svg,.pfig').forEach((el) => el.classList.add('bump'));
+    if (just.scope.startsWith('.evw')) root.querySelector('.ei')?.classList.add('bump');
+  }
+  just = null;
+}
+// Jauges de détails : elles partent de leur valeur précédente pour glisser jusqu'à la nouvelle.
+const lastPct = {};
+function animateMeters() {
+  document.querySelectorAll('.meter i[data-to]').forEach((i) => requestAnimationFrame(() => requestAnimationFrame(() => { i.style.width = i.dataset.to + '%'; })));
 }
 
 function openOrder() {
@@ -816,13 +973,58 @@ $('#orderForm').addEventListener('submit', async (e) => {
     const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), product: 'affiche-' + S.format + (S.frame ? '-cadre' : ''), story: JSON.stringify({ ...S, people: S.people.map((p) => ({ ...p, photos: p.photos.map((f) => f.name) })), briefs: shownEvents(S).map((ev) => ({ title: ev.title, date: ev.date, ...brief(ev) })) }), caption: S.title }) });
     if (!r.ok) throw new Error();
     m.className = 'done'; m.textContent = 'Merci ! Votre demande est envoyée.';
+    confetti(m, 60);
   } catch {
     m.className = 'err'; m.textContent = "Maquette : aucun serveur n'est branché, la demande n'a pas été enregistrée.";
+    confetti(m, 60);
   }
 });
 
-$('#sample').onclick = () => { S = SAMPLE(); S.step = 5; renderJourney(); update(); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
-$('#heroArt').innerHTML = poster(SAMPLE());
+// Petite pluie de confettis aux couleurs de la carte, partant d'un élément.
+function confetti(from, count = 40) {
+  if (!from || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const host = from.closest('dialog') || document.body, box = document.createElement('div'), r = from.getBoundingClientRect(), hr = host === document.body ? { left: 0, top: 0 } : host.getBoundingClientRect();
+  box.className = 'confetti';
+  const cols = ['#9db08a', '#d9a29b', '#7fa5a8', '#d8a85c', '#9a5b3c'];
+  for (let i = 0; i < count; i++) {
+    const c = document.createElement('i'), a = Math.random() * Math.PI * 2, v = 60 + Math.random() * 140;
+    c.style.cssText = `left:${r.left - hr.left + r.width / 2}px;top:${r.top - hr.top + r.height / 2}px;background:${cols[i % cols.length]};--dx:${Math.cos(a) * v}px;--dy:${Math.sin(a) * v + 60}px;--r:${Math.random() * 720 - 360}deg;animation-delay:${Math.random() * 0.12}s`;
+    box.append(c);
+  }
+  host.append(box);
+  setTimeout(() => box.remove(), 1500);
+}
+
+// Inclinaison légère de l'affiche sous la souris, avec un reflet qui suit le pointeur.
+if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.querySelectorAll('.tilt').forEach((el) => {
+    el.addEventListener('pointermove', (ev) => {
+      const r = el.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+      el.style.transform = `perspective(1000px) rotateX(${(0.5 - y) * 5}deg) rotateY(${(x - 0.5) * 6}deg)`;
+      el.style.setProperty('--mx', x * 100 + '%'); el.style.setProperty('--my', y * 100 + '%');
+      el.classList.add('on');
+    });
+    el.addEventListener('pointerleave', () => { el.style.transform = ''; el.classList.remove('on'); });
+  });
+}
+
+// Apparition des blocs au défilement.
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { threshold: 0.12 });
+  document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+} else document.querySelectorAll('.rv').forEach((el) => el.classList.add('in'));
+
+$('#sample').onclick = () => { S = SAMPLE(); lastStep = S.step; renderJourney(); update({ intro: true }); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
+const heroPlay = () => { $('#heroArt').innerHTML = poster(SAMPLE(), { intro: true, walker: true }); };
+$('#heroArt').onclick = heroPlay;
+$('#heroArt').onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); heroPlay(); } };
+heroPlay();
+{
+  const ex = SAMPLE();
+  $('#hw1').innerHTML = thumb({ icon: 'ship', a: { sails: 'rouge' } });
+  $('#hw2').innerHTML = personThumb(ex.people[1]);
+  $('#hw3').innerHTML = thumb({ icon: 'house', a: { wall: 'jaune' } });
+}
 renderJourney();
 update();
 </script>

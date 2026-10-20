@@ -16,6 +16,8 @@ Personnages : étape facultative où chaque personne est décrite une seule fois
 
 Photos de référence : adultes uniquement, avec case de consentement, 2 photos de 5 Mo au maximum, jamais imprimées. Les photos de personnes de moins de 18 ans sont refusées (`isChild()`) et supprimées si la date de naissance change. Dans la maquette, la photo reste sur l'appareil (aucun envoi). Les textes de politique sont à faire valider (RGPD : consentement, durée de conservation, hébergeur, sous-traitants éventuels). Aucune photo n'est envoyée à un service d'IA.
 
+Animations (motion design) : l'affiche se dessine (route tracée, souvenirs et arbres qui apparaissent quand la route passe, petit cœur voyageur sur l'affiche d'accueil), chaque nouveau souvenir « pousse » sur l'aperçu, transitions orientées entre étapes, frise d'étapes cliquable, retour visuel sur chaque choix, jauges de détails animées, inclinaison de l'affiche sous la souris, apparition au défilement, confettis à la commande. Tout est désactivé si le système demande de réduire les animations.
+
 Les textes et les dates sont écrits par le code, jamais par une IA d'images.
 
 Test local : `cd souvenirs && python3 -m http.server 8000`.
