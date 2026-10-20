@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Souvenirs sur mesure</title>
+<meta name="description" content="Décrivez un souvenir, l'IA le dessine, nous le fabriquons : mug, t-shirt, cadre, porte-clés ou boule de Noël.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#">✦ Souvenirs</a>
+  <nav><a href="#creer">Créer</a><a href="#etapes">Comment ça marche</a><a href="#faq">Questions</a></nav>
+</header>
+
+<section class="hero">
+  <h1>Un souvenir, <em>un objet</em> rien qu'à vous.</h1>
+  <p>Racontez un moment en quelques mots. Une illustration unique est générée, puis imprimée sur l'objet de votre choix.</p>
+  <a class="btn" href="#creer">Créer mon souvenir</a>
+</section>
+
+<section id="etapes" class="steps">
+  <div><b>1</b><h3>Racontez</h3><p>« Notre premier voyage à Lisbonne, un tram jaune au coucher du soleil. »</p></div>
+  <div><b>2</b><h3>Choisissez</h3><p>Un style, un objet, un texte de dédicace si vous le souhaitez.</p></div>
+  <div><b>3</b><h3>Recevez</h3><p>Nous imprimons et expédions. Retouches illimitées avant paiement.</p></div>
+</section>
+
+<main id="creer" class="studio">
+  <form id="form" class="panel" autocomplete="off">
+    <h2>Votre création</h2>
+
+    <label for="story">Votre souvenir</label>
+    <textarea id="story" rows="4" maxlength="400" required placeholder="Ex. : Mariage d'Inès et Paul, un champ de lavande en juin"></textarea>
+
+    <fieldset>
+      <legend>Style</legend>
+      <div class="chips" id="styles"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Objet</legend>
+      <div class="chips" id="products"></div>
+    </fieldset>
+
+    <label for="caption">Dédicace (facultatif)</label>
+    <input id="caption" maxlength="40" placeholder="Lisbonne · 2026">
+
+    <button class="btn" id="go" type="submit">Générer l'aperçu</button>
+    <p class="note" id="status" role="status"></p>
+  </form>
+
+  <div class="panel preview">
+    <div id="stage" class="stage"></div>
+    <div class="actions">
+      <button class="btn ghost" id="redo" type="button" disabled>Autre version</button>
+      <button class="btn ghost" id="dl" type="button" disabled>Télécharger l'image</button>
+    </div>
+    <div class="price"><span id="priceLabel">—</span><button class="btn" id="order" type="button" disabled>Commander</button></div>
+  </div>
+</main>
+
+<dialog id="orderDlg">
+  <form method="dialog" id="orderForm">
+    <h3>Finaliser la commande</h3>
+    <p class="note">Nous vous recontactons sous 24 h pour confirmer et régler en ligne. Aucun paiement maintenant.</p>
+    <label>Nom<input name="name" required></label>
+    <label>E-mail<input name="email" type="email" required></label>
+    <label>Adresse de livraison<textarea name="address" rows="2" required></textarea></label>
+    <label>Quantité<input name="qty" type="number" min="1" max="50" value="1"></label>
+    <div class="row"><button class="btn ghost" value="cancel">Annuler</button><button class="btn" id="send" value="ok">Envoyer</button></div>
+  </form>
+</dialog>
+
+<section id="faq" class="faq">
+  <h2>Questions</h2>
+  <details><summary>L'image est-elle vraiment unique ?</summary><p>Oui, chaque génération est nouvelle. Vous pouvez en demander autant que vous voulez avant de commander.</p></details>
+  <details><summary>Puis-je utiliser mes propres photos ?</summary><p>Pas encore : cette version génère des illustrations à partir de texte.</p></details>
+  <details><summary>Délais de livraison ?</summary><p>Comptez 5 à 8 jours ouvrés après validation.</p></details>
+</section>
+
+<footer>© <span id="y"></span> Souvenirs · Fait avec soin</footer>
+<script src="app.js"></script>
+</body>
+</html>
