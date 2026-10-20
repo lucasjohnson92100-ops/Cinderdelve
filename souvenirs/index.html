@@ -282,6 +282,7 @@ const pa = (p) => ({ ...PDEF, ...Object.fromEntries(Object.entries(p.a).filter((
 const PQ = [
   { id: 'name', label: 'Prénom', type: 'text', ph: 'Léa' },
   { id: 'link', label: 'Lien avec vous', type: 'text', ph: 'Ma fille, mon père, mon amie…' },
+  { id: 'sex', label: 'Sexe', type: 'choice', options: ['Féminin', 'Masculin', 'Non précisé'] },
   { id: 'birth', label: "Date de naissance (sert à calculer l'âge sur chaque souvenir)", type: 'date' },
   { id: 'cat', label: "Ou tranche d'âge", type: 'choice', options: Object.values(CATS) },
   { id: 'build', label: 'Silhouette', type: 'choice', options: ['Mince', 'Moyenne', 'Forte'] },
@@ -301,78 +302,206 @@ const EN = { Mince: 'slim', Moyenne: 'average', Forte: 'stocky', Courts: 'short'
   'Taches de rousseur': 'freckles', 'Grain de beauté': 'beauty mark', Fossettes: 'dimples', Pantalon: 'trousers', 'Robe ou jupe': 'dress or skirt', Chapeau: 'hat', Bonnet: 'beanie', Nœud: 'hair bow', Écharpe: 'scarf',
   bebe: 'baby', enfant: 'child', ado: 'teenager', adulte: 'adult', senior: 'senior' };
 const en = (v) => EN[v] || v;
+const sexOf = (p) => (p.a.sex === 'Féminin' ? 'f' : p.a.sex === 'Masculin' ? 'm' : 'n');
+const WHO = { f: { bebe: ['bébé fille', 'baby girl'], enfant: ['fille', 'girl'], ado: ['adolescente', 'teenage girl'], adulte: ['femme', 'woman'], senior: ['femme âgée', 'elderly woman'] },
+  m: { bebe: ['bébé garçon', 'baby boy'], enfant: ['garçon', 'boy'], ado: ['adolescent', 'teenage boy'], adulte: ['homme', 'man'], senior: ['homme âgé', 'elderly man'] } };
+const whoWord = (p, cat, lang) => (WHO[sexOf(p)] ? WHO[sexOf(p)][cat][lang] : lang ? en(cat) : CATS[cat].toLowerCase());
+// Coiffure par défaut quand le client ne l'a pas précisée.
+const hairstyleOf = (p, cat) => p.a.hairstyle || (sexOf(p) === 'f' && cat !== 'bebe' ? 'Longs' : 'Courts');
 // Description d'une personne à la date d'un souvenir : texte français (brief) et anglais (prompt).
 function personDesc(p, date) {
   const r = pa(p), cat = catAt(p, date) || 'adulte', name = p.a.name || 'Sans nom';
+  r.hairstyle = hairstyleOf(p, cat);
   const hair = r.hairstyle === 'Chauve' ? 'chauve' : `cheveux ${r.hairstyle.toLowerCase()} ${HAIRC[r.haircolor][0].toLowerCase()}`;
-  const fr = [CATS[cat].toLowerCase(), r.build.toLowerCase(), hair, r.glasses === 'Oui' && 'lunettes', r.beard !== 'Non' && r.beard.toLowerCase(), r.mark !== 'Aucun' && r.mark.toLowerCase(),
+  const fr = [whoWord(p, cat, 0), `silhouette ${r.build.toLowerCase()}`, hair, r.glasses === 'Oui' && 'lunettes', r.beard !== 'Non' && r.beard.toLowerCase(), r.mark !== 'Aucun' && r.mark.toLowerCase(),
     `haut ${COLORS[r.top][0].toLowerCase()}`, r.outfit === 'Robe ou jupe' ? 'robe ou jupe' : `bas ${COLORS[r.bottom][0].toLowerCase()}`, r.accessory !== 'Aucun' && r.accessory.toLowerCase(), p.a.notes].filter(Boolean).join(', ');
-  const enl = [`${name}${p.a.link ? ' (' + p.a.link + ')' : ''}: a ${en(cat)}`, `${en(r.build)} build`, `skin ${SKINS[r.skin][0].toLowerCase()} of 6`, r.hairstyle === 'Chauve' ? 'bald' : `${en(r.hairstyle)} ${en(r.haircolor)} hair`,
+  const enl = [`${name}${p.a.link ? ' (' + p.a.link + ')' : ''}: a ${whoWord(p, cat, 1)}`, `${en(r.build)} build`, `skin ${SKINS[r.skin][0].toLowerCase()} of 6`, r.hairstyle === 'Chauve' ? 'bald' : `${en(r.hairstyle)} ${en(r.haircolor)} hair`,
     r.glasses === 'Oui' && 'glasses', r.beard !== 'Non' && en(r.beard), r.mark !== 'Aucun' && en(r.mark), `${COLORS[r.top][2]} top`, r.outfit === 'Robe ou jupe' ? 'dress or skirt' : `${COLORS[r.bottom][2]} bottoms`,
     r.accessory !== 'Aucun' && en(r.accessory), p.a.notes].filter(Boolean).join(', ');
   return { name, fr, en: enl };
 }
 
-const FIG = { bebe: { hr: 30, th: 40, lh: 20, sw: 26 }, enfant: { hr: 25, th: 54, lh: 48, sw: 27 }, ado: { hr: 21, th: 66, lh: 74, sw: 31 }, adulte: { hr: 20, th: 70, lh: 84, sw: 34 }, senior: { hr: 20, th: 68, lh: 76, sw: 33 } };
-// Personnage vectoriel dans le même style que les vignettes ; 240 x 240, pieds en bas.
+// Personnage vectoriel dans le style des vignettes (240 x 240, pieds en bas) : encre tremblée, lavis décalé,
+// ombre à l'aquarelle côté droit (lumière venant de la gauche). Le bébé est assis, les autres debout.
+const FIG = { enfant: { hr: 24, th: 46, lh: 42, sw: 22 }, ado: { hr: 22, th: 54, lh: 62, sw: 25 }, adulte: { hr: 21, th: 58, lh: 72, sw: 28 }, senior: { hr: 21, th: 56, lh: 66, sw: 27 } };
 function personBody(p, cat, pre, ink, paper) {
-  const r = pa(p), A = FIG[cat || 'adulte'], c = { Mince: 0.86, Moyenne: 1, Forte: 1.2 }[r.build] || 1;
+  cat = cat || 'adulte';
+  const r = pa(p), sex = sexOf(p), baby = cat === 'bebe', adult = cat === 'adulte' || cat === 'senior';
+  r.hairstyle = hairstyleOf(p, cat);
   if (!p.a.haircolor && cat === 'senior') r.haircolor = 'gris';
-  const skin = SKINS[r.skin][1], hair = HAIRC[r.haircolor][1], top = COLORS[r.top][1], bot = COLORS[r.bottom][1];
-  const cx = 120, bottom = 206, hr = A.hr, hw = A.sw * c;
-  const hy = bottom - (2 * hr + 4 + A.th + A.lh) + hr, tTop = hy + hr + 4, tBot = tTop + A.th;
-  const out = [], f = `filter="url(#${pre}h)"`;
-  const ell = (x, y, rx, ry) => `M${x - rx} ${y}A${rx} ${ry} 0 1 0 ${x + rx} ${y}A${rx} ${ry} 0 1 0 ${x - rx} ${y}Z`;
-  const rr = (x, y, w, h, k) => `M${x + k} ${y}H${x + w - k}Q${x + w} ${y} ${x + w} ${y + k}V${y + h - k}Q${x + w} ${y + h} ${x + w - k} ${y + h}H${x + k}Q${x} ${y + h} ${x} ${y + h - k}V${y + k}Q${x} ${y} ${x + k} ${y}Z`;
+  const skin = SKINS[r.skin][1], hair = HAIRC[r.haircolor][1], hairD = shade(hair, 0.68), top = COLORS[r.top][1], bot = COLORS[r.bottom][1];
+  const out = [], F = `filter="url(#${pre}h)"`;
+  let clips = 0;
+  const ell = (x, y, rx, ry = rx) => `M${x - rx} ${y}A${rx} ${ry} 0 1 0 ${x + rx} ${y}A${rx} ${ry} 0 1 0 ${x - rx} ${y}Z`;
+  // forme : fond papier (masque), lavis décalé, ombre côté droit, trait d'encre
   const sh = (d, fill, o = {}) => {
-    const { sw = 1.5, line = true, op = 0.85, mask = true } = o;
-    if (fill && mask) out.push(`<path d="${d}" fill="${paper}" ${f}/>`);
-    if (fill) out.push(`<path d="${d}" fill="${fill}" fill-opacity="${op}" transform="translate(1.3 1.2)" filter="url(#${pre}w)"/>`);
-    if (line) out.push(`<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${f}/>`);
+    const { sw = 1.5, line = true, op = 0.85, mask = true, shadeX = null, shadeOp = 0.42 } = o;
+    if (fill && mask) out.push(`<path d="${d}" fill="${paper}" ${F}/>`);
+    if (fill) out.push(`<path d="${d}" fill="${fill}" fill-opacity="${op}" transform="translate(1.2 1.1)" filter="url(#${pre}w)"/>`);
+    if (fill && shadeX !== null) {
+      const id = `${pre}c${clips++}`;
+      out.push(`<clipPath id="${id}"><path d="${d}"/></clipPath><rect x="${shadeX}" y="0" width="240" height="240" fill="${shade(fill, 0.7)}" fill-opacity="${shadeOp}" clip-path="url(#${id})" filter="url(#${pre}w)"/>`);
+    }
+    if (line) out.push(`<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${F}/>`);
   };
-  const solid = (d, col) => out.push(`<path d="${d}" fill="${col}" ${f}/>`);
-  const stroke = (d, sw = 1.2) => out.push(`<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" ${f}/>`);
-  sh(ell(cx, bottom + 3, hw + 16, 5), '#8f7a5a', { line: false, op: 0.3, mask: false });
-  const hairBot = tTop + A.th * 0.5;
-  if (r.hairstyle === 'Longs') sh(`M${cx - hr - 2} ${hy}C${cx - hr - 10} ${hy + hr + 8} ${cx - hr - 7} ${hairBot} ${cx - hr + 4} ${hairBot}L${cx + hr - 4} ${hairBot}C${cx + hr + 7} ${hairBot} ${cx + hr + 10} ${hy + hr + 8} ${cx + hr + 2} ${hy}Z`, hair);
-  const lw = hw * 0.62, legTop = tBot - 4, legBot = bottom - 6, skirt = r.outfit === 'Robe ou jupe' && cat !== 'bebe';
-  const legCol = cat === 'bebe' ? top : skirt ? skin : bot;
-  sh(rr(cx - hw * 0.72, legTop, lw, legBot - legTop, 5), legCol);
-  sh(rr(cx + hw * 0.1, legTop, lw, legBot - legTop, 5), legCol);
-  sh(ell(cx - hw * 0.41, bottom - 3, lw * 0.72, 5), '#7a5a40');
-  sh(ell(cx + hw * 0.41, bottom - 3, lw * 0.72, 5), '#7a5a40');
-  if (skirt) sh(`M${cx - hw * 0.85} ${tBot - 8}H${cx + hw * 0.85}L${cx + hw * 1.3} ${tBot + A.lh * 0.55}H${cx - hw * 1.3}Z`, bot);
-  sh(rr(cx - hw, tTop, hw * 2, A.th, 12), top);
+  const line = (d, sw = 1.1, col = ink, op = 1) => out.push(`<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-opacity="${op}" stroke-linecap="round" stroke-linejoin="round" ${F}/>`);
+  const dot = (x, y, rr, col) => out.push(`<circle cx="${x}" cy="${y}" r="${rr}" fill="${col}" ${F}/>`);
+  const cx = 120;
+  let hy, hr, rx, shY = 0, S = 0;
+
+  if (baby) {
+    // ---- bébé assis, en grenouillère ----
+    hr = 31; hy = 100; rx = hr * 0.98;
+    sh(ell(cx, 203, 46, 5), '#8f7a5a', { line: false, op: 0.3, mask: false });
+    for (const sg of [-1, 1]) sh(ell(cx + sg * 17, 198, 14, 8.5), top, { shadeX: sg > 0 ? cx + 22 : 999 });
+    sh(`M${cx - 20} ${hy + hr * 0.85}C${cx - 36} ${hy + hr + 14} ${cx - 38} 190 ${cx - 26} 197L${cx + 26} 197C${cx + 38} 190 ${cx + 36} ${hy + hr + 14} ${cx + 20} ${hy + hr * 0.85}Q${cx} ${hy + hr * 0.75} ${cx - 20} ${hy + hr * 0.85}Z`, top, { shadeX: cx + 12 });
+    line(`M${cx - 12} ${hy + hr * 0.9}Q${cx} ${hy + hr * 1.18} ${cx + 12} ${hy + hr * 0.9}`, 1);
+    for (const y of [152, 166]) dot(cx, y, 1.6, paper);
+    for (const sg of [-1, 1]) {
+      const X = (d) => cx + sg * d;
+      sh(`M${X(18)} 136C${X(30)} 140 ${X(35)} 156 ${X(32)} 168L${X(23)} 169C${X(24)} 158 ${X(20)} 148 ${X(13)} 142Z`, top, { sw: 1.3 });
+      sh(ell(X(28), 172, 6.2), skin, { sw: 1.2 });
+      sh(ell(X(30), 197, 5.6, 7.2), skin, { sw: 1.2 });
+    }
+  } else {
+    // ---- silhouette debout ----
+    const A = FIG[cat], c = { Mince: 0.86, Moyenne: 1, Forte: 1.2 }[r.build] || 1;
+    const k = { enfant: 0.3, ado: 0.7 }[cat] ?? 1; // différence de silhouette selon le sexe, plus faible chez l'enfant
+    const sexS = sex === 'm' ? 1 + 0.07 * k : sex === 'f' ? 1 - 0.09 * k : 1;
+    const waistF = sex === 'f' ? 0.86 - 0.14 * k : 0.9, hipF = sex === 'f' ? 0.86 + 0.08 * k : 0.84;
+    S = A.sw * c * sexS;
+    const Wd = S * waistF * (1 + (c - 1) * 0.8), Hp = S * hipF * (1 + (c - 1) * 0.6);
+    const footY = 204, hipY = footY - A.lh, legBot = footY - 7;
+    shY = hipY - A.th; hr = A.hr; hy = shY - 6 - hr; rx = hr * 0.94;
+    const waistY = shY + A.th * 0.6, kneeY = hipY + A.lh * 0.42, dress = r.outfit === 'Robe ou jupe';
+    sh(ell(cx, footY + 2, Hp + 20, 5), '#8f7a5a', { line: false, op: 0.3, mask: false });
+    // cheveux longs ou bouclés : partie arrière, derrière le corps
+    if (r.hairstyle === 'Longs') {
+      const e = shY + A.th * 0.46;
+      sh(`M${cx - rx - 2} ${hy - hr * 0.2}C${cx - rx - 8} ${hy + hr * 0.8} ${cx - rx - 9} ${e - 10} ${cx - rx - 4} ${e}Q${cx - rx * 0.2} ${e + 6} ${cx} ${e}Q${cx + rx * 0.2} ${e + 6} ${cx + rx + 4} ${e}C${cx + rx + 9} ${e - 10} ${cx + rx + 8} ${hy + hr * 0.8} ${cx + rx + 2} ${hy - hr * 0.2}C${cx + rx} ${hy - hr * 1.3} ${cx - rx} ${hy - hr * 1.3} ${cx - rx - 2} ${hy - hr * 0.2}Z`, hair, { shadeX: cx + rx * 0.4 });
+      for (const sg of [-1, 1]) line(`M${cx + sg * (rx + 3)} ${hy + hr * 0.6}Q${cx + sg * (rx + 6)} ${shY + 8} ${cx + sg * (rx + 2)} ${e - 4}`, 0.9, hairD);
+    }
+    if (r.hairstyle === 'Courts' && sex === 'f') sh(`M${cx - rx - 3} ${hy - hr * 0.3}C${cx - rx - 5} ${hy + hr * 0.5} ${cx - rx - 2} ${hy + hr * 0.78} ${cx - rx * 0.5} ${hy + hr * 0.8}L${cx + rx * 0.5} ${hy + hr * 0.8}C${cx + rx + 2} ${hy + hr * 0.78} ${cx + rx + 5} ${hy + hr * 0.5} ${cx + rx + 3} ${hy - hr * 0.3}Z`, hair);
+    if (r.hairstyle === 'Bouclés') {
+      const low = sex === 'f' ? 1.15 : 0.35;
+      for (let a = 150; a <= 390; a += 20) { const t = (a * Math.PI) / 180, yy = hy + Math.sin(t) * hr * 1.02; if (yy > hy + hr * low) continue; sh(ell(cx + Math.cos(t) * rx * 1.05, yy, hr * 0.34), hair, { sw: 1.1 }); }
+      if (sex === 'f') for (const sg of [-1, 1]) for (const yy of [hy + hr * 0.6, hy + hr * 1.0]) sh(ell(cx + sg * (rx + 2), yy, hr * 0.3), hair, { sw: 1.1 });
+    }
+    // jambes et chaussures
+    for (const sg of [-1, 1]) {
+      const X = (d) => cx + sg * d;
+      if (dress) sh(`M${X(3.5)} ${kneeY}L${X(Hp * 0.62)} ${kneeY}C${X(Hp * 0.64)} ${kneeY + (legBot - kneeY) * 0.6} ${X(Hp * 0.56)} ${legBot - 6} ${X(Hp * 0.55)} ${legBot}L${X(4.5)} ${legBot}C${X(4)} ${legBot - 8} ${X(3.5)} ${kneeY + 10} ${X(3.5)} ${kneeY}Z`, skin, { sw: 1.3 });
+      else {
+        sh(`M${X(1.2)} ${hipY - 3}L${X(Hp - 0.5)} ${hipY - 3}C${X(Hp + 0.5)} ${hipY + A.lh * 0.35} ${X(Hp * 0.8)} ${legBot - 16} ${X(Hp * 0.72)} ${legBot}L${X(3.5)} ${legBot}C${X(3)} ${legBot - 20} ${X(1.5)} ${hipY + A.lh * 0.4} ${X(1.2)} ${hipY - 3}Z`, bot, { shadeX: sg > 0 ? cx + Hp * 0.45 : 999 });
+        line(`M${X(Hp * 0.5)} ${hipY + A.lh * 0.45}q${sg * 2} 4 0 8`, 0.8, ink, 0.6);
+      }
+      const lc = X(((dress ? Hp * 0.55 : Hp * 0.72) + 4) / 2) + sg * 2.5;
+      sh(`M${lc - 8} ${footY - 2}C${lc - 8} ${footY - 9} ${lc + 8} ${footY - 9} ${lc + 8} ${footY - 2}Q${lc + 8} ${footY + 1} ${lc + 4} ${footY + 1}H${lc - 4}Q${lc - 8} ${footY + 1} ${lc - 8} ${footY - 2}Z`, '#6a4e3a', { sw: 1.2 });
+    }
+    // haut (pull, chemise…) puis jupe
+    sh(`M${cx - S * 0.5} ${shY - 2}Q${cx} ${shY + 7} ${cx + S * 0.5} ${shY - 2}C${cx + S * 0.88} ${shY - 2} ${cx + S} ${shY + 3} ${cx + S} ${shY + 12}C${cx + S * 0.98} ${waistY - 12} ${cx + Wd} ${waistY - 6} ${cx + Wd} ${waistY}C${cx + Wd} ${waistY + 8} ${cx + Hp} ${hipY - 10} ${cx + Hp} ${hipY}L${cx - Hp} ${hipY}C${cx - Hp} ${hipY - 10} ${cx - Wd} ${waistY + 8} ${cx - Wd} ${waistY}C${cx - Wd} ${waistY - 6} ${cx - S * 0.98} ${waistY - 12} ${cx - S} ${shY + 12}C${cx - S} ${shY + 3} ${cx - S * 0.88} ${shY - 2} ${cx - S * 0.5} ${shY - 2}Z`, top, { shadeX: cx + S * 0.35 });
+    line(`M${cx - S * 0.42} ${shY + 1}Q${cx} ${shY + 9.5} ${cx + S * 0.42} ${shY + 1}`, 0.9, ink, 0.7);
+    if (!dress) line(`M${cx - Hp + 2} ${hipY - 4}H${cx + Hp - 2}`, 0.8, ink, 0.6);
+    if (dress) {
+      sh(`M${cx - Wd - 1} ${waistY}L${cx + Wd + 1} ${waistY}C${cx + Wd + 6} ${waistY + 12} ${cx + Hp * 1.35} ${kneeY - 12} ${cx + Hp * 1.45} ${kneeY}Q${cx} ${kneeY + 9} ${cx - Hp * 1.45} ${kneeY}C${cx - Hp * 1.35} ${kneeY - 12} ${cx - Wd - 6} ${waistY + 12} ${cx - Wd - 1} ${waistY}Z`, bot, { shadeX: cx + Hp * 0.5 });
+      for (const sg of [-1, 1]) line(`M${cx + sg * Hp * 0.4} ${waistY + 12}Q${cx + sg * Hp * 0.62} ${kneeY - 10} ${cx + sg * Hp * 0.75} ${kneeY + 3}`, 0.8, ink, 0.55);
+    }
+    // bras et mains
+    const wristY = shY + A.th * 0.78;
+    for (const sg of [-1, 1]) {
+      const X = (d) => cx + sg * d;
+      sh(`M${X(S - 5)} ${shY + 3}C${X(S + 5)} ${shY + 2} ${X(S + 10)} ${shY + 18} ${X(S + 10)} ${shY + A.th * 0.42}C${X(S + 10.5)} ${wristY - 14} ${X(S + 9)} ${wristY - 4} ${X(S + 8.5)} ${wristY}L${X(S + 0.5)} ${wristY}C${X(S + 1)} ${wristY - 10} ${X(S + 1.5)} ${shY + A.th * 0.5} ${X(S - 1)} ${shY + 20}Z`, top, { sw: 1.3, shadeX: sg > 0 ? X(S + 5) : 999 });
+      line(`M${X(S + 0.8)} ${wristY - 3}L${X(S + 8.6)} ${wristY - 3}`, 0.8, ink, 0.6);
+      sh(ell(X(S + 4.6), wristY + 4.6, 4.6, 5.3), skin, { sw: 1.1 });
+    }
+    if (r.accessory === 'Écharpe') {
+      sh(`M${cx - S * 0.56} ${shY - 4}Q${cx} ${shY + 8} ${cx + S * 0.56} ${shY - 4}L${cx + S * 0.56} ${shY + 4}Q${cx} ${shY + 16} ${cx - S * 0.56} ${shY + 4}Z`, '#c9645c');
+      sh(`M${cx + S * 0.18} ${shY + 7}H${cx + S * 0.18 + 9}L${cx + S * 0.18 + 10} ${shY + A.th * 0.45}H${cx + S * 0.18 - 1}Z`, '#c9645c', { sw: 1.2 });
+      line(`M${cx + S * 0.18} ${shY + A.th * 0.3}h9M${cx + S * 0.18} ${shY + A.th * 0.38}h9`, 0.8, '#fffaf0');
+    }
+    sh(`M${cx - hr * 0.27} ${hy + hr * 0.7}V${shY + 3}Q${cx} ${shY + 7} ${cx + hr * 0.27} ${shY + 3}V${hy + hr * 0.7}Z`, skin, { shadeX: cx + 2, sw: 1.2 });
+  }
+
+  // ---- tête et visage ----
+  for (const sg of [-1, 1]) { sh(ell(cx + sg * rx, hy + hr * 0.12, hr * 0.16, hr * 0.24), skin, { sw: 1.1 }); }
+  sh(ell(cx, hy, rx, hr * 1.02), skin, { shadeX: cx + rx * 0.5, shadeOp: 0.3 });
+  const eyY = hy + hr * (baby ? 0.2 : 0.12), ex = hr * (baby ? 0.34 : 0.36), big = baby ? 1.35 : cat === 'enfant' ? 1.2 : 1;
+  for (const sg of [-1, 1]) sh(ell(cx + sg * hr * 0.55, hy + hr * 0.45, hr * (baby ? 0.22 : 0.17), hr * 0.12), '#d98f8f', { line: false, op: baby ? 0.45 : 0.32, mask: false });
+  if (r.mark === 'Taches de rousseur') for (const [dx, dy] of [[-0.52, 0.3], [-0.38, 0.38], [-0.26, 0.28], [0.26, 0.28], [0.38, 0.38], [0.52, 0.3]]) dot(cx + dx * hr, hy + dy * hr, 0.85, '#a8643f');
+  if (r.mark === 'Grain de beauté') dot(cx + hr * 0.42, hy + hr * 0.5, 1.2, ink);
+  if (r.mark === 'Fossettes') line(`M${cx - hr * 0.36} ${hy + hr * 0.56}q-1.6 1.6 0 3.2M${cx + hr * 0.36} ${hy + hr * 0.56}q1.6 1.6 0 3.2`, 0.8);
+  if (adult && r.beard === 'Barbe') {
+    sh(`M${cx - rx * 0.95} ${hy + hr * 0.15}C${cx - rx} ${hy + hr * 0.95} ${cx - rx * 0.5} ${hy + hr * 1.22} ${cx} ${hy + hr * 1.24}C${cx + rx * 0.5} ${hy + hr * 1.22} ${cx + rx} ${hy + hr * 0.95} ${cx + rx * 0.95} ${hy + hr * 0.15}C${cx + rx * 0.7} ${hy + hr * 0.55} ${cx + hr * 0.3} ${hy + hr * 0.5} ${cx} ${hy + hr * 0.66}C${cx - hr * 0.3} ${hy + hr * 0.5} ${cx - rx * 0.7} ${hy + hr * 0.55} ${cx - rx * 0.95} ${hy + hr * 0.15}Z`, hair, { mask: false, shadeX: cx + rx * 0.4 });
+    line(`M${cx - hr * 0.5} ${hy + hr * 0.8}l1 3M${cx - hr * 0.2} ${hy + hr * 0.95}l0.5 3M${cx + hr * 0.2} ${hy + hr * 0.95}l-0.5 3M${cx + hr * 0.5} ${hy + hr * 0.8}l-1 3`, 0.7, hairD);
+  }
+  line(baby ? `M${cx - 4.5} ${hy + hr * 0.52}Q${cx} ${hy + hr * 0.68} ${cx + 4.5} ${hy + hr * 0.52}` : `M${cx - hr * 0.2} ${hy + hr * 0.58}Q${cx} ${hy + hr * 0.74} ${cx + hr * 0.2} ${hy + hr * 0.58}`, 1.3);
+  if (!baby && cat !== 'enfant' && r.beard === 'Moustache') sh(`M${cx - hr * 0.32} ${hy + hr * 0.56}Q${cx - hr * 0.1} ${hy + hr * 0.42} ${cx} ${hy + hr * 0.5}Q${cx + hr * 0.1} ${hy + hr * 0.42} ${cx + hr * 0.32} ${hy + hr * 0.56}Q${cx} ${hy + hr * 0.6} ${cx - hr * 0.32} ${hy + hr * 0.56}Z`, hair, { mask: false, sw: 1 });
+  line(`M${cx - 0.5} ${hy + hr * 0.26}Q${cx - 2.6} ${hy + hr * 0.4} ${cx + 1} ${hy + hr * 0.42}`, 1);
   for (const sg of [-1, 1]) {
-    sh(rr(sg < 0 ? cx - hw - 9 : cx + hw, tTop + 3, 9, A.th * 0.82, 4.5), top);
-    sh(ell(cx + sg * (hw + 4.5), tTop + 5 + A.th * 0.82, 4.6, 4.6), skin, { sw: 1.2 });
+    const x = cx + sg * ex;
+    out.push(`<ellipse cx="${x}" cy="${eyY}" rx="${1.8 * big}" ry="${2.4 * big}" fill="${ink}" ${F}/>`);
+    dot(x + 0.6 * big, eyY - 0.8 * big, 0.65 * big, '#fffaf0');
+    if (!baby) line(`M${x - sg * hr * 0.14} ${eyY - hr * 0.3}Q${x + sg * hr * 0.02} ${eyY - hr * 0.4} ${x + sg * hr * 0.16} ${eyY - hr * 0.28}`, 1.3, hairD);
+    if (sex === 'f' && !baby && cat !== 'enfant') line(`M${x + sg * 1.6 * big} ${eyY - 1.8 * big}l${sg * 2} -1.4`, 0.9);
+    if (cat === 'senior') line(`M${x + sg * hr * 0.2} ${eyY + 0.4}l${sg * 2.6} -1M${x + sg * hr * 0.2} ${eyY + 2.4}l${sg * 2.6} 1`, 0.7, ink, 0.6);
   }
-  if (r.accessory === 'Écharpe') sh(rr(cx - hw * 0.6, tTop - 4, hw * 1.2, 10, 5), '#c9645c');
-  sh(rr(cx - 5, hy + hr - 4, 10, 10, 3), skin);
-  sh(ell(cx - hr, hy + 2, 3.6, 5), skin, { sw: 1.2 });
-  sh(ell(cx + hr, hy + 2, 3.6, 5), skin, { sw: 1.2 });
-  sh(ell(cx, hy, hr, hr * 1.05), skin);
-  for (const sg of [-1, 1]) sh(ell(cx + sg * hr * 0.55, hy + hr * 0.38, hr * 0.2, hr * 0.14), '#d98f8f', { line: false, op: 0.35, mask: false });
-  if (r.mark === 'Taches de rousseur') for (const [dx, dy] of [[-0.5, 0.25], [-0.35, 0.32], [-0.25, 0.2], [0.25, 0.2], [0.35, 0.32], [0.5, 0.25]]) out.push(`<circle cx="${cx + dx * hr}" cy="${hy + dy * hr}" r="0.9" fill="#a8643f" ${f}/>`);
-  if (r.mark === 'Grain de beauté') out.push(`<circle cx="${cx + hr * 0.45}" cy="${hy + hr * 0.42}" r="1.3" fill="${ink}" ${f}/>`);
-  if (r.mark === 'Fossettes') stroke(`M${cx - hr * 0.42} ${hy + hr * 0.5}q-2 2 0 4M${cx + hr * 0.42} ${hy + hr * 0.5}q2 2 0 4`, 0.9);
-  if (r.beard === 'Barbe') sh(`M${cx - hr * 0.84} ${hy + hr * 0.1}Q${cx - hr * 0.9} ${hy + hr * 1.3} ${cx} ${hy + hr * 1.4}Q${cx + hr * 0.9} ${hy + hr * 1.3} ${cx + hr * 0.84} ${hy + hr * 0.1}Q${cx + hr * 0.45} ${hy + hr * 0.62} ${cx} ${hy + hr * 0.58}Q${cx - hr * 0.45} ${hy + hr * 0.62} ${cx - hr * 0.84} ${hy + hr * 0.1}Z`, hair, { mask: false });
-  stroke(`M${cx - hr * 0.25} ${hy + hr * 0.5}Q${cx} ${hy + hr * 0.7} ${cx + hr * 0.25} ${hy + hr * 0.5}`, 1.3);
-  if (r.beard === 'Moustache') sh(`M${cx - hr * 0.45} ${hy + hr * 0.42}Q${cx} ${hy + hr * 0.28} ${cx + hr * 0.45} ${hy + hr * 0.42}Q${cx} ${hy + hr * 0.52} ${cx - hr * 0.45} ${hy + hr * 0.42}Z`, hair, { mask: false, sw: 1 });
-  stroke(`M${cx} ${hy + hr * 0.2}q-2.5 5 2.5 5`, 1);
-  const eyeY = hy + hr * 0.08, ex = hr * 0.38, er = cat === 'bebe' ? 2.4 : 1.9;
-  for (const sg of [-1, 1]) out.push(`<circle cx="${cx + sg * ex}" cy="${eyeY}" r="${er}" fill="${ink}" ${f}/>`);
-  if (r.glasses === 'Oui') { for (const sg of [-1, 1]) out.push(`<circle cx="${cx + sg * ex}" cy="${eyeY}" r="${hr * 0.27}" fill="none" stroke="${ink}" stroke-width="1.4" ${f}/>`); stroke(`M${cx - hr * 0.11} ${eyeY}H${cx + hr * 0.11}`, 1.2); }
-  if (r.hairstyle !== 'Chauve') {
-    sh(`M${cx - hr - 1} ${hy + 1}A${hr + 1} ${hr + 1} 0 0 1 ${cx + hr + 1} ${hy + 1}Q${cx + hr * 0.7} ${hy - hr * 0.55} ${cx + hr * 0.1} ${hy - hr * 0.5}Q${cx - hr * 0.5} ${hy - hr * 0.62} ${cx - hr - 1} ${hy + 1}Z`, hair);
-    if (r.hairstyle === 'Bouclés') for (let a = 200; a <= 340; a += 28) { const t = (a * Math.PI) / 180; sh(ell(cx + Math.cos(t) * (hr + 1), hy + Math.sin(t) * (hr + 1), hr * 0.34, hr * 0.34), hair, { sw: 1.2 }); }
-    if (r.hairstyle === 'Chignon') sh(ell(cx, hy - hr - hr * 0.3, hr * 0.42, hr * 0.42), hair);
+  if (r.glasses === 'Oui') {
+    for (const sg of [-1, 1]) { out.push(`<circle cx="${cx + sg * ex}" cy="${eyY}" r="${hr * 0.24}" fill="#fffaf0" fill-opacity=".18" stroke="${ink}" stroke-width="1.3" ${F}/>`); line(`M${cx + sg * (ex + hr * 0.24)} ${eyY - 0.5}L${cx + sg * rx} ${eyY - 1.5}`, 1); }
+    line(`M${cx - ex + hr * 0.24} ${eyY - 0.5}Q${cx} ${eyY - 2.5} ${cx + ex - hr * 0.24} ${eyY - 0.5}`, 1.1);
   }
-  if (r.accessory === 'Chapeau') { sh(rr(cx - hr * 0.72, hy - hr * 1.38, hr * 1.44, hr * 0.9, 9), '#d8b472'); sh(ell(cx, hy - hr * 0.52, hr * 1.5, hr * 0.27), '#d8b472'); }
-  if (r.accessory === 'Bonnet') { sh(`M${cx - hr - 2} ${hy - hr * 0.3}Q${cx - hr} ${hy - hr * 1.6} ${cx} ${hy - hr * 1.6}Q${cx + hr} ${hy - hr * 1.6} ${cx + hr + 2} ${hy - hr * 0.3}Z`, top); sh(rr(cx - hr - 3, hy - hr * 0.45, 2 * hr + 6, hr * 0.3, 5), top); sh(ell(cx, hy - hr * 1.65, 5, 5), '#fffaf0'); }
-  if (r.accessory === 'Nœud') sh(`M${cx + hr * 0.5} ${hy - hr * 0.95}l-10 -7v14zM${cx + hr * 0.5} ${hy - hr * 0.95}l10 -7v14z`, '#c9645c');
-  const filters = `<filter id="${pre}h" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter>`
-    + `<filter id="${pre}w" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" result="d"/><feGaussianBlur in="d" stdDeviation=".7"/></filter>`;
+
+  // ---- cheveux, avant ----
+  const st = r.hairstyle;
+  if (baby) {
+    if (st !== 'Chauve') {
+      sh(`M${cx - rx * 0.85} ${hy - hr * 0.45}C${cx - rx * 0.6} ${hy - hr * 1.08} ${cx + rx * 0.6} ${hy - hr * 1.08} ${cx + rx * 0.85} ${hy - hr * 0.45}C${cx + rx * 0.4} ${hy - hr * 0.7} ${cx - rx * 0.4} ${hy - hr * 0.7} ${cx - rx * 0.85} ${hy - hr * 0.45}Z`, hair, { op: 0.55, sw: 1 });
+      line(`M${cx - 2} ${hy - hr * 0.95}C${cx + 6} ${hy - hr * 1.18} ${cx + 9} ${hy - hr * 0.76} ${cx + 2} ${hy - hr * 0.74}`, 1.8, hairD);
+    }
+  } else if (st === 'Courts' || st === 'Longs') {
+    const part = st === 'Longs' || sex === 'f';
+    sh(part
+      ? `M${cx - rx - 1.5} ${hy + hr * 0.3}C${cx - rx - 3} ${hy - hr * 0.9} ${cx - rx * 0.3} ${hy - hr * 1.22} ${cx} ${hy - hr * 1.15}C${cx + rx * 0.3} ${hy - hr * 1.22} ${cx + rx + 3} ${hy - hr * 0.9} ${cx + rx + 1.5} ${hy + hr * 0.3}C${cx + rx * 0.7} ${hy - hr * 0.2} ${cx + hr * 0.25} ${hy - hr * 0.62} ${cx} ${hy - hr * 0.86}C${cx - hr * 0.25} ${hy - hr * 0.62} ${cx - rx * 0.7} ${hy - hr * 0.2} ${cx - rx - 1.5} ${hy + hr * 0.3}Z`
+      : `M${cx - rx - 1} ${hy + hr * 0.05}C${cx - rx - 3} ${hy - hr * 0.9} ${cx - rx * 0.4} ${hy - hr * 1.25} ${cx + hr * 0.1} ${hy - hr * 1.18}C${cx + rx * 0.9} ${hy - hr * 1.12} ${cx + rx + 3} ${hy - hr * 0.6} ${cx + rx + 1} ${hy + hr * 0.05}C${cx + rx * 0.85} ${hy - hr * 0.3} ${cx + rx * 0.5} ${hy - hr * 0.5} ${cx + hr * 0.15} ${hy - hr * 0.42}C${cx - hr * 0.2} ${hy - hr * 0.55} ${cx - rx * 0.7} ${hy - hr * 0.35} ${cx - rx - 1} ${hy + hr * 0.05}Z`,
+      hair, { shadeX: cx + rx * 0.45 });
+    if (part) line(`M${cx - hr * 0.5} ${hy - hr * 0.9}Q${cx - hr * 0.2} ${hy - hr * 0.8} ${cx - hr * 0.05} ${hy - hr * 1.05}M${cx + hr * 0.5} ${hy - hr * 0.9}Q${cx + hr * 0.2} ${hy - hr * 0.8} ${cx + hr * 0.05} ${hy - hr * 1.05}`, 0.9, hairD);
+    else line(`M${cx - hr * 0.4} ${hy - hr * 0.95}Q${cx - hr * 0.1} ${hy - hr * 0.75} ${cx + hr * 0.1} ${hy - hr * 0.5}M${cx + hr * 0.1} ${hy - hr * 1.05}Q${cx + hr * 0.4} ${hy - hr * 0.85} ${cx + hr * 0.55} ${hy - hr * 0.55}`, 0.9, hairD);
+    if (st === 'Longs') for (const sg of [-1, 1]) {
+      const X = (d) => cx + sg * d;
+      sh(`M${X(rx * 0.8)} ${hy - hr * 0.3}C${X(rx + 3)} ${hy + hr * 0.4} ${X(rx + 3)} ${hy + hr * 1.1} ${X(rx + 1)} ${shY + 10}L${X(rx + 6.5)} ${shY + 12}C${X(rx + 7.5)} ${hy + hr * 1.0} ${X(rx + 5)} ${hy + hr * 0.2} ${X(rx + 1.5)} ${hy - hr * 0.55}Z`, hair, { sw: 1.2 });
+    }
+  } else if (st === 'Bouclés') {
+    for (const t of [-1, -0.33, 0.33, 1]) sh(ell(cx + t * hr * 0.5, hy - hr * 0.78, hr * 0.27), hair, { sw: 1.1 });
+    for (const t of [-0.7, 0, 0.7]) line(`M${cx + t * hr * 0.6 - 1.5} ${hy - hr * 1.1}a2 2 0 1 1 3 1`, 0.8, hairD);
+  } else if (st === 'Chignon') {
+    sh(ell(cx, hy - hr * 1.22, hr * 0.42, hr * 0.36), hair, { shadeX: cx + hr * 0.15 });
+    sh(`M${cx - rx - 1} ${hy + hr * 0.2}C${cx - rx - 2} ${hy - hr * 0.95} ${cx + rx + 2} ${hy - hr * 0.95} ${cx + rx + 1} ${hy + hr * 0.2}C${cx + rx * 0.6} ${hy - hr * 0.45} ${cx - rx * 0.6} ${hy - hr * 0.45} ${cx - rx - 1} ${hy + hr * 0.2}Z`, hair, { shadeX: cx + rx * 0.45 });
+    line(`M${cx - rx * 0.6} ${hy - hr * 0.35}Q${cx - hr * 0.2} ${hy - hr * 0.95} ${cx + rx * 0.1} ${hy - hr * 0.98}M${cx + rx * 0.6} ${hy - hr * 0.35}Q${cx + hr * 0.25} ${hy - hr * 0.85} ${cx + rx * 0.05} ${hy - hr * 0.9}`, 0.9, hairD);
+    line(`M${cx - hr * 0.3} ${hy - hr * 0.97}Q${cx} ${hy - hr * 0.88} ${cx + hr * 0.3} ${hy - hr * 0.97}`, 1.8, top);
+  } else if (st === 'Chauve' && adult) {
+    for (const sg of [-1, 1]) sh(`M${cx + sg * rx * 0.92} ${hy - hr * 0.4}Q${cx + sg * (rx + 3)} ${hy - hr * 0.1} ${cx + sg * (rx + 1)} ${hy + hr * 0.25}Q${cx + sg * rx * 0.8} ${hy} ${cx + sg * rx * 0.92} ${hy - hr * 0.4}Z`, hair, { sw: 1 });
+    line(`M${cx - hr * 0.45} ${hy - hr * 0.75}Q${cx - hr * 0.25} ${hy - hr * 0.9} ${cx - hr * 0.05} ${hy - hr * 0.92}`, 1.6, '#fffaf0', 0.7);
+  }
+
+  // ---- accessoires ----
+  const acc = r.accessory;
+  if (acc === 'Chapeau') {
+    sh(ell(cx, hy - hr * 0.6, hr * 1.45, hr * 0.24), '#d8b472', { shadeX: cx + hr * 0.6 });
+    sh(`M${cx - hr * 0.72} ${hy - hr * 0.64}C${cx - hr * 0.72} ${hy - hr * 1.45} ${cx + hr * 0.72} ${hy - hr * 1.45} ${cx + hr * 0.72} ${hy - hr * 0.64}Z`, '#d8b472', { shadeX: cx + hr * 0.3 });
+    sh(`M${cx - hr * 0.72} ${hy - hr * 0.8}H${cx + hr * 0.72}V${hy - hr * 0.66}H${cx - hr * 0.72}Z`, top, { sw: 1 });
+  }
+  if (acc === 'Bonnet') {
+    sh(`M${cx - rx - 2} ${hy - hr * 0.3}C${cx - rx - 2} ${hy - hr * 1.45} ${cx + rx + 2} ${hy - hr * 1.45} ${cx + rx + 2} ${hy - hr * 0.3}Z`, top, { shadeX: cx + rx * 0.4 });
+    sh(`M${cx - rx - 3} ${hy - hr * 0.5}H${cx + rx + 3}V${hy - hr * 0.2}H${cx - rx - 3}Z`, shade(top, 0.85), { sw: 1.2 });
+    for (let i = -3; i <= 3; i++) line(`M${cx + i * rx * 0.28} ${hy - hr * 0.48}v${hr * 0.26}`, 0.7, ink, 0.5);
+    sh(ell(cx, hy - hr * 1.32, hr * 0.24), '#fffaf0', { sw: 1.1 });
+  }
+  if (acc === 'Nœud') {
+    const x = cx + hr * 0.55, y = hy - hr * 0.85;
+    sh(`M${x} ${y}C${x - 4} ${y - 9} ${x - 13} ${y - 7} ${x - 12} ${y}C${x - 13} ${y + 7} ${x - 4} ${y + 9} ${x} ${y}ZM${x} ${y}C${x + 4} ${y - 9} ${x + 13} ${y - 7} ${x + 12} ${y}C${x + 13} ${y + 7} ${x + 4} ${y + 9} ${x} ${y}Z`, '#c9645c', { sw: 1.1 });
+    sh(ell(x, y, 2.6, 3), '#c9645c', { sw: 1 });
+  }
+  const filters = `<filter id="${pre}h" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.8"/></filter>`
+    + `<filter id="${pre}w" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4" result="d"/><feGaussianBlur in="d" stdDeviation=".6"/></filter>`;
   return `<defs>${filters}</defs>${out.join('')}`;
 }
 let figId = 0;
@@ -385,9 +514,9 @@ let S = blank();
 
 const SAMPLE = () => {
   personSeq = 0;
-  const lea = newPerson({ name: 'Léa', link: 'Notre fille', birth: '2025-03-12', build: 'Moyenne', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', top: 'rose' });
-  const maman = newPerson({ name: 'Maman', link: 'Ma femme', birth: '1990-06-02', build: 'Mince', skin: 's2', hairstyle: 'Longs', haircolor: 'chatain', glasses: 'Oui', top: 'bleu', bottom: 'gris' });
-  const papa = newPerson({ name: 'Papa', link: 'Moi', birth: '1987-01-20', build: 'Forte', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', beard: 'Barbe', glasses: 'Oui', top: 'gris', bottom: 'marron' });
+  const lea = newPerson({ name: 'Léa', link: 'Notre fille', sex: 'Féminin', birth: '2025-03-12', build: 'Moyenne', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', top: 'rose' });
+  const maman = newPerson({ name: 'Maman', link: 'Ma femme', sex: 'Féminin', birth: '1990-06-02', build: 'Mince', skin: 's2', hairstyle: 'Longs', haircolor: 'chatain', glasses: 'Oui', top: 'bleu', bottom: 'gris' });
+  const papa = newPerson({ name: 'Papa', link: 'Moi', sex: 'Masculin', birth: '1987-01-20', build: 'Forte', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', beard: 'Barbe', glasses: 'Oui', top: 'gris', bottom: 'marron' });
   lea.open = maman.open = papa.open = false;
   const ev = (date, title, icon, a, people, open = false) => ({ date, title, icon, a, people: people.map((p) => p.id), open });
   return { ...blank(), people: [lea, maman, papa], step: 5, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
@@ -440,7 +569,8 @@ function poster(s) {
   const ids = evs.map(vid);
   const pvars = new Map(); // un personnage par tranche d'âge
   const pvid = (p, cat) => { const sig = p.id + cat + JSON.stringify(pa(p)); if (!pvars.has(sig)) pvars.set(sig, { p, cat, n: pvars.size }); return `${id}-q${pvars.get(sig).n}`; };
-  const crowd = evs.map((e) => eventPeople(e).map((p) => pvid(p, catAt(p, e.date) || 'adulte')));
+  const ZS = { bebe: 0.6, enfant: 0.8, ado: 0.93, adulte: 1, senior: 0.97 }; // tailles relatives sur l'affiche
+  const crowd = evs.map((e) => eventPeople(e).map((p) => { const cat = catAt(p, e.date) || 'adulte'; return { sid: pvid(p, cat), z: ZS[cat] }; }));
   let g = `<defs>${[...pvars.values()].map((v) => `<symbol id="${id}-q${v.n}" viewBox="0 0 240 240">${personBody(v.p, v.cat, `${id}-q${v.n}-`, ink, th.bg)}</symbol>`).join('')}${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
   g += `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
@@ -461,7 +591,7 @@ function poster(s) {
     g += `<circle cx="${p.x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${th.road}" stroke="${ink}" stroke-width="1.6"/>`;
     g += `<use href="#${ids[i]}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
     const offs = [[], [28], [-28, 28], [-33, 0, 33]][crowd[i].length];
-    crowd[i].forEach((sid, k) => { g += `<use href="#${sid}" x="${cx + offs[k] - PF / 2}" y="${(y + 30 - PF * 0.86).toFixed(1)}" width="${PF}" height="${PF}"/>`; });
+    crowd[i].forEach(({ sid, z }, k) => { const w = PF * z; g += `<use href="#${sid}" x="${(cx + offs[k] - w / 2).toFixed(1)}" y="${(y + 30 - w * 0.86).toFixed(1)}" width="${w.toFixed(1)}" height="${w.toFixed(1)}"/>`; });
     g += `<text x="${cx}" y="${(y + 49).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="11" fill="${ink}" opacity=".85">${esc(fmt(e.date))}</text>`;
     lines.forEach((ln, k) => { g += `<text x="${cx}" y="${(y + 62 + k * 14).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="${ink}">${esc(ln)}</text>`; });
   });
