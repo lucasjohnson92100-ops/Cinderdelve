@@ -2458,16 +2458,17 @@ function upText(t, lvl) {
 // ---- Cartes : {t: type, c: couleurs}. Une carte fusionnée a des parts ----
 const mkCard = (t, c) => ({ t, c });
 // Paquet de départ volontairement court (15 cartes) : le reste se gagne en campagne
-const DECK_PLAN = [['tireurs', 'JJRRVN'], ['jeep', 'JV'], ['blinde', 'R'], ['destroyer', 'JN'], ['chasseur', 'V'],
+// départ modeste, presque tout au sol : chars, artillerie, flotte et aviation se gagnent au fil des achats
+const DECK_PLAN = [['tireurs', 'JJJRRVVN'], ['mitrailleuse', 'R'], ['jeep', 'JN'], ['destroyer', 'V'],
   ['barrage', ''], ['fumigenes', ''], ['ravitaillement', '.']];
 const START_DECK = DECK_PLAN.flatMap(([t, cs]) => (TYPES[t].order ? Array.from({ length: Math.max(1, cs.length) }, () => mkCard(t, '')) : [...cs].map(c => mkCard(t, c))));
 // Doctrines : choisies au début de la campagne, elles ajoutent 3 cartes qui orientent le paquet
 const DOCTRINES = {
   blitz: { name: 'Doctrine Blitz', tip: 'Véhicules à élan : plus vous en posez, plus ils frappent.', cards: [['halftrack', 'J'], ['jeep', 'N'], ['assaut', '']] },
-  artillerie: { name: 'Doctrine Artillerie', tip: 'Marquer l’ennemi, puis le pilonner de loin.', cards: [['artillerie', 'R'], ['observateur', 'J'], ['reco', 'V']] },
+  artillerie: { name: 'Doctrine Artillerie', tip: 'Marquer l’ennemi, puis le pilonner de loin.', cards: [['observateur', 'J'], ['reco', 'V'], ['barrage', '']] },
   defense: { name: 'Doctrine Défense', tip: 'Tenir le front et laisser l’ennemi s’user.', cards: [['mitrailleuse', 'V'], ['genie', 'N'], ['infirmiers', 'R']] },
   commandos: { name: 'Doctrine Commandos', tip: 'Sauter derrière les lignes et saboter le QG.', cards: [['paras', 'R'], ['paras', 'V'], ['sabotage', '']] },
-  marine: { name: 'Doctrine Marine', tip: 'Une flotte qui pilonne la côte et débarque.', cards: [['croiseur', 'V'], ['sousmarin', 'R'], ['debarquement', '']] },
+  marine: { name: 'Doctrine Marine', tip: 'Une flotte qui pilonne la côte et débarque.', cards: [['destroyer', 'R'], ['tireurs', 'N'], ['debarquement', '']] },
 };
 const doctrineCards = id => DOCTRINES[id].cards.map(([t, c]) => mkCard(t, c));
 function pickDoctrines(rng = Math.random) { return shuffle(Object.keys(DOCTRINES), rng).slice(0, 3); }

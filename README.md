@@ -1,0 +1,3 @@
+
+### Départ modeste, flotte à construire
+Paquet de départ (15 cartes) : 8 tireurs, 1 mitrailleuse, 2 jeeps, 1 destroyer et les 3 ordres — plus de char ni de chasseur. Doctrines allégées : Marine donne un destroyer, des tireurs et Débarquement (au lieu du croiseur et du sous-marin), Artillerie donne observateurs, reconnaissance et Barrage (sans canon). Chars, artillerie, croiseurs, sous-marins et avions s'obtiennent par les packs et l'Intendance. Simulation du bot : 47,5 % de campagnes terminées (46 % avant), premières batailles toujours gagnées en 2,4 à 3,7 tours : pas besoin d'affaiblir les premiers ennemis.
