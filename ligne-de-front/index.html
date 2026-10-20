@@ -2171,7 +2171,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .vdust { position: absolute; z-index: -1; left: -55%; bottom: -10%; width: calc(var(--uh, 60px) * 1.25); aspect-ratio: 200 / 121; background: var(--vfx-dust) 0 0 / 400% 100% no-repeat; animation: vboom .85s steps(1) forwards; pointer-events: none; }
 .vdust.sm { width: calc(var(--uh, 60px) * .85); left: -40%; }
 .awb.t-riviere.wading .awb-units { bottom: 5% !important; }
-svg.shv.wade { -webkit-mask-image: linear-gradient(#000 0, #000 66%, transparent 76%); mask-image: linear-gradient(#000 0, #000 66%, transparent 76%); }
+/* fantassin dans l'eau : la fenêtre de la planche est raccourcie (on ne montre que le haut du corps) ; un masque CSS faisait déborder toute la planche */
 .wtr { fill: var(--wtr, rgba(115, 180, 208, .62)); stroke: rgba(255, 255, 255, .85); stroke-width: .7; transform-box: fill-box; transform-origin: center; animation: wtrw 1.7s ease-in-out infinite alternate; }
 .wtr.w2 { fill: none; stroke: rgba(255, 255, 255, .6); stroke-width: .5; animation: wtrr 1.7s ease-out infinite; }
 @keyframes wtrw { from { transform: translateX(-1.5%) scaleY(1); } to { transform: translateX(1.5%) scaleY(1.18); } }
@@ -3581,7 +3581,7 @@ function spriteInner(key, side, t) {
     const x = +(m.ref ? xb + m.ref[0] * wb : xb).toFixed(2), y = +(m.ref ? yb + m.ref[1] * hb : yb).toFixed(2);
     const bk = key.replace(/_fire$/, ''), wade = window.__wade && side === 'me' && kindOf(bk) === 'foot' && bk !== 'mgnest' && !bk.startsWith('inf_eau');
     const water = wade ? `<ellipse class="wtr" cx="${+(x + w / 2).toFixed(2)}" cy="${+(y + h * 0.74).toFixed(2)}" rx="${+(w * 0.5).toFixed(2)}" ry="${+(h * 0.085).toFixed(2)}"/><ellipse class="wtr w2" cx="${+(x + w / 2).toFixed(2)}" cy="${+(y + h * 0.74).toFixed(2)}" rx="${+(w * 0.42).toFixed(2)}" ry="${+(h * 0.06).toFixed(2)}"/>` : '';
-    return `${air || wade ? '' : ring}<svg class="shv${wade ? ' wade' : ''}" x="${x}" y="${y}" width="${w}" height="${h}" style="width:${w}px;height:${h}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${m.fh}" preserveAspectRatio="none" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" keyTimes="${kt}" calcMode="discrete" dur="${dur}ms" ${m.once ? 'begin="indefinite" repeatCount="1" fill="freeze" data-once="1"' : `begin="-__B__ms" data-d="${dur}" repeatCount="indefinite"`}/></image></svg>${water}`;
+    return `${air || wade ? '' : ring}<svg class="shv${wade ? ' wade' : ''}" x="${x}" y="${y}" width="${w}" height="${wade ? +(h * 0.78).toFixed(2) : h}" style="width:${w}px;height:${wade ? +(h * 0.78).toFixed(2) : h}px;max-width:none;max-height:none;animation:none;filter:none" viewBox="0 0 ${m.fw} ${wade ? +(m.fh * 0.78).toFixed(1) : m.fh}" preserveAspectRatio="none" overflow="hidden"><image class="pimg sheet" href="${s}" width="${m.fw * m.n}" height="${m.fh}"><animate attributeName="x" values="${vals}" keyTimes="${kt}" calcMode="discrete" dur="${dur}ms" ${m.once ? 'begin="indefinite" repeatCount="1" fill="freeze" data-once="1"' : `begin="-__B__ms" data-d="${dur}" repeatCount="indefinite"`}/></image></svg>${water}`;
   }
   return `${air ? '' : ring}<image class="pimg" href="${src}" x="-3" y="${air ? 6 : -2}" width="70" height="${air ? 48 : 61}" preserveAspectRatio="${air ? 'xMidYMid' : 'xMidYMax'} meet"/>`;
 }

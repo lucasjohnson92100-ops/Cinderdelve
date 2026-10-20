@@ -234,3 +234,6 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 
 ### Portraits de jokers ajoutés : Amiral Vague, Intendant Fort, Sergent Intendant
 Générés en 16:9 puis recadrés en carré autour du sujet (`art/jokers/<id>.webp`, `JOKER_ART`). Restent sans portrait (icône par défaut) : quartier, blitz, radio, sapeur, lebrun, faucon, fer, clairon, tenaille, fanfare, triade, mousse, ombre.
+
+### Correctif : fantassins dans la rivière
+Les parachutistes, observateurs, infirmiers et le génie dans un secteur Rivière affichaient toute leur planche d'animation en rangée (le masque CSS appliqué pour les couper à la taille faisait perdre le découpage de la fenêtre). La fenêtre est maintenant simplement raccourcie à 78 % de la hauteur de l'image, sans masque.
