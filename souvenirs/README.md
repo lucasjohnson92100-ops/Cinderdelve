@@ -1,11 +1,12 @@
-# Souvenirs : objets personnalisés par IA
+# La route du temps
 
-Site statique + 2 fonctions Netlify. Le client décrit un souvenir, choisit un style et un objet, voit l'aperçu, puis envoie une demande de commande.
+Maquette d'une affiche illustrée : une route relie une date de début à une date de fin, et chaque souvenir est dessiné le long du chemin. Style visé : carte ancienne douce.
 
-- `index.html`, `style.css`, `app.js` : le site (sans dépendance, thème clair/sombre, mobile).
-- `functions/generate.js` : génération d'image. Définir `IMAGE_API_URL` et `IMAGE_API_KEY` ; adapter l'extraction de l'image dans la réponse.
-- `functions/order.js` : réception des commandes (à relier à e-mail / base de données / paiement).
+- `index.html` : page unique (HTML, CSS, JS) avec le parcours en 5 étapes (occasion, pour qui, dates, souvenirs, style et format) et l'aperçu de l'affiche en direct.
+- `functions/order.js` : réception des commandes (à relier à e-mail, base de données et paiement).
 
-Sans clé d'API, le site passe en **mode démonstration** (illustration abstraite locale).
+Les petits dessins sont provisoires (tracés en SVG dans le code). Les illustrations définitives viendront d'une bibliothèque dessinée dans le même style ; la génération par IA reste à tester pour les événements sur mesure.
 
-Test local : `cd souvenirs && python3 -m http.server 8000` (les fonctions nécessitent `netlify dev`).
+Contraintes de composition : 10 souvenirs au maximum, textes et dates écrits par le code, jamais par une IA d'images.
+
+Test local : `cd souvenirs && python3 -m http.server 8000`.

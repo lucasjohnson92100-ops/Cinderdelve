@@ -1,12 +1,7 @@
-# Site « Souvenirs » : à déployer comme un site Netlify distinct, avec "souvenirs" comme dossier de base.
+# Site « La route du temps » : à déployer comme un site Netlify distinct, avec "souvenirs" comme dossier de base.
 [build]
   publish = "."
   functions = "functions"
-
-[[redirects]]
-  from = "/api/generate"
-  to = "/.netlify/functions/generate"
-  status = 200
 
 [[redirects]]
   from = "/api/order"
