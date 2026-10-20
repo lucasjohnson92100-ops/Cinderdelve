@@ -143,6 +143,22 @@ footer{text-align:center;color:var(--muted);padding:24px;border-top:1px solid va
 .meter i{transition:width .6s cubic-bezier(.2,.8,.3,1)}
 .meter.full i{background:linear-gradient(90deg,var(--ok),#d8a85c);animation:m-glow 1.6s ease-out 1}
 input:focus,select:focus{transition:box-shadow .2s;box-shadow:0 0 0 4px rgba(154,91,60,.12)}
+/* modèles */
+.tplshow{max-width:1040px;margin:0 auto 44px;padding:0 20px}
+.tplshow h2{font-size:clamp(1.5rem,3.5vw,2rem);text-wrap:balance;margin:0 0 4px}
+.tgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-top:14px}
+@media(max-width:900px){.tgrid{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:minmax(170px,40%);overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}.tcard{scroll-snap-align:start}}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 8px 12px;cursor:pointer;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column;gap:4px;transition:transform .2s,box-shadow .2s}
+.tcard:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(74,54,35,.16)}
+.tcard .tv svg,.tpl .tv svg{display:block;width:100%;height:auto;border-radius:4px}
+.tcard .tv{margin-bottom:6px}
+.tcard b{font:1.08rem var(--serif);font-weight:400}.tcard small{color:var(--muted);font-size:.84rem}.tcard .go{color:var(--acc);font-size:.85rem;margin-top:4px}
+.tcard:hover .arr{transform:translateX(4px)}.tcard .arr{display:inline-block;transition:transform .2s}
+.tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px}
+.tpl{border:1px solid var(--line);border-radius:10px;padding:5px 5px 7px;background:transparent;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:5px;transition:transform .15s,border-color .2s,box-shadow .2s}
+.tpl b{font:400 .8rem/1.2 var(--serif)}
+.tpl:hover{transform:translateY(-2px);border-color:var(--acc)}
+.tpl[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 /* comment ça marche */
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1040px;margin:0 auto 40px;padding:0 20px}
 @media(max-width:800px){.how{grid-template-columns:1fr}}
@@ -180,6 +196,12 @@ dialog .confetti{position:absolute}
   <div class="hw"><span class="hwi" id="hw1"></span><b>1. Racontez</b><p>Deux dates, puis les moments qui comptent entre les deux.</p></div>
   <div class="hw"><span class="hwi" id="hw2"></span><b>2. Personnalisez</b><p>Vos proches, leurs couleurs, les petits détails qui vous ressemblent.</p></div>
   <div class="hw"><span class="hwi" id="hw3"></span><b>3. Recevez</b><p>Une affiche illustrée, prête à encadrer.</p></div>
+</section>
+
+<section class="tplshow" aria-labelledby="tplshowT">
+  <h2 id="tplshowT">Un modèle pour chaque histoire</h2>
+  <p class="hint">Chaque type d'événement a son décor : choisissez-en un pour démarrer, vous pourrez en changer à la fin.</p>
+  <div class="tgrid" id="tgrid"></div>
 </section>
 
 <main id="creer" class="app">
@@ -594,7 +616,7 @@ const personThumb = (p, date) => `<svg viewBox="0 0 240 240" aria-hidden="true">
 let personSeq = 0;
 const newPerson = (a = {}) => ({ id: 'p' + ++personSeq, a, photos: [], consent: false, open: true });
 
-const blank = () => ({ people: [], step: 0, occ: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
+const blank = () => ({ people: [], step: 0, occ: '', tpl: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
 let S = blank();
 
 const SAMPLE = () => {
@@ -626,6 +648,139 @@ function wrap(t, n) {
   return lines;
 }
 
+// ---- Modèles d'affiche, un par type d'événement ----
+// road : [largeur du bord, largeur de la chaussée (0 = sentier), pointillés, épaisseur des pointillés] ; amp : sinuosité.
+const TPL = {
+  naissance: { label: 'Nuit étoilée', desc: 'étoiles, nuages et lune', theme: 'brume', amp: 1, road: [13, 9.5, '0.1 8', 2.6] },
+  couple: { label: 'Deux chemins', desc: 'deux routes qui se rejoignent', theme: 'rose', amp: 0.9, road: [15, 11, '6 7', 1.3] },
+  anniversaire: { label: 'Les années', desc: 'bornes des âges et ballons', theme: 'parchemin', amp: 1.05, road: [17, 12.5, '6 7', 1.3] },
+  mariage: { label: 'Vers le grand jour', desc: 'colombes, fleurs et arche', theme: 'brume', amp: 0.9, road: [14, 10.5, '', 0] },
+  autre: { label: 'Carte au trésor', desc: 'montagnes, mer et croix finale', theme: 'parchemin', amp: 1.15, road: [8, 0, '7 6', 2.4] },
+};
+const tplOf = (s) => (TPL[s.tpl] ? s.tpl : TPL[s.occ] ? s.occ : 'autre');
+const MOTIF = {
+  star: (x, y, r) => `M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z`,
+  heart: (x, y, k) => `M${x} ${y + k * 0.9}C${x - k * 2} ${y - k * 0.2} ${x - k} ${y - k * 1.5} ${x} ${y - k * 0.6}C${x + k} ${y - k * 1.5} ${x + k * 2} ${y - k * 0.2} ${x} ${y + k * 0.9}Z`,
+  cloud: (x, y, w) => `M${x - w} ${y}Q${x - w} ${y - w * 0.5} ${x - w * 0.5} ${y - w * 0.45}Q${x - w * 0.3} ${y - w * 0.95} ${x + w * 0.1} ${y - w * 0.7}Q${x + w * 0.6} ${y - w * 0.95} ${x + w * 0.65} ${y - w * 0.4}Q${x + w} ${y - w * 0.4} ${x + w} ${y}Z`,
+};
+const shape = (c, d, fill, sw = 1.2) => `<path d="${d}" fill="${fill || 'none'}" stroke="${c.ink}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const flower = (c, x, y) => shape(c, `M${x} ${y + 10}Q${x - 2} ${y} ${x} ${y - 6}`, '', 1.1)
+  + [[-5, 3, -35], [5, 0, 35]].map(([dx, dy, r]) => `<ellipse cx="${x + dx}" cy="${y + dy}" rx="5" ry="2.3" transform="rotate(${r} ${x + dx} ${y + dy})" fill="${c.th.wash[0]}" stroke="${c.ink}" stroke-width=".8"/>`).join('')
+  + [0, 72, 144, 216, 288].map((a) => { const t = (a * Math.PI) / 180; return `<circle cx="${(x + Math.cos(t) * 3.6).toFixed(1)}" cy="${(y - 9 + Math.sin(t) * 3.6).toFixed(1)}" r="3" fill="${c.th.wash[1]}" stroke="${c.ink}" stroke-width=".7"/>`; }).join('')
+  + `<circle cx="${x}" cy="${y - 9}" r="2" fill="${c.th.wash[3]}"/>`;
+
+function tplFrame(c) {
+  const { W, H, ink, th, tk } = c;
+  const dbl = `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
+  const corners = (f) => [[36, 36, 1, 1], [W - 36, 36, -1, 1], [36, H - 36, 1, -1], [W - 36, H - 36, -1, -1]].map(([x, y, sx, sy]) => f(x, y, sx, sy)).join('');
+  if (tk === 'naissance') return `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" rx="18" fill="none" stroke="${ink}" stroke-width="2"/><rect x="25" y="25" width="${W - 50}" height="${H - 50}" rx="12" fill="none" stroke="${ink}" stroke-width="1.8" stroke-dasharray="0.1 7" stroke-linecap="round" opacity=".7"/>`
+    + corners((x, y) => shape(c, MOTIF.star(x, y, 6), th.wash[3], 1));
+  if (tk === 'couple') return dbl + corners((x, y) => shape(c, MOTIF.heart(x, y, 5), th.wash[1], 1));
+  if (tk === 'mariage') return dbl + corners((x, y, sx, sy) => `<g transform="translate(${x - 12 * sx} ${y - 12 * sy}) scale(${sx} ${sy})"><path d="M2 46Q2 2 46 2" fill="none" stroke="${ink}" stroke-width="1.3"/>`
+    + [[6, 30, -60], [12, 16, -35], [24, 7, -15], [38, 4, 0]].map(([lx, ly, r]) => `<ellipse cx="${lx}" cy="${ly}" rx="6" ry="2.6" transform="rotate(${r} ${lx} ${ly})" fill="${th.wash[0]}" stroke="${ink}" stroke-width=".8"/>`).join('')
+    + `<circle cx="4" cy="4" r="3.4" fill="${th.wash[1]}" stroke="${ink}" stroke-width=".8"/></g>`);
+  if (tk === 'autre') return `<rect x="18" y="18" width="${W - 36}" height="${H - 36}" fill="none" stroke="${th.road}" stroke-width="7"/><rect x="18" y="18" width="${W - 36}" height="${H - 36}" fill="none" stroke="${ink}" stroke-width="7" stroke-dasharray="22 22"/>`
+    + `<rect x="14" y="14" width="${W - 28}" height="${H - 28}" fill="none" stroke="${ink}" stroke-width="1"/><rect x="22" y="22" width="${W - 44}" height="${H - 44}" fill="none" stroke="${ink}" stroke-width="1"/>`;
+  return dbl;
+}
+
+function tplOrnament(c) {
+  const { CX, ink, th, tk } = c, line = `<path d="M${CX - 110} 134H${CX + 110}" stroke="${ink}" stroke-width="1" fill="none" opacity=".6"/>`;
+  if (tk === 'naissance') return line + [CX - 118, CX, CX + 118].map((x, i) => shape(c, MOTIF.star(x, 134, i === 1 ? 7 : 4.5), th.wash[3], 0.9)).join('');
+  if (tk === 'couple') return line + shape(c, MOTIF.heart(CX, 134, 6), th.wash[1], 1);
+  if (tk === 'anniversaire') { // guirlande de fanions
+    let r = `<path d="M${CX - 160} 132Q${CX} 162 ${CX + 160} 132" fill="none" stroke="${ink}" stroke-width="1"/>`;
+    for (let k = 1; k < 12; k++) {
+      const t = k / 12, x = (1 - t) ** 2 * (CX - 160) + 2 * (1 - t) * t * CX + t * t * (CX + 160), y = (1 - t) ** 2 * 132 + 2 * (1 - t) * t * 162 + t * t * 132;
+      r += shape(c, `M${(x - 6).toFixed(1)} ${y.toFixed(1)}L${(x + 6).toFixed(1)} ${y.toFixed(1)}L${x.toFixed(1)} ${(y + 13).toFixed(1)}Z`, th.wash[k % 4], 0.8);
+    }
+    return r;
+  }
+  if (tk === 'mariage') {
+    const dove = (x, sx) => `<g transform="translate(${x} 128) scale(${sx} 1)">${shape(c, 'M-10 2Q-2 -2 4 2Q10 -6 14 -4Q10 0 9 4Q4 9 -6 6L-14 8Q-10 5 -10 2Z', th.road, 1)}${shape(c, 'M0 2Q4 -10 12 -12Q8 -2 4 3', th.road, 1)}<circle cx="10" cy="-2" r=".9" fill="${ink}"/></g>`;
+    return line + dove(CX - 135, 1) + dove(CX + 135, -1);
+  }
+  return line + `<path d="M${CX} 128v12" stroke="${ink}" stroke-width="1" opacity=".6"/>`;
+}
+
+// Petit décor posé entre deux souvenirs, à côté de la route.
+function tplFiller(c, i, x, y) {
+  const { ink, th, tk } = c, w = th.wash[i % 4];
+  if (tk === 'naissance') return i % 2 ? [[0, 0, 5], [10, -10, 3.5], [-9, -12, 3]].map(([dx, dy, r]) => shape(c, MOTIF.star(x + dx, y + dy, r), th.wash[3])).join('') : shape(c, MOTIF.cloud(x, y, 15), th.road);
+  if (tk === 'couple') return i % 2 ? shape(c, MOTIF.heart(x - 5, y - 4, 5), th.wash[1]) + shape(c, MOTIF.heart(x + 6, y + 2, 4), th.wash[3]) : flower(c, x, y);
+  if (tk === 'anniversaire') return `<path d="M${x} ${y - 4}Q${x - 4} ${y + 4} ${x + 1} ${y + 12}" fill="none" stroke="${ink}" stroke-width="1"/>` + shape(c, `M${x} ${y - 5}L${x - 2.5} ${y - 1}H${x + 2.5}Z`, w) + shape(c, `M${x - 9} ${y - 16}A9 11 0 1 1 ${x + 9} ${y - 16}A9 11 0 1 1 ${x - 9} ${y - 16}Z`, w);
+  if (tk === 'mariage') return flower(c, x, y);
+  return i % 2 // carte au trésor : vagues ou montagne
+    ? `<path d="M${x - 14} ${y}q3.5 -4 7 0t7 0t7 0t7 0M${x - 10} ${y + 6}q3.5 -4 7 0t7 0t7 0" fill="none" stroke="${ink}" stroke-width="1.1" opacity=".8"/>`
+    : shape(c, `M${x - 16} ${y + 6}L${x - 3} ${y - 14}L${x + 4} ${y - 4}L${x + 8} ${y - 9}L${x + 18} ${y + 6}Z`, th.wash[0]) + shape(c, `M${x - 8} ${y - 7.5}L${x - 3} ${y - 14}L${x + 1} ${y - 8}L${x - 2} ${y - 6}Z`, th.road);
+}
+
+// La route : bande (bord + chaussée) ou simple sentier, pointillés ; pour « Deux chemins », deux branches qui se rejoignent.
+function tplRoad(c, d) {
+  const { ink, th, id, tk } = c, [ow, iw, dash, dw] = TPL[tk].road;
+  const band = (dd, k = 1, main = false) => `<path class="m-road" pathLength="1" d="${dd}" fill="none" stroke="${ink}" stroke-opacity="${iw ? 1 : 0.25}" stroke-width="${ow * k}" stroke-linecap="round" stroke-linejoin="round"${main && !iw ? ` id="${id}-road"` : ''}/>`
+    + (iw ? `<path class="m-road" pathLength="1" d="${dd}" fill="none" stroke="${th.road}" stroke-width="${iw * k}" stroke-linecap="round" stroke-linejoin="round"${main ? ` id="${id}-road"` : ''}/>` : '')
+    + (dash ? `<path class="m-dash" d="${dd}" fill="none" stroke="${ink}" stroke-width="${dw * k}" stroke-dasharray="${dash}" stroke-linecap="round" opacity="${iw ? 0.7 : 0.85}"/>` : '');
+  let r = '';
+  if (tk === 'couple') {
+    const j = c.at(c.u0);
+    for (const x of c.starts) r += band(`M${x.toFixed(1)} ${c.Y0 + 4}C${x.toFixed(1)} ${c.Y0 - 22} ${j.x.toFixed(1)} ${(j.y + 36).toFixed(1)} ${j.x.toFixed(1)} ${j.y.toFixed(1)}`, 0.72);
+  }
+  return r + band(d, 1, true);
+}
+
+// Éléments propres au modèle : lune, bornes des âges, arche fleurie, rose des vents.
+function tplExtras(c) {
+  const { W, H, ink, th, tk, at, s, evs, evU, n, delay, u0 } = c;
+  let r = '';
+  if (tk === 'naissance') r += shape(c, `M${W - 64} 154A14 14 0 1 0 ${W - 50} 180A11 11 0 0 1 ${W - 64} 154Z`, th.wash[3], 1.3);
+  if (tk === 'anniversaire' && s.start && s.end && s.end > s.start) {
+    const t = (d) => new Date(d + 'T12:00').getTime();
+    const anchors = [[t(s.start), 0], ...evs.map((e, i) => [t(e.date), evU((i + 1) / (n + 1))]), [t(s.end), 1]];
+    const uOf = (tm) => { for (let k = 1; k < anchors.length; k++) { const [t0, a0] = anchors[k - 1], [t1, a1] = anchors[k]; if (tm <= t1) return t1 > t0 ? a0 + ((tm - t0) / (t1 - t0)) * (a1 - a0) : a1; } return 1; };
+    const y0 = +s.start.slice(0, 4), span = +s.end.slice(0, 4) - y0, step = span <= 12 ? 1 : span <= 30 ? 5 : 10, ages = s.occ === 'anniversaire';
+    for (let k = step; k < span; k += step) {
+      const u = uOf(t(`${y0 + k}${s.start.slice(4)}`)), p = at(u);
+      const near = Math.round(((u - u0) / (1 - u0)) * (n + 1)) - 1, side = n && near >= 0 && near < n ? (near % 2 === 0 ? 1 : -1) : (k / step) % 2 ? 1 : -1; // côté opposé au souvenir voisin
+      const x = p.x + side * 24, y = p.y;
+      r += `<g class="m-tree" style="--d:${delay(u)}"><path d="M${x - 8} ${y + 8}V${y - 4}Q${x - 8} ${y - 11} ${x} ${y - 11}Q${x + 8} ${y - 11} ${x + 8} ${y - 4}V${y + 8}Z" fill="#e9e1cf" stroke="${ink}" stroke-width="1.1"/>`
+        + `<text x="${x}" y="${y + (ages ? 1.5 : 2)}" text-anchor="middle" font-family="${SERIF}" font-size="${ages ? 7.5 : 5.6}" fill="${ink}">${ages ? k : y0 + k}</text>${ages ? `<text x="${x}" y="${y + 6.5}" text-anchor="middle" font-family="${SERIF}" font-size="4.4" fill="${ink}">ans</text>` : ''}</g>`;
+    }
+  }
+  if (tk === 'mariage') {
+    const b = at(1);
+    r += `<g class="m-end" style="--d:1.8s"><path d="M${b.x - 24} ${b.y + 10}A24 26 0 0 1 ${b.x + 24} ${b.y + 10}" fill="none" stroke="${ink}" stroke-width="2.2"/>`;
+    for (let a = 190; a <= 350; a += 32) { const q = (a * Math.PI) / 180, x = b.x + 24 * Math.cos(q), y = b.y + 10 + 26 * Math.sin(q); r += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${(a / 32) % 2 < 1 ? th.wash[1] : th.road}" stroke="${ink}" stroke-width=".8"/>`; }
+    r += '</g>';
+  }
+  if (tk === 'autre') r += `<g transform="translate(64 ${H - 66})" stroke="${ink}" fill="none"><circle r="22" stroke-width="1"/><circle r="17" stroke-width=".6"/><path d="M0 -26L5 -5L26 0L5 5L0 26L-5 5L-26 0L-5 -5Z" fill="${th.wash[3]}" stroke-width="1"/><path d="M0 -26L5 -5L0 0Z" fill="${ink}"/><text y="-30" text-anchor="middle" font-family="${SERIF}" font-size="10" fill="${ink}" stroke="none">N</text></g>`;
+  return r;
+}
+
+// Repères de départ et d'arrivée selon le modèle.
+function tplEnds(c, a, b) {
+  const { ink, th, tk, Y0 } = c;
+  const dot = (p, f, d) => `<circle class="m-end" style="--d:${d}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="${f}" stroke="${ink}" stroke-width="1.8"/>`;
+  let r = tk === 'couple' ? c.starts.map((x) => dot({ x, y: Y0 + 4 }, th.wash[3], '.1s')).join('') : dot(a, th.wash[3], '.1s');
+  const e = 'class="m-end" style="--d:1.75s"';
+  if (tk === 'naissance') r += `<g ${e}>${shape(c, MOTIF.star(b.x, b.y, 12), th.wash[3], 1.6)}</g>`;
+  else if (tk === 'couple') r += `<g ${e}>${shape(c, MOTIF.heart(b.x, b.y, 8), th.wash[1], 1.6)}</g>`;
+  else if (tk === 'anniversaire') r += `<g ${e}><path d="M${b.x} ${b.y + 6}V${b.y - 16}" stroke="${ink}" stroke-width="1.8"/>${shape(c, `M${b.x} ${b.y - 16}L${b.x + 18} ${b.y - 11}L${b.x} ${b.y - 6}Z`, th.wash[1])}<circle cx="${b.x}" cy="${b.y + 6}" r="4" fill="${th.wash[3]}" stroke="${ink}" stroke-width="1.4"/></g>`;
+  else if (tk === 'autre') r += `<g ${e}><path d="M${b.x - 9} ${b.y - 9}L${b.x + 9} ${b.y + 9}M${b.x + 9} ${b.y - 9}L${b.x - 9} ${b.y + 9}" stroke="#b5483a" stroke-width="4.5" stroke-linecap="round"/></g>`;
+  else r += dot(b, th.wash[1], '1.75s');
+  return r;
+}
+
+// Exemples de la galerie « Un modèle pour chaque histoire ».
+const EX = {
+  couple: { names: 'Camille & Tom', title: 'Camille & Tom, notre chemin', start: '2018-06-02', end: '2026-06-02', ev: [['2019-08-10', 'Premier voyage', 'ship'], ['2021-01-15', 'Emménagement', 'house'], ['2022-05-01', 'Moka arrive', 'puppy'], ['2025-02-14', 'Fiançailles', 'heart']] },
+  anniversaire: { names: 'Paul', title: 'Les 50 ans de Paul', start: '1976-05-04', end: '2026-05-04', ev: [['1982-09-01', "Entrée à l'école", 'school'], ['1998-07-01', 'Diplôme', 'cap'], ['2003-06-14', 'Mariage', 'chapel'], ['2006-03-02', 'Naissance de Jade', 'cradle'], ['2015-08-01', 'Tour du monde', 'ship']] },
+  mariage: { names: 'Inès & Hugo', title: 'Inès & Hugo, vers le grand jour', start: '2019-09-21', end: '2026-06-20', ev: [['2019-09-21', 'Notre rencontre', 'heart'], ['2020-07-10', 'Premier voyage', 'ship'], ['2021-10-01', 'Premier appartement', 'house'], ['2025-01-01', 'La demande', 'chapel']] },
+  autre: { names: 'Sam', title: 'La grande aventure de Sam', start: '2024-01-10', end: '2024-12-20', ev: [['2024-02-01', 'Lisbonne', 'ship'], ['2024-05-12', 'Concert à Rio', 'music'], ['2024-08-03', 'Un chiot adopté', 'puppy'], ['2024-11-02', 'Diplôme de plongée', 'cap']] },
+};
+const example = (k) => (k === 'naissance' ? { ...SAMPLE(), theme: TPL.naissance.theme }
+  : { ...blank(), occ: k, tpl: k, theme: TPL[k].theme, names: EX[k].names, title: EX[k].title, start: EX[k].start, end: EX[k].end, events: EX[k].ev.map(([date, title, icon]) => ({ date, title, icon, a: {} })) });
+
 let posterId = 0, evSeq = 0;
 const PF = 44; // taille d'un personnage sur l'affiche (2,2 cm de boîte)
 const VSIZE = 80; // taille d'une vignette sur l'affiche, en unités (4 cm)
@@ -644,10 +799,11 @@ function poster(s, o = {}) {
   const th = THEMES[s.theme], oc = OCC[s.occ] || OCC.autre, id = 'p' + posterId++, F = FORMATS[s.format], W = F.w, H = F.h, CX = W / 2;
   const evs = shownEvents(s), n = evs.length, Y0 = H - Y_MARGIN, Y1 = Y_END;
   evs.forEach((e) => (e.id ||= 'e' + ++evSeq));
+  const tk = tplOf(s), T = TPL[tk], u0 = tk === 'couple' ? 0.14 : 0, evU = (f) => u0 + (1 - u0) * f; // « Deux chemins » : la route commune commence plus haut
   const delay = (u) => (0.25 + 1.5 * u).toFixed(2) + 's'; // apparition au moment où la route passe
-  const small = W < 500, amp = small ? 38 : W < 700 ? 66 : 100, colX = small ? 82 : W < 700 ? 105 : 150, wrapN = small ? 15 : 20, waves = (Y0 - Y1) / 260;
+  const small = W < 500, amp = (small ? 38 : W < 700 ? 66 : 100) * T.amp, colX = small ? 82 : W < 700 ? 105 : 150, wrapN = small ? 15 : 20, waves = (Y0 - Y1) / 260;
   const at = (u) => ({ x: CX + amp * Math.sin(u * Math.PI * 2 * waves + 0.5), y: Y0 - u * (Y0 - Y1) });
-  const N = Math.ceil(waves * 60), pts = Array.from({ length: N + 1 }, (_, i) => at(i / N));
+  const N = Math.ceil(waves * 60), pts = Array.from({ length: N + 1 }, (_, i) => at(u0 + ((1 - u0) * i) / N));
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join('');
   const title = s.title.trim() || oc.title.replace('{n}', s.names.trim() || '…');
   const ts = Math.max(18, Math.min(35, (W - 90) / (title.length * 0.48)));
@@ -660,22 +816,23 @@ function poster(s, o = {}) {
   const crowd = evs.map((e) => eventPeople(e).map((p) => { const cat = catAt(p, e.date) || 'adulte'; return { sid: pvid(p, cat), z: ZS[cat] }; }));
   let g = `<defs>${[...pvars.values()].map((v) => `<symbol id="${id}-q${v.n}" viewBox="0 0 240 240">${personBody(v.p, v.cat, `${id}-q${v.n}-`, ink, th.bg)}</symbol>`).join('')}${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
-  g += `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
+  const c = { W, H, CX, ink, th, tk, id, at, s, evs, evU, n, delay, u0, Y0, starts: [CX - W * 0.24, CX + W * 0.24] };
+  g += tplFrame(c);
   g += '<g class="m-ttl">';
   g += `<text x="${CX}" y="86" text-anchor="middle" font-family="${SERIF}" font-size="${ts.toFixed(1)}" fill="${ink}">${esc(title)}</text>`;
   if (s.start && s.end) g += `<text x="${CX}" y="116" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="15" fill="${ink}" opacity=".85">du ${esc(fmt(s.start))} au ${esc(fmt(s.end))}</text>`;
-  g += `<path d="M${CX - 110} 134H${CX + 110}M${CX} 128v12" stroke="${ink}" stroke-width="1" fill="none" opacity=".6"/></g>`;
-  // décor : petits arbres entre les repères
+  g += tplOrnament(c) + '</g>';
+  // décor propre au modèle entre les repères, puis la route
   for (let i = 0; i <= n; i++) {
-    const p = at((i + 0.5) / (n + 1)), x = p.x + (i % 2 ? 54 : -54);
-    g += `<g class="m-tree" style="--d:${delay((i + 0.5) / (n + 1))}"><g transform="translate(${x.toFixed(1)} ${p.y.toFixed(1)}) scale(.9)" stroke="${ink}" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M0 -2V9"/><path d="M0 -17C-10 -17 -11 -2 0 -2C11 -2 10 -17 0 -17Z" fill="${th.wash[i % 4]}"/></g></g>`;
+    const u = evU((i + 0.5) / (n + 1)), p = at(u), x = p.x + (i % 2 ? 54 : -54);
+    g += `<g class="m-tree" style="--d:${delay(u)}">${tplFiller(c, i, +x.toFixed(1), +p.y.toFixed(1))}</g>`;
   }
-  g += `<path class="m-road" pathLength="1" d="${d}" fill="none" stroke="${ink}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/><path class="m-road" id="${id}-road" pathLength="1" d="${d}" fill="none" stroke="${th.road}" stroke-width="12.5" stroke-linecap="round" stroke-linejoin="round"/><path class="m-dash" d="${d}" fill="none" stroke="${ink}" stroke-width="1.3" stroke-dasharray="6 7" opacity=".7"/>`;
+  g += tplRoad(c, d) + tplExtras(c);
   evs.forEach((e, i) => {
-    const p = at((i + 1) / (n + 1)), left = i % 2 === 0, cx = left ? colX : W - colX, y = p.y;
+    const p = at(evU((i + 1) / (n + 1))), left = i % 2 === 0, cx = left ? colX : W - colX, y = p.y;
     const ex = left ? cx + 35 : cx - 35, rx = left ? p.x - 9 : p.x + 9;
     const lines = wrap(e.title.trim(), wrapN);
-    g += `<g class="m-ev${pop.has(e.id) ? ' pop' : ''}" style="--d:${delay((i + 1) / (n + 1))}">`;
+    g += `<g class="m-ev${pop.has(e.id) ? ' pop' : ''}" style="--d:${delay(evU((i + 1) / (n + 1)))}">`;
     g += `<path d="M${rx.toFixed(1)} ${y.toFixed(1)}L${ex} ${y.toFixed(1)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="2 4" opacity=".8"/>`;
     g += `<circle cx="${p.x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${th.road}" stroke="${ink}" stroke-width="1.6"/>`;
     g += `<use href="#${ids[i]}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
@@ -685,13 +842,11 @@ function poster(s, o = {}) {
     lines.forEach((ln, k) => { g += `<text x="${cx}" y="${(y + 62 + k * 14).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="${ink}">${esc(ln)}</text>`; });
     g += '</g>';
   });
-  const a = at(0), b = at(1);
-  g += `<circle class="m-end" style="--d:.1s" cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="7" fill="${th.wash[3]}" stroke="${ink}" stroke-width="1.8"/><circle class="m-end" style="--d:1.75s" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="7" fill="${th.wash[1]}" stroke="${ink}" stroke-width="1.8"/>`;
+  g += tplEnds(c, at(u0), at(1));
   // petit cœur voyageur qui suit la route (affiche d'accueil)
   if (o.walker) g += `<g class="m-walk"><path d="M0 4.5C-9 -1.5 -6 -9 0 -4.5C6 -9 9 -1.5 0 4.5Z" fill="${th.wash[1]}" stroke="${ink}" stroke-width="1.4"/><animateMotion dur="9s" begin="2.3s" repeatCount="indefinite" calcMode="linear"><mpath href="#${id}-road"/></animateMotion></g>`;
   g += `<text x="${CX}" y="${Y0 + 42}" text-anchor="middle" font-family="${SERIF}" font-size="15" fill="${ink}">${esc(oc.start)}${s.start ? ' · ' + esc(fmt(s.start)) : ''}</text>`;
   g += `<text x="${CX}" y="${Y1 - 22}" text-anchor="middle" font-family="${SERIF}" font-size="15" fill="${ink}">${esc(oc.end)}${s.end ? ' · ' + esc(fmt(s.end)) : ''}</text>`;
-  g += `<g transform="translate(56 ${H - 44})" stroke="${ink}" stroke-width="1" fill="none"><circle r="12"/><path d="M0 -16V16M-16 0H16"/><path d="M0 -16L3 -3L0 0L-3 -3Z" fill="${ink}"/></g>`;
   g += `<rect width="${W}" height="${H}" fill="url(#${id})"/>`; // bords vieillis, par-dessus tout
   return `<svg viewBox="0 0 ${W} ${H}" class="${o.intro ? 'intro' : ''}" role="img" aria-label="Aperçu de l'affiche : ${esc(title)}">${g}</svg>`;
 }
@@ -764,7 +919,8 @@ function renderJourney() {
       <p class="count" id="count"></p><button type="button" class="btn ghost" id="addEv">+ Ajouter un souvenir</button>`;
   } else {
     const price = FORMATS[S.format].price + (S.frame ? FRAME_PRICE : 0);
-    h += `<h2>Style et finition</h2><label>Couleurs</label><div class="chips">${Object.entries(THEMES).map(([k, t]) => `<button type="button" class="chip" data-theme="${k}" aria-pressed="${S.theme === k}">${t.label}</button>`).join('')}</div>
+    h += `<h2>Style et finition</h2><label>Modèle</label><div class="tpls">${Object.entries(TPL).map(([k, t]) => `<button type="button" class="tpl" data-tpl="${k}" aria-pressed="${tplOf(S) === k}"><span class="tv">${poster({ ...S, tpl: k, theme: t.theme, events: [] })}</span><b>${t.label}</b></button>`).join('')}</div>
+      <p class="hint">${TPL[tplOf(S)].label} : ${TPL[tplOf(S)].desc}. Les couleurs du modèle s'appliquent, vous pouvez les changer.</p><label>Couleurs</label><div class="chips">${Object.entries(THEMES).map(([k, t]) => `<button type="button" class="chip" data-theme="${k}" aria-pressed="${S.theme === k}">${t.label}</button>`).join('')}</div>
       <label class="fmt" style="margin-top:12px;display:flex"><span style="display:flex;gap:8px;align-items:center;width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:400"><input type="checkbox" id="frame" ${S.frame ? 'checked' : ''} style="width:auto">Avec cadre (+ ${FRAME_PRICE} €)</span></label>
       <p class="hint">${FORMATS[S.format].label}, ${S.events.length} souvenir${S.events.length > 1 ? 's' : ''}.</p><div class="total"><span>Total</span><span>${price} €</span></div>`;
   }
@@ -846,7 +1002,8 @@ const err = (m) => { const e = $('#err'); if (e) e.textContent = m; };
 
 function wire() {
   const j = $('#journey');
-  j.querySelectorAll('[data-occ]').forEach((b) => (b.onclick = () => { S.occ = b.dataset.occ; if (!S.titleEdited) S.title = ''; S.step = 1; renderJourney(); update(); }));
+  j.querySelectorAll('[data-occ]').forEach((b) => (b.onclick = () => { S.occ = b.dataset.occ; S.tpl = S.occ; S.theme = TPL[S.occ].theme; if (!S.titleEdited) S.title = ''; S.step = 1; renderJourney(); update({ intro: true }); }));
+  j.querySelectorAll('[data-tpl]').forEach((b) => (b.onclick = () => { S.tpl = b.dataset.tpl; S.theme = TPL[S.tpl].theme; renderJourney(); update({ intro: true }); }));
   const on = (sel, ev, fn) => { const el = j.querySelector(sel); if (el) el['on' + ev] = fn; };
   on('#names', 'input', (e) => { S.names = e.target.value; if (!S.titleEdited) $('#title').value = OCC[S.occ].title.replace('{n}', S.names.trim() || '…'); update(); });
   on('#title', 'input', (e) => { S.title = e.target.value; S.titleEdited = true; update(); });
@@ -1009,6 +1166,15 @@ if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(pr
   });
 }
 
+$('#tgrid').innerHTML = Object.entries(TPL).map(([k, t]) => `<button type="button" class="tcard" data-start="${k}"><span class="tv">${poster(example(k))}</span><b>${t.label}</b><small>${OCC[k].label} · ${t.desc}</small><span class="go">Commencer avec ce modèle <span class="arr">→</span></span></button>`).join('');
+$('#tgrid').onclick = (ev) => {
+  const b = ev.target.closest('[data-start]');
+  if (!b) return;
+  const k = b.dataset.start;
+  S = { ...blank(), occ: k, tpl: k, theme: TPL[k].theme, step: 1 };
+  lastStep = 0; renderJourney(); update({ intro: true });
+  $('#creer').scrollIntoView({ behavior: 'smooth' });
+};
 $('#sample').onclick = () => { S = SAMPLE(); lastStep = S.step; renderJourney(); update({ intro: true }); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
 const heroPlay = () => { $('#heroArt').innerHTML = poster(SAMPLE(), { intro: true, walker: true }); };
 $('#heroArt').onclick = heroPlay;
