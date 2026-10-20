@@ -224,3 +224,7 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 
 ### Proportions engins / soldats dans l'assaut
 `VEH_K` donne la hauteur de chaque engin en multiple de la taille d'un soldat (char 1,47, chasseur de chars 1,5, half-track 1,9, jeep 1,55, artillerie 1,53) : un char est plus grand qu'un soldat, plus jamais l'inverse. Si un secteur déborde (rangées supplémentaires, unité coupée), toutes les tailles terrestres baissent ensemble par pas de 10 % : les soldats restent identiques d'un secteur à l'autre et tous les pieds restent sur le sol. La rangée du fond d'un groupe de fantassins est rapprochée.
+
+### Boucliers pendant la riposte, QG renforçable
+- Riposte : chaque secteur dresse un bouclier (valeur de sa Défense) devant ses unités ; l'obus ennemi vole jusqu'à lui et explose dessus. Sa taille suit la part de la riposte qu'il couvre ; s'il ne suffit pas et que votre QG perd des PV, il se fissure. Un secteur sans Défense prend l'obus sur ses unités.
+- Intendance : nouveau service « QG max +10 » (+10 PV max et +10 PV), $5 puis +$3 à chaque achat, 5 fois par campagne (`FORT_AMOUNT`, `MAX_FORTIFY`, `fortifyCost`, `C.hqUp`).

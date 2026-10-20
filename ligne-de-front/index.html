@@ -1802,6 +1802,15 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: var(--gt, 8%); bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
 .aws.focus .awb-lab > b { font-size: .74rem; }
+.awshield { position: absolute; z-index: 8; right: 30%; top: 50%; width: calc(64px * var(--sk, 1)); height: calc(74px * var(--sk, 1)); margin-top: calc(-37px * var(--sk, 1)); display: grid; place-items: center; color: #4fa3ff; filter: drop-shadow(0 0 10px rgba(80, 170, 255, .9)) drop-shadow(0 2px 0 #0d1218); animation: awshin .3s cubic-bezier(.2, 1.5, .4, 1); pointer-events: none; }
+.awshield > svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .82; }
+.awshield > b { position: relative; font-family: var(--font-display); font-size: calc(.95rem * var(--sk, 1)); color: #fff; text-shadow: 0 2px 0 #0d1218; }
+.awshield.none { display: none; }
+.awshield.hit { animation: awshit .45s ease-out; } .awshield.hit > svg { color: #bfe2ff; }
+.awshield.crack.hit { animation: awshcrack .5s ease-out forwards; }
+@keyframes awshin { from { transform: scale(.2); opacity: 0; } }
+@keyframes awshit { 0% { transform: none; filter: brightness(2.2) drop-shadow(0 0 18px #fff); } 40% { transform: translateX(-6%) scale(1.08); } 100% { transform: none; } }
+@keyframes awshcrack { 0% { filter: brightness(2) drop-shadow(0 0 16px #fff); } 50% { transform: translateX(-8%) rotate(-6deg); opacity: 1; } 100% { transform: translateX(-4%) rotate(-10deg) scale(.9); opacity: .55; } }
 .aws-wipe { position: absolute; inset: 0; z-index: 15; pointer-events: none; background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-120%); mix-blend-mode: screen; }
 .aws.flash .aws-wipe { animation: awwipe .6s ease-out; } @keyframes awwipe { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
 .aws.in { opacity: 1; } .aws.out { opacity: 0; transition: opacity .25s; }
@@ -1924,13 +1933,13 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .pack .st-price { position: relative; margin-top: 2px; font-size: clamp(.8rem, 2.8vh, 1.05rem); }
 .pack.poor { filter: saturate(.55) brightness(.85); } .pack.done { filter: grayscale(1) brightness(.6); transform: scale(.94); }
 .pack.opened { animation: pkpulse .8s infinite alternate; } @keyframes pkpulse { to { box-shadow: 0 5px 0 #1b1008, 0 0 24px #ffd24a; } }
-.s2-row.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.s2-row.four { grid-template-columns: repeat(4, minmax(0, 1fr)); } .s2-row.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .packopen { display: flex; justify-content: center; gap: 10px; }
 .packopen .card { width: calc((100% - 28px) / 3); max-width: 150px; min-width: 0; }
 .popt { position: relative; width: calc((100% - 28px) / 3); max-width: 150px; aspect-ratio: .78; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 6px; text-align: center; font-family: inherit; color: #2b2116; background: linear-gradient(180deg, #fff, #e9ebee); border: 3px solid #2b2116; border-radius: 10px; box-shadow: 0 3px 0 #2b2116; cursor: pointer; animation: crateIn .45s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: calc(var(--k) * 110ms); }
 .popt.gone { visibility: hidden; } .popt .po-ic { font-size: 2.4rem; line-height: 1; } .popt b { font-family: var(--font-display); font-size: .78rem; line-height: 1.1; } .popt > span:last-child { font-size: .64rem; font-weight: 700; line-height: 1.2; }
 .popt.jk { background: linear-gradient(180deg, #eef4ff, #c9dcff); } .popt.up { background: linear-gradient(180deg, #fff3d6, #ffd98a); } .popt.mn { background: linear-gradient(180deg, #e6f0ff, #b9d1ff); }
-@media (max-height: 420px) { .pk-tx { font-size: .54rem; } .pk-row { gap: 8px; } .s2-row.four .ssvc b { font-size: .5rem; } .popt .po-ic { font-size: 1.6rem; } .popt b { font-size: .64rem; } .popt > span:last-child { font-size: .54rem; } }
+@media (max-height: 420px) { .pk-tx { font-size: .54rem; } .pk-row { gap: 8px; } .s2-row.four .ssvc b, .s2-row.five .ssvc b { font-size: .5rem; } .popt .po-ic { font-size: 1.6rem; } .popt b { font-size: .64rem; } .popt > span:last-child { font-size: .54rem; } }
 
 .crateopen.packopen { zoom: 1 !important; align-items: center; }
 .packopen .popt, .packopen .card { height: min(52vh, 210px); width: auto; aspect-ratio: .74; max-width: none; flex: none; }
@@ -3230,6 +3239,8 @@ function genPacks(C, rng = Math.random, rare = false) {
   return kinds.map(kind => ({ kind, price: PACKS[kind].price, left: PACKS[kind].pick, opts: null }));
 }
 const HEAL_COST = 4, HEAL_AMOUNT = 12, MANUAL_PRICE = 4;
+// Fortifier le QG : +10 PV max (et +10 PV), de plus en plus cher, 5 fois au plus par campagne
+const FORT_AMOUNT = 10, MAX_FORTIFY = 5, fortifyCost = C => 5 + 3 * (C.hqUp || 0);
 // Manuel tactique : une combinaison d'assaut gagne un niveau pour toute la campagne
 function buyManual(C, id) { C.comboLv = C.comboLv || {}; C.comboLv[id] = (C.comboLv[id] || 1) + 1; return C.comboLv[id]; }
 // ==/CORE==
@@ -5100,7 +5111,16 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     sc.querySelectorAll('.awb').forEach((band, i) => setTimeout(() => {
       const lab = band.querySelector('.awb-lab'), mk = sc.querySelector(`.aws-mk[data-i="${i}"]`);
       SFX.play('shell'); const bl = document.createElement('i'); bl.className = 'vblast en'; mk.appendChild(bl); setTimeout(() => bl.remove(), 420);
-      flyFx(mk, lab, 'shell en', 480).then(() => { const z = zoneOfBand(band); if (z) harass(band, 3, 90); else boomOn(band.querySelector('.awb-units') || lab, true, 0, 0); const d = band.querySelector('.awb-def'); d.classList.add('on'); bump(d); });
+      // le bouclier du secteur se dresse devant les unités et encaisse l'obus ; plus la Défense est forte, plus il est grand et solide
+      const dv = rows[i].f.def, sh = document.createElement('i'), share = en.atk ? Math.min(1, dv / Math.max(1, en.atk / Math.max(1, rows.length))) : 1;
+      sh.className = 'awshield' + (dv ? '' : ' none') + (en.dmg && share < 1 ? ' crack' : '');
+      sh.style.setProperty('--sk', (0.65 + 0.55 * share).toFixed(2));
+      sh.innerHTML = `${SHIELD}<b>${fmtN(dv)}</b>`; band.appendChild(sh); setTimeout(() => sh.remove(), 1500);
+      flyFx(mk, dv ? sh : lab, 'shell en', 480).then(() => {
+        const d = band.querySelector('.awb-def'); d.classList.add('on'); bump(d);
+        if (dv) { sh.classList.add('hit'); boomOn(sh, false, 0, 0); return; }
+        const z = zoneOfBand(band); if (z) harass(band, 3, 90); else boomOn(band.querySelector('.awb-units') || lab, true, 0, 0);
+      });
     }, i * 150));
     await T(500 + rows.length * 150);
     hqBox.classList.remove('firing');
@@ -5356,6 +5376,7 @@ const SVC = [
   { act: 'supply', ic: '⛽', name: 'Ravit. +1', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
   { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
   { act: 'reform', ic: '✂', name: 'Réformer', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
+  { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
 ];
 function shopTile(kind, i, it, inner) {
   const full = kind === 'j' && C.officers.length >= MAX_JOKERS && !it.sold;
@@ -5384,7 +5405,7 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouveaux packs">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
-    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row four">${svcs}</div></section></div>
+    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row five">${svcs}</div></section></div>
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
@@ -5733,6 +5754,7 @@ document.addEventListener('click', e => {
   else if (a === 'reform') deckModal('remove');
   else if (a === 'leave') finishNode();
   else if (a === 'reroll') { const rc = 2 + C.shop.rerolls; if (C.loot < rc) return; C.loot -= rc; SFX.play('reroll'); const fresh = genPacks(C, Math.random, ['elite', 'boss'].includes(C.node.type)); C.shop.packs = C.shop.packs.map((pk, i) => (pk.opts ? pk : (fresh[i] || pk))); C.shop.rerolls++; renderShop(); }
+  else if (a === 'fortify') { const pr = fortifyCost(C); if (C.loot < pr || (C.hqUp || 0) >= MAX_FORTIFY) return; C.loot -= pr; C.hqUp = (C.hqUp || 0) + 1; C.hqMax += FORT_AMOUNT; C.hq += FORT_AMOUNT; SFX.play('upgrade'); toast(`QG fortifié : ${C.hq}/${C.hqMax}.`); renderShop(); }
   else if (a === 'shopheal') { if (C.loot < HEAL_COST || C.hq >= C.hqMax) return; C.loot -= HEAL_COST; C.hq = Math.min(C.hqMax, C.hq + HEAL_AMOUNT); SFX.play('heal'); toast(`QG soigné : ${C.hq}/${C.hqMax}.`); renderShop(); }
   else if (a === 'cratenone') { window.__crate = null; closeModal(); }
   else if (a === 'packnone') { const pk = C.shop.packs[+b.dataset.pk]; if (pk) pk.left = 0; closeModal(); renderShop(); }
