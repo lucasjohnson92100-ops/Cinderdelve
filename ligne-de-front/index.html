@@ -1798,6 +1798,7 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units .awu.k-foot { margin-top: calc(var(--uh, 60px) * -.55); }   /* la rangée du fond se rapproche : les deux rangées forment un même groupe */
 .aws.focus .awb[data-rows="2"] .awb-units .awu:nth-child(even) { margin-left: calc(var(--uh, 60px) * .18); }
 .aws.focus .awb-units { justify-content: safe center; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: var(--gt, 8%); bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
 .aws.focus .awb-lab > b { font-size: .74rem; }
@@ -3580,6 +3581,8 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
 // décalage aléatoire du départ d'une animation d'attente peinte (pour que les figurines ne bougent pas toutes ensemble)
 const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 const UNARMED = { obs: 1, medic: 1 };
+// échelle des engins dans la scène d'assaut, relative à la taille d'un soldat (char ≈ 1,45 soldat de haut, jeep ≈ 1,1…)
+const VEH_K = { tank: 1.47, td: 1.5, halftrack: 1.9, jeep: 1.55, arty: 1.53 };
 const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
@@ -3593,7 +3596,7 @@ function squadSVG(key, side, n, nMax, size, cols) {
     const W = +(wMax + 4).toFixed(1);
     let g = '';
     rws.forEach((m, r) => {
-      const y = rws.length === 1 || r === 1 ? 64 - fig : 64 - fig * 1.62, x0 = 2 + (rws.length === 2 && r === 0 ? gap / 2 : 0);
+      const y = rws.length === 1 || r === 1 ? 64 - fig : 64 - fig * 1.3, x0 = 2 + (rws.length === 2 && r === 0 ? gap / 2 : 0);
       for (let i = 0; i < m; i++) g += `<g transform="translate(${(x0 + i * gap).toFixed(1)} ${y.toFixed(1)}) scale(${FOOT_FIG})">${desync(r === rws.length - 1 ? one : oneDry)}</g>`;
     });
     return `<svg viewBox="0 0 ${W} 66" width="${Math.round(size * W / 66)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
@@ -4819,7 +4822,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const u = live.find(x => x.uid === uid); if (!u) return '';
     window.__wade = WADE_ON && ter === 'riviere';   // les fantassins d'une rivière sont dessinés dans l'eau (désactivé en attendant une vraie vidéo)
     const k0 = SPR_OF[u.key], k = ter === 'riviere' && k0 === 'inf' && typeof IDLE !== 'undefined' && IDLE.inf_eau ? 'inf_eau' : k0, fk = fireKey(k);
-    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
+    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
   };
   const hasAir = () => false;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
@@ -4853,6 +4856,13 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // même taille de soldat d'un secteur terrestre à l'autre : on garde la plus petite des tailles calculées
   const landB = bs.filter(b => !/t-(mer|air)\b/.test(b.className)), uMin = Math.min(...landB.map(b => +b.dataset.u));
   landB.forEach(b => b.style.setProperty('--uh', uMin.toFixed(0) + 'px'));
+  // ajustement final : si un secteur déborde (engins agrandis, deux rangées), on réduit tout le monde ensemble
+  let uFit = uMin;
+  for (let it = 0; it < 8 && landB.length; it++) {
+    const over = landB.some(b => { const box = b.querySelector('.awb-units'); b.classList.add('cur'); const R = box.getBoundingClientRect(), us = [...box.querySelectorAll('.awu')], lines = new Set(us.map(e => Math.round(e.getBoundingClientRect().bottom / 6))), o = lines.size > (+b.dataset.rows || 1) || us.some(e => { const q = e.getBoundingClientRect(); return q.top < R.top - 2 || q.right > R.right + 12 || q.left < R.left - 12; }); b.classList.remove('cur'); return o; });
+    if (!over) break;
+    uFit *= 0.9; landB.forEach(b => b.style.setProperty('--uh', uFit.toFixed(0) + 'px'));
+  }
   sc.style.setProperty('--uh', '60px');
   if (bs[0]) bs[0].classList.add('cur');
   const hpBar = sc.querySelector('.aws-hp .bar i'), hpTx = sc.querySelector('.aws-hp span'), hqBox = sc.querySelector('.aws-hq');

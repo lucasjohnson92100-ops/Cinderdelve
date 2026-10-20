@@ -221,3 +221,6 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 - Proportions des sprites peints alignées sur le tireur (taille du casque) : `IDLE.sc` des parachutistes, observateurs, infirmiers, génie, mitrailleuse et fantassin dans l'eau recalés.
 - Scène d'assaut : la même taille d'unité pour tous les secteurs terrestres (la plus petite des tailles calculées) ; la rangée du fond se rapproche de celle de devant.
 - Observateurs et infirmiers (`UNARMED`) ne tirent plus : ni flash de bouche, ni balles, ni impacts.
+
+### Proportions engins / soldats dans l'assaut
+`VEH_K` donne la hauteur de chaque engin en multiple de la taille d'un soldat (char 1,47, chasseur de chars 1,5, half-track 1,9, jeep 1,55, artillerie 1,53) : un char est plus grand qu'un soldat, plus jamais l'inverse. Si un secteur déborde (rangées supplémentaires, unité coupée), toutes les tailles terrestres baissent ensemble par pas de 10 % : les soldats restent identiques d'un secteur à l'autre et tous les pieds restent sur le sol. La rangée du fond d'un groupe de fantassins est rapprochée.
