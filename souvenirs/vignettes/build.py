@@ -3,6 +3,7 @@
 Usage : python3 build.py
 Chaque forme est tracée une seule fois (defs), puis dessinée en trois couches : fond papier
 (masque ce qui est derrière), lavis d'aquarelle décalé, trait d'encre légèrement tremblé."""
+import json
 import pathlib
 
 INK = '#5a432b'
@@ -16,19 +17,19 @@ class Sheet:
 
     def add(self, geom, wash=None, ink=True, sw=1.8, op=.62, solid=None, stroke=None, ink_op=1, paper=None):
         self.n += 1
-        i = f'{self.name}-{self.n}'
+        i = f'@P@{self.name}-{self.n}'
         self.defs.append(geom.replace('/>', f' id="{i}"/>'))
         use = lambda extra: f'<use href="#{i}" {extra}/>'
         if paper if paper is not None else wash:
-            self.body.append(use('fill="var(--paper,#f4e8c8)" stroke="none" filter="url(#hand)"'))
+            self.body.append(use('fill="var(--paper,#f4e8c8)" stroke="none" filter="url(#@P@{self.name}-hand)"'))
         if wash:
-            self.body.append(use(f'fill="{wash}" fill-opacity="{op}" stroke="none" transform="translate(1.8 1.6)" filter="url(#wash)"'))
+            self.body.append(use(f'fill="{wash}" fill-opacity="{op}" stroke="none" transform="translate(1.8 1.6)" filter="url(#@P@{self.name}-wash)"'))
         if solid:
-            self.body.append(use(f'fill="{solid}" stroke="none" filter="url(#hand)"'))
+            self.body.append(use(f'fill="{solid}" stroke="none" filter="url(#@P@{self.name}-hand)"'))
         if stroke:
-            self.body.append(use(f'fill="none" stroke="{stroke}" stroke-width="{sw}" filter="url(#hand)"'))
+            self.body.append(use(f'fill="none" stroke="{stroke}" stroke-width="{sw}" filter="url(#@P@{self.name}-hand)"'))
         if ink:
-            self.body.append(use(f'fill="none" stroke="{INK}" stroke-width="{sw}" stroke-opacity="{ink_op}" stroke-linecap="round" stroke-linejoin="round" filter="url(#hand)"'))
+            self.body.append(use(f'fill="none" stroke="{INK}" stroke-width="{sw}" stroke-opacity="{ink_op}" stroke-linecap="round" stroke-linejoin="round" filter="url(#@P@{self.name}-hand)"'))
 
     def path(self, d, **k): self.add(f'<path d="{d}"/>', **k)
     def circle(self, x, y, r, **k): self.add(f'<circle cx="{x}" cy="{y}" r="{r}"/>', **k)
@@ -37,11 +38,15 @@ class Sheet:
     def star(self, x, y, r, color=O):
         self.path(f'M{x} {y-r}Q{x} {y} {x+r} {y}Q{x} {y} {x} {y+r}Q{x} {y} {x-r} {y}Q{x} {y} {x} {y-r}Z', wash=color, sw=1.1, op=.8)
 
+    def inner(self):
+        n = self.name
+        defs = (f'<filter id="@P@{n}-hand" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter>'
+                f'<filter id="@P@{n}-wash" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" result="d"/><feGaussianBlur in="d" stdDeviation=".7"/></filter>')
+        return f'<defs>{defs}{"".join(self.defs)}</defs>{"".join(self.body)}'
+
     def svg(self):
-        defs = ('<filter id="hand" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter>'
-                '<filter id="wash" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" result="d"/><feGaussianBlur in="d" stdDeviation=".7"/></filter>')
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="{self.name}">'
-                f'<defs>{defs}{"".join(self.defs)}</defs>{"".join(self.body)}</svg>')
+                + self.inner().replace('@P@', '') + '</svg>')
 
 
 def cradle():
@@ -203,14 +208,15 @@ def house():
     return s
 
 
-VIGNETTES = [(cradle, 'Naissance', 'Berceau, lune et étoiles'), (steps, 'Premiers pas', 'Canard à roulettes et empreintes'),
-             (ship, 'Voyage', 'Voilier, rose des vents et mouettes'), (chapel, 'Mariage', 'Chapelle, alliances et fleurs'),
-             (puppy, 'Animal', 'Chiot, gamelle et balle'), (house, 'Nouvelle maison', 'Maison, arbre et clé')]
+VIGNETTES = [(cradle, 'cradle', 'Naissance', 'Berceau, lune et étoiles'), (steps, 'steps', 'Premiers pas', 'Canard à roulettes et empreintes'),
+             (ship, 'ship', 'Voyage', 'Voilier, rose des vents et mouettes'), (chapel, 'chapel', 'Mariage', 'Chapelle, alliances et fleurs'),
+             (puppy, 'puppy', 'Animal', 'Chiot, gamelle et balle'), (house, 'house', 'Nouvelle maison', 'Maison, arbre et clé')]
 
-cards = []
-for fn, title, sub in VIGNETTES:
+cards, js = [], {}
+for fn, key, title, sub in VIGNETTES:
     sh = fn()
     svg = sh.svg()
+    js[key] = {'label': title, 'body': sh.inner()}
     (HERE / f'{sh.name}.svg').write_text(svg, encoding='utf8')
     cards.append(f'<figure class="card">{svg}<figcaption><b>{title}</b><span>{sub}</span></figcaption></figure>')
 
@@ -245,3 +251,11 @@ figcaption span{{font-size:.92rem;opacity:.75;font-style:italic}}
 '''
 (HERE.parent / 'vignettes.html').write_text(page, encoding='utf8')
 print('ok', len(cards))
+
+# Les vignettes sont aussi copiées dans ../index.html (page unique) entre deux repères.
+idx = HERE.parent / 'index.html'
+html = idx.read_text(encoding='utf8')
+a, b = '/* VIGNETTES:BEGIN (généré par vignettes/build.py) */', '/* VIGNETTES:END */'
+head, rest = html.split(a)
+_, tail = rest.split(b)
+idx.write_text(head + a + '\nconst VIG = ' + json.dumps(js, ensure_ascii=False) + ';\n' + b + tail, encoding='utf8')
