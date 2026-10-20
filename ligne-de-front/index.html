@@ -3142,12 +3142,15 @@ function blindAt(b, rng = Math.random) {
 // La carte de campagne : une liste de couches d'un seul élément (la blinde b). Elle s'allonge à la demande en mode infini.
 function ensureMap(map, upTo, rng = Math.random) { for (let b = map.length; b <= upTo; b++) map.push([blindAt(b, rng)]); return map; }
 function genMap(rng = Math.random) { return ensureMap([], BLINDS_TO_WIN - 1, rng); }
+// Milieu de campagne plus dur (étapes 5 à 14) : l'infanterie de départ ne suffit plus, il faut avoir acheté des engins, une flotte ou des avions
+const MID_HARD = typeof process !== 'undefined' && process.env && process.env.MIDH ? +process.env.MIDH : 0.3;
+const midK = lv => { const b = lv / 0.37; return b < 4.5 ? 1 : b <= 8 ? 1 + MID_HARD * (b - 4) / 4 : Math.max(1, 1 + MID_HARD * (1 - (b - 8) / 11)); };   // b = étape : monte des étapes 5 à 8, puis s'efface doucement jusqu'à la 19 (plus lentement que la croissance normale)
 function battleCfg(node) {
   const lv = node.levelIdx, elite = node.type === 'elite', o = node.obj || { type: 'hq' };
-  const hq = Math.round((22 + 8 * lv) * BLIND_HQ[node.slot === undefined ? 1 : node.slot] * HQ_MULT * Math.pow(HQ_GROW, lv));
+  const hq = Math.round((22 + 8 * lv) * BLIND_HQ[node.slot === undefined ? 1 : node.slot] * HQ_MULT * Math.pow(HQ_GROW, lv) * midK(lv));
   // « Frappe décisive » : gagner en infligeant assez en un seul tour (remplace l'ancien objectif « éliminer »)
   const obj = o.type === 'kills' || o.type === 'burst' ? { type: 'burst', n: Math.round(hq * 0.3) } : o;
-  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * (o.type === 'hold' ? 1.25 : 1), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
+  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
     levelIdx: lv, obj, elite, tutorial: node.layer === 0 };
 }
 // Cartes proposées en récompense : type et couleur tirés au hasard
