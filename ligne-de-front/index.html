@@ -1811,6 +1811,10 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 @keyframes awshin { from { transform: scale(.2); opacity: 0; } }
 @keyframes awshit { 0% { transform: none; filter: brightness(2.2) drop-shadow(0 0 18px #fff); } 40% { transform: translateX(-6%) scale(1.08); } 100% { transform: none; } }
 @keyframes awshcrack { 0% { filter: brightness(2) drop-shadow(0 0 16px #fff); } 50% { transform: translateX(-8%) rotate(-6deg); opacity: 1; } 100% { transform: translateX(-4%) rotate(-10deg) scale(.9); opacity: .55; } }
+.ctips { margin-top: 6px; padding: 7px 9px; border-radius: 9px; background: rgba(61, 134, 232, .12); border: 1.5px solid rgba(37, 89, 181, .35); font-size: .82rem; } .ctips p { margin: 0 0 4px; } .ctips p:last-child { margin: 0; }
+.ctips .now { color: #1f6a2f; font-weight: 800; } .ctips .warn { color: #a3361d; font-weight: 800; }
+.card .cuse { position: absolute; z-index: 9; left: 50%; margin-left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: .7rem; line-height: 1; color: #3b2a00; background: radial-gradient(circle at 35% 30%, #fff3b0, #ffc93a 70%); border: 2px solid #1b2540; box-shadow: 0 0 8px rgba(255, 210, 60, .9); animation: cusep 1.4s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes cusep { to { transform: scale(1.18); box-shadow: 0 0 14px rgba(255, 210, 60, 1); } }
 .aws-wipe { position: absolute; inset: 0; z-index: 15; pointer-events: none; background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%); transform: translateX(-120%); mix-blend-mode: screen; }
 .aws.flash .aws-wipe { animation: awwipe .6s ease-out; } @keyframes awwipe { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
 .aws.in { opacity: 1; } .aws.out { opacity: 0; transition: opacity .25s; }
@@ -3765,7 +3769,41 @@ const $ = s => document.querySelector(s);
 const app = $('#app');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const KW_DESC = { spot: 'Tir guidé avec artillerie ou navire', heal: 'à son arrivée, +1 endurance aux autres unités du secteur', mines: 'déminé son secteur ; ignore le Bunker ; Attaque ×2 contre un Bunker', guard: 'Nid défensif avec une autre infanterie', arty: 'Tir guidé avec des observateurs', carrier: 'véhicule de transport', elan: '+1 dégât par véhicule à élan déjà posé ce tour', antitank: 'Attaque ×2 contre une Division blindée', recon: 'Tir guidé avec artillerie ou navire', cover: "Couverture aérienne ; intercepte l'obus de son secteur", bomb: 'frappe aérienne immédiate sur le QG', raid: 'Commando : son secteur ignore Bunker et Blindage' };
-const SHORT_TAG = { observateur: 'Tir guidé', infirmiers: '+1 tour aux voisins', genie: 'Anti-bunker', mitrailleuse: 'Nid défensif', artillerie: 'Tir guidé', halftrack: 'Armes combinées', antichar: 'Anti-blindés', reco: 'Appui · tir guidé', tireurs: 'Économique', jeep: 'Élan', blinde: 'Robuste', destroyer: 'Appui naval', croiseur: 'Appui · tout le front', sousmarin: 'Appui côtier', chasseur: 'Couverture aérienne', bombardier: 'Frappe le QG', paras: 'Commando' };
+const SHORT_TAG = { observateur: 'Tir guidé ×1,5', infirmiers: '+1 tour aux voisins', genie: 'Anti-mines, anti-bunker', mitrailleuse: 'Nid défensif', artillerie: 'Tir guidé ×1,5', halftrack: 'Armes combinées', antichar: 'Att. ×2 vs blindés', reco: 'Appui · tir guidé', tireurs: 'Économique', jeep: 'Élan', blinde: 'Robuste', destroyer: 'Appui naval', croiseur: 'Appui · tout le front', sousmarin: 'Appui côtier', chasseur: 'Couverture aérienne', bombardier: '60 dégâts sur le QG', paras: 'Ignore bunker/blindage' };
+// Fiche explicite de chaque carte : quand la jouer, son atout propre, et les effets ennemis contre lesquels elle est précieuse (fx)
+const CARD_TIPS = {
+  tireurs: { use: "Le socle de tout secteur : le plus d'Attaque pour 2 de ravitaillement.", plus: 'Aucune capacité spéciale : misez sur le nombre.' },
+  jeep: { use: "Posez-les en groupe, après un autre véhicule : chaque véhicule déjà posé ce tour leur ajoute +1 dégât par tir.", plus: 'Élan', fx: { nids: "Les véhicules ne subissent pas le −25 % d'Attaque des nids de mitrailleuses." } },
+  blinde: { use: "Pilier d'un secteur : Défense 16 et 3 tours d'endurance. Interdit en forêt et en rivière.", plus: 'Robuste + Élan', fx: { nids: "Les véhicules ne subissent pas le −25 % d'Attaque des nids de mitrailleuses." } },
+  destroyer: { use: "Se pose en mer : appuie vos secteurs et frappe le QG. Ajoutez-en d'autres pour le combo Flotte.", plus: 'Appui naval', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
+  croiseur: { use: "Gros obus (Attaque 24) qui appuie tout le front. Associez-le à des observateurs : Tir guidé ×1,5.", plus: 'Appui sur tout le front', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
+  sousmarin: { use: "Torpille à Attaque 18 mais Défense 0 : à poser en renfort d'attaque, pas pour encaisser.", plus: 'Appui côtier', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
+  chasseur: { use: "Couverture aérienne : Défense ×1,25 sur tous vos secteurs, et il intercepte l'obus visant son secteur.", plus: 'Couverture', fx: { artillerie: "Intercepte l'obus des obusiers ennemis." } },
+  bombardier: { use: "Frappe immédiate : 60 dégâts directement sur le QG, sans passer par un secteur. À garder pour finir une bataille.", plus: 'Frappe le QG', fx: { bunker: 'Frappe directe : le Bunker ne la réduit pas.', mammouth: 'Frappe directe : le blindage du Mammouth ne la réduit pas.', train: 'Frappe directe : le train blindé ne peut pas la couper.' } },
+  observateur: { use: "Ne tire pas. Associez-le à de l'artillerie, un navire ou un avion de reconnaissance dans le même secteur : Tir guidé, Attaque ×1,5.", plus: 'Tir guidé' },
+  infirmiers: { use: "À leur arrivée, les autres unités du secteur gagnent +1 endurance : posez-les APRÈS vos autres unités.", plus: '+1 tour aux voisins', fx: { snipers: "Compensent l'endurance perdue sous les tireurs d'élite.", artillerie: "Compensent l'endurance perdue sous les obus." } },
+  genie: { use: "Déminent leur secteur en y entrant, et leur Attaque est doublée contre un QG fortifié.", plus: 'Anti-mines, anti-bunker', fx: { mines: 'Déminent le secteur piégé en y entrant.', bunker: 'Attaque ×2 et ignorent la réduction du Bunker.' } },
+  mitrailleuse: { use: "Défense 7 pour 2 de ravitaillement : elle absorbe la riposte. Avec une autre infanterie : Nid défensif (+1 Défense).", plus: 'Nid défensif', fx: { nids: 'Dure à déloger : Défense élevée contre les nids ennemis.' } },
+  artillerie: { use: "Tire de loin (portée 2-3) mais Défense 2 : protégez-la avec d'autres unités. Avec des observateurs : Tir guidé ×1,5.", plus: 'Tir guidé' },
+  halftrack: { use: "Défense 12 et Attaque 10. Avec de l'infanterie dans le même secteur : combo Armes combinées.", plus: 'Armes combinées', fx: { nids: "Les véhicules ne subissent pas le −25 % d'Attaque des nids de mitrailleuses." } },
+  antichar: { use: "Attaque doublée contre une Division blindée : à poser quand l'ennemi en a une.", plus: 'Anti-blindés', fx: { panzer: 'Attaque ×2 contre la Division blindée.' } },
+  reco: { use: "Pour 1 seul ravitaillement : avec de l'artillerie ou un navire, Tir guidé (Attaque ×1,5). Seul, il n'apporte presque rien.", plus: 'Tir guidé' },
+  paras: { use: "Moins d'Attaque que les tireurs, mais leur secteur ignore les protections du QG : à poser là où doit passer le gros de votre frappe. Seuls à pouvoir recevoir l'ordre Sabotage.", plus: 'Commando', fx: { bunker: 'Leur secteur ignore la réduction de 30 % du Bunker.', mammouth: 'Leur secteur ignore le blindage du Mammouth.' } },
+  barrage: { use: "+20 d'Attaque de base dans un secteur, AVANT ses combos : à jouer sur le secteur au plus gros multiplicateur.", plus: 'Valeur fixe' },
+  fumigenes: { use: "Divise par deux la riposte ennemie ce tour et fait perdre l'obus annoncé. À jouer quand votre Défense est trop faible.", plus: 'Défensif', fx: { artillerie: "Annule l'obus des obusiers." } },
+  ravitaillement: { use: "Gratuit : +2 ravitaillement et une carte piochée. À jouer en premier.", plus: 'Gratuit' },
+  retranchement: { use: "Une unité terrestre : +50 % de Défense et +1 endurance. Pour sauver une unité précieuse (artillerie, char).", plus: 'Protège une unité', fx: { snipers: "Une unité de plus qui tient sous les tireurs d'élite.", artillerie: 'Protège contre le tir des obusiers.' } },
+  repli: { use: "Gratuit : retire une unité du front et la remet dans votre main pour la rejouer fraîche (endurance neuve) ailleurs.", plus: 'Réutilise une unité' },
+  assaut: { use: "Attaque d'un secteur ×1,5 ce tour : à jouer sur votre plus gros secteur.", plus: 'Multiplicateur' },
+  contreattaque: { use: "Défense d'un secteur ×1,5 ce tour : utile quand la riposte dépasse votre Défense.", plus: 'Défensif' },
+  embuscade: { use: "Toutes les unités d'un secteur gagnent +1 endurance : à jouer sur un secteur qui allait disparaître.", plus: 'Prolonge vos unités', fx: { snipers: "Compense l'endurance perdue sous les tireurs d'élite.", artillerie: "Compense l'endurance perdue sous les obus." } },
+  debarquement: { use: "Gratuit : la première carte d'infanterie de votre pioche débarque aussitôt dans ce secteur, sans payer son coût.", plus: 'Infanterie gratuite' },
+  sabotage: { use: "Le QG ennemi perd 8 % de ses PV de départ, quelle que soit votre Attaque. Ne se joue que sur des parachutistes déjà posés.", plus: 'Dégâts fixes', fx: { bunker: 'Ignore le Bunker.', mammouth: 'Ignore le blindage du Mammouth.' } },
+};
+// effet ennemi du combat en cours qui rend cette carte précieuse (affiché sur la carte et dans sa fiche)
+const cardUseNow = card => { const t = CARD_TIPS[card.t], fx = t && t.fx; if (!fx || typeof S === 'undefined' || !S || !S.fx) return ''; const k = S.fx.find(x => fx[x] && !/^Attention/.test(fx[x])); return k ? `${HQFX[k].name} : ${fx[k]}` : ''; };
+const cardWarnNow = card => { const t = CARD_TIPS[card.t], fx = t && t.fx; if (!fx || typeof S === 'undefined' || !S || !S.fx) return ''; const k = S.fx.find(x => fx[x] && /^Attention/.test(fx[x])); return k ? fx[k] : ''; };
+const tipsHTML = card => { const t = CARD_TIPS[card.t]; if (!t) return ''; const now = cardUseNow(card), warn = cardWarnNow(card); return `<div class="ctips"><p><b>Quand la jouer.</b> ${t.use}</p>${now ? `<p class="now">★ Utile dans cette bataille — ${now}</p>` : ''}${warn ? `<p class="warn">⚠ ${warn}</p>` : ''}</div>`; };
 const SHORT_EFF = { J: '+1 dégât par tir', R: "+50 % d'hommes", V: '+25 % Déf., +1 tour', N: '+0,5 Att. par homme' };
 const FAM_SHORT = { terre: 'Terre', mer: 'Mer', air: 'Air', ordre: 'Ordre' };
 const ORDER_SHORT = { debarquement: 'Infanterie gratuite', sabotage: '−8 % au QG ennemi', barrage: '+20 Attaque', fumigenes: 'Riposte ÷2', ravitaillement: '+2 ravit. · pioche 1', retranchement: 'Défense +50 %, +1 tour', repli: 'La carte revient en main', assaut: 'Attaque ×1,5', contreattaque: 'Défense ×1,5', embuscade: '+1 tour au secteur' };
@@ -4248,7 +4286,7 @@ function cardHTML(card, extra = '', attrs = '') {
 }
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>
     <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
@@ -4259,13 +4297,13 @@ function cardModal(reg) {
   const card = CARD_REG[reg]; if (!card) return;
   if (isOrder(card)) { const d = TYPES[card.t]; return openModal(`<div class="hd"><span class="ribbon">${d.name}</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="row" style="flex-wrap:nowrap;gap:14px"><span class="nodeart" style="width:92px;height:92px">${iconSVG(ORDER_ICON[card.t], 64)}</span>
-    <div class="stack" style="gap:4px"><b>Ordre · coût ${d.cost}</b><span>Cible : ${TGT_TXT[d.tgt]}</span><span class="small muted">Sans couleur : se joue en plus de vos déploiements.</span></div></div><p>${d.txt}</p>`); }
+    <div class="stack" style="gap:4px"><b>Ordre · coût ${d.cost}</b><span>Cible : ${TGT_TXT[d.tgt]}</span><span class="small muted">Sans couleur : se joue en plus de vos déploiements.</span></div></div><p>${d.txt}</p>${tipsHTML(card)}`); }
   const d = TYPES[card.t], cs = cardStats(card);
   const eff = [...card.c].map(ch => `<li><i class="dot" style="background:${COLORS[ch].hex}"></i> <b>${COLORS[ch].name}</b> : ${COLORS[ch].txt}${d.land ? ` · ▲ fort en ${TERRAIN[COLOR_TERRAIN[ch].fort].name.toLowerCase()}, ▼ faible en ${TERRAIN[COLOR_TERRAIN[ch].faible].name.toLowerCase()}` : ''}</li>`).join('');
   openModal(`<div class="hd"><span class="ribbon">${d.name} ${colorName(card.c).toLowerCase()}</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="row" style="flex-wrap:nowrap;gap:14px"><span class="nodeart" style="width:92px;height:92px">${squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 56, card.c)}</span>
     <div class="stack" style="gap:4px"><b>${FAMILIES[d.fam]}</b><span>${cs.st.men} tir${cs.st.men > 1 ? 's' : ''} de ${cs.st.dmg} dégât${cs.st.dmg > 1 ? 's' : ''}</span><span>${SWORD} Attaque ${fmtN(cs.st.men * (cs.st.dmg + Math.min(2, cs.st.pierce || 0) * 0.5))} · ${SHIELD} Défense ${fmtN(cs.st.def)}</span><span>Endurance : ${cs.st.stam} tour${cs.st.stam > 1 ? 's' : ''}</span><span>Coût : ${d.cost}</span>${(card.lv || 1) > 1 ? `<span class="star">Niveau ${card.lv}</span>` : ''}</div></div>
-    <p>${d.txt}</p><ul class="effl">${eff}</ul>`);
+    <p>${d.txt}</p>${tipsHTML(card)}<ul class="effl">${eff}</ul>`);
 }
 function objLine() {
   const o = S.obj;

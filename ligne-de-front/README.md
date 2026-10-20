@@ -228,3 +228,6 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 ### Boucliers pendant la riposte, QG renforçable
 - Riposte : chaque secteur dresse un bouclier (valeur de sa Défense) devant ses unités ; l'obus ennemi vole jusqu'à lui et explose dessus. Sa taille suit la part de la riposte qu'il couvre ; s'il ne suffit pas et que votre QG perd des PV, il se fissure. Un secteur sans Défense prend l'obus sur ses unités.
 - Intendance : nouveau service « QG max +10 » (+10 PV max et +10 PV), $5 puis +$3 à chaque achat, 5 fois par campagne (`FORT_AMOUNT`, `MAX_FORTIFY`, `fortifyCost`, `C.hqUp`).
+
+### Fiches de cartes explicites
+`CARD_TIPS` : pour chaque carte (17 unités, 11 ordres), un « Quand la jouer » dans sa fiche (bouton ⓘ), et pour les cartes à effet particulier la liste des effets ennemis (`fx`) contre lesquels elles sont précieuses. Dans une bataille, si l'ennemi a l'effet concerné (Bunker, Mammouth, Division blindée, mines, tireurs d'élite, obusiers, nids…), la fiche affiche « ★ Utile dans cette bataille » et la carte en main porte une étoile dorée ; un avertissement ⚠ apparaît quand la carte est pénalisée (navires contre la batterie côtière). Libellés courts des cartes précisés (« Ignore bunker/blindage », « Att. ×2 vs blindés », « 60 dégâts sur le QG »…).
