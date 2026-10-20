@@ -8,9 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap">
 <style>
-:root{--bg:#f7f1e3;--ink:#4a3623;--muted:#7b6a58;--card:#fffaf0;--line:#e3d5b8;--acc:#9a5b3c;--ok:#5f7f58;--err:#a8403a;--r:14px;--serif:'IM Fell English','Palatino Linotype',Palatino,Georgia,serif}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1812;--ink:#f0e6d2;--muted:#b3a58f;--card:#2a231a;--line:#43392b;--acc:#d9a070;--ok:#9dbb94;--err:#e08a82}}
+:root{--onacc:#fff;--bg:#f7f1e3;--ink:#4a3623;--muted:#7b6a58;--card:#fffaf0;--line:#e3d5b8;--acc:#9a5b3c;--ok:#5f7f58;--err:#a8403a;--r:14px;--serif:'IM Fell English','Palatino Linotype',Palatino,Georgia,serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--onacc:#1d1812;--bg:#1d1812;--ink:#f0e6d2;--muted:#b3a58f;--card:#2a231a;--line:#43392b;--acc:#d9a070;--ok:#9dbb94;--err:#e08a82;color-scheme:dark}}
+:root[data-theme=dark]{--onacc:#1d1812;--bg:#1d1812;--ink:#f0e6d2;--muted:#b3a58f;--card:#2a231a;--line:#43392b;--acc:#d9a070;--ok:#9dbb94;--err:#e08a82;color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
 h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.15;margin:0 0 .5em}
 .top{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line)}
@@ -23,7 +25,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.15;margin:0 0 .5
 .hero p{color:var(--muted);font-size:1.08rem}
 .art{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px;box-shadow:0 14px 34px rgba(74,54,35,.18)}
 .art svg,.poster svg{display:block;width:100%;height:auto}
-.btn{display:inline-block;background:var(--acc);color:#fff;border:0;border-radius:999px;padding:11px 24px;font:600 1rem inherit;cursor:pointer;text-decoration:none}
+.btn{display:inline-block;background:var(--acc);color:var(--onacc);border:0;border-radius:999px;padding:11px 24px;font:600 1rem inherit;cursor:pointer;text-decoration:none}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .link{background:none;border:0;color:var(--acc);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
@@ -141,9 +143,6 @@ footer{text-align:center;color:var(--muted);padding:24px;border-top:1px solid va
 .meter i{transition:width .6s cubic-bezier(.2,.8,.3,1)}
 .meter.full i{background:linear-gradient(90deg,var(--ok),#d8a85c);animation:m-glow 1.6s ease-out 1}
 input:focus,select:focus{transition:box-shadow .2s;box-shadow:0 0 0 4px rgba(154,91,60,.12)}
-/* défilement */
-.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease var(--rd,0s),transform .7s cubic-bezier(.2,.8,.3,1) var(--rd,0s)}
-.rv.in{opacity:1;transform:none}
 /* comment ça marche */
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1040px;margin:0 auto 40px;padding:0 20px}
 @media(max-width:800px){.how{grid-template-columns:1fr}}
@@ -156,35 +155,36 @@ input:focus,select:focus{transition:box-shadow .2s;box-shadow:0 0 0 4px rgba(154
 .tilt:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,30%),rgba(255,255,255,.28),transparent 55%);opacity:0;transition:opacity .35s}
 .tilt.on:after{opacity:1}
 .art{cursor:pointer}
+.poster.demo:before{content:"Exemple";position:absolute;top:10px;left:10px;z-index:2;background:var(--acc);color:var(--card);font:600 .75rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
 .stats{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin:12px 0 0;font:1rem var(--serif);color:var(--ink)}
 .stats span{display:inline-block}
 .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
 .confetti i{position:absolute;width:8px;height:12px;border-radius:2px;animation:m-confetti 1.2s cubic-bezier(.15,.7,.3,1) forwards}
 dialog .confetti{position:absolute}
-@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}.m-walk{display:none}}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.m-walk{display:none}}
 </style>
 </head>
 <body>
 <header class="top"><a class="logo" href="#">La route du temps</a><span>Maquette</span></header>
 
 <section class="hero">
-  <div class="rv">
+  <div>
     <h1>Toute une histoire, <em>une seule route</em>.</h1>
     <p>Choisissez deux dates : celle du début et celle de la fin. Racontez les moments qui comptent entre les deux. Nous les dessinons le long d'un chemin, sur une affiche à encadrer.</p>
     <p><a class="btn cta" href="#creer">Créer mon affiche <span class="arr">→</span></a> &nbsp; <button class="link" id="sample" type="button">Voir un exemple complet</button></p>
   </div>
-  <div class="art tilt rv" id="heroArt" style="--rd:.15s" role="button" tabindex="0" aria-label="Exemple d'affiche : cliquez pour la voir se dessiner à nouveau"></div>
+  <div class="art tilt" id="heroArt" role="button" tabindex="0" aria-label="Exemple d'affiche : cliquez pour la voir se dessiner à nouveau"></div>
 </section>
 
 <section class="how" aria-label="Comment ça marche">
-  <div class="hw rv"><span class="hwi" id="hw1"></span><b>1. Racontez</b><p>Deux dates, puis les moments qui comptent entre les deux.</p></div>
-  <div class="hw rv" style="--rd:.12s"><span class="hwi" id="hw2"></span><b>2. Personnalisez</b><p>Vos proches, leurs couleurs, les petits détails qui vous ressemblent.</p></div>
-  <div class="hw rv" style="--rd:.24s"><span class="hwi" id="hw3"></span><b>3. Recevez</b><p>Une affiche illustrée, prête à encadrer.</p></div>
+  <div class="hw"><span class="hwi" id="hw1"></span><b>1. Racontez</b><p>Deux dates, puis les moments qui comptent entre les deux.</p></div>
+  <div class="hw"><span class="hwi" id="hw2"></span><b>2. Personnalisez</b><p>Vos proches, leurs couleurs, les petits détails qui vous ressemblent.</p></div>
+  <div class="hw"><span class="hwi" id="hw3"></span><b>3. Recevez</b><p>Une affiche illustrée, prête à encadrer.</p></div>
 </section>
 
 <main id="creer" class="app">
-  <div class="panel rv" id="journey" aria-live="polite"></div>
-  <aside class="side rv" style="--rd:.12s">
+  <div class="panel" id="journey" aria-live="polite"></div>
+  <aside class="side">
     <div class="poster tilt" id="poster"></div>
     <p class="stats" id="stats" aria-live="polite"></p>
     <p class="cap">Maquette : l'aperçu montre les couleurs choisies. Les autres détails (prénoms, objets, lieux…) sont transmis dans un brief à notre illustrateur, qui dessine la version personnalisée, dans le même style de carte ancienne douce.</p>
@@ -831,13 +831,14 @@ function update(o = {}) {
   const keys = shownEvents(S).map((e) => (e.id ||= 'e' + ++evSeq));
   const pop = o.intro ? new Set() : new Set(keys.filter((k) => !shownKeys.has(k)));
   shownKeys = new Set(keys);
-  const box = $('#poster');
-  box.innerHTML = poster(S, { intro: o.intro, pop });
+  const box = $('#poster'), demo = !S.occ;
+  box.innerHTML = demo ? poster(DEMO, { intro: o.intro }) : poster(S, { intro: o.intro, pop });
+  box.classList.toggle('demo', demo);
   if (o.swap) { box.classList.remove('m-swap'); void box.offsetWidth; box.classList.add('m-swap'); }
   const n = keys.length, np = S.people.length, price = FORMATS[S.format].price + (S.frame ? FRAME_PRICE : 0);
   const st = [`${n} souvenir${n > 1 ? 's' : ''}`, `${np} personnage${np > 1 ? 's' : ''}`, FORMATS[S.format].label, `${price} €`];
-  const el = $('#stats'), sig = st.join('|');
-  el.innerHTML = st.map((t) => `<span>${t}</span>`).join('<span aria-hidden="true">·</span>');
+  const el = $('#stats'), sig = demo ? 'demo' : st.join('|');
+  el.innerHTML = demo ? '<span>Choisissez une occasion pour commencer votre affiche.</span>' : st.map((t) => `<span>${t}</span>`).join('<span aria-hidden="true">·</span>');
   if (lastStats && sig !== lastStats) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
   lastStats = sig;
 }
@@ -1008,12 +1009,6 @@ if (matchMedia('(hover: hover) and (pointer: fine)').matches && !matchMedia('(pr
   });
 }
 
-// Apparition des blocs au défilement.
-if ('IntersectionObserver' in window) {
-  const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { threshold: 0.12 });
-  document.querySelectorAll('.rv').forEach((el) => io.observe(el));
-} else document.querySelectorAll('.rv').forEach((el) => el.classList.add('in'));
-
 $('#sample').onclick = () => { S = SAMPLE(); lastStep = S.step; renderJourney(); update({ intro: true }); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
 const heroPlay = () => { $('#heroArt').innerHTML = poster(SAMPLE(), { intro: true, walker: true }); };
 $('#heroArt').onclick = heroPlay;
@@ -1025,8 +1020,9 @@ heroPlay();
   $('#hw2').innerHTML = personThumb(ex.people[1]);
   $('#hw3').innerHTML = thumb({ icon: 'house', a: { wall: 'jaune' } });
 }
+const DEMO = SAMPLE();
 renderJourney();
-update();
+update({ intro: true });
 </script>
 </body>
 </html>
