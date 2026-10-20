@@ -5,7 +5,7 @@ Maquette d'une affiche illustrée : une route relie une date de début à une da
 - `index.html` : page unique (HTML, CSS, JS) avec le parcours en 6 étapes (occasion, pour qui, dates, format, souvenirs, style et commande) et l'aperçu de l'affiche en direct.
 - `functions/order.js` : réception des commandes (à relier à e-mail, base de données et paiement).
 
-Les dessins de l'affiche sont les vignettes de `vignettes/` (6 pour l'instant : naissance, premiers pas, voyage, mariage, animal, maison). `python3 vignettes/build.py` régénère les fichiers SVG, la planche `vignettes.html` et la copie des dessins dans `index.html` (entre les repères `VIGNETTES:BEGIN/END`). Pour ajouter un dessin : une fonction dans `build.py`, puis relancer le script. La génération par IA reste à tester pour les événements sur mesure.
+Les dessins de l'affiche sont les vignettes de `vignettes/` (11 pour l'instant : naissance, premiers pas, voyage, mariage, animal, maison, anniversaire, diplôme, concert, amour, école). `python3 vignettes/build.py` régénère les fichiers SVG, la planche `vignettes.html` et la copie des dessins dans `index.html` (entre les repères `VIGNETTES:BEGIN/END`). Pour ajouter un dessin : une fonction dans `build.py`, puis relancer le script. La génération par IA reste à tester pour les événements sur mesure.
 
 Capacité selon le format (un souvenir tous les 58 unités de route, 1 cm = 20 unités, donc textes et dessins gardent la même taille réelle) :
 21 × 30 cm : 4 souvenirs · 30 × 40 cm : 7 · 50 × 70 cm : 18. Le format est choisi avant les souvenirs ; le calcul est dans `maxEvents()`.

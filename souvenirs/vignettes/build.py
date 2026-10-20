@@ -15,7 +15,7 @@ class Sheet:
     def __init__(self, name):
         self.name, self.defs, self.body, self.n = name, [], [], 0
 
-    def add(self, geom, wash=None, ink=True, sw=1.8, op=.62, solid=None, stroke=None, ink_op=1, paper=None):
+    def add(self, geom, wash=None, ink=True, sw=1.8, op=.62, solid=None, stroke=None, ink_op=1, paper=None, dash=None):
         self.n += 1
         i = f'@P@{self.name}-{self.n}'
         self.defs.append(geom.replace('/>', f' id="{i}"/>'))
@@ -29,7 +29,7 @@ class Sheet:
         if stroke:
             self.body.append(use(f'fill="none" stroke="{stroke}" stroke-width="{sw}" filter="url(#@P@{self.name}-hand)"'))
         if ink:
-            self.body.append(use(f'fill="none" stroke="{INK}" stroke-width="{sw}" stroke-opacity="{ink_op}" stroke-linecap="round" stroke-linejoin="round" filter="url(#@P@{self.name}-hand)"'))
+            self.body.append(use(f'fill="none" stroke="{INK}" stroke-width="{sw}" stroke-opacity="{ink_op}"{f' stroke-dasharray="{dash}"' if dash else ''} stroke-linecap="round" stroke-linejoin="round" filter="url(#@P@{self.name}-hand)"'))
 
     def path(self, d, **k): self.add(f'<path d="{d}"/>', **k)
     def circle(self, x, y, r, **k): self.add(f'<circle cx="{x}" cy="{y}" r="{r}"/>', **k)
@@ -208,9 +208,113 @@ def house():
     return s
 
 
+def cake():
+    s = Sheet('gateau')
+    s.ground(120, 206, 86, 8, O)
+    s.ellipse(120, 196, 82, 10, wash=C)
+    s.path('M50 150H190V190Q120 204 50 190Z', wash=R)
+    s.path('M190 138V150q-10 12 -22 0q-8 16 -18 0q-10 12 -20 0q-9 16 -20 0q-10 12 -20 0q-9 18 -20 0q-8 10 -20 0V138Z', wash=C)
+    for x, y, c in ((70, 170, O), (96, 176, T), (122, 170, S), (148, 177, O), (172, 170, T)): s.circle(x, y, 3.4, wash=c, sw=1.1)
+    s.path('M78 140V106Q78 100 84 100H156Q162 100 162 106V140Z', wash=O)
+    s.path('M162 100V108q-8 10 -17 0q-8 14 -17 0q-8 10 -17 0q-8 14 -17 0q-8 8 -16 0V100Z', wash=C)
+    for x, c in ((100, R), (120, T), (140, S)):
+        s.path(f'M{x-3} 100V78H{x+3}V100Z', wash=c, sw=1.4)
+        s.path(f'M{x} 76q-6 -8 0 -17q6 9 0 17Z', wash=O, op=.9, sw=1.3)
+    for x, y, r in ((38, 66, 6), (206, 82, 5), (216, 130, 4), (28, 130, 4)): s.star(x, y, r)
+    s.circle(52, 100, 3, wash=R, sw=1)
+    s.circle(194, 58, 3, wash=T, sw=1)
+    s.circle(68, 44, 2.6, wash=O, sw=1)
+    return s
+
+
+def cap():
+    s = Sheet('diplome')
+    s.ground(120, 206, 86, 8, T)
+    s.path('M54 176L180 160L184 182L58 198Z', wash=C)
+    s.ellipse(56, 187, 6, 12, wash=C, sw=1.5)
+    s.ellipse(182, 171, 6, 12, wash=C, sw=1.5)
+    s.path('M70 185L100 181M72 191L108 187', sw=.9, ink_op=.55)
+    s.path('M112 169L124 168L128 188L116 190Z', wash=R)
+    s.circle(120, 179, 4, wash=R, sw=1.3)
+    s.path('M118 188L112 205M122 188L128 205', sw=1.4)
+    s.path('M80 106V132Q120 154 160 132V106Z', wash='#4f7c85')
+    s.path('M120 58L200 88L120 118L40 88Z', wash=T, op=.85)
+    s.circle(120, 88, 4, wash=O, sw=1.4)
+    s.path('M120 88L186 102V128', sw=1.5)
+    s.path('M181 128H191L189 146H183Z', wash=O)
+    s.path('M184 134V146M188 134V146', sw=.8, ink_op=.6)
+    for x, y, r in ((36, 50, 6), (212, 52, 5), (224, 150, 4), (24, 124, 4)): s.star(x, y, r)
+    return s
+
+
+def music():
+    s = Sheet('concert')
+    s.path('M120 22L68 198H172Z', wash=O, op=.2, ink=False, paper=False)
+    s.path('M106 12H134L130 28H110Z', wash=B)
+    s.ellipse(120, 204, 74, 9, wash=T, ink=False, op=.4, paper=False)
+    s.path('M120 160L94 200M120 160L146 200M120 160V200', sw=2)
+    s.path('M120 160V108', sw=2.6)
+    s.path('M104 102Q120 120 136 102', sw=1.8)
+    s.ellipse(120, 86, 16, 22, wash=T, op=.55)
+    s.path('M107 78H133M105 86H135M107 94H133M114 66V106M126 66V106', sw=.8, ink_op=.6)
+    s.path('M52 118V78q14 4 14 20', sw=1.8)
+    s.ellipse(46, 119, 7, 5, wash=R, sw=1.5)
+    s.path('M188 124V88M210 114V78', sw=1.8)
+    s.path('M188 88L210 78V86L188 96Z', solid=INK, sw=1.2)
+    s.ellipse(182, 125, 7, 5, wash=S, sw=1.5)
+    s.ellipse(204, 115, 7, 5, wash=S, sw=1.5)
+    for x, y, r in ((70, 48, 6), (190, 44, 6), (34, 160, 4), (212, 160, 4)): s.star(x, y, r)
+    return s
+
+
+def heart():
+    s = Sheet('coeur')
+    hp = lambda cx, cy, k: f'M{cx} {cy+k*.9}C{cx-k*2} {cy-k*.2} {cx-k} {cy-k*1.5} {cx} {cy-k*.6}C{cx+k} {cy-k*1.5} {cx+k*2} {cy-k*.2} {cx} {cy+k*.9}Z'
+    s.ellipse(120, 208, 60, 6, wash=R, ink=False, op=.3, paper=False)
+    s.path('M120 196C50 150 40 96 76 78C98 68 114 80 120 96C126 80 142 68 164 78C200 96 190 150 120 196Z', wash=R, op=.7)
+    s.path('M120 182C62 146 54 102 82 88C100 80 114 90 120 104C126 90 140 80 158 88C186 102 178 146 120 182Z', sw=1, ink_op=.55, dash='4 4')
+    s.path('M70 100Q74 86 90 84', ink=False, stroke='#fffaf0', sw=4)
+    s.path(hp(52, 56, 9), wash=R, sw=1.6)
+    s.path(hp(190, 52, 7), wash=O, sw=1.5)
+    s.path(hp(204, 108, 5), wash=T, sw=1.3)
+    s.path(hp(34, 128, 5), wash=S, sw=1.3)
+    for x, y, r in ((98, 38, 5), (150, 30, 6), (28, 86, 4), (218, 150, 5)): s.star(x, y, r)
+    return s
+
+
+def school():
+    s = Sheet('ecole')
+    s.ground(120, 204, 94, 9, S)
+    s.path('M34 190V128H206V190Z', wash='#d49a7f')
+    s.path('M28 130L48 112H192L212 130Z', wash=T, op=.7)
+    s.path('M88 190V94H152V190Z', wash='#efdcae')
+    s.path('M82 96L120 64L158 96Z', wash=T)
+    s.path('M110 64V50H130V64M108 50L120 38L132 50Z', wash=R)
+    s.path('M120 38V22', sw=1.6)
+    s.path('M120 22L138 29L120 36Z', wash=R)
+    s.circle(120, 88, 9, wash=C)
+    s.path('M120 88V82M120 88L125 90', sw=1.3)
+    s.path('M106 190V156Q120 142 134 156V190Z', wash='#a96f4a')
+    s.circle(128, 172, 1.8, solid=INK, ink=False)
+    for x in (42, 66, 160, 184):
+        for y in (134, 162):
+            s.path(f'M{x} {y}H{x+14}V{y+18}H{x}Z', wash='#bcd9dd', sw=1.3)
+            s.path(f'M{x+7} {y}V{y+18}M{x} {y+9}H{x+14}', sw=.8)
+    s.path('M98 190H142V196H98Z', wash='#d8cfb8')
+    s.path('M8 198H44V190H8Z', wash=T)
+    s.path('M12 190H42V182H12Z', wash=R)
+    s.circle(216, 190, 9, wash=R)
+    s.path('M216 181Q218 174 222 172', sw=1.4)
+    s.path('M219 178q6 -5 9 0q-4 5 -9 0Z', wash=S, sw=1.1)
+    return s
+
+
 VIGNETTES = [(cradle, 'cradle', 'Naissance', 'Berceau, lune et étoiles'), (steps, 'steps', 'Premiers pas', 'Canard à roulettes et empreintes'),
              (ship, 'ship', 'Voyage', 'Voilier, rose des vents et mouettes'), (chapel, 'chapel', 'Mariage', 'Chapelle, alliances et fleurs'),
-             (puppy, 'puppy', 'Animal', 'Chiot, gamelle et balle'), (house, 'house', 'Nouvelle maison', 'Maison, arbre et clé')]
+             (puppy, 'puppy', 'Animal', 'Chiot, gamelle et balle'), (house, 'house', 'Nouvelle maison', 'Maison, arbre et clé'),
+             (cake, 'cake', 'Anniversaire', 'Gâteau, bougies et confettis'), (cap, 'cap', 'Diplôme', 'Toque et diplôme roulé'),
+             (music, 'music', 'Concert', 'Micro, projecteur et notes'), (heart, 'heart', 'Amour', 'Cœur, petits cœurs et étincelles'),
+             (school, 'school', 'École', 'École, horloge et drapeau')]
 
 cards, js = [], {}
 for fn, key, title, sub in VIGNETTES:
