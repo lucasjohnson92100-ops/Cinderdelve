@@ -53,6 +53,14 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outli
 .ev{display:grid;grid-template-columns:46px 1fr 1fr 30px;gap:6px;align-items:center;margin:10px 0}
 .ev .ei{grid-row:1/3;background:#f4e8c8;border-radius:8px;display:grid;place-items:center;width:46px;height:46px}.ev .ei svg{width:42px;height:42px}
 .ev [data-k=date]{grid-column:2;grid-row:1}.ev [data-k=icon]{grid-column:3;grid-row:1}.ev .x{grid-column:4;grid-row:1}.ev [data-k=title]{grid-column:2/5;grid-row:2}
+.evw{border-bottom:1px dashed var(--line);padding:10px 0}.evw .ev{margin:0}
+.more{display:block;margin:6px 0 0 52px;font-size:.88rem}
+.detail{background:rgba(154,91,60,.06);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px;margin:8px 0 0}
+.q label{font-size:.88rem;margin:12px 0 5px}
+.sws{display:flex;gap:8px;flex-wrap:wrap}.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}.sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--ink)}
+.brief{margin-top:14px;font-size:.9rem;border-top:1px solid var(--line);padding-top:10px}.brief ul{margin:6px 0;padding-left:18px}.brief summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+.brief pre{white-space:pre-wrap;font:.76rem/1.45 ui-monospace,monospace;background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--line);margin:6px 0 0}
+.meter{height:4px;background:var(--line);border-radius:4px;margin:6px 0;overflow:hidden}.meter i{display:block;height:100%;background:var(--ok)}
 .x{background:none;border:0;font-size:1.4rem;color:var(--muted);cursor:pointer;line-height:1}
 .bad input[data-k=date]{border-color:var(--err)}
 .count{color:var(--muted);font-size:.88rem}
@@ -85,7 +93,7 @@ footer{text-align:center;color:var(--muted);padding:24px;border-top:1px solid va
   <div class="panel" id="journey" aria-live="polite"></div>
   <aside class="side">
     <div class="poster" id="poster"></div>
-    <p class="cap">Maquette : onze dessins sont disponibles pour l'instant (naissance, premiers pas, voyage, mariage, animal, maison, anniversaire, diplôme, concert, amour, école). D'autres suivront dans le même style de carte ancienne douce.</p>
+    <p class="cap">Maquette : l'aperçu montre les couleurs choisies. Les autres détails (prénoms, objets, lieux…) sont transmis dans un brief à notre illustrateur, qui dessine la version personnalisée, dans le même style de carte ancienne douce.</p>
   </aside>
 </main>
 
@@ -153,11 +161,100 @@ const FRAME_PRICE = 19;
 const Y_END = 205, Y_MARGIN = 75, SLOT = 58; // route : de h - Y_MARGIN à Y_END, un souvenir tous les 58 unités
 const maxEvents = (s) => Math.floor((FORMATS[s.format].h - Y_MARGIN - Y_END) / SLOT) - 1;
 
+// Questions posées pour chaque souvenir : elles servent à (1) recolorer le dessin dans l'aperçu et (2) rédiger un brief détaillé
+// pour l'illustrateur (ou la génération par IA, relue ensuite). `target` = couleur de la vignette remplacée par le choix du client.
+const COLORS = { rose: ['Rose', '#d98f8f', 'pink'], rouge: ['Rouge', '#c9645c', 'red'], bleu: ['Bleu', '#7fa5c9', 'blue'], vert: ['Vert', '#8fae7e', 'green'], jaune: ['Jaune', '#e8c05a', 'yellow'],
+  violet: ['Violet', '#a99bc9', 'purple'], marron: ['Marron', '#a9714b', 'brown'], noir: ['Noir', '#4d4750', 'black'], gris: ['Gris', '#b3aeb0', 'grey'], blanc: ['Blanc', '#f6efe0', 'white'], creme: ['Crème', '#ecc88a', 'cream'] };
+const shade = (hex, f = 0.75) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('');
+const COMMON = [
+  { id: 'who', label: 'Qui est présent ?', type: 'text', ph: 'Léa, papa, maman…', en: 'People present' },
+  { id: 'where', label: 'Où cela se passe-t-il ?', type: 'text', ph: 'Dans le jardin de mamie', en: 'Place' },
+  { id: 'mood', label: 'Ambiance', type: 'choice', options: ['Douce', 'Joyeuse', 'Nostalgique', 'Festive'], en: 'Mood' },
+  { id: 'detail', label: 'Un détail à ne pas oublier ?', type: 'text', ph: 'Le doudou lapin gris, un ballon rouge…', en: 'Special detail to include' },
+];
+const color = (id, label, colors, target, en, dark) => ({ id, label, type: 'color', colors, target, en, dark });
+const SPECIFIC = {
+  cradle: { base: 'a wooden baby cradle with a small blanket, a crescent moon and stars', q: [
+    color('blanket', 'Couleur de la couverture', ['rose', 'bleu', 'vert', 'jaune', 'blanc'], '#d98f8f', 'Blanket color'),
+    { id: 'toy', label: 'Doudou ou jouet préféré', type: 'text', ph: 'Un lapin gris nommé Bunny', en: 'Favourite soft toy' },
+    { id: 'time', label: 'Moment de la journée', type: 'choice', options: ['Nuit', 'Jour'], en: 'Time of day' }] },
+  steps: { base: 'a wooden pull-toy duck on wheels with small footprints', q: [
+    color('toycolor', 'Couleur du jouet', ['jaune', 'rose', 'bleu', 'vert'], '#e8c05a', 'Toy color'),
+    { id: 'shoes', label: 'Chaussons ou jouet', type: 'text', ph: 'Des chaussons jaunes', en: 'Shoes or toy' },
+    { id: 'ground', label: 'Sur quel sol ?', type: 'choice', options: ['Herbe', 'Sable', 'Parquet', 'Carrelage'], en: 'Ground' }] },
+  ship: { base: 'a vintage sailing ship on gentle waves with a compass rose and seagulls', q: [
+    { id: 'dest', label: 'Destination', type: 'text', ph: 'Lisbonne, Portugal', en: 'Destination' },
+    { id: 'mode', label: 'Moyen de transport', type: 'choice', options: ['Bateau', 'Avion', 'Train', 'Voiture', 'Camping-car', 'À pied'], en: 'Means of transport' },
+    color('sails', 'Couleur des voiles', ['rose', 'bleu', 'rouge', 'vert'], '#d98f8f', 'Sail color')] },
+  chapel: { base: 'a small village chapel with a bell tower, two wedding rings above it and flowers', q: [
+    { id: 'venue', label: 'Lieu de la cérémonie', type: 'choice', options: ['Église', 'Mairie', 'Domaine', 'Plage', 'Jardin'], en: 'Venue' },
+    { id: 'season', label: 'Saison', type: 'choice', options: ['Printemps', 'Été', 'Automne', 'Hiver'], en: 'Season' },
+    color('roof', 'Couleur du toit', ['rose', 'bleu', 'vert', 'rouge'], '#d98f8f', 'Roof color'),
+    { id: 'flowers', label: 'Fleurs du bouquet', type: 'text', ph: 'Pivoines et eucalyptus', en: 'Bouquet flowers' }] },
+  puppy: { base: 'a cheerful sitting dog with a bowl and a ball', q: [
+    { id: 'name', label: 'Nom', type: 'text', ph: 'Moka', en: 'Name' },
+    { id: 'species', label: 'Animal', type: 'choice', options: ['Chien', 'Chat', 'Lapin', 'Cheval', 'Autre'], en: 'Animal' },
+    color('coat', 'Couleur du pelage', ['creme', 'marron', 'noir', 'gris', 'blanc'], '#ecc88a', 'Coat color'),
+    { id: 'trait', label: 'Signe particulier', type: 'text', ph: "Une tache blanche sur l'oreille", en: 'Distinctive mark' }] },
+  house: { base: 'a cosy small house with a chimney, a tree and a key', q: [
+    { id: 'dwelling', label: 'Type de logement', type: 'choice', options: ['Maison', 'Appartement', 'Péniche', 'Chalet', 'Autre'], en: 'Dwelling type' },
+    color('wall', 'Couleur des murs', ['creme', 'rose', 'bleu', 'vert', 'jaune'], '#f3e1b6', 'Wall color'),
+    color('roofh', 'Couleur du toit', ['rose', 'rouge', 'bleu', 'marron'], '#d98f8f', 'Roof color'),
+    { id: 'garden', label: 'Dans le jardin', type: 'text', ph: 'Un cerisier et une balançoire', en: 'Garden' }] },
+  cake: { base: 'a two-tier birthday cake with lit candles and confetti', q: [
+    { id: 'age', label: 'Âge fêté', type: 'text', ph: '30 ans', en: 'Age celebrated' },
+    { id: 'flavor', label: 'Parfum du gâteau', type: 'text', ph: 'Fraise et chocolat', en: 'Flavour' },
+    color('icing', 'Couleur du glaçage', ['rose', 'bleu', 'vert', 'jaune', 'blanc'], '#d98f8f', 'Icing color')] },
+  cap: { base: 'a graduation cap with a rolled diploma tied with a ribbon', q: [
+    { id: 'degree', label: 'Diplôme ou matière', type: 'text', ph: "Master d'histoire", en: 'Degree' },
+    { id: 'school', label: 'École ou ville', type: 'text', ph: 'Université de Lyon', en: 'School or city' },
+    color('capcolor', 'Couleur de la toque', ['bleu', 'noir', 'rouge', 'vert'], '#6f9fa6', 'Cap color', '#4f7c85')] },
+  music: { base: 'a vintage microphone on a stand in a spotlight with floating music notes', q: [
+    { id: 'artist', label: 'Artiste ou groupe', type: 'text', ph: 'Daft Punk', en: 'Artist or band' },
+    { id: 'venue2', label: 'Lieu', type: 'text', ph: 'Stade de France', en: 'Venue' },
+    { id: 'element', label: 'Ce qui doit apparaître', type: 'choice', options: ['Micro', 'Guitare', 'Piano', 'Batterie', 'Foule'], en: 'Main element' }] },
+  heart: { base: 'a large heart with small hearts and sparkles', q: [
+    { id: 'initials', label: 'Prénoms ou initiales', type: 'text', ph: 'C + T', en: 'Names or initials' },
+    { id: 'meet', label: 'Comment vous vous êtes rencontrés', type: 'text', ph: 'Dans un train pour Lyon', en: 'How they met' },
+    color('heartcolor', 'Couleur du cœur', ['rose', 'rouge', 'bleu', 'violet'], '#d98f8f', 'Heart color')] },
+  school: { base: 'a brick school building with a clock tower, a flag, books and an apple', q: [
+    { id: 'level', label: 'Niveau', type: 'choice', options: ['Maternelle', 'Primaire', 'Collège', 'Lycée', 'Université'], en: 'School level' },
+    { id: 'schoolname', label: "Nom de l'école ou de la ville", type: 'text', ph: 'École Jules Ferry', en: 'School name' },
+    color('building', 'Couleur du bâtiment', ['rose', 'creme', 'bleu', 'gris'], '#d49a7f', 'Building color')] },
+};
+const STYLE_PROMPT = 'Soft antique map illustration style: hand-drawn fine sepia ink linework with gentle watercolor washes in muted sage green, dusty rose, faded teal and warm ochre, on a plain transparent or parchment background, subject centered, no text, no letters.';
+const allQ = (k) => [...(SPECIFIC[k] ? SPECIFIC[k].q : []), ...COMMON];
+const ansOf = (e) => e.a || (e.a = {});
+const answeredCount = (e) => allQ(vigKey(e.icon)).filter((q) => ansOf(e)[q.id]).length;
+// Couleurs choisies par le client : paires [couleur d'origine, nouvelle couleur] appliquées à la vignette.
+function recolor(e) {
+  const out = [];
+  for (const q of SPECIFIC[vigKey(e.icon)]?.q || []) {
+    const v = q.type === 'color' && ansOf(e)[q.id];
+    if (v) { out.push([q.target, COLORS[v][1]]); if (q.dark) out.push([q.dark, shade(COLORS[v][1])]); }
+  }
+  return out;
+}
+// Brief lisible (français) et texte transmis à l'illustrateur ou au modèle d'images.
+function brief(e) {
+  const k = vigKey(e.icon), lines = [], en = [];
+  for (const q of allQ(k)) {
+    const v = ansOf(e)[q.id];
+    if (!v) continue;
+    lines.push([q.label, q.type === 'color' ? COLORS[v][0].toLowerCase() : v]);
+    en.push(`${q.en}: ${q.type === 'color' ? COLORS[v][2] : v}`);
+  }
+  const prompt = `A small isolated vignette of ${SPECIFIC[k].base}, personalised for the life event "${e.title.trim()}"${e.date ? ' (' + fmt(e.date) + ')' : ''}.${en.length ? ' Personal details to include: ' + en.join('; ') + '.' : ''} ${STYLE_PROMPT}`;
+  return { lines, prompt };
+}
+
 const blank = () => ({ step: 0, occ: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
 let S = blank();
 
 const SAMPLE = () => ({ ...blank(), step: 5, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
-  events: [['2025-04-20', 'Premier sourire', 'cradle'], ['2025-06-08', 'Baptême', 'chapel'], ['2025-07-14', 'Premier voyage', 'ship'], ['2025-11-08', 'Rencontre avec Moka', 'puppy'], ['2025-12-25', 'Premier Noël', 'house'], ['2026-02-14', 'Premiers pas', 'steps']].map(([date, title, ic]) => ({ date, title, icon: ic })) });
+  events: [['2025-04-20', 'Premier sourire', 'cradle', { blanket: 'bleu', toy: 'Un lapin gris nommé Bunny', time: 'Nuit' }], ['2025-06-08', 'Baptême', 'chapel', { venue: 'Église', roof: 'bleu' }], ['2025-07-14', 'Premier voyage', 'ship', { dest: 'Lisbonne', mode: 'Bateau', sails: 'rouge' }],
+    ['2025-11-08', 'Rencontre avec Moka', 'puppy', { name: 'Moka', species: 'Chien', coat: 'marron', trait: "Une tache blanche sur l'oreille", where: 'Chez le voisin' }], ['2025-12-25', 'Premier Noël', 'house', { wall: 'jaune', garden: 'Un sapin dans le jardin' }], ['2026-02-14', 'Premiers pas', 'steps', { toycolor: 'rose', ground: 'Parquet' }]]
+    .map(([date, title, icon, a], i) => ({ date, title, icon, a, open: i === 3 })) });
 
 const shownEvents = (s) => s.events.filter((e) => e.date && e.title.trim()).sort((a, b) => a.date.localeCompare(b.date)).slice(0, maxEvents(s));
 
@@ -175,10 +272,15 @@ function wrap(t, n) {
 
 let posterId = 0;
 const VSIZE = 80; // taille d'une vignette sur l'affiche, en unités (4 cm)
-const tint = (body, pre, ink, paper) => body.split('@P@').join(pre).split('var(--paper,#f4e8c8)').join(paper).split('#5a432b').join(ink);
+const tint = (body, pre, ink, paper, repl = []) => {
+  const b = body.split('@P@').join(pre).split('var(--paper,#f4e8c8)').join(paper).split('#5a432b').join(ink);
+  if (!repl.length) return b;
+  const map = Object.fromEntries(repl); // un seul passage : un nouveau coloris n'est pas remplacé à son tour
+  return b.replace(new RegExp(Object.keys(map).join('|'), 'g'), (m) => map[m]);
+};
 const vigKey = (k) => (VIG[k] ? k : 'ship');
 let thumbId = 0;
-const thumb = (k) => `<svg viewBox="0 0 240 240" aria-hidden="true">${tint(VIG[vigKey(k)].body, 't' + thumbId++ + '-', '#5a432b', '#f4e8c8')}</svg>`;
+const thumb = (e) => `<svg viewBox="0 0 240 240" aria-hidden="true">${tint(VIG[vigKey(e.icon)].body, 't' + thumbId++ + '-', '#5a432b', '#f4e8c8', recolor(e))}</svg>`;
 
 function poster(s) {
   const th = THEMES[s.theme], oc = OCC[s.occ] || OCC.autre, id = 'p' + posterId++, F = FORMATS[s.format], W = F.w, H = F.h, CX = W / 2;
@@ -189,8 +291,10 @@ function poster(s) {
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join('');
   const title = s.title.trim() || oc.title.replace('{n}', s.names.trim() || '…');
   const ts = Math.max(18, Math.min(35, (W - 90) / (title.length * 0.48)));
-  const ink = th.ink, used = [...new Set(evs.map((e) => vigKey(e.icon)))];
-  let g = `<defs>${used.map((k) => `<symbol id="${id}-v-${k}" viewBox="0 0 240 240">${tint(VIG[k].body, `${id}-${k}-`, ink, th.bg)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
+  const ink = th.ink, variants = new Map(); // une définition par dessin et par jeu de couleurs
+  const vid = (e) => { const k = vigKey(e.icon), r = recolor(e), sig = k + JSON.stringify(r); if (!variants.has(sig)) variants.set(sig, { k, r, n: variants.size }); return `${id}-v${variants.get(sig).n}`; };
+  const ids = evs.map(vid);
+  let g = `<defs>${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
   g += `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
   g += `<text x="${CX}" y="86" text-anchor="middle" font-family="${SERIF}" font-size="${ts.toFixed(1)}" fill="${ink}">${esc(title)}</text>`;
@@ -208,7 +312,7 @@ function poster(s) {
     const lines = wrap(e.title.trim(), wrapN);
     g += `<path d="M${rx.toFixed(1)} ${y.toFixed(1)}L${ex} ${y.toFixed(1)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="2 4" opacity=".8"/>`;
     g += `<circle cx="${p.x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${th.road}" stroke="${ink}" stroke-width="1.6"/>`;
-    g += `<use href="#${id}-v-${vigKey(e.icon)}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
+    g += `<use href="#${ids[i]}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
     g += `<text x="${cx}" y="${(y + 49).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="11" fill="${ink}" opacity=".85">${esc(fmt(e.date))}</text>`;
     lines.forEach((ln, k) => { g += `<text x="${cx}" y="${(y + 62 + k * 14).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="${ink}">${esc(ln)}</text>`; });
   });
@@ -267,13 +371,35 @@ function renderJourney() {
   wire();
 }
 
+function briefHTML(e) {
+  const n = answeredCount(e), tot = allQ(vigKey(e.icon)).length, bf = brief(e);
+  return `<div class="brief" data-brief><b>Brief du dessin</b> <span class="count">${n} / ${tot} détails</span><div class="meter"><i style="width:${(n / tot) * 100}%"></i></div>
+    ${bf.lines.length ? `<ul>${bf.lines.map(([l, v]) => `<li>${esc(l)} : <b>${esc(v)}</b></li>`).join('')}</ul>` : '<p class="hint">Aucune précision pour l\'instant : nous dessinerons la version standard.</p>'}
+    <details><summary>Texte transmis à l'illustrateur</summary><pre>${esc(bf.prompt)}</pre></details></div>`;
+}
+
+function detailHTML(e) {
+  const k = vigKey(e.icon), a = ansOf(e);
+  const field = (q) => {
+    const v = a[q.id] || '';
+    if (q.type === 'text') return `<input data-q="${q.id}" value="${esc(v)}" maxlength="80" placeholder="${esc(q.ph)}">`;
+    if (q.type === 'choice') return `<div class="chips">${q.options.map((o) => `<button type="button" class="chip" data-q="${q.id}" data-v="${esc(o)}" aria-pressed="${v === o}">${o}</button>`).join('')}</div>`;
+    return `<div class="sws">${q.colors.map((c) => `<button type="button" class="sw" style="background:${COLORS[c][1]}" title="${COLORS[c][0]}" aria-label="${COLORS[c][0]}" data-q="${q.id}" data-v="${c}" aria-pressed="${v === c}"></button>`).join('')}</div>`;
+  };
+  return `<p class="hint">Plus vous précisez, plus le dessin vous ressemblera. Tout est facultatif.</p>${allQ(k).map((q) => `<div class="q"><label>${q.label}</label>${field(q)}</div>`).join('')}
+    ${briefHTML(e)}`;
+}
+
 function renderEvents() {
   const opts = (sel) => Object.entries(VIG).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${v.label}</option>`).join('');
-  $('#evs').innerHTML = S.events.map((e, i) => `<div class="ev ${e.date && (e.date < S.start || e.date > S.end) ? 'bad' : ''}" data-i="${i}"><span class="ei">${thumb(e.icon)}</span>
+  $('#evs').innerHTML = S.events.map((e, i) => `<div class="evw" data-i="${i}"><div class="ev ${e.date && (e.date < S.start || e.date > S.end) ? 'bad' : ''}" data-i="${i}"><span class="ei">${thumb(e)}</span>
     <input type="date" data-k="date" min="${S.start}" max="${S.end}" value="${e.date}" aria-label="Date"><input data-k="title" value="${esc(e.title)}" maxlength="40" placeholder="Titre" aria-label="Titre">
-    <select data-k="icon" aria-label="Dessin">${opts(e.icon)}</select><button type="button" class="x" data-del aria-label="Supprimer">×</button></div>`).join('');
+    <select data-k="icon" aria-label="Dessin">${opts(e.icon)}</select><button type="button" class="x" data-del aria-label="Supprimer">×</button></div>
+    <button type="button" class="link more" data-more aria-expanded="${!!e.open}">${e.open ? 'Masquer' : 'Personnaliser le dessin'} · ${answeredCount(e)} / ${allQ(vigKey(e.icon)).length} détails</button>
+    ${e.open ? `<div class="detail">${detailHTML(e)}</div>` : ''}</div>`).join('');
   const full = S.events.length >= maxEvents(S);
-  $('#count').textContent = `${S.events.length} / ${maxEvents(S)} souvenirs pour le format ${FORMATS[S.format].label}. Besoin de plus de place ? Revenez choisir un format plus grand.`;
+  const done = S.events.reduce((t, e) => t + answeredCount(e), 0), tot = S.events.reduce((t, e) => t + allQ(vigKey(e.icon)).length, 0);
+  $('#count').textContent = `${S.events.length} / ${maxEvents(S)} souvenirs pour le format ${FORMATS[S.format].label}. Détails renseignés : ${done} / ${tot}.`;
   $('#addEv').disabled = full;
   document.querySelectorAll('#sugs .chip').forEach((c) => (c.disabled = full));
 }
@@ -289,17 +415,30 @@ function wire() {
   on('#title', 'input', (e) => { S.title = e.target.value; S.titleEdited = true; update(); });
   on('#start', 'input', (e) => { S.start = e.target.value; update(); });
   on('#end', 'input', (e) => { S.end = e.target.value; update(); });
-  on('#addEv', 'click', () => { S.events.push({ date: '', title: '', icon: 'ship' }); renderEvents(); wire(); const l = j.querySelectorAll('.ev [data-k=title]'); l[l.length - 1].focus(); });
-  j.querySelectorAll('[data-sug]').forEach((b) => (b.onclick = () => { const [title, ic] = OCC[S.occ].sug[+b.dataset.sug]; S.events.push({ date: '', title, icon: ic }); renderEvents(); wire(); update(); const l = j.querySelectorAll('.ev [data-k=date]'); l[l.length - 1].focus(); }));
-  j.querySelectorAll('.ev').forEach((row) => {
-    const e = S.events[+row.dataset.i];
+  on('#addEv', 'click', () => { S.events.push({ date: '', title: '', icon: 'ship', a: {} }); renderEvents(); wire(); const l = j.querySelectorAll('.ev [data-k=title]'); l[l.length - 1].focus(); });
+  j.querySelectorAll('[data-sug]').forEach((b) => (b.onclick = () => { const [title, ic] = OCC[S.occ].sug[+b.dataset.sug]; S.events.push({ date: '', title, icon: ic, a: {} }); renderEvents(); wire(); update(); const l = j.querySelectorAll('.ev [data-k=date]'); l[l.length - 1].focus(); }));
+  j.querySelectorAll('.evw').forEach((w) => {
+    const row = w.querySelector('.ev'), e = S.events[+w.dataset.i];
     row.querySelectorAll('[data-k]').forEach((f) => f.addEventListener('input', () => {
       e[f.dataset.k] = f.value;
-      if (f.dataset.k === 'icon') row.querySelector('.ei').innerHTML = thumb(e.icon);
+      if (f.dataset.k === 'icon') { renderEvents(); wire(); update(); return; } // les questions dépendent du dessin
       row.classList.toggle('bad', !!e.date && (e.date < S.start || e.date > S.end));
       update();
     }));
-    row.querySelector('[data-del]').onclick = () => { S.events.splice(+row.dataset.i, 1); renderEvents(); wire(); update(); };
+    row.querySelector('[data-del]').onclick = () => { S.events.splice(+w.dataset.i, 1); renderEvents(); wire(); update(); };
+    w.querySelector('[data-more]').onclick = () => { e.open = !e.open; renderEvents(); wire(); };
+    w.querySelectorAll('input[data-q]').forEach((f) => (f.oninput = () => {
+      ansOf(e)[f.dataset.q] = f.value;
+      w.querySelector('[data-brief]').outerHTML = briefHTML(e);
+      w.querySelector('[data-more]').textContent = `Masquer · ${answeredCount(e)} / ${allQ(vigKey(e.icon)).length} détails`;
+      w.querySelector('.ei').innerHTML = thumb(e);
+      update();
+    }));
+    w.querySelectorAll('button[data-q]').forEach((b) => (b.onclick = () => {
+      const a = ansOf(e), id = b.dataset.q;
+      a[id] = a[id] === b.dataset.v ? '' : b.dataset.v;
+      renderEvents(); wire(); update();
+    }));
   });
   j.querySelectorAll('[data-theme]').forEach((b) => (b.onclick = () => { S.theme = b.dataset.theme; renderJourney(); update(); }));
   j.querySelectorAll('[name=fmt]').forEach((r) => (r.onchange = () => { S.format = r.value; renderJourney(); update(); }));
@@ -324,7 +463,7 @@ $('#orderForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const m = $('#orderMsg');
   try {
-    const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), product: 'affiche-' + S.format + (S.frame ? '-cadre' : ''), story: JSON.stringify(S), caption: S.title }) });
+    const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), product: 'affiche-' + S.format + (S.frame ? '-cadre' : ''), story: JSON.stringify({ ...S, briefs: shownEvents(S).map((ev) => ({ title: ev.title, date: ev.date, ...brief(ev) })) }), caption: S.title }) });
     if (!r.ok) throw new Error();
     m.className = 'done'; m.textContent = 'Merci ! Votre demande est envoyée.';
   } catch {
@@ -332,7 +471,7 @@ $('#orderForm').addEventListener('submit', async (e) => {
   }
 });
 
-$('#sample').onclick = () => { S = SAMPLE(); S.step = 5; renderJourney(); update(); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
+$('#sample').onclick = () => { S = SAMPLE(); S.step = 4; renderJourney(); update(); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
 $('#heroArt').innerHTML = poster(SAMPLE());
 renderJourney();
 update();
