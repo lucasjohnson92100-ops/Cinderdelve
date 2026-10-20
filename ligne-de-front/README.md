@@ -231,3 +231,6 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 
 ### Fiches de cartes explicites
 `CARD_TIPS` : pour chaque carte (17 unités, 11 ordres), un « Quand la jouer » dans sa fiche (bouton ⓘ), et pour les cartes à effet particulier la liste des effets ennemis (`fx`) contre lesquels elles sont précieuses. Dans une bataille, si l'ennemi a l'effet concerné (Bunker, Mammouth, Division blindée, mines, tireurs d'élite, obusiers, nids…), la fiche affiche « ★ Utile dans cette bataille » et la carte en main porte une étoile dorée ; un avertissement ⚠ apparaît quand la carte est pénalisée (navires contre la batterie côtière). Libellés courts des cartes précisés (« Ignore bunker/blindage », « Att. ×2 vs blindés », « 60 dégâts sur le QG »…).
+
+### Portraits de jokers ajoutés : Amiral Vague, Intendant Fort, Sergent Intendant
+Générés en 16:9 puis recadrés en carré autour du sujet (`art/jokers/<id>.webp`, `JOKER_ART`). Restent sans portrait (icône par défaut) : quartier, blitz, radio, sapeur, lebrun, faucon, fer, clairon, tenaille, fanfare, triade, mousse, ombre.
