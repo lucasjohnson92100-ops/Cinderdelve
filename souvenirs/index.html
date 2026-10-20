@@ -61,6 +61,15 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outli
 .brief{margin-top:14px;font-size:.9rem;border-top:1px solid var(--line);padding-top:10px}.brief ul{margin:6px 0;padding-left:18px}.brief summary{cursor:pointer;color:var(--muted);font-size:.85rem}
 .brief pre{white-space:pre-wrap;font:.76rem/1.45 ui-monospace,monospace;background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--line);margin:6px 0 0}
 .meter{height:4px;background:var(--line);border-radius:4px;margin:6px 0;overflow:hidden}.meter i{display:block;height:100%;background:var(--ok)}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(154,91,60,.04)}
+.phead{display:flex;align-items:center;gap:12px}.pname{flex:1}.pname small{color:var(--muted)}
+.pfig{width:54px;height:54px;background:#f4e8c8;border-radius:8px;flex:none;display:block}.pfig svg{width:54px;height:54px;display:block}
+.pform{display:grid;grid-template-columns:150px 1fr;gap:16px;margin-top:8px}
+@media(max-width:560px){.pform{grid-template-columns:1fr}}
+.pbig{position:sticky;top:12px;align-self:start}.pbig svg{display:block;width:150px;height:150px;background:#f4e8c8;border-radius:10px}
+.photos{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}.warn{color:var(--err);font-size:.9rem;margin:6px 0 0}
+.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:.9rem;margin:8px 0}.chk input{width:auto;margin-top:4px}
+.thumbs{display:flex;gap:8px;margin:8px 0}.ph{position:relative}.ph img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}.ph .x{position:absolute;top:-6px;right:-2px;background:var(--card);border-radius:50%;width:22px;height:22px;font-size:1rem}
 .x{background:none;border:0;font-size:1.4rem;color:var(--muted);cursor:pointer;line-height:1}
 .bad input[data-k=date]{border-color:var(--err)}
 .count{color:var(--muted);font-size:.88rem}
@@ -167,7 +176,8 @@ const COLORS = { rose: ['Rose', '#d98f8f', 'pink'], rouge: ['Rouge', '#c9645c', 
   violet: ['Violet', '#a99bc9', 'purple'], marron: ['Marron', '#a9714b', 'brown'], noir: ['Noir', '#4d4750', 'black'], gris: ['Gris', '#b3aeb0', 'grey'], blanc: ['Blanc', '#f6efe0', 'white'], creme: ['Crème', '#ecc88a', 'cream'] };
 const shade = (hex, f = 0.75) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('');
 const COMMON = [
-  { id: 'who', label: 'Qui est présent ?', type: 'text', ph: 'Léa, papa, maman…', en: 'People present' },
+  { id: 'pose', label: 'Posture ou geste des personnages', type: 'choice', options: ['Debout', 'Assis', 'Dans les bras', 'Main dans la main', 'Ils trinquent', 'Ils dansent'], en: 'Pose or gesture' },
+  { id: 'who', label: 'Autres personnes présentes (non dessinées)', type: 'text', ph: 'Mamie, les cousins…', en: 'Other people present (not drawn)' },
   { id: 'where', label: 'Où cela se passe-t-il ?', type: 'text', ph: 'Dans le jardin de mamie', en: 'Place' },
   { id: 'mood', label: 'Ambiance', type: 'choice', options: ['Douce', 'Joyeuse', 'Nostalgique', 'Festive'], en: 'Mood' },
   { id: 'detail', label: 'Un détail à ne pas oublier ?', type: 'text', ph: 'Le doudou lapin gris, un ballon rouge…', en: 'Special detail to include' },
@@ -225,7 +235,9 @@ const SPECIFIC = {
 const STYLE_PROMPT = 'Soft antique map illustration style: hand-drawn fine sepia ink linework with gentle watercolor washes in muted sage green, dusty rose, faded teal and warm ochre, on a plain transparent or parchment background, subject centered, no text, no letters.';
 const allQ = (k) => [...(SPECIFIC[k] ? SPECIFIC[k].q : []), ...COMMON];
 const ansOf = (e) => e.a || (e.a = {});
-const answeredCount = (e) => allQ(vigKey(e.icon)).filter((q) => ansOf(e)[q.id]).length;
+const totalQ = (e) => allQ(vigKey(e.icon)).length + 1; // + la liste des personnages
+const eventPeople = (e) => (e.people || []).map((id) => S.people.find((p) => p.id === id)).filter(Boolean).slice(0, 3);
+const answeredCount = (e) => allQ(vigKey(e.icon)).filter((q) => ansOf(e)[q.id]).length + (eventPeople(e).length ? 1 : 0);
 // Couleurs choisies par le client : paires [couleur d'origine, nouvelle couleur] appliquées à la vignette.
 function recolor(e) {
   const out = [];
@@ -244,17 +256,148 @@ function brief(e) {
     lines.push([q.label, q.type === 'color' ? COLORS[v][0].toLowerCase() : v]);
     en.push(`${q.en}: ${q.type === 'color' ? COLORS[v][2] : v}`);
   }
-  const prompt = `A small isolated vignette of ${SPECIFIC[k].base}, personalised for the life event "${e.title.trim()}"${e.date ? ' (' + fmt(e.date) + ')' : ''}.${en.length ? ' Personal details to include: ' + en.join('; ') + '.' : ''} ${STYLE_PROMPT}`;
+  const ppl = eventPeople(e).map((p) => personDesc(p, e.date));
+  if (ppl.length) lines.unshift(['Personnages', ppl.map((d) => `${d.name} (${d.fr})`).join(' ; ')]);
+  const prompt = `A small isolated vignette of ${SPECIFIC[k].base}, personalised for the life event "${e.title.trim()}"${e.date ? ' (' + fmt(e.date) + ')' : ''}.${ppl.length ? ' Draw these people as small, simple, stylised characters with minimal faces, never photorealistic: ' + ppl.map((d) => d.en).join(' | ') + '.' : ''}${en.length ? ' Personal details to include: ' + en.join('; ') + '.' : ''} ${STYLE_PROMPT}`;
   return { lines, prompt };
 }
 
-const blank = () => ({ step: 0, occ: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
+// ---- Personnages ----
+const SKINS = { s1: ['Teinte 1', '#f6d9bf'], s2: ['Teinte 2', '#eec29b'], s3: ['Teinte 3', '#d9a06f'], s4: ['Teinte 4', '#b97a4e'], s5: ['Teinte 5', '#8a5634'], s6: ['Teinte 6', '#5e3a24'] };
+const HAIRC = { noir: ['Noir', '#3f3a40'], brun: ['Brun', '#6b4a33'], chatain: ['Châtain', '#9a6b45'], blond: ['Blond', '#e0b85a'], roux: ['Roux', '#c4622d'], gris: ['Gris', '#aaa6aa'], blanc: ['Blanc', '#efeae0'] };
+const CATS = { bebe: 'Bébé', enfant: 'Enfant', ado: 'Adolescent', adulte: 'Adulte', senior: 'Senior' };
+const catKey = (label) => Object.keys(CATS).find((k) => CATS[k] === label);
+const todayStr = () => new Date().toISOString().slice(0, 10);
+// Tranche d'âge de la personne à une date donnée (date de naissance prioritaire, sinon la tranche choisie).
+function catAt(p, date) {
+  if (p.a.birth && date) {
+    const yrs = (new Date(date) - new Date(p.a.birth)) / 3.15576e10;
+    return yrs < 2 ? 'bebe' : yrs < 12 ? 'enfant' : yrs < 18 ? 'ado' : yrs < 65 ? 'adulte' : 'senior';
+  }
+  return catKey(p.a.cat) || null;
+}
+const isChild = (p) => ['bebe', 'enfant', 'ado'].includes(catAt(p, todayStr()));
+const PDEF = { build: 'Moyenne', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', glasses: 'Non', beard: 'Non', mark: 'Aucun', outfit: 'Pantalon', top: 'bleu', bottom: 'gris', accessory: 'Aucun' };
+const pa = (p) => ({ ...PDEF, ...Object.fromEntries(Object.entries(p.a).filter(([, v]) => v)) });
+const PQ = [
+  { id: 'name', label: 'Prénom', type: 'text', ph: 'Léa' },
+  { id: 'link', label: 'Lien avec vous', type: 'text', ph: 'Ma fille, mon père, mon amie…' },
+  { id: 'birth', label: "Date de naissance (sert à calculer l'âge sur chaque souvenir)", type: 'date' },
+  { id: 'cat', label: "Ou tranche d'âge", type: 'choice', options: Object.values(CATS) },
+  { id: 'build', label: 'Silhouette', type: 'choice', options: ['Mince', 'Moyenne', 'Forte'] },
+  { id: 'skin', label: 'Teinte de peau', type: 'color', palette: SKINS },
+  { id: 'hairstyle', label: 'Cheveux', type: 'choice', options: ['Courts', 'Longs', 'Bouclés', 'Chignon', 'Chauve'] },
+  { id: 'haircolor', label: 'Couleur des cheveux', type: 'color', palette: HAIRC },
+  { id: 'glasses', label: 'Lunettes', type: 'choice', options: ['Non', 'Oui'] },
+  { id: 'beard', label: 'Barbe', type: 'choice', options: ['Non', 'Barbe', 'Moustache'] },
+  { id: 'mark', label: 'Signe visible', type: 'choice', options: ['Aucun', 'Taches de rousseur', 'Grain de beauté', 'Fossettes'] },
+  { id: 'outfit', label: 'Tenue', type: 'choice', options: ['Pantalon', 'Robe ou jupe'] },
+  { id: 'top', label: 'Couleur du haut', type: 'color', colors: ['rose', 'rouge', 'bleu', 'vert', 'jaune', 'violet', 'marron', 'noir', 'gris', 'blanc'] },
+  { id: 'bottom', label: 'Couleur du bas', type: 'color', colors: ['rose', 'rouge', 'bleu', 'vert', 'jaune', 'violet', 'marron', 'noir', 'gris', 'blanc'] },
+  { id: 'accessory', label: 'Accessoire', type: 'choice', options: ['Aucun', 'Chapeau', 'Bonnet', 'Nœud', 'Écharpe'] },
+  { id: 'notes', label: 'Autre détail qui les rend reconnaissables', type: 'text', ph: 'Toujours un chapeau de paille' },
+];
+const EN = { Mince: 'slim', Moyenne: 'average', Forte: 'stocky', Courts: 'short', Longs: 'long', Bouclés: 'curly', Chignon: 'bun', Chauve: 'bald', Oui: 'yes', Non: 'no', Barbe: 'beard', Moustache: 'moustache',
+  'Taches de rousseur': 'freckles', 'Grain de beauté': 'beauty mark', Fossettes: 'dimples', Pantalon: 'trousers', 'Robe ou jupe': 'dress or skirt', Chapeau: 'hat', Bonnet: 'beanie', Nœud: 'hair bow', Écharpe: 'scarf',
+  bebe: 'baby', enfant: 'child', ado: 'teenager', adulte: 'adult', senior: 'senior' };
+const en = (v) => EN[v] || v;
+// Description d'une personne à la date d'un souvenir : texte français (brief) et anglais (prompt).
+function personDesc(p, date) {
+  const r = pa(p), cat = catAt(p, date) || 'adulte', name = p.a.name || 'Sans nom';
+  const hair = r.hairstyle === 'Chauve' ? 'chauve' : `cheveux ${r.hairstyle.toLowerCase()} ${HAIRC[r.haircolor][0].toLowerCase()}`;
+  const fr = [CATS[cat].toLowerCase(), r.build.toLowerCase(), hair, r.glasses === 'Oui' && 'lunettes', r.beard !== 'Non' && r.beard.toLowerCase(), r.mark !== 'Aucun' && r.mark.toLowerCase(),
+    `haut ${COLORS[r.top][0].toLowerCase()}`, r.outfit === 'Robe ou jupe' ? 'robe ou jupe' : `bas ${COLORS[r.bottom][0].toLowerCase()}`, r.accessory !== 'Aucun' && r.accessory.toLowerCase(), p.a.notes].filter(Boolean).join(', ');
+  const enl = [`${name}${p.a.link ? ' (' + p.a.link + ')' : ''}: a ${en(cat)}`, `${en(r.build)} build`, `skin ${SKINS[r.skin][0].toLowerCase()} of 6`, r.hairstyle === 'Chauve' ? 'bald' : `${en(r.hairstyle)} ${en(r.haircolor)} hair`,
+    r.glasses === 'Oui' && 'glasses', r.beard !== 'Non' && en(r.beard), r.mark !== 'Aucun' && en(r.mark), `${COLORS[r.top][2]} top`, r.outfit === 'Robe ou jupe' ? 'dress or skirt' : `${COLORS[r.bottom][2]} bottoms`,
+    r.accessory !== 'Aucun' && en(r.accessory), p.a.notes].filter(Boolean).join(', ');
+  return { name, fr, en: enl };
+}
+
+const FIG = { bebe: { hr: 30, th: 40, lh: 20, sw: 26 }, enfant: { hr: 25, th: 54, lh: 48, sw: 27 }, ado: { hr: 21, th: 66, lh: 74, sw: 31 }, adulte: { hr: 20, th: 70, lh: 84, sw: 34 }, senior: { hr: 20, th: 68, lh: 76, sw: 33 } };
+// Personnage vectoriel dans le même style que les vignettes ; 240 x 240, pieds en bas.
+function personBody(p, cat, pre, ink, paper) {
+  const r = pa(p), A = FIG[cat || 'adulte'], c = { Mince: 0.86, Moyenne: 1, Forte: 1.2 }[r.build] || 1;
+  if (!p.a.haircolor && cat === 'senior') r.haircolor = 'gris';
+  const skin = SKINS[r.skin][1], hair = HAIRC[r.haircolor][1], top = COLORS[r.top][1], bot = COLORS[r.bottom][1];
+  const cx = 120, bottom = 206, hr = A.hr, hw = A.sw * c;
+  const hy = bottom - (2 * hr + 4 + A.th + A.lh) + hr, tTop = hy + hr + 4, tBot = tTop + A.th;
+  const out = [], f = `filter="url(#${pre}h)"`;
+  const ell = (x, y, rx, ry) => `M${x - rx} ${y}A${rx} ${ry} 0 1 0 ${x + rx} ${y}A${rx} ${ry} 0 1 0 ${x - rx} ${y}Z`;
+  const rr = (x, y, w, h, k) => `M${x + k} ${y}H${x + w - k}Q${x + w} ${y} ${x + w} ${y + k}V${y + h - k}Q${x + w} ${y + h} ${x + w - k} ${y + h}H${x + k}Q${x} ${y + h} ${x} ${y + h - k}V${y + k}Q${x} ${y} ${x + k} ${y}Z`;
+  const sh = (d, fill, o = {}) => {
+    const { sw = 1.5, line = true, op = 0.85, mask = true } = o;
+    if (fill && mask) out.push(`<path d="${d}" fill="${paper}" ${f}/>`);
+    if (fill) out.push(`<path d="${d}" fill="${fill}" fill-opacity="${op}" transform="translate(1.3 1.2)" filter="url(#${pre}w)"/>`);
+    if (line) out.push(`<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${f}/>`);
+  };
+  const solid = (d, col) => out.push(`<path d="${d}" fill="${col}" ${f}/>`);
+  const stroke = (d, sw = 1.2) => out.push(`<path d="${d}" fill="none" stroke="${ink}" stroke-width="${sw}" stroke-linecap="round" ${f}/>`);
+  sh(ell(cx, bottom + 3, hw + 16, 5), '#8f7a5a', { line: false, op: 0.3, mask: false });
+  const hairBot = tTop + A.th * 0.5;
+  if (r.hairstyle === 'Longs') sh(`M${cx - hr - 2} ${hy}C${cx - hr - 10} ${hy + hr + 8} ${cx - hr - 7} ${hairBot} ${cx - hr + 4} ${hairBot}L${cx + hr - 4} ${hairBot}C${cx + hr + 7} ${hairBot} ${cx + hr + 10} ${hy + hr + 8} ${cx + hr + 2} ${hy}Z`, hair);
+  const lw = hw * 0.62, legTop = tBot - 4, legBot = bottom - 6, skirt = r.outfit === 'Robe ou jupe' && cat !== 'bebe';
+  const legCol = cat === 'bebe' ? top : skirt ? skin : bot;
+  sh(rr(cx - hw * 0.72, legTop, lw, legBot - legTop, 5), legCol);
+  sh(rr(cx + hw * 0.1, legTop, lw, legBot - legTop, 5), legCol);
+  sh(ell(cx - hw * 0.41, bottom - 3, lw * 0.72, 5), '#7a5a40');
+  sh(ell(cx + hw * 0.41, bottom - 3, lw * 0.72, 5), '#7a5a40');
+  if (skirt) sh(`M${cx - hw * 0.85} ${tBot - 8}H${cx + hw * 0.85}L${cx + hw * 1.3} ${tBot + A.lh * 0.55}H${cx - hw * 1.3}Z`, bot);
+  sh(rr(cx - hw, tTop, hw * 2, A.th, 12), top);
+  for (const sg of [-1, 1]) {
+    sh(rr(sg < 0 ? cx - hw - 9 : cx + hw, tTop + 3, 9, A.th * 0.82, 4.5), top);
+    sh(ell(cx + sg * (hw + 4.5), tTop + 5 + A.th * 0.82, 4.6, 4.6), skin, { sw: 1.2 });
+  }
+  if (r.accessory === 'Écharpe') sh(rr(cx - hw * 0.6, tTop - 4, hw * 1.2, 10, 5), '#c9645c');
+  sh(rr(cx - 5, hy + hr - 4, 10, 10, 3), skin);
+  sh(ell(cx - hr, hy + 2, 3.6, 5), skin, { sw: 1.2 });
+  sh(ell(cx + hr, hy + 2, 3.6, 5), skin, { sw: 1.2 });
+  sh(ell(cx, hy, hr, hr * 1.05), skin);
+  for (const sg of [-1, 1]) sh(ell(cx + sg * hr * 0.55, hy + hr * 0.38, hr * 0.2, hr * 0.14), '#d98f8f', { line: false, op: 0.35, mask: false });
+  if (r.mark === 'Taches de rousseur') for (const [dx, dy] of [[-0.5, 0.25], [-0.35, 0.32], [-0.25, 0.2], [0.25, 0.2], [0.35, 0.32], [0.5, 0.25]]) out.push(`<circle cx="${cx + dx * hr}" cy="${hy + dy * hr}" r="0.9" fill="#a8643f" ${f}/>`);
+  if (r.mark === 'Grain de beauté') out.push(`<circle cx="${cx + hr * 0.45}" cy="${hy + hr * 0.42}" r="1.3" fill="${ink}" ${f}/>`);
+  if (r.mark === 'Fossettes') stroke(`M${cx - hr * 0.42} ${hy + hr * 0.5}q-2 2 0 4M${cx + hr * 0.42} ${hy + hr * 0.5}q2 2 0 4`, 0.9);
+  if (r.beard === 'Barbe') sh(`M${cx - hr * 0.84} ${hy + hr * 0.1}Q${cx - hr * 0.9} ${hy + hr * 1.3} ${cx} ${hy + hr * 1.4}Q${cx + hr * 0.9} ${hy + hr * 1.3} ${cx + hr * 0.84} ${hy + hr * 0.1}Q${cx + hr * 0.45} ${hy + hr * 0.62} ${cx} ${hy + hr * 0.58}Q${cx - hr * 0.45} ${hy + hr * 0.62} ${cx - hr * 0.84} ${hy + hr * 0.1}Z`, hair, { mask: false });
+  stroke(`M${cx - hr * 0.25} ${hy + hr * 0.5}Q${cx} ${hy + hr * 0.7} ${cx + hr * 0.25} ${hy + hr * 0.5}`, 1.3);
+  if (r.beard === 'Moustache') sh(`M${cx - hr * 0.45} ${hy + hr * 0.42}Q${cx} ${hy + hr * 0.28} ${cx + hr * 0.45} ${hy + hr * 0.42}Q${cx} ${hy + hr * 0.52} ${cx - hr * 0.45} ${hy + hr * 0.42}Z`, hair, { mask: false, sw: 1 });
+  stroke(`M${cx} ${hy + hr * 0.2}q-2.5 5 2.5 5`, 1);
+  const eyeY = hy + hr * 0.08, ex = hr * 0.38, er = cat === 'bebe' ? 2.4 : 1.9;
+  for (const sg of [-1, 1]) out.push(`<circle cx="${cx + sg * ex}" cy="${eyeY}" r="${er}" fill="${ink}" ${f}/>`);
+  if (r.glasses === 'Oui') { for (const sg of [-1, 1]) out.push(`<circle cx="${cx + sg * ex}" cy="${eyeY}" r="${hr * 0.27}" fill="none" stroke="${ink}" stroke-width="1.4" ${f}/>`); stroke(`M${cx - hr * 0.11} ${eyeY}H${cx + hr * 0.11}`, 1.2); }
+  if (r.hairstyle !== 'Chauve') {
+    sh(`M${cx - hr - 1} ${hy + 1}A${hr + 1} ${hr + 1} 0 0 1 ${cx + hr + 1} ${hy + 1}Q${cx + hr * 0.7} ${hy - hr * 0.55} ${cx + hr * 0.1} ${hy - hr * 0.5}Q${cx - hr * 0.5} ${hy - hr * 0.62} ${cx - hr - 1} ${hy + 1}Z`, hair);
+    if (r.hairstyle === 'Bouclés') for (let a = 200; a <= 340; a += 28) { const t = (a * Math.PI) / 180; sh(ell(cx + Math.cos(t) * (hr + 1), hy + Math.sin(t) * (hr + 1), hr * 0.34, hr * 0.34), hair, { sw: 1.2 }); }
+    if (r.hairstyle === 'Chignon') sh(ell(cx, hy - hr - hr * 0.3, hr * 0.42, hr * 0.42), hair);
+  }
+  if (r.accessory === 'Chapeau') { sh(rr(cx - hr * 0.72, hy - hr * 1.38, hr * 1.44, hr * 0.9, 9), '#d8b472'); sh(ell(cx, hy - hr * 0.52, hr * 1.5, hr * 0.27), '#d8b472'); }
+  if (r.accessory === 'Bonnet') { sh(`M${cx - hr - 2} ${hy - hr * 0.3}Q${cx - hr} ${hy - hr * 1.6} ${cx} ${hy - hr * 1.6}Q${cx + hr} ${hy - hr * 1.6} ${cx + hr + 2} ${hy - hr * 0.3}Z`, top); sh(rr(cx - hr - 3, hy - hr * 0.45, 2 * hr + 6, hr * 0.3, 5), top); sh(ell(cx, hy - hr * 1.65, 5, 5), '#fffaf0'); }
+  if (r.accessory === 'Nœud') sh(`M${cx + hr * 0.5} ${hy - hr * 0.95}l-10 -7v14zM${cx + hr * 0.5} ${hy - hr * 0.95}l10 -7v14z`, '#c9645c');
+  const filters = `<filter id="${pre}h" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter>`
+    + `<filter id="${pre}w" filterUnits="userSpaceOnUse" x="-20" y="-20" width="280" height="280"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" result="d"/><feGaussianBlur in="d" stdDeviation=".7"/></filter>`;
+  return `<defs>${filters}</defs>${out.join('')}`;
+}
+let figId = 0;
+const personThumb = (p, date) => `<svg viewBox="0 0 240 240" aria-hidden="true">${personBody(p, catAt(p, date || todayStr()) || 'adulte', 'f' + figId++ + '-', '#5a432b', '#f4e8c8')}</svg>`;
+let personSeq = 0;
+const newPerson = (a = {}) => ({ id: 'p' + ++personSeq, a, photos: [], consent: false, open: true });
+
+const blank = () => ({ people: [], step: 0, occ: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
 let S = blank();
 
-const SAMPLE = () => ({ ...blank(), step: 5, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
-  events: [['2025-04-20', 'Premier sourire', 'cradle', { blanket: 'bleu', toy: 'Un lapin gris nommé Bunny', time: 'Nuit' }], ['2025-06-08', 'Baptême', 'chapel', { venue: 'Église', roof: 'bleu' }], ['2025-07-14', 'Premier voyage', 'ship', { dest: 'Lisbonne', mode: 'Bateau', sails: 'rouge' }],
-    ['2025-11-08', 'Rencontre avec Moka', 'puppy', { name: 'Moka', species: 'Chien', coat: 'marron', trait: "Une tache blanche sur l'oreille", where: 'Chez le voisin' }], ['2025-12-25', 'Premier Noël', 'house', { wall: 'jaune', garden: 'Un sapin dans le jardin' }], ['2026-02-14', 'Premiers pas', 'steps', { toycolor: 'rose', ground: 'Parquet' }]]
-    .map(([date, title, icon, a], i) => ({ date, title, icon, a, open: i === 3 })) });
+const SAMPLE = () => {
+  personSeq = 0;
+  const lea = newPerson({ name: 'Léa', link: 'Notre fille', birth: '2025-03-12', build: 'Moyenne', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', top: 'rose' });
+  const maman = newPerson({ name: 'Maman', link: 'Ma femme', birth: '1990-06-02', build: 'Mince', skin: 's2', hairstyle: 'Longs', haircolor: 'chatain', glasses: 'Oui', top: 'bleu', bottom: 'gris' });
+  const papa = newPerson({ name: 'Papa', link: 'Moi', birth: '1987-01-20', build: 'Forte', skin: 's2', hairstyle: 'Courts', haircolor: 'brun', beard: 'Barbe', glasses: 'Oui', top: 'gris', bottom: 'marron' });
+  lea.open = maman.open = papa.open = false;
+  const ev = (date, title, icon, a, people, open = false) => ({ date, title, icon, a, people: people.map((p) => p.id), open });
+  return { ...blank(), people: [lea, maman, papa], step: 5, occ: 'naissance', names: 'Léa', title: 'La première aventure de Léa', start: '2025-03-12', end: '2026-03-12',
+    events: [ev('2025-04-20', 'Premier sourire', 'cradle', { blanket: 'bleu', toy: 'Un lapin gris nommé Bunny', time: 'Nuit', pose: 'Dans les bras' }, [lea, maman]),
+      ev('2025-06-08', 'Baptême', 'chapel', { venue: 'Église', roof: 'bleu', pose: 'Debout' }, [lea, maman, papa]),
+      ev('2025-07-14', 'Premier voyage', 'ship', { dest: 'Lisbonne', mode: 'Bateau', sails: 'rouge' }, [lea, papa]),
+      ev('2025-11-08', 'Rencontre avec Moka', 'puppy', { name: 'Moka', species: 'Chien', coat: 'marron', trait: "Une tache blanche sur l'oreille", where: 'Chez le voisin' }, [lea], true),
+      ev('2025-12-25', 'Premier Noël', 'house', { wall: 'jaune', garden: 'Un sapin dans le jardin', pose: 'Debout' }, [lea, maman, papa]),
+      ev('2026-02-14', 'Premiers pas', 'steps', { toycolor: 'rose', ground: 'Parquet' }, [lea, maman])] };
+};
 
 const shownEvents = (s) => s.events.filter((e) => e.date && e.title.trim()).sort((a, b) => a.date.localeCompare(b.date)).slice(0, maxEvents(s));
 
@@ -271,6 +414,7 @@ function wrap(t, n) {
 }
 
 let posterId = 0;
+const PF = 44; // taille d'un personnage sur l'affiche (2,2 cm de boîte)
 const VSIZE = 80; // taille d'une vignette sur l'affiche, en unités (4 cm)
 const tint = (body, pre, ink, paper, repl = []) => {
   const b = body.split('@P@').join(pre).split('var(--paper,#f4e8c8)').join(paper).split('#5a432b').join(ink);
@@ -294,7 +438,10 @@ function poster(s) {
   const ink = th.ink, variants = new Map(); // une définition par dessin et par jeu de couleurs
   const vid = (e) => { const k = vigKey(e.icon), r = recolor(e), sig = k + JSON.stringify(r); if (!variants.has(sig)) variants.set(sig, { k, r, n: variants.size }); return `${id}-v${variants.get(sig).n}`; };
   const ids = evs.map(vid);
-  let g = `<defs>${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
+  const pvars = new Map(); // un personnage par tranche d'âge
+  const pvid = (p, cat) => { const sig = p.id + cat + JSON.stringify(pa(p)); if (!pvars.has(sig)) pvars.set(sig, { p, cat, n: pvars.size }); return `${id}-q${pvars.get(sig).n}`; };
+  const crowd = evs.map((e) => eventPeople(e).map((p) => pvid(p, catAt(p, e.date) || 'adulte')));
+  let g = `<defs>${[...pvars.values()].map((v) => `<symbol id="${id}-q${v.n}" viewBox="0 0 240 240">${personBody(v.p, v.cat, `${id}-q${v.n}-`, ink, th.bg)}</symbol>`).join('')}${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
   g += `<rect x="16" y="16" width="${W - 32}" height="${H - 32}" fill="none" stroke="${ink}" stroke-width="2"/><rect x="24" y="24" width="${W - 48}" height="${H - 48}" fill="none" stroke="${ink}" stroke-width=".8"/>`;
   g += `<text x="${CX}" y="86" text-anchor="middle" font-family="${SERIF}" font-size="${ts.toFixed(1)}" fill="${ink}">${esc(title)}</text>`;
@@ -313,6 +460,8 @@ function poster(s) {
     g += `<path d="M${rx.toFixed(1)} ${y.toFixed(1)}L${ex} ${y.toFixed(1)}" stroke="${ink}" stroke-width="1.2" stroke-dasharray="2 4" opacity=".8"/>`;
     g += `<circle cx="${p.x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${th.road}" stroke="${ink}" stroke-width="1.6"/>`;
     g += `<use href="#${ids[i]}" x="${cx - VSIZE / 2}" y="${(y - VSIZE / 2).toFixed(1)}" width="${VSIZE}" height="${VSIZE}"/>`;
+    const offs = [[], [28], [-28, 28], [-33, 0, 33]][crowd[i].length];
+    crowd[i].forEach((sid, k) => { g += `<use href="#${sid}" x="${cx + offs[k] - PF / 2}" y="${(y + 30 - PF * 0.86).toFixed(1)}" width="${PF}" height="${PF}"/>`; });
     g += `<text x="${cx}" y="${(y + 49).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="11" fill="${ink}" opacity=".85">${esc(fmt(e.date))}</text>`;
     lines.forEach((ln, k) => { g += `<text x="${cx}" y="${(y + 62 + k * 14).toFixed(1)}" text-anchor="middle" font-family="${SERIF}" font-size="13.5" fill="${ink}">${esc(ln)}</text>`; });
   });
@@ -325,14 +474,39 @@ function poster(s) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aperçu de l'affiche : ${esc(title)}">${g}</svg>`;
 }
 
-const STEPS = 6;
+function photoBlock(p) {
+  const cat = catAt(p, todayStr());
+  let h = '<div class="photos"><b>Photo de référence (facultative)</b>';
+  if (!cat) return h + '<p class="hint">Indiquez d\'abord la date de naissance ou la tranche d\'âge.</p></div>';
+  if (isChild(p)) return h + '<p class="warn">Nous n\'acceptons pas les photos de personnes de moins de 18 ans. Décrivez cette personne avec les questions ci-dessus : le dessin est réalisé sans photo.</p></div>';
+  h += `<label class="chk"><input type="checkbox" data-consent ${p.consent ? 'checked' : ''}> J'ai l'accord de cette personne pour utiliser sa photo comme modèle.</label>
+    <input type="file" data-file accept="image/jpeg,image/png,image/webp" multiple ${p.consent && p.photos.length < 2 ? '' : 'disabled'}>
+    <div class="thumbs">${p.photos.map((f, i) => `<span class="ph"><img src="${f.url}" alt="${esc(f.name)}"><button type="button" class="x" data-rmphoto="${i}" aria-label="Retirer la photo">×</button></span>`).join('')}</div>
+    <p class="hint" data-photomsg>Adultes uniquement, 2 photos au maximum (5 Mo chacune). Elle sert de modèle au dessinateur et n'est jamais imprimée. Maquette : la photo reste sur votre appareil.</p></div>`;
+  return h;
+}
+
+function peopleStepHTML() {
+  const cards = S.people.map((p, i) => {
+    const cat = catAt(p, todayStr()), name = p.a.name || 'Nouvelle personne';
+    const head = `<div class="phead"><span class="pfig">${personThumb(p)}</span><div class="pname"><b>${esc(name)}</b><br><small>${cat ? CATS[cat] : 'Âge à préciser'}${p.a.link ? ' · ' + esc(p.a.link) : ''}</small></div>
+      <button type="button" class="link" data-popen>${p.open ? 'Réduire' : 'Modifier'}</button><button type="button" class="x" data-pdel aria-label="Supprimer ${esc(name)}">×</button></div>`;
+    const form = p.open ? `<div class="pform"><div class="pbig">${personThumb(p)}<p class="hint">L'aperçu se met à jour pendant que vous répondez.</p></div><div>${PQ.map((q) => `<div class="q"><label>${q.label}</label>${fieldHTML(q, p.a[q.id] || '', 'pq')}</div>`).join('')}${photoBlock(p)}</div></div>` : '';
+    return `<div class="pcard" data-p="${i}">${head}${form}</div>`;
+  }).join('');
+  return `<h2>Qui apparaît dans votre histoire ?</h2><p class="hint">Décrivez chaque personne une seule fois : vous pourrez ensuite l'ajouter à vos souvenirs, dessinée à l'âge qu'elle avait ce jour-là. Étape facultative.</p>${cards}
+    <button type="button" class="btn ghost" id="addPerson" ${S.people.length >= 6 ? 'disabled' : ''}>+ Ajouter une personne</button><p class="count">${S.people.length} / 6 personnes.</p>`;
+}
+
+const STEPS = 7;
 function stepError() {
   if (S.step === 1 && !S.names.trim()) return 'Indiquez au moins un prénom.';
   if (S.step === 2) {
     if (!S.start || !S.end) return 'Renseignez les deux dates.';
     if (S.end <= S.start) return 'La date de fin doit être après la date de début.';
   }
-  if (S.step === 4) {
+  if (S.step === 3 && S.people.some((p) => !(p.a.name || '').trim())) return 'Donnez un prénom à chaque personne, ou supprimez-la.';
+  if (S.step === 5) {
     const ok = S.events.filter((e) => e.date && e.title.trim());
     if (ok.length < 1) return 'Ajoutez au moins un souvenir avec une date et un titre.';
     if (ok.some((e) => e.date < S.start || e.date > S.end)) return 'Une date est en dehors de la période choisie.';
@@ -352,10 +526,12 @@ function renderJourney() {
   } else if (S.step === 2) {
     h += `<h2>Où commence la route, où s'arrête-t-elle ?</h2><div class="dates"><div><label for="start">${oc.sLab}</label><input id="start" type="date" value="${S.start}"></div><div><label for="end">${oc.eLab}</label><input id="end" type="date" value="${S.end}"></div></div>`;
   } else if (S.step === 3) {
+    h += peopleStepHTML();
+  } else if (S.step === 4) {
     h += `<h2>Quelle taille d'affiche ?</h2><p class="hint">Plus l'affiche est grande, plus elle peut raconter de moments sans devenir illisible.</p>
       <div class="fmt">${Object.entries(FORMATS).map(([k, f]) => `<label><input type="radio" name="fmt" value="${k}" ${S.format === k ? 'checked' : ''}><span><b>${f.label}</b><br><small>jusqu'à ${maxEvents({ format: k })} souvenirs · ${f.price} €</small></span></label>`).join('')}</div>`;
     if (S.events.length > maxEvents(S)) h += `<p class="err">Vous avez déjà ${S.events.length} souvenirs : ce format n'en accueille que ${maxEvents(S)}.</p>`;
-  } else if (S.step === 4) {
+  } else if (S.step === 5) {
     h += `<h2>Les moments qui comptent</h2><p class="hint">Choisissez une idée ou écrivez la vôtre. Chaque souvenir devient un petit dessin le long de la route.</p>
       <div class="chips" id="sugs">${oc.sug.map(([t, ic], i) => `<button type="button" class="chip" data-sug="${i}">${esc(t)}</button>`).join('')}</div><div id="evs"></div>
       <p class="count" id="count"></p><button type="button" class="btn ghost" id="addEv">+ Ajouter un souvenir</button>`;
@@ -367,26 +543,33 @@ function renderJourney() {
   }
   h += `<p class="err" id="err" role="alert"></p><div class="nav"><button type="button" class="btn ghost" id="prev" ${S.step === 0 ? 'hidden' : ''}>Retour</button>${S.step === 0 ? '<span></span>' : ''}<button type="button" class="btn" id="next" ${S.step === 0 ? 'hidden' : ''}>${S.step === STEPS - 1 ? 'Commander' : 'Continuer'}</button></div>`;
   $('#journey').innerHTML = h;
-  if (S.step === 4) { renderEvents(); }
+  if (S.step === 5) { renderEvents(); }
   wire();
 }
 
 function briefHTML(e) {
-  const n = answeredCount(e), tot = allQ(vigKey(e.icon)).length, bf = brief(e);
+  const n = answeredCount(e), tot = totalQ(e), bf = brief(e);
   return `<div class="brief" data-brief><b>Brief du dessin</b> <span class="count">${n} / ${tot} détails</span><div class="meter"><i style="width:${(n / tot) * 100}%"></i></div>
     ${bf.lines.length ? `<ul>${bf.lines.map(([l, v]) => `<li>${esc(l)} : <b>${esc(v)}</b></li>`).join('')}</ul>` : '<p class="hint">Aucune précision pour l\'instant : nous dessinerons la version standard.</p>'}
     <details><summary>Texte transmis à l'illustrateur</summary><pre>${esc(bf.prompt)}</pre></details></div>`;
 }
 
+// Champ de formulaire commun aux questions des souvenirs (clé "q") et des personnages (clé "pq").
+function fieldHTML(q, v, key) {
+  if (q.type === 'text') return `<input data-${key}="${q.id}" value="${esc(v)}" maxlength="80" placeholder="${esc(q.ph || '')}">`;
+  if (q.type === 'date') return `<input type="date" data-${key}="${q.id}" value="${esc(v)}" max="${todayStr()}">`;
+  if (q.type === 'choice') return `<div class="chips">${q.options.map((o) => `<button type="button" class="chip" data-${key}="${q.id}" data-v="${esc(o)}" aria-pressed="${v === o}">${o}</button>`).join('')}</div>`;
+  const pal = q.palette || COLORS;
+  return `<div class="sws">${(q.colors || Object.keys(pal)).map((c) => `<button type="button" class="sw" style="background:${pal[c][1]}" title="${pal[c][0]}" aria-label="${pal[c][0]}" data-${key}="${q.id}" data-v="${c}" aria-pressed="${v === c}"></button>`).join('')}</div>`;
+}
+
 function detailHTML(e) {
-  const k = vigKey(e.icon), a = ansOf(e);
-  const field = (q) => {
-    const v = a[q.id] || '';
-    if (q.type === 'text') return `<input data-q="${q.id}" value="${esc(v)}" maxlength="80" placeholder="${esc(q.ph)}">`;
-    if (q.type === 'choice') return `<div class="chips">${q.options.map((o) => `<button type="button" class="chip" data-q="${q.id}" data-v="${esc(o)}" aria-pressed="${v === o}">${o}</button>`).join('')}</div>`;
-    return `<div class="sws">${q.colors.map((c) => `<button type="button" class="sw" style="background:${COLORS[c][1]}" title="${COLORS[c][0]}" aria-label="${COLORS[c][0]}" data-q="${q.id}" data-v="${c}" aria-pressed="${v === c}"></button>`).join('')}</div>`;
-  };
-  return `<p class="hint">Plus vous précisez, plus le dessin vous ressemblera. Tout est facultatif.</p>${allQ(k).map((q) => `<div class="q"><label>${q.label}</label>${field(q)}</div>`).join('')}
+  const k = vigKey(e.icon), a = ansOf(e), sel = e.people || [];
+  const who = S.people.length
+    ? `<div class="q"><label>Qui apparaît dans ce souvenir ?</label><div class="chips">${S.people.map((p) => `<button type="button" class="chip" data-ep="${p.id}" aria-pressed="${sel.includes(p.id)}">${esc(p.a.name || 'Sans nom')}</button>`).join('')}</div>
+      <p class="hint">Trois personnages au maximum par souvenir. Ils sont dessinés à l'âge qu'ils avaient ce jour-là.</p></div>`
+    : '<p class="hint">Ajoutez des personnages à l\'étape précédente pour les faire apparaître dans vos souvenirs.</p>';
+  return `<p class="hint">Plus vous précisez, plus le dessin vous ressemblera. Tout est facultatif.</p>${who}${allQ(k).map((q) => `<div class="q"><label>${q.label}</label>${fieldHTML(q, a[q.id] || '', 'q')}</div>`).join('')}
     ${briefHTML(e)}`;
 }
 
@@ -395,10 +578,10 @@ function renderEvents() {
   $('#evs').innerHTML = S.events.map((e, i) => `<div class="evw" data-i="${i}"><div class="ev ${e.date && (e.date < S.start || e.date > S.end) ? 'bad' : ''}" data-i="${i}"><span class="ei">${thumb(e)}</span>
     <input type="date" data-k="date" min="${S.start}" max="${S.end}" value="${e.date}" aria-label="Date"><input data-k="title" value="${esc(e.title)}" maxlength="40" placeholder="Titre" aria-label="Titre">
     <select data-k="icon" aria-label="Dessin">${opts(e.icon)}</select><button type="button" class="x" data-del aria-label="Supprimer">×</button></div>
-    <button type="button" class="link more" data-more aria-expanded="${!!e.open}">${e.open ? 'Masquer' : 'Personnaliser le dessin'} · ${answeredCount(e)} / ${allQ(vigKey(e.icon)).length} détails</button>
+    <button type="button" class="link more" data-more aria-expanded="${!!e.open}">${e.open ? 'Masquer' : 'Personnaliser le dessin'} · ${answeredCount(e)} / ${totalQ(e)} détails</button>
     ${e.open ? `<div class="detail">${detailHTML(e)}</div>` : ''}</div>`).join('');
   const full = S.events.length >= maxEvents(S);
-  const done = S.events.reduce((t, e) => t + answeredCount(e), 0), tot = S.events.reduce((t, e) => t + allQ(vigKey(e.icon)).length, 0);
+  const done = S.events.reduce((t, e) => t + answeredCount(e), 0), tot = S.events.reduce((t, e) => t + totalQ(e), 0);
   $('#count').textContent = `${S.events.length} / ${maxEvents(S)} souvenirs pour le format ${FORMATS[S.format].label}. Détails renseignés : ${done} / ${tot}.`;
   $('#addEv').disabled = full;
   document.querySelectorAll('#sugs .chip').forEach((c) => (c.disabled = full));
@@ -430,7 +613,7 @@ function wire() {
     w.querySelectorAll('input[data-q]').forEach((f) => (f.oninput = () => {
       ansOf(e)[f.dataset.q] = f.value;
       w.querySelector('[data-brief]').outerHTML = briefHTML(e);
-      w.querySelector('[data-more]').textContent = `Masquer · ${answeredCount(e)} / ${allQ(vigKey(e.icon)).length} détails`;
+      w.querySelector('[data-more]').textContent = `Masquer · ${answeredCount(e)} / ${totalQ(e)} détails`;
       w.querySelector('.ei').innerHTML = thumb(e);
       update();
     }));
@@ -440,6 +623,43 @@ function wire() {
       renderEvents(); wire(); update();
     }));
   });
+  on('#addPerson', 'click', () => { S.people.forEach((p) => (p.open = false)); S.people.push(newPerson()); renderJourney(); });
+  j.querySelectorAll('.pcard').forEach((card) => {
+    const p = S.people[+card.dataset.p];
+    const refresh = () => { card.querySelector('.pfig').innerHTML = personThumb(p); const big = card.querySelector('.pbig svg'); if (big) big.outerHTML = personThumb(p); card.querySelector('.pname').innerHTML = `<b>${esc(p.a.name || 'Nouvelle personne')}</b><br><small>${catAt(p, todayStr()) ? CATS[catAt(p, todayStr())] : 'Âge à préciser'}${p.a.link ? ' · ' + esc(p.a.link) : ''}</small>`; update(); };
+    card.querySelector('[data-popen]').onclick = () => { p.open = !p.open; renderJourney(); };
+    card.querySelector('[data-pdel]').onclick = () => { S.people.splice(+card.dataset.p, 1); S.events.forEach((e) => (e.people = (e.people || []).filter((id) => id !== p.id))); renderJourney(); update(); };
+    card.querySelectorAll('input[data-pq]').forEach((f) => {
+      f.oninput = () => { p.a[f.dataset.pq] = f.value; if (f.type !== 'date') refresh(); };
+      if (f.type === 'date') f.onchange = () => { p.a.birth = f.value; if (isChild(p)) p.photos = []; renderJourney(); update(); };
+    });
+    card.querySelectorAll('button[data-pq]').forEach((b) => (b.onclick = () => {
+      const id = b.dataset.pq; p.a[id] = p.a[id] === b.dataset.v ? '' : b.dataset.v;
+      if (id === 'cat' && isChild(p)) p.photos = [];
+      renderJourney(); update();
+    }));
+    const consent = card.querySelector('[data-consent]');
+    if (consent) consent.onchange = () => { p.consent = consent.checked; renderJourney(); };
+    const file = card.querySelector('[data-file]');
+    if (file) file.onchange = () => {
+      const msg = card.querySelector('[data-photomsg]'); let err = '';
+      for (const f of file.files) {
+        if (p.photos.length >= 2) { err = '2 photos au maximum.'; break; }
+        if (!/^image\/(jpeg|png|webp)$/.test(f.type)) { err = 'Format refusé : JPEG, PNG ou WebP uniquement.'; continue; }
+        if (f.size > 5 * 1024 * 1024) { err = 'Photo trop lourde (5 Mo maximum).'; continue; }
+        p.photos.push({ name: f.name, url: URL.createObjectURL(f) });
+      }
+      renderJourney();
+      if (err) { const m = $('#journey').querySelectorAll('.pcard')[+card.dataset.p]?.querySelector('[data-photomsg]'); if (m) { m.textContent = err; m.className = 'warn'; } }
+    };
+    card.querySelectorAll('[data-rmphoto]').forEach((b) => (b.onclick = () => { URL.revokeObjectURL(p.photos[+b.dataset.rmphoto].url); p.photos.splice(+b.dataset.rmphoto, 1); renderJourney(); }));
+  });
+  j.querySelectorAll('button[data-ep]').forEach((b) => (b.onclick = () => {
+    const w = b.closest('.evw'), e = S.events[+w.dataset.i], sel = e.people || (e.people = []);
+    const i = sel.indexOf(b.dataset.ep);
+    if (i >= 0) sel.splice(i, 1); else if (sel.length < 3) sel.push(b.dataset.ep);
+    renderEvents(); wire(); update();
+  }));
   j.querySelectorAll('[data-theme]').forEach((b) => (b.onclick = () => { S.theme = b.dataset.theme; renderJourney(); update(); }));
   j.querySelectorAll('[name=fmt]').forEach((r) => (r.onchange = () => { S.format = r.value; renderJourney(); update(); }));
   on('#frame', 'change', (e) => { S.frame = e.target.checked; renderJourney(); });
@@ -463,7 +683,7 @@ $('#orderForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const m = $('#orderMsg');
   try {
-    const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), product: 'affiche-' + S.format + (S.frame ? '-cadre' : ''), story: JSON.stringify({ ...S, briefs: shownEvents(S).map((ev) => ({ title: ev.title, date: ev.date, ...brief(ev) })) }), caption: S.title }) });
+    const r = await fetch('/api/order', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...Object.fromEntries(new FormData(e.target)), product: 'affiche-' + S.format + (S.frame ? '-cadre' : ''), story: JSON.stringify({ ...S, people: S.people.map((p) => ({ ...p, photos: p.photos.map((f) => f.name) })), briefs: shownEvents(S).map((ev) => ({ title: ev.title, date: ev.date, ...brief(ev) })) }), caption: S.title }) });
     if (!r.ok) throw new Error();
     m.className = 'done'; m.textContent = 'Merci ! Votre demande est envoyée.';
   } catch {
@@ -471,7 +691,7 @@ $('#orderForm').addEventListener('submit', async (e) => {
   }
 });
 
-$('#sample').onclick = () => { S = SAMPLE(); S.step = 4; renderJourney(); update(); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
+$('#sample').onclick = () => { S = SAMPLE(); S.step = 5; renderJourney(); update(); $('#creer').scrollIntoView({ behavior: 'smooth' }); };
 $('#heroArt').innerHTML = poster(SAMPLE());
 renderJourney();
 update();
