@@ -25,3 +25,12 @@ Animations (motion design) : l'affiche se dessine (route tracée, souvenirs et a
 Les textes et les dates sont écrits par le code, jamais par une IA d'images.
 
 Test local : `cd souvenirs && python3 -m http.server 8000`.
+
+## Page de précommande
+
+`precommande.html` : page pour tester la demande et le prix avant le lancement (produits et prix envisagés, galerie des modèles, formulaire : e-mail, occasion, produits, prix jugé juste pour un 30 × 40, échéance, consentement).
+
+- En ligne (Netlify) : le formulaire est un formulaire Netlify Forms (`data-netlify="true"`, anti-robot `bot-field`). Activer la détection des formulaires dans les réglages du site Netlify ; les réponses arrivent dans l'onglet Formulaires.
+- En artefact claude.ai : les réponses vont dans la base de l'artefact (`precommandes/<id de la personne>`), et un tableau des résultats n'est visible que par le propriétaire. Seules les personnes de l'organisation peuvent y écrire : pour le public, utiliser la version Netlify.
+- Les affiches de la page viennent de `assets/`, régénérés par `export_posters.js` (`NODE_PATH=$(npm root -g) node export_posters.js`) après un changement du dessin.
+- `python3 build_artifact.py precommande.html` fabrique la version artefact dans `.artifact/`.
