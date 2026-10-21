@@ -143,6 +143,10 @@ footer{text-align:center;color:var(--muted);padding:24px;border-top:1px solid va
 .meter i{transition:width .6s cubic-bezier(.2,.8,.3,1)}
 .meter.full i{background:linear-gradient(90deg,var(--ok),#d8a85c);animation:m-glow 1.6s ease-out 1}
 input:focus,select:focus{transition:box-shadow .2s;box-shadow:0 0 0 4px rgba(154,91,60,.12)}
+.poster.tall{background:transparent;box-shadow:none}.poster.tall svg{height:min(82vh,1100px);width:auto;max-width:100%;margin:0 auto;box-shadow:0 12px 30px rgba(74,54,35,.2)}
+.toisecard{width:100%}
+.mh{font:1.15rem var(--serif);margin:18px 0 2px}
+.mrow{display:grid;grid-template-columns:1fr 130px 30px;gap:6px;align-items:center;margin:8px 0}
 /* modèles */
 .tplshow{max-width:1040px;margin:0 auto 44px;padding:0 20px}
 .tplshow h2{font-size:clamp(1.5rem,3.5vw,2rem);text-wrap:balance;margin:0 0 4px}
@@ -272,10 +276,20 @@ const FORMATS = {
   '21x30': { label: '21 × 30 cm', price: 19, w: 420, h: 600 },
   '30x40': { label: '30 × 40 cm', price: 29, w: 600, h: 800 },
   '50x70': { label: '50 × 70 cm', price: 49, w: 1000, h: 1400 },
+  toise: { label: 'Toise 30 × 100 cm', price: 59, w: 600, h: 2000, toise: true },
 };
+const TOISE = { base: 50, top: 140, bottom: 40 }; // centimètres imprimés sur la règle ; bottom = marge basse en unités
+const toiseY = (H, cm) => H - TOISE.bottom - (cm - TOISE.base) * 20;
+const MAX_TOISE_EVENTS = 12;
+// Âge à une date, à partir d'une date de naissance : « 8 mois » puis « 3 ans ».
+function ageLabel(birth, date) {
+  const b = new Date(birth + 'T12:00'), d = new Date(date + 'T12:00');
+  const m = (d.getFullYear() - b.getFullYear()) * 12 + d.getMonth() - b.getMonth() - (d.getDate() < b.getDate() ? 1 : 0);
+  return m < 0 ? '' : m < 24 ? `${m} mois` : `${Math.floor(m / 12)} ans`;
+}
 const FRAME_PRICE = 19;
 const Y_END = 205, Y_MARGIN = 75, SLOT = 58; // route : de h - Y_MARGIN à Y_END, un souvenir tous les 58 unités
-const maxEvents = (s) => Math.floor((FORMATS[s.format].h - Y_MARGIN - Y_END) / SLOT) - 1;
+const maxEvents = (s) => Math.min(FORMATS[s.format].toise ? MAX_TOISE_EVENTS : Infinity, Math.floor((FORMATS[s.format].h - Y_MARGIN - Y_END) / SLOT) - 1);
 
 // Questions posées pour chaque souvenir : elles servent à (1) recolorer le dessin dans l'aperçu et (2) rédiger un brief détaillé
 // pour l'illustrateur (ou la génération par IA, relue ensuite). `target` = couleur de la vignette remplacée par le choix du client.
@@ -616,7 +630,7 @@ const personThumb = (p, date) => `<svg viewBox="0 0 240 240" aria-hidden="true">
 let personSeq = 0;
 const newPerson = (a = {}) => ({ id: 'p' + ++personSeq, a, photos: [], consent: false, open: true });
 
-const blank = () => ({ people: [], step: 0, occ: '', tpl: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
+const blank = () => ({ people: [], measures: [], step: 0, occ: '', tpl: '', names: '', title: '', titleEdited: false, start: '', end: '', events: [], theme: 'parchemin', format: '30x40', frame: false });
 let S = blank();
 
 const SAMPLE = () => {
@@ -757,6 +771,25 @@ function tplExtras(c) {
   return r;
 }
 
+// Règle de la toise : graduations au centimètre, chiffres tous les 10 cm, mesures de l'enfant déjà prises.
+function toiseRuler(s, W, H, ink, th) {
+  const x0 = 26, x1 = 108, top = toiseY(H, TOISE.top) - 14, birth = ['naissance', 'anniversaire'].includes(s.occ) ? s.start : '';
+  let r = `<rect x="${x0}" y="${top}" width="${x1 - x0}" height="${H - 24 - top}" fill="${th.road}" fill-opacity=".7"/><path d="M${x1} ${top}V${H - 24}" stroke="${ink}" stroke-width="1.4"/>`;
+  for (let cm = TOISE.base; cm <= TOISE.top; cm++) {
+    const y = toiseY(H, cm).toFixed(1), len = cm % 10 === 0 ? 30 : cm % 5 === 0 ? 18 : 10;
+    r += `<path d="M${x0} ${y}h${len}" stroke="${ink}" stroke-width="${cm % 10 === 0 ? 1.6 : 0.9}"/>`;
+    if (cm % 10 === 0) r += `<text x="${x0 + 36}" y="${(+y + 5).toFixed(1)}" font-family="${SERIF}" font-size="16" fill="${ink}">${cm}</text>`;
+  }
+  r += `<text transform="rotate(-90 ${x1 - 8} ${H - 110})" x="${x1 - 8}" y="${H - 110}" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="10" fill="${ink}" opacity=".75">accrocher à 50 cm du sol</text>`;
+  for (const m of (s.measures || []).filter((q) => q.date && q.cm >= TOISE.base && q.cm <= TOISE.top)) {
+    const y = toiseY(H, +m.cm);
+    r += `<path d="M${x0} ${y}H${x1 + 10}" stroke="${th.wash[1]}" stroke-width="3" stroke-linecap="round"/><path d="${MOTIF.star(x1 + 14, y, 6)}" fill="${th.wash[3]}" stroke="${ink}" stroke-width="1"/>`
+      + `<text x="${x1 - 4}" y="${y - 5}" text-anchor="end" font-family="${SERIF}" font-size="12" font-weight="bold" fill="${ink}">${esc(String(m.cm))} cm</text>`
+      + `<text x="${x1 - 4}" y="${y + 11}" text-anchor="end" font-family="${SERIF}" font-style="italic" font-size="9" fill="${ink}">${esc(birth ? ageLabel(birth, m.date) || fmt(m.date) : fmt(m.date))}</text>`;
+  }
+  return r;
+}
+
 // Repères de départ et d'arrivée selon le modèle.
 function tplEnds(c, a, b) {
   const { ink, th, tk, Y0 } = c;
@@ -801,8 +834,10 @@ function poster(s, o = {}) {
   evs.forEach((e) => (e.id ||= 'e' + ++evSeq));
   const tk = tplOf(s), T = TPL[tk], u0 = tk === 'couple' ? 0.14 : 0, evU = (f) => u0 + (1 - u0) * f; // « Deux chemins » : la route commune commence plus haut
   const delay = (u) => (0.25 + 1.5 * u).toFixed(2) + 's'; // apparition au moment où la route passe
-  const small = W < 500, amp = (small ? 38 : W < 700 ? 66 : 100) * T.amp, colX = small ? 82 : W < 700 ? 105 : 150, wrapN = small ? 15 : 20, waves = (Y0 - Y1) / 260;
-  const at = (u) => ({ x: CX + amp * Math.sin(u * Math.PI * 2 * waves + 0.5), y: Y0 - u * (Y0 - Y1) });
+  const toise = !!F.toise, RX = toise ? 345 : CX; // sur la toise, la route laisse la place à la règle, à gauche
+  const small = W < 500, amp = (toise ? 55 : small ? 38 : W < 700 ? 66 : 100) * T.amp, colX = small ? 82 : W < 700 ? 105 : 150, wrapN = small ? 15 : 20, waves = (Y0 - Y1) / 260;
+  const colL = toise ? 180 : colX, colR = toise ? W - 88 : W - colX;
+  const at = (u) => ({ x: RX + amp * Math.sin(u * Math.PI * 2 * waves + 0.5), y: Y0 - u * (Y0 - Y1) });
   const N = Math.ceil(waves * 60), pts = Array.from({ length: N + 1 }, (_, i) => at(u0 + ((1 - u0) * i) / N));
   const d = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join('');
   const title = s.title.trim() || oc.title.replace('{n}', s.names.trim() || '…');
@@ -816,8 +851,9 @@ function poster(s, o = {}) {
   const crowd = evs.map((e) => eventPeople(e).map((p) => { const cat = catAt(p, e.date) || 'adulte'; return { sid: pvid(p, cat), z: ZS[cat] }; }));
   let g = `<defs>${[...pvars.values()].map((v) => `<symbol id="${id}-q${v.n}" viewBox="0 0 240 240">${personBody(v.p, v.cat, `${id}-q${v.n}-`, ink, th.bg)}</symbol>`).join('')}${[...variants.values()].map((v) => `<symbol id="${id}-v${v.n}" viewBox="0 0 240 240">${tint(VIG[v.k].body, `${id}-${v.n}-`, ink, th.bg, v.r)}</symbol>`).join('')}<radialGradient id="${id}" cx="50%" cy="50%" r="75%"><stop offset="60%" stop-color="${ink}" stop-opacity="0"/><stop offset="100%" stop-color="${ink}" stop-opacity=".22"/></radialGradient></defs>`;
   g += `<rect width="${W}" height="${H}" fill="${th.bg}"/>`;
-  const c = { W, H, CX, ink, th, tk, id, at, s, evs, evU, n, delay, u0, Y0, starts: [CX - W * 0.24, CX + W * 0.24] };
+  const c = { W, H, CX, ink, th, tk, id, at, s, evs, evU, n, delay, u0, Y0, starts: toise ? [RX - 110, RX + 110] : [CX - W * 0.24, CX + W * 0.24] };
   g += tplFrame(c);
+  if (toise) g += toiseRuler(s, W, H, ink, th);
   g += '<g class="m-ttl">';
   g += `<text x="${CX}" y="86" text-anchor="middle" font-family="${SERIF}" font-size="${ts.toFixed(1)}" fill="${ink}">${esc(title)}</text>`;
   if (s.start && s.end) g += `<text x="${CX}" y="116" text-anchor="middle" font-family="${SERIF}" font-style="italic" font-size="15" fill="${ink}" opacity=".85">du ${esc(fmt(s.start))} au ${esc(fmt(s.end))}</text>`;
@@ -829,7 +865,7 @@ function poster(s, o = {}) {
   }
   g += tplRoad(c, d) + tplExtras(c);
   evs.forEach((e, i) => {
-    const p = at(evU((i + 1) / (n + 1))), left = i % 2 === 0, cx = left ? colX : W - colX, y = p.y;
+    const p = at(evU((i + 1) / (n + 1))), left = i % 2 === 0, cx = left ? colL : colR, y = p.y;
     const ex = left ? cx + 35 : cx - 35, rx = left ? p.x - 9 : p.x + 9;
     const lines = wrap(e.title.trim(), wrapN);
     g += `<g class="m-ev${pop.has(e.id) ? ' pop' : ''}" style="--d:${delay(evU((i + 1) / (n + 1)))}">`;
@@ -885,6 +921,7 @@ function stepError() {
     if (S.end <= S.start) return 'La date de fin doit être après la date de début.';
   }
   if (S.step === 3 && S.people.some((p) => !(p.a.name || '').trim())) return 'Donnez un prénom à chaque personne, ou supprimez-la.';
+  if (S.step === 4 && S.format === 'toise' && S.measures.some((m) => !m.date || !(m.cm >= TOISE.base && m.cm <= TOISE.top))) return `Chaque mesure doit avoir une date et une taille entre ${TOISE.base} et ${TOISE.top} cm.`;
   if (S.step === 5) {
     const ok = S.events.filter((e) => e.date && e.title.trim());
     if (ok.length < 1) return 'Ajoutez au moins un souvenir avec une date et un titre.';
@@ -911,7 +948,15 @@ function renderJourney() {
     h += peopleStepHTML();
   } else if (S.step === 4) {
     h += `<h2>Quelle taille d'affiche ?</h2><p class="hint">Plus l'affiche est grande, plus elle peut raconter de moments sans devenir illisible.</p>
-      <div class="fmt">${Object.entries(FORMATS).map(([k, f]) => `<label><input type="radio" name="fmt" value="${k}" ${S.format === k ? 'checked' : ''}><span><b>${f.label}</b><br><small>jusqu'à ${maxEvents({ format: k })} souvenirs · ${f.price} €</small></span></label>`).join('')}</div>`;
+      <div class="fmt">${Object.entries(FORMATS).filter(([, f]) => !f.toise).map(([k, f]) => `<label><input type="radio" name="fmt" value="${k}" ${S.format === k ? 'checked' : ''}><span><b>${f.label}</b><br><small>jusqu'à ${maxEvents({ format: k })} souvenirs · ${f.price} €</small></span></label>`).join('')}</div>
+      <label>Pour une chambre d'enfant</label>
+      <div class="fmt"><label class="toisecard"><input type="radio" name="fmt" value="toise" ${S.format === 'toise' ? 'checked' : ''}><span><b>Toise de croissance 30 × 100 cm · ${FORMATS.toise.price} €</b><br><small>La route monte le long d'une règle graduée de 50 à 140 cm, à accrocher à 50 cm du sol. Jusqu'à ${MAX_TOISE_EVENTS} souvenirs, et les tailles déjà mesurées imprimées sur la règle.</small></span></label></div>`;
+    if (S.format === 'toise') {
+      h += `<h3 class="mh">Les tailles déjà mesurées</h3><p class="hint">Elles sont imprimées sur la règle. Les suivantes s'ajouteront au crayon. La règle commence à 50 cm.</p>
+        <div id="measures">${S.measures.map((m, i) => `<div class="mrow" data-mi="${i}"><input type="date" data-mk="date" value="${esc(m.date || '')}" aria-label="Date de la mesure"><input type="number" data-mk="cm" min="${TOISE.base}" max="${TOISE.top}" step="0.5" value="${esc(String(m.cm ?? ''))}" placeholder="Taille en cm" aria-label="Taille en centimètres"><button type="button" class="x" data-mdel aria-label="Supprimer la mesure">×</button></div>`).join('')}</div>
+        <button type="button" class="btn ghost" id="addMeasure" ${S.measures.length >= 10 ? 'disabled' : ''}>+ Ajouter une mesure</button>`;
+      if (!['naissance', 'anniversaire', 'autre'].includes(S.occ)) h += '<p class="hint">La toise est pensée pour un enfant : elle convient surtout aux occasions Naissance et Anniversaire.</p>';
+    }
     if (S.events.length > maxEvents(S)) h += `<p class="err">Vous avez déjà ${S.events.length} souvenirs : ce format n'en accueille que ${maxEvents(S)}.</p>`;
   } else if (S.step === 5) {
     h += `<h2>Les moments qui comptent</h2><p class="hint">Choisissez une idée ou écrivez la vôtre. Chaque souvenir devient un petit dessin le long de la route.</p>
@@ -990,6 +1035,7 @@ function update(o = {}) {
   const box = $('#poster'), demo = !S.occ;
   box.innerHTML = demo ? poster(DEMO, { intro: o.intro }) : poster(S, { intro: o.intro, pop });
   box.classList.toggle('demo', demo);
+  box.classList.toggle('tall', !demo && !!FORMATS[S.format].toise);
   if (o.swap) { box.classList.remove('m-swap'); void box.offsetWidth; box.classList.add('m-swap'); }
   const n = keys.length, np = S.people.length, price = FORMATS[S.format].price + (S.frame ? FRAME_PRICE : 0);
   const st = [`${n} souvenir${n > 1 ? 's' : ''}`, `${np} personnage${np > 1 ? 's' : ''}`, FORMATS[S.format].label, `${price} €`];
@@ -1074,6 +1120,12 @@ function wire() {
   }));
   j.querySelectorAll('[data-theme]').forEach((b) => (b.onclick = () => { S.theme = b.dataset.theme; renderJourney(); update({ swap: true }); }));
   j.querySelectorAll('[name=fmt]').forEach((r) => (r.onchange = () => { S.format = r.value; renderJourney(); update({ intro: true }); }));
+  on('#addMeasure', 'click', () => { S.measures.push({ date: '', cm: '' }); renderJourney(); j.querySelector('.mrow:last-child [data-mk=date]')?.focus(); });
+  j.querySelectorAll('.mrow').forEach((row) => {
+    const m = S.measures[+row.dataset.mi];
+    row.querySelectorAll('[data-mk]').forEach((f) => (f.oninput = () => { m[f.dataset.mk] = f.dataset.mk === 'cm' ? (f.value === '' ? '' : +f.value) : f.value; update(); }));
+    row.querySelector('[data-mdel]').onclick = () => { S.measures.splice(+row.dataset.mi, 1); renderJourney(); update(); };
+  });
   on('#frame', 'change', (e) => { S.frame = e.target.checked; renderJourney(); update(); });
   on('#prev', 'click', () => { S.step--; renderJourney(); });
   j.querySelectorAll('[data-goto]').forEach((b) => (b.onclick = () => {
