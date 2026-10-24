@@ -2334,6 +2334,11 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 @media (max-height: 340px) { .dlock { grid-template-columns: auto 1fr; align-items: center; padding: 3px 8px; gap: 2px 8px; } .dlock > .small { display: none; } .dlkc { padding: 1px 8px; } .dlkc small { display: none; } .stack.briefing > p.small { display: none; } }
 .dnew, .dnew * { color: #3b2a00 !important; text-shadow: none !important; }
 .dnew { display: grid; gap: 2px; background: linear-gradient(180deg, #fff3c4, #ffe28a); border-color: #b8860b; animation: cppop .5s cubic-bezier(.2, 1.4, .4, 1); }
+.cardpop.list { pointer-events: auto; overflow-y: auto; }
+.cardpop .cp-sub { margin: 4px 0 2px; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #ffd24a; } .cardpop .cp-sub:last-child { text-transform: none; letter-spacing: 0; font-weight: 600; color: #9fb1c9; }
+.cardpop .cp-co { margin: 0 0 3px; font-size: .68rem; line-height: 1.15; color: #cdd6e4; } .cardpop .cp-co b { color: #fff; } .cardpop .cp-co em { font-style: normal; font-weight: 800; color: #9cc7ff; } .cardpop .cp-co em.m { color: #ff9c8a; } .cardpop .cp-co small { display: block; font-size: .6rem; color: #9fb1c9; }
+.cardpop .cp-co.on b { color: #8be39a; } .cardpop .cp-co.on { background: rgba(139, 227, 154, .1); border-radius: 5px; padding: 1px 3px; }
+@media (max-height: 340px) { .cardpop .cp-co { font-size: .6rem; margin-bottom: 2px; } .cardpop .cp-co small { font-size: .54rem; } .cardpop .cp-sub { margin-top: 2px; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -4032,6 +4037,17 @@ function jokerPop(id) {
   const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.hq.me'); if (mq) pp.style.maxHeight = Math.max(80, Math.round(mq.getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
   SFX.play('select');
 }
+// fiche des combos en combat : bulle de droite listant chaque combo, son bonus actuel et sa condition ; ● = actif sur le plateau
+function comboPop() {
+  const btl = document.querySelector('.btl.land'), old = btl && btl.querySelector('.cardpop'); const same = old && old.dataset.combos; if (old) old.remove(); if (!btl || same || !S) return;
+  const act = new Set(); [...landCols(S), AIRC, S.seaCol].forEach(c => { const cb = sectorCombos(S, c).list; [...cb.atk, ...cb.def].forEach(k => act.add(k.id)); });
+  const line = k => { const lv = comboLv(S, k.id), b = k.mul ? '×' + fmtMult(k.mul + k.step * (lv - 1)) : '+' + fmtMult(k.add + k.step * (lv - 1)); return `<p class="cp-co ${act.has(k.id) ? 'on' : ''}"><b>${act.has(k.id) ? '● ' : ''}${k.name}</b> <em class="${k.mul ? 'm' : ''}">${b}</em><small>${k.txt}</small></p>`; };
+  btl.insertAdjacentHTML('afterbegin', `<div class="cardpop list" data-combos="1"><div class="cp-hd"><b class="cp-ic">🎯</b><span class="cp-nm">Combos</span><span class="cp-tag">dans un même secteur</span></div>
+    <p class="cp-sub">Attaque</p>${COMBOS.filter(k => k.on === 'atk').map(line).join('')}<p class="cp-sub">Défense</p>${COMBOS.filter(k => k.on === 'def').map(line).join('')}
+    <p class="cp-sub">Le bonus s'ajoute (+) ou se multiplie (×) au Mult du secteur. Les manuels de la boutique le renforcent.</p></div>`);
+  const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.bt-hint, .hq.me'); pp.style.maxHeight = Math.max(100, Math.round((btl.querySelector('.dock') || mq).getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
+  SFX.play('select');
+}
 function jokerPickModal(id) {
   const j = JOKERS.find(x => x.id === id); if (!j) return;
   openModal(`<div class="hd"><span class="ribbon">${j.name}</span><button class="pill" data-act="close">Retour</button></div>${jokerSpecHTML(j, 44)}<button class="btn go" data-officergo="${id}">Prendre ce joker</button>`);
@@ -4511,7 +4527,7 @@ function renderBattle() {
   const endLabel = 'Fin du tour';
   const pop = picked.length && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
   app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">${pop}
-    <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
+    <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
     <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px"><button class="hand-tog" data-act="handtog" aria-label="Afficher ou masquer la main">${window.__handHide ? '▴' : '▾'} Main <b>${n}</b></button>${hand}</div>
@@ -5957,6 +5973,7 @@ document.addEventListener('click', e => {
   else if (a === 'coachoff') { const r = load(); r.tuto = { ...(r.tuto || {}), off: 1 }; save(r); showCoach(); toast('Tutoriel désactivé. Le bouton « ? » reste disponible.'); }
   else if (a === 'help') helpModal(false);
   else if (a === 'guide') guideModal();
+  else if (a === 'combos') comboPop();
   else if (a === 'menu') menuModal();
   else if (a === 'close') { closeModal(); if (S && document.getElementById('hand') && !busy) showCoach(); }
   else if (a === 'deploy') {

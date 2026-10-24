@@ -261,3 +261,5 @@ Toucher une doctrine (choix de départ) ou un joker (récompense) ouvre une fich
 Deux doctrines sont disponibles au départ (Défense, Blitz). Chaque campagne gagnée jusqu'au bout (écran « Victoire ! ») en débloque une nouvelle, dans l'ordre : Artillerie, Marine, Commandos. L'écran de choix montre les doctrines verrouillées et la victoire qui les ouvre ; l'écran de victoire annonce la doctrine débloquée. Le compteur est le nombre de victoires déjà enregistré dans la sauvegarde (`wins`), donc les parties déjà gagnées comptent.
 
 Jokers en combat : toucher un joker de la barre en haut à droite ouvre sa fiche (Effet, Conseil, Limite) dans la même bulle que les cartes, dans la colonne de droite ; le retoucher la referme.
+
+Ordres et combos en combat : les ordres (Assaut, Barrage, Fumigènes…) affichent leur fiche dans la bulle de droite dès qu'on les sélectionne, comme les unités. Le bouton « Combos » (en haut à droite, à côté de ⋯) ouvre la liste de tous les combos avec leur bonus actuel (niveau des manuels compris) et leur condition ; ● vert = combo actif quelque part sur le plateau. La liste défile ; le bouton la referme.
