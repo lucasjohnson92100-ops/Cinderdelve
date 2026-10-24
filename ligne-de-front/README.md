@@ -237,3 +237,6 @@ Générés en 16:9 puis recadrés en carré autour du sujet (`art/jokers/<id>.we
 
 ### Correctif : fantassins dans la rivière
 Les parachutistes, observateurs, infirmiers et le génie dans un secteur Rivière affichaient toute leur planche d'animation en rangée (le masque CSS appliqué pour les couper à la taille faisait perdre le découpage de la fenêtre). La fenêtre est maintenant simplement raccourcie à 78 % de la hauteur de l'image, sans masque.
+
+### Toucher pendant l'assaut
+Une touche isolée sur l'écran pendant la résolution ne passe plus l'animation (`fast`) : sur mobile, un doigt posé par mégarde supprimait flashs, fumées et tirs de véhicules. Il faut maintenant un double toucher (deux touches en moins de 0,45 s) pour accélérer.

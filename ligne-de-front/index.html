@@ -5801,7 +5801,9 @@ document.addEventListener('click', e => {
   else if (a === 'cratenone') { window.__crate = null; closeModal(); }
   else if (a === 'packnone') { const pk = C.shop.packs[+b.dataset.pk]; if (pk) pk.left = 0; closeModal(); renderShop(); }
 });
-document.addEventListener('click', e => { if (busy && !e.target.closest('[data-act]') && Date.now() > (window.__noFastUntil || 0)) fast = true; });
+// un double toucher (deux touches en moins de 0,45 s) passe l'animation ; une touche isolée ne la coupe plus (elle supprimait les tirs sans prévenir)
+let lastTap = 0;
+document.addEventListener('click', e => { if (!busy || e.target.closest('[data-act]') || Date.now() <= (window.__noFastUntil || 0)) return; const t = Date.now(); if (t - lastTap < 450) fast = true; lastTap = t; });
 
 document.addEventListener('pointermove', e => {
   const c = e.target.closest && e.target.closest('#hand .hc'); if (!c || busy || (drag && drag.on)) return;
