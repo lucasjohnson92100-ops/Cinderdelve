@@ -263,3 +263,5 @@ Deux doctrines sont disponibles au départ (Défense, Blitz). Chaque campagne ga
 Jokers en combat : toucher un joker de la barre en haut à droite ouvre sa fiche (Effet, Conseil, Limite) dans la même bulle que les cartes, dans la colonne de droite ; le retoucher la referme.
 
 Ordres et combos en combat : les ordres (Assaut, Barrage, Fumigènes…) affichent leur fiche dans la bulle de droite dès qu'on les sélectionne, comme les unités. Le bouton « Combos » (en haut à droite, à côté de ⋯) ouvre la liste de tous les combos avec leur bonus actuel (niveau des manuels compris) et leur condition ; ● vert = combo actif quelque part sur le plateau. La liste défile ; le bouton la referme.
+
+Explications allégées : bulles et fiches se limitent à l'essentiel (Effet + Conseil, une phrase chacune) ; la ligne ★/⚠ n'apparaît que si l'ennemi du combat la rend utile. Les limites, les rôles détaillés des cartes de doctrine et les notes annexes des combos ont été retirés.

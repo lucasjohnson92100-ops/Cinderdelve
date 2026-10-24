@@ -3897,13 +3897,13 @@ const CARD_SPEC = {
   sabotage: { ic: '💣', nm: 'Dégâts fixes', what: "Le QG ennemi perd 8 % de ses PV de départ, quelle que soit votre Attaque.", syn: "Ignore le Bunker et le blindage du Mammouth.", lim: "Ne se joue que sur des parachutistes déjà posés." },
 };
 const specBadge = card => { const t = CARD_SPEC[card.t]; return t ? `<span class="hspec" title="${t.what}"><b>${t.ic}</b> ${t.nm}</span>` : ''; };
-const specHTML = card => { const t = CARD_SPEC[card.t]; return t ? `<div class="cspec"><div class="cs-hd"><b>${t.ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${t.what}</p><p class="cs-sy"><b>Conseil</b> ${t.syn}</p><p class="cs-li"><b>À savoir</b> ${t.lim}</p></div>` : ''; };
+const specHTML = card => { const t = CARD_SPEC[card.t]; return t ? `<div class="cspec"><div class="cs-hd"><b>${t.ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${short1(t.what)}</p><p class="cs-sy"><b>Conseil</b> ${short1(t.syn)}</p></div>` : ''; };
 // bulle d'explication affichée dès qu'une carte est sélectionnée : effet, conseil, limite, et ce qui compte dans la bataille en cours
 const cardPopHTML = (card, i, n) => {
   const t = CARD_SPEC[card.t], d = TYPES[card.t]; if (!t) return '';
   const now = cardUseNow(card), warn = cardWarnNow(card);
   return `<div class="cardpop" role="status"><div class="cp-hd"><b class="cp-ic">${t.ic}</b><span class="cp-nm">${d.name}${n > 1 ? `<small>carte ${i + 1} sur ${n}</small>` : ''}</span><span class="cp-tag">${t.nm}</span></div>
-    <p class="cp-row"><i>Effet</i>${t.what}</p><p class="cp-row ok"><i>Conseil</i>${t.syn}</p><p class="cp-row lim"><i>Limite</i>${t.lim}</p>${now ? `<p class="cp-row now"><i>★ Ici</i>${now}</p>` : ''}${warn ? `<p class="cp-row lim"><i>⚠</i>${warn.replace(/^Attention\s*:?\s*/, '')}</p>` : ''}</div>`;
+    <p class="cp-row"><i>Effet</i>${short1(t.what)}</p><p class="cp-row ok"><i>Conseil</i>${short1(t.syn)}</p>${now ? `<p class="cp-row now"><i>★ Ici</i>${now}</p>` : ''}${warn ? `<p class="cp-row lim"><i>⚠</i>${warn.replace(/^Attention\s*:?\s*/, '')}</p>` : ''}</div>`;
 };
 // effet ennemi du combat en cours qui rend cette carte précieuse (affiché sur la carte et dans sa fiche)
 const cardUseNow = card => { const t = CARD_TIPS[card.t], fx = t && t.fx; if (!fx || typeof S === 'undefined' || !S || !S.fx) return ''; const k = S.fx.find(x => fx[x] && !/^Attention/.test(fx[x])); return k ? `${HQFX[k].name} : ${fx[k]}` : ''; };
@@ -4001,7 +4001,8 @@ const DOCTRINE_SPEC = {
   commandos: { nm: 'Frappe directe', what: "Des parachutistes ignorent les protections du QG, et le Sabotage retire des PV fixes.", syn: "Posez les parachutistes là où passera votre gros score, puis jouez Sabotage dessus.", lim: "Moins d'Attaque brute que l'infanterie classique.", cards: ["Parachutistes (rouge) : Commando, ignorent bunker et blindage.", "Parachutistes (vert) : plus endurants.", "Sabotage : −8 % PV du QG, seulement sur des parachutistes."] },
   marine: { nm: 'Flotte et débarquement', what: "Un destroyer appuie vos secteurs depuis la mer, et le Débarquement fait arriver de l'infanterie gratuite.", syn: "Ajoutez d'autres navires pour le combo Flotte ; jouez le Débarquement quand une infanterie est en tête de pioche.", lim: "La batterie côtière ennemie divise par deux vos navires.", cards: ["Destroyer : appui naval, frappe le QG.", "Tireurs : de quoi débarquer sur la côte.", "Débarquement : première infanterie de la pioche, gratuite."] },
 };
-const specBlock = (ic, t, what, extra = '') => `<div class="cspec"><div class="cs-hd"><b>${ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${what}</p><p class="cs-sy"><b>Conseil</b> ${t.syn}</p><p class="cs-li"><b>À savoir</b> ${t.lim}</p>${extra}</div>`;
+const short1 = x => String(x).split(/\s*;\s*|\.\s+(?=[A-ZÀ-Ý])/)[0].replace(/\.$/, '') + '.';
+const specBlock = (ic, t, what, extra = '') => `<div class="cspec"><div class="cs-hd"><b>${ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${short1(what)}</p><p class="cs-sy"><b>Conseil</b> ${short1(t.syn)}</p>${extra}</div>`;
 const jokerSpecHTML = (j, ic = 56) => { const t = JOKER_SPEC[j.id]; return t ? specBlock(officerSVG(j.id, ic), t, j.desc) : ''; };
 function doctrineStep() {
   saveRun('doctrine');
@@ -4013,7 +4014,7 @@ function doctrineStep() {
 }
 function doctrineModal(id) {
   const d = DOCTRINES[id], t = DOCTRINE_SPEC[id]; if (!t) return chooseDoctrine(id);
-  openModal(`<div class="hd"><span class="ribbon">${d.name}</span><button class="pill" data-act="close">Retour</button></div>${specBlock('🎖', t, d.tip, `<ul class="cs-cards">${t.cards.map(x => `<li>${x}</li>`).join('')}</ul>`)}<button class="btn go" data-docgo="${id}">Choisir cette doctrine</button>`);
+  openModal(`<div class="hd"><span class="ribbon">${d.name}</span><button class="pill" data-act="close">Retour</button></div>${specBlock('🎖', t, d.tip)}<button class="btn go" data-docgo="${id}">Choisir cette doctrine</button>`);
 }
 function chooseDoctrine(id) {
   if (!C.docOpts || !C.docOpts.includes(id)) return;
@@ -4033,7 +4034,7 @@ function jokerPop(id) {
   const same = old && old.dataset.joker === id; if (old) old.remove(); if (!btl || same) return;
   const j = JOKERS.find(x => x.id === id), t = JOKER_SPEC[id]; if (!j || !t) return;
   btl.insertAdjacentHTML('afterbegin', `<div class="cardpop" data-joker="${id}" role="status"><div class="cp-hd"><b class="cp-ic">${officerSVG(id, 30)}</b><span class="cp-nm">${j.name}</span><span class="cp-tag">${t.nm}</span></div>
-    <p class="cp-row"><i>Effet</i>${j.desc}</p><p class="cp-row ok"><i>Conseil</i>${t.syn}</p><p class="cp-row lim"><i>Limite</i>${t.lim}</p></div>`);
+    <p class="cp-row"><i>Effet</i>${short1(j.desc)}</p><p class="cp-row ok"><i>Conseil</i>${short1(t.syn)}</p></div>`);
   const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.hq.me'); if (mq) pp.style.maxHeight = Math.max(80, Math.round(mq.getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
   SFX.play('select');
 }
@@ -4042,9 +4043,8 @@ function comboPop() {
   const btl = document.querySelector('.btl.land'), old = btl && btl.querySelector('.cardpop'); const same = old && old.dataset.combos; if (old) old.remove(); if (!btl || same || !S) return;
   const act = new Set(); [...landCols(S), AIRC, S.seaCol].forEach(c => { const cb = sectorCombos(S, c).list; [...cb.atk, ...cb.def].forEach(k => act.add(k.id)); });
   const line = k => { const lv = comboLv(S, k.id), b = k.mul ? '×' + fmtMult(k.mul + k.step * (lv - 1)) : '+' + fmtMult(k.add + k.step * (lv - 1)); return `<p class="cp-co ${act.has(k.id) ? 'on' : ''}"><b>${act.has(k.id) ? '● ' : ''}${k.name}</b> <em class="${k.mul ? 'm' : ''}">${b}</em><small>${k.txt}</small></p>`; };
-  btl.insertAdjacentHTML('afterbegin', `<div class="cardpop list" data-combos="1"><div class="cp-hd"><b class="cp-ic">🎯</b><span class="cp-nm">Combos</span><span class="cp-tag">dans un même secteur</span></div>
-    <p class="cp-sub">Attaque</p>${COMBOS.filter(k => k.on === 'atk').map(line).join('')}<p class="cp-sub">Défense</p>${COMBOS.filter(k => k.on === 'def').map(line).join('')}
-    <p class="cp-sub">Le bonus s'ajoute (+) ou se multiplie (×) au Mult du secteur. Les manuels de la boutique le renforcent.</p></div>`);
+  btl.insertAdjacentHTML('afterbegin', `<div class="cardpop list" data-combos="1"><div class="cp-hd"><b class="cp-ic">🎯</b><span class="cp-nm">Combos</span></div>
+    <p class="cp-sub">Attaque</p>${COMBOS.filter(k => k.on === 'atk').map(line).join('')}<p class="cp-sub">Défense</p>${COMBOS.filter(k => k.on === 'def').map(line).join('')}</div>`);
   const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.bt-hint, .hq.me'); pp.style.maxHeight = Math.max(100, Math.round((btl.querySelector('.dock') || mq).getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
   SFX.play('select');
 }
