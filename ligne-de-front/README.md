@@ -259,3 +259,5 @@ Toucher une doctrine (choix de départ) ou un joker (récompense) ouvre une fich
 
 ## Déblocage des doctrines
 Deux doctrines sont disponibles au départ (Défense, Blitz). Chaque campagne gagnée jusqu'au bout (écran « Victoire ! ») en débloque une nouvelle, dans l'ordre : Artillerie, Marine, Commandos. L'écran de choix montre les doctrines verrouillées et la victoire qui les ouvre ; l'écran de victoire annonce la doctrine débloquée. Le compteur est le nombre de victoires déjà enregistré dans la sauvegarde (`wins`), donc les parties déjà gagnées comptent.
+
+Jokers en combat : toucher un joker de la barre en haut à droite ouvre sa fiche (Effet, Conseil, Limite) dans la même bulle que les cartes, dans la colonne de droite ; le retoucher la referme.

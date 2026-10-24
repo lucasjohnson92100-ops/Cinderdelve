@@ -2316,11 +2316,12 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .btl.land { position: relative; }
 .btl.land > .cardpop { position: absolute !important; left: auto; right: 4px; top: 40px; bottom: auto; grid-area: auto; width: calc(var(--rw, 200px) - 4px); overflow: hidden; z-index: 500 !important; padding: 8px 10px 9px; border-radius: 12px; pointer-events: none; color: #f6ecd0; background: linear-gradient(180deg, #222e40, #141c28); border: 2px solid #ffd24a; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); animation: cppop .22s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes cppop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
-.cardpop .cp-hd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 5px; } .cardpop .cp-tag { margin-left: 34px; }
+.cardpop .cp-hd { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; margin-bottom: 3px; } .cardpop .cp-tag { margin-left: 34px; }
+.cardpop .cp-ic svg { height: 30px !important; width: 30px !important; display: block; }
 .cardpop .cp-ic { font-size: 1.5rem; font-weight: 400; line-height: 1; }
 .cardpop .cp-nm { flex: 1 1 calc(100% - 44px); min-width: 0; font-family: var(--font-display); font-size: 1rem; line-height: 1.05; } .cardpop .cp-nm small { display: block; font-family: inherit; font-size: .6rem; color: #9fb1c9; }
 .cardpop .cp-tag { flex: none; padding: 2px 8px; border-radius: 99px; background: #ffd24a; color: #3b2a00; font-family: var(--font-display); font-size: .72rem; }
-.cardpop .cp-row { margin: 0 0 4px; display: grid; grid-template-columns: 1fr; gap: 0; font-size: .74rem; line-height: 1.2; } .cardpop .cp-row:last-child { margin: 0; }
+.cardpop .cp-row { margin: 0 0 4px; display: grid; grid-template-columns: 1fr; gap: 0; font-size: .7rem; line-height: 1.18; } .cardpop .cp-row:last-child { margin: 0; }
 .cardpop .cp-row i { font-style: normal; font-weight: 800; font-size: .66rem; letter-spacing: .04em; text-transform: uppercase; color: #ffd24a; padding-top: 1px; }
 .cardpop .cp-row.ok i { color: #8be39a; } .cardpop .cp-row.lim i { color: #ff9c8a; } .cardpop .cp-row.now { color: #bff0c8; } .cardpop .cp-row.now i { color: #8be39a; }
 @media (max-height: 340px) { .cardpop { padding: 3px 6px 4px; top: 30px; } .cardpop .cp-ic { display: none; } .cardpop .cp-tag { margin-left: 0; } .cardpop .cp-nm { flex-basis: auto; } .cardpop .cp-row i { display: inline; margin-right: 4px; } .cardpop .cp-row { display: block; } .cardpop .cp-hd { margin-bottom: 2px; } .cardpop .cp-ic { font-size: 1.15rem; } .cardpop .cp-nm { font-size: .82rem; } .cardpop .cp-nm small { display: none; } .cardpop .cp-row { font-size: .6rem; line-height: 1.12; margin-bottom: 2px; } .cardpop .cp-row i { font-size: .56rem; } .cardpop .cp-tag { font-size: .6rem; padding: 1px 6px; } }
@@ -4020,6 +4021,16 @@ function officerItem(o, tag, attrs) {
 function jokerBar() {
   const slots = Array.from({ length: MAX_JOKERS }, (_, i) => (C.officers[i] ? `<button class="jk" data-joker="${i}" aria-label="${JOKERS.find(j => j.id === C.officers[i]).name}">${officerSVG(C.officers[i], 38)}</button>` : '<span class="jk empty"></span>')).join('');
   return `<div class="jbar" title="Cartes joker">${slots}</div>`;
+}
+// en combat : toucher un joker affiche sa fiche dans la bulle de droite (comme les cartes) ; le retoucher la referme
+function jokerPop(id) {
+  const btl = document.querySelector('.btl.land'), old = btl && btl.querySelector('.cardpop');
+  const same = old && old.dataset.joker === id; if (old) old.remove(); if (!btl || same) return;
+  const j = JOKERS.find(x => x.id === id), t = JOKER_SPEC[id]; if (!j || !t) return;
+  btl.insertAdjacentHTML('afterbegin', `<div class="cardpop" data-joker="${id}" role="status"><div class="cp-hd"><b class="cp-ic">${officerSVG(id, 30)}</b><span class="cp-nm">${j.name}</span><span class="cp-tag">${t.nm}</span></div>
+    <p class="cp-row"><i>Effet</i>${j.desc}</p><p class="cp-row ok"><i>Conseil</i>${t.syn}</p><p class="cp-row lim"><i>Limite</i>${t.lim}</p></div>`);
+  const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.hq.me'); if (mq) pp.style.maxHeight = Math.max(80, Math.round(mq.getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
+  SFX.play('select');
 }
 function jokerPickModal(id) {
   const j = JOKERS.find(x => x.id === id); if (!j) return;
@@ -5907,7 +5918,7 @@ document.addEventListener('click', e => {
   const bm = t.closest('[data-buym]'); if (bm) { const m = C.shop.manuals[+bm.dataset.buym]; if (!m || m.sold || C.loot < m.price) return; C.loot -= m.price; m.sold = true; const lv = buyManual(C, m.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === m.id).name} passe au niveau ${lv}.`); return renderShop(); }
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
   const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
-  const jk = t.closest('[data-joker]'); if (jk) return jokerModal(+jk.dataset.joker);
+  const jk = t.closest('[data-joker]'); if (jk) return S && document.getElementById('hand') ? jokerPop(C.officers[+jk.dataset.joker]) : jokerModal(+jk.dataset.joker);
   const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1); closeModal(); SFX.play('sell'); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
   const rem = t.closest('[data-remove]');
   if (rem) {
