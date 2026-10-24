@@ -1800,6 +1800,7 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb-units { justify-content: safe center; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }   /* un engin ne se laisse pas écraser par un gros groupe de fantassins : c'est l'ajustement commun qui réduit tout le monde ensemble */
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-units { top: var(--gt, 8%); bottom: 3%; }   /* en plein écran, les pieds se posent sur la route, pas au milieu du décor */
 .aws.focus .awb-lab > b { font-size: .74rem; }
 .awshield { position: absolute; z-index: 8; right: 30%; top: 50%; width: calc(64px * var(--sk, 1)); height: calc(74px * var(--sk, 1)); margin-top: calc(-37px * var(--sk, 1)); display: grid; place-items: center; color: #4fa3ff; filter: drop-shadow(0 0 10px rgba(80, 170, 255, .9)) drop-shadow(0 2px 0 #0d1218); animation: awshin .3s cubic-bezier(.2, 1.5, .4, 1); pointer-events: none; }
@@ -3627,7 +3628,7 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
 const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 const UNARMED = { obs: 1, medic: 1 };
 // échelle des engins dans la scène d'assaut, relative à la taille d'un soldat (char ≈ 1,45 soldat de haut, jeep ≈ 1,1…)
-const VEH_K = { tank: 1.47, td: 1.5, halftrack: 1.9, jeep: 1.55, arty: 1.53 };
+const VEH_K = { tank: 1.7, td: 1.7, halftrack: 2.05, jeep: 1.65, arty: 1.65 };
 const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
