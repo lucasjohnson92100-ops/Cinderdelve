@@ -256,3 +256,6 @@ Dès qu'une carte est touchée dans la main, une bulle apparaît au-dessus de la
 
 ## Explications des jokers et des doctrines
 Toucher une doctrine (choix de départ) ou un joker (récompense) ouvre une fiche avant de confirmer : nom court de la spécificité, effet, **Conseil**, **À savoir**, et pour les doctrines le rôle des 3 cartes fournies. Les mêmes fiches s'affichent dans les jokers possédés (bouton de la barre de jokers) et dans le détail d'un joker en boutique.
+
+## Déblocage des doctrines
+Deux doctrines sont disponibles au départ (Défense, Blitz). Chaque campagne gagnée jusqu'au bout (écran « Victoire ! ») en débloque une nouvelle, dans l'ordre : Artillerie, Marine, Commandos. L'écran de choix montre les doctrines verrouillées et la victoire qui les ouvre ; l'écran de victoire annonce la doctrine débloquée. Le compteur est le nombre de victoires déjà enregistré dans la sauvegarde (`wins`), donc les parties déjà gagnées comptent.

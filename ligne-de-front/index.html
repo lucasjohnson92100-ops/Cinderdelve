@@ -2328,6 +2328,11 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cspec .cs-cards { margin: 4px 0 0; padding-left: 18px; font-size: .78rem; } .cspec .cs-cards li { margin: 1px 0; }
 .doctrine.chosen, .off-item.chosen { outline: 4px solid #ffd24a; outline-offset: 1px; transform: translateY(-2px); }
 .cspec .cs-hd > b svg { height: 40px; width: auto; display: block; }
+.dlock { display: grid; gap: 4px; text-align: center; } .dlk { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.dlkc { display: grid; padding: 4px 12px; border-radius: 10px; background: rgba(27, 37, 64, .1); border: 2px dashed rgba(27, 37, 64, .35); opacity: .75; } .dlkc small { font-size: .62rem; }
+@media (max-height: 340px) { .dlock { grid-template-columns: auto 1fr; align-items: center; padding: 3px 8px; gap: 2px 8px; } .dlock > .small { display: none; } .dlkc { padding: 1px 8px; } .dlkc small { display: none; } .stack.briefing > p.small { display: none; } }
+.dnew, .dnew * { color: #3b2a00 !important; text-shadow: none !important; }
+.dnew { display: grid; gap: 2px; background: linear-gradient(180deg, #fff3c4, #ffe28a); border-color: #b8860b; animation: cppop .5s cubic-bezier(.2, 1.4, .4, 1); }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2525,7 +2530,10 @@ const DOCTRINES = {
   marine: { name: 'Doctrine Marine', tip: 'Une flotte qui pilonne la côte et débarque.', cards: [['destroyer', 'R'], ['tireurs', 'N'], ['debarquement', '']] },
 };
 const doctrineCards = id => DOCTRINES[id].cards.map(([t, c]) => mkCard(t, c));
-function pickDoctrines(rng = Math.random) { return shuffle(Object.keys(DOCTRINES), rng).slice(0, 3); }
+function pickDoctrines(rng = Math.random, pool = Object.keys(DOCTRINES)) { return shuffle(pool, rng).slice(0, 3); }
+// Déblocage : deux doctrines au départ, une de plus à chaque campagne gagnée jusqu'au bout
+const DOC_ORDER = ['defense', 'blitz', 'artillerie', 'marine', 'commandos'], DOC_START = 2;
+const unlockedDocs = (wins = (typeof load === 'function' ? load().wins || 0 : 0)) => DOC_ORDER.slice(0, Math.min(DOC_ORDER.length, DOC_START + wins));
 const isOrder = card => !!(card && TYPES[card.t] && TYPES[card.t].order);
 const cardKey = c => c.t + ':' + c.c + ':' + (c.lv || 1);
 
@@ -3946,7 +3954,7 @@ function resumeRun() {
   toMap();
 }
 function newCampaign() {
-  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), next: 0, trail: {}, won: false, pos: null, node: null, decor: null, docOpts: pickDoctrines() };
+  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), next: 0, trail: {}, won: false, pos: null, node: null, decor: null, docOpts: pickDoctrines(Math.random, unlockedDocs()) };
   doctrineStep();
 }
 // Choix d'une doctrine : 3 cartes qui orientent le paquet de départ
@@ -3994,7 +4002,8 @@ function doctrineStep() {
   app.innerHTML = `<div class="stack briefing"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${C.deck.length} cartes</span></div>
     <div class="panel">Votre paquet de départ est court : tireurs, jeeps, un blindé, deux destroyers, un chasseur et trois ordres. Une doctrine y ajoute 3 cartes et oriente votre campagne. Les autres unités se gagnent après chaque victoire.</div>
     ${C.docOpts.map(id => { const d = DOCTRINES[id]; return `<button class="panel doctrine" data-doctrine="${id}"><b>${d.name}</b><span class="small muted">${d.tip}</span><span class="dchips">${doctrineCards(id).map(c => `<span class="dchip"><span class="dart">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 30) : spriteSVG(SPR_OF[c.t], 'me', 34, c.c)}</span><span class="dtx"><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span></span>`).join('')}</span></button>`; }).join('')}
-    <p class="small muted" style="text-align:center">Touchez une doctrine pour lire son fonctionnement avant de la choisir.</p></div>`;
+    <p class="small muted" style="text-align:center">Touchez une doctrine pour lire son fonctionnement avant de la choisir.</p>
+    ${(() => { const w = load().wins || 0, un = unlockedDocs(), lk = DOC_ORDER.filter(id => !un.includes(id)); return lk.length ? `<div class="panel dlock"><b>🔒 Doctrines à débloquer</b><span class="small muted">Gagnez une campagne jusqu'au bout pour en débloquer une nouvelle (${un.length} / ${DOC_ORDER.length} disponibles).</span><span class="dlk">${lk.map((id, i) => `<span class="dlkc"><b>${DOCTRINES[id].name.replace('Doctrine ', '')}</b><small>${i === 0 ? 'prochaine victoire' : 'dans ' + (i + 1) + ' victoires'}</small></span>`).join('')}</span></div>` : `<p class="small muted" style="text-align:center">✔ Toutes les doctrines sont débloquées (${w} victoire${w > 1 ? 's' : ''}).</p>`; })()}</div>`;
 }
 function doctrineModal(id) {
   const d = DOCTRINES[id], t = DOCTRINE_SPEC[id]; if (!t) return chooseDoctrine(id);
@@ -5757,10 +5766,10 @@ function toCamp() {
     <button class="off-item plain" data-act="removecard"><span class="tx"><b>Retirer une carte</b><span class="small muted">Un paquet plus petit retombe plus souvent sur vos meilleures cartes.</span></span></button></div>`;
 }
 function victory() {
-  const rec = load(); rec.level = Math.max(rec.level || 0, BLINDS_TO_WIN); rec.wins = (rec.wins || 0) + 1; save(rec); saveRun('victory');
+  const before = unlockedDocs(); const rec = load(); rec.level = Math.max(rec.level || 0, BLINDS_TO_WIN); rec.wins = (rec.wins || 0) + 1; save(rec); saveRun('victory'); const fresh = unlockedDocs().filter(id => !before.includes(id));
   setTimeout(() => confetti(80), 200);
   app.innerHTML = `<div class="stack end"><div class="big">Victoire !</div><div class="armies">${['inf', 'jeep', 'tank', 'chasseur'].map((k, i) => spriteSVG(k, 'me', 72, ['J', 'V', 'R', 'N'][i])).join('')}</div><h2>${BLINDS_TO_WIN} blindes vaincues : la guerre est gagnée</h2>
-    <p>Avec ${C.deck.length} cartes et ${C.officers.length} jokers. Vous pouvez continuer à l'infini : les blindes seront toujours plus fortes.</p>
+    ${fresh.length ? `<div class="panel dnew">🔓 <b>Nouvelle doctrine débloquée : ${DOCTRINES[fresh[0]].name}</b><span class="small">${DOCTRINES[fresh[0]].tip}</span></div>` : ''}<p>Avec ${C.deck.length} cartes et ${C.officers.length} jokers. Vous pouvez continuer à l'infini : les blindes seront toujours plus fortes.</p>
     <div class="row" style="gap:10px;justify-content:center"><button class="btn go" data-act="endless">Continuer à l'infini ∞</button><button class="btn ghost" data-act="quit">Terminer la campagne</button></div></div>`;
 }
 
