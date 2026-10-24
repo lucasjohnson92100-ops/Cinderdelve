@@ -247,3 +247,6 @@ Une touche isolée sur l'écran pendant la résolution ne passe plus l'animation
 - **Mise en scène** : léger zoom sur le secteur qui tire, recul de caméra à la salve, compteur qui tressaute (style Balatro), combos qui s'allument un à un avec un son de plus en plus aigu.
 - **Vie des unités** : elles arrivent en file depuis la gauche, les unités fatiguées (dernière endurance) sont ternies et se dissipent à la fin de leur dernier assaut.
 - **Ambiance** : éclairs et tonnerre sous la pluie, lueur des tirs au crépuscule et de nuit, poussière en suspension le jour.
+
+## Spécificité des cartes mise en avant
+Chaque carte (unités et ordres) a une fiche « Spécificité » dans sa fenêtre de détails : icône et nom court, ce qu'elle fait, un conseil d'usage et ses limites. En main, un badge doré sur l'illustration rappelle la spécificité d'un coup d'œil (Commando, Tir guidé, Élan, Nid défensif…). Les conseils liés à l'ennemi de la bataille en cours (★ / ⚠) restent affichés en dessous.
