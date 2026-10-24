@@ -240,3 +240,10 @@ Les parachutistes, observateurs, infirmiers et le génie dans un secteur Rivièr
 
 ### Toucher pendant l'assaut
 Une touche isolée sur l'écran pendant la résolution ne passe plus l'animation (`fast`) : sur mobile, un doigt posé par mégarde supprimait flashs, fumées et tirs de véhicules. Il faut maintenant un double toucher (deux touches en moins de 0,45 s) pour accélérer.
+
+## Animations d'assaut (synchro et ambiance)
+- **Tir → impact** : chaque projectile signale son atterrissage ; le score du secteur, le tremblement du QG et le chiffre de dégâts se déclenchent au vrai impact (pas avant).
+- **QG ennemi** : tremblement proportionnel aux dégâts, éclats de gravats, fissures qui s'accumulent (75 / 50 / 25 % de PV), flammes puis fumée de plus en plus épaisse.
+- **Mise en scène** : léger zoom sur le secteur qui tire, recul de caméra à la salve, compteur qui tressaute (style Balatro), combos qui s'allument un à un avec un son de plus en plus aigu.
+- **Vie des unités** : elles arrivent en file depuis la gauche, les unités fatiguées (dernière endurance) sont ternies et se dissipent à la fin de leur dernier assaut.
+- **Ambiance** : éclairs et tonnerre sous la pluie, lueur des tirs au crépuscule et de nuit, poussière en suspension le jour.

@@ -2278,6 +2278,32 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .aws[data-amb="pluie"] .awb.t-route .awb-bg { background-image: var(--sc-route-pluie); background-position: 50% 78%; }
 .aws[data-amb="nuit"] .awb.t-route .awb-bg { background-image: var(--sc-route-nuit); background-position: 50% 78%; }
 .aws[data-amb="nuit"] .awb.t-champ .awb-bg { background-image: var(--sc-champ-nuit); background-position: 50% 78%; }
+/* ---- Animations d'assaut : réaction du QG, mise en scène des secteurs, vie des unités, ambiance ---- */
+.aws-hq.hit .aws-pic { animation: hqhit2 calc(.22s + var(--hs, 1) * .1s); }
+@keyframes hqhit2 { 0% { filter: brightness(calc(1.4 + var(--hs, 1) * .7)) saturate(.3); transform: translateX(calc(var(--hs, 1) * 7px)); } 35% { transform: translateX(calc(var(--hs, 1) * -6px)) rotate(calc(var(--hs, 1) * -.4deg)); } 70% { transform: translateX(calc(var(--hs, 1) * 3px)); } 100% { filter: none; transform: none; } }
+.aws-hq .vcrack { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .5s; mix-blend-mode: multiply;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><g fill='none' stroke='%23140a06' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'><path d='M30 20 L36 34 L31 44 L40 58 L35 70'/><path d='M36 34 L48 38 L52 50'/><path d='M66 24 L60 38 L68 48 L62 62 L70 76'/><path d='M60 38 L50 42'/><path d='M14 52 L24 56 L22 68'/><path d='M82 52 L76 60 L84 70'/></g></svg>") center / 100% 100% no-repeat; }
+.aws-hq.c1 .vcrack { opacity: .35; } .aws-hq.c2 .vcrack { opacity: .6; } .aws-hq.c3 .vcrack { opacity: .85; }
+.aws-hq .vdeb { position: absolute; z-index: 5; width: 5px; height: 5px; border-radius: 1px; background: #6b5a48; box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); animation: vdeb .65s cubic-bezier(.2, .7, .4, 1) forwards; }
+@keyframes vdeb { to { transform: translate(var(--dx), calc(var(--dy) + 60px)) rotate(240deg); opacity: 0; } }
+.aws-hq .vsmoke.c { left: 70%; }
+.aws-hq .vsmk { width: 52%; filter: blur(6px); }
+.awb-bg { transition: transform 1.1s cubic-bezier(.2, .8, .3, 1); }
+.aws.focus .awb.cur.act .awb-bg { transform: scale(1.06); }
+.aws.focus .awb.cur.salvo .awb-bg { transform: scale(1.12) translateX(-3%); transition-duration: .35s; }
+.awb-eq.shk { animation: cshk .24s; } @keyframes cshk { 25% { transform: rotate(calc(var(--sk, 1) * -3deg)) scale(1.12); } 60% { transform: rotate(calc(var(--sk, 1) * 2deg)) scale(1.06); } }
+.awb.enter .awu { animation: awwalk .55s cubic-bezier(.2, .8, .3, 1) both; animation-delay: calc(var(--j, 0) * 70ms); }
+@keyframes awwalk { from { translate: -26% 0; opacity: 0; } }
+.awu.tired svg { filter: saturate(.7) brightness(.92) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.spent svg { filter: grayscale(.55) brightness(.85) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.dissolve { animation: awdis .7s ease-in forwards !important; } @keyframes awdis { to { opacity: 0; translate: 0 -8%; filter: grayscale(1) blur(4px); } }
+.aws[data-amb="nuit"] .awu.fire svg, .aws[data-amb="crepuscule"] .awu.fire svg, .aws[data-amb="nuit"] .awu.fire .awu-fire > svg { filter: drop-shadow(0 0 9px rgba(255, 170, 60, .85)) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.aws-motes { position: absolute; inset: 0 var(--rw, 220px) 0 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.aws-motes i { position: absolute; left: var(--x); top: var(--y); width: var(--s); height: var(--s); border-radius: 50%; background: rgba(255, 244, 214, .7); animation: mote var(--t) ease-in-out var(--dl) infinite alternate; }
+@keyframes mote { from { transform: translate(0, 0); opacity: .15; } to { transform: translate(26px, -18px); opacity: .75; } }
+.aws-bolt { position: absolute; inset: 0; z-index: 90; pointer-events: none; opacity: 0; background: radial-gradient(70% 60% at 40% 0%, rgba(235, 242, 255, .95), rgba(190, 210, 255, .35) 60%, transparent); }
+.aws-bolt.go { animation: bolt .5s ease-out; } @keyframes bolt { 0% { opacity: 0; } 8% { opacity: 1; } 18% { opacity: .2; } 28% { opacity: .85; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .aws-bolt.go { animation: none; } .aws-motes i { animation: none; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -3721,6 +3747,8 @@ const SFX = (() => {
   const S = {
     tap() { tone(520, 0.05, { type: 'triangle', vol: 0.2 }); },
     select() { tone(720, 0.06, { type: 'triangle', vol: 0.16 }); tone(980, 0.05, { type: 'triangle', vol: 0.1, at: 0.05 }); },
+    rise(i = 0) { const f = 520 * Math.pow(1.12, Math.min(i, 9)); tone(f, 0.08, { type: 'triangle', vol: 0.16 }); tone(f * 1.5, 0.07, { type: 'triangle', vol: 0.1, at: 0.05 }); },
+    thunder() { tone(78, 0.9, { type: 'sawtooth', vol: 0.18, to: 34 }); tone(52, 1.1, { type: 'square', vol: 0.1, to: 28, at: 0.08 }); },
     deselect() { tone(560, 0.07, { type: 'triangle', vol: 0.12, to: 420 }); },
     deny() { tone(150, 0.12, { vol: 0.16 }); tone(130, 0.14, { vol: 0.16, at: 0.13 }); },
     fuse() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.16, { type: 'triangle', vol: 0.17, at: i * 0.055 })); noise(0.25, { type: 'highpass', f: 5000, vol: 0.06, at: 0.1 }); },
@@ -4888,9 +4916,16 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
   const sc = document.createElement('div'); sc.className = 'aws'; sc.style.setProperty('--rw', sideW() + 'px'); sc.dataset.amb = sceneMood(S.lvl);
   sc.innerHTML = `<div class="aws-bands">${bands}</div>
-    <div class="aws-hq"><i class="aws-pic"></i>${marks}<div class="aws-hp"><b>${hold ? 'Tenir' : S.lvl.name}</b><div class="bar"><i style="width:${hold ? 100 : (hq0.en / max) * 100}%"></i></div><span>${hold ? '' : `${fmtN(hq0.en)} / ${fmtN(max)}`}</span></div></div>
+    <div class="aws-hq"><i class="aws-pic"></i><i class="vcrack"></i>${marks}<div class="aws-hp"><b>${hold ? 'Tenir' : S.lvl.name}</b><div class="bar"><i style="width:${hold ? 100 : (hq0.en / max) * 100}%"></i></div><span>${hold ? '' : `${fmtN(hq0.en)} / ${fmtN(max)}`}</span></div></div>
     <div class="aws-wipe"></div><div class="aws-banner"><b>Assaut !</b></div>`;
   document.body.appendChild(sc);
+  // ambiance : poussière en suspension le jour, éclairs et tonnerre sous la pluie
+  let ambT = 0;
+  if (sc.dataset.amb === 'jour') sc.insertAdjacentHTML('beforeend', '<div class="aws-motes">' + Array.from({ length: 9 }, (_, k) => `<i style="--x:${(k * 11 + 6) % 92}%;--y:${(k * 29 + 12) % 70}%;--s:${(2 + (k % 3)).toFixed(1)}px;--t:${(5 + (k % 4) * 1.6).toFixed(1)}s;--dl:${(-k * 0.9).toFixed(1)}s"></i>`).join('') + '</div>');
+  if (sc.dataset.amb === 'pluie') {
+    sc.insertAdjacentHTML('beforeend', '<i class="aws-bolt"></i>');
+    ambT = setInterval(() => { if (fast || Math.random() < .45) return; const b = sc.querySelector('.aws-bolt'); if (!b) return; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); setTimeout(() => SFX.play('thunder'), 380 + Math.random() * 500); }, 2200);
+  }
   sc.classList.add('focus');   // un seul secteur affiché à la fois, en grand ; vue d'ensemble pour le bilan
   // taille commune des unités : la même pour tous les secteurs, calée sur la bande la plus contrainte (hauteur et largeur)
   sc.querySelectorAll('.awb').forEach(b => { const t = (b.className.match(/t-(\w+)/) || [])[1]; b.dataset.ambok = ambHas(t, sc.dataset.amb) ? '1' : '0'; });
@@ -4977,15 +5012,29 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     for (let k = 0; k < n; k++) setTimeout(() => { fxOn(box, kind, k === n - 1, (Math.random() - .5) * w * .8, (Math.random() - .5) * h * (kind === 'flak' ? .7 : .2)); if (kind === 'splash') SFX.play('shell'); }, k * gap);
   };
   // le QG brûle de plus en plus : flammes peintes posées sur la façade, puis la version en ruines
+  const shk = el => { const q = el.parentElement; if (!q) return; q.style.setProperty('--sk', (Math.random() < .5 ? -1 : 1)); q.classList.remove('shk'); void q.offsetWidth; q.classList.add('shk'); };
   const burn = () => {
     const r = hold ? 1 : hpNow / max;
     if (r < 0.5 && !hqBox.classList.contains('dmg')) { hqBox.classList.add('dmg'); SFX.play('boom'); }
+    hqBox.classList.toggle('c1', r < 0.75); hqBox.classList.toggle('c2', r < 0.5); hqBox.classList.toggle('c3', r < 0.25);
+    const smk = r < 0.25 ? 3 : r < 0.5 ? 2 : r < 0.75 ? 1 : 0;
+    for (let k = hqBox.querySelectorAll('.vsmk').length; k < smk; k++) { const m = document.createElement('i'); m.className = 'vsmoke vsmk ' + 'abc'[k]; m.style.left = (4 + k * 30) + '%'; m.style.animationDelay = (k * 0.9) + 's'; hqBox.appendChild(m); }
     const want = r < 0.25 ? 6 : r < 0.5 ? 4 : r < 0.8 ? 2 : 0, have = hqBox.querySelectorAll('.vflame').length;
     for (let k = have; k < want; k++) { const f = document.createElement('i'); f.className = 'vflame'; f.style.left = (8 + ((k * 37) % 76)) + '%'; f.style.top = (22 + ((k * 23) % 34)) + '%'; f.style.setProperty('--fd', (k * 0.17) + 's'); hqBox.appendChild(f); }
   };
   if (typeof VFX !== 'undefined') sc.style.setProperty('--vfx-boom', `url(${VFX.boom})`), sc.style.setProperty('--vfx-impact', `url(${VFX.impact})`), sc.style.setProperty('--vfx-flame', `url(${VFX.flame})`), sc.style.setProperty('--vfx-muzzle', `url(${VFX.muzzle})`), sc.style.setProperty('--vfx-blast', `url(${VFX.blast})`), VFX.splash && sc.style.setProperty('--vfx-splash', `url(${VFX.splash})`), VFX.flak && sc.style.setProperty('--vfx-flak', `url(${VFX.flak})`);
   burn();
   if (typeof VFX !== 'undefined' && VFX.broad) { sc.style.setProperty('--vfx-broad', `url(${VFX.broad})`); sc.style.setProperty('--vfx-torpboom', `url(${VFX.torpboom})`); document.documentElement.style.setProperty('--vfx-torp', `url(${VFX.torp})`); }
+  // synchro tir → impact : chaque projectile de l'unité qui tire enregistre son atterrissage, le score et la réaction du QG attendent le vrai impact
+  const landings = [];
+  const fly = (...a) => { const p = flyFx(...a); landings.push(p); return p; };
+  // réaction du QG à chaque salve : tremblement proportionnel aux dégâts, éclats de gravats
+  const hqImpact = a => {
+    const k = Math.min(1, a / Math.max(1, max * 0.1));
+    hqBox.style.setProperty('--hs', (0.45 + k * 1.1).toFixed(2)); hqBox.classList.remove('hit'); void hqBox.offsetWidth; hqBox.classList.add('hit');
+    if (fast) return;
+    for (let j = 0; j < 2 + Math.round(k * 3); j++) { const d = document.createElement('i'); d.className = 'vdeb'; d.style.setProperty('--dx', ((Math.random() - .5) * 60) + 'px'); d.style.setProperty('--dy', (-18 - Math.random() * 34) + 'px'); d.style.left = (20 + Math.random() * 60) + '%'; d.style.top = (30 + Math.random() * 30) + '%'; hqBox.appendChild(d); setTimeout(() => d.remove(), 700); }
+  };
   // tir naval : le navire recule et tangue, la bordée crache feu et fumée, les obus partent en cloche ; le sous-marin lance ses torpilles
   const navalFire = (tk, u, mk) => {
     const k = SPR_OF[u.key], sub = k === 'sousmarin', big = k === 'croiseur';
@@ -4996,12 +5045,12 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       const n = Math.min(3, Math.max(1, u.menMax + 1));
       // les torpilles filent au ras de l'eau jusqu'au pied du QG
       const r = mk.getBoundingClientRect(), t = tk.getBoundingClientRect(), wy = t.top + t.height * 0.72, dy = Math.max(-r.height, Math.min(120, wy - (r.top + r.height / 2)));
-      for (let j = 0; j < n; j++) setTimeout(() => flyFx(tk, { left: r.left, top: wy + (j - 1) * 6, width: 0, height: 0 }, 'torp', 700).then(() => { fxOn(mk, 'torpboom', j === n - 1, (Math.random() - .5) * 30, dy); SFX.play('boom'); }), j * 170);
+      for (let j = 0; j < n; j++) setTimeout(() => fly(tk, { left: r.left, top: wy + (j - 1) * 6, width: 0, height: 0 }, 'torp', 700).then(() => { fxOn(mk, 'torpboom', j === n - 1, (Math.random() - .5) * 30, dy); SFX.play('boom'); }), j * 170);
     } else {
       if (!vid) { const b = document.createElement('i'); b.className = 'vbroad' + (big ? ' big' : ''); tk.appendChild(b); setTimeout(() => b.remove(), 680); }
       sc.classList.remove('kick'); void sc.offsetWidth; sc.classList.add('kick');
       const shots = big ? 3 : Math.min(4, Math.max(2, Math.ceil(u.menMax / 2) + 1));
-      for (let j = 0; j < shots; j++) setTimeout(() => flyFx(tk, mk, 'shell naval', 600 + j * 40).then(() => boomOn(mk, j === shots - 1, (Math.random() - .5) * 40, (Math.random() - .5) * 36)), j * 90);
+      for (let j = 0; j < shots; j++) setTimeout(() => fly(tk, mk, 'shell naval', 600 + j * 40).then(() => boomOn(mk, j === shots - 1, (Math.random() - .5) * 40, (Math.random() - .5) * 36)), j * 90);
     }
     setTimeout(() => tk.classList.remove('navfire'), 700);
   };
@@ -5015,11 +5064,11 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       setTimeout(() => { const rt = document.createElement('i'); rt.className = 'vreticle'; mk.appendChild(rt); setTimeout(() => rt.remove(), 1200); }, 220);
     } else {
       if (!vid) add('vwingmuz', 460);
-      for (let j = 0; j < 9; j++) setTimeout(() => flyFx(tk, { left: mr.left + (Math.random() - .3) * 70, top: mr.top + 10 + Math.random() * 40, width: 0, height: 0 }, 'bullet tracer', 240), j * 40);
+      for (let j = 0; j < 9; j++) setTimeout(() => fly(tk, { left: mr.left + (Math.random() - .3) * 70, top: mr.top + 10 + Math.random() * 40, width: 0, height: 0 }, 'bullet tracer', 240), j * 40);
       setTimeout(() => { fxOn(mk, 'strafe', false, -10, 22); SFX.play('mg'); }, 300);
       if (k === 'chasseur' && !vid) setTimeout(() => {
         tk.classList.add('rkt'); SFX.play('shell');
-        for (let j = 0; j < 2; j++) setTimeout(() => flyFx(tk, mk, 'rocket', 430).then(() => boomOn(mk, j === 1, (Math.random() - .5) * 34, (Math.random() - .5) * 30)), j * 120);
+        for (let j = 0; j < 2; j++) setTimeout(() => fly(tk, mk, 'rocket', 430).then(() => boomOn(mk, j === 1, (Math.random() - .5) * 34, (Math.random() - .5) * 30)), j * 120);
       }, 420);
     }
     setTimeout(() => tk.classList.remove('airdive', 'rkt'), 1000);
@@ -5032,14 +5081,14 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     if (k === 'tank' || k === 'td') {
       if (!vid) { tk.classList.add('tankfire'); add('vblast', 420); add('vring', 480); solOn(tk, 'roulage', 'roul', 900) || add('vdust', 850); }
       sc.classList.remove('kick'); void sc.offsetWidth; sc.classList.add('kick');
-      setTimeout(() => flyFx(tk, mk, 'apshell', 240).then(() => { const d = document.createElement('span'); d.className = 'vimpact'; mk.appendChild(d); setTimeout(() => d.remove(), 650); boomOn(mk, true, (Math.random() - .5) * 24, (Math.random() - .5) * 24); }), vid ? 140 : 0);
+      setTimeout(() => fly(tk, mk, 'apshell', 240).then(() => { const d = document.createElement('span'); d.className = 'vimpact'; mk.appendChild(d); setTimeout(() => d.remove(), 650); boomOn(mk, true, (Math.random() - .5) * 24, (Math.random() - .5) * 24); }), vid ? 140 : 0);
     } else if (k === 'arty') {
       if (!vid) { tk.classList.add('artyfire'); add('vblast up', 420); solOn(tk, 'pas', 'souffle', 900) || add('vdust', 850); }
       sc.classList.remove('kick'); void sc.offsetWidth; sc.classList.add('kick');
-      for (let j = 0; j < 2; j++) setTimeout(() => flyFx(tk, mk, 'shell naval', 680).then(() => { fxOn(mk, 'earth', j === 1, (Math.random() - .5) * 40, 18); SFX.play('boom'); }), j * 160);
+      for (let j = 0; j < 2; j++) setTimeout(() => fly(tk, mk, 'shell naval', 680).then(() => { fxOn(mk, 'earth', j === 1, (Math.random() - .5) * 40, 18); SFX.play('boom'); }), j * 160);
     } else {
       if (!vid) { tk.classList.add('mgfire'); add('vmuz', 300); solOn(tk, 'roulage', 'roul sm', 900) || add('vdust sm', 850); }
-      for (let j = 0; j < 8; j++) setTimeout(() => flyFx(tk, { left: mr.left + (Math.random() - .3) * 70, top: mr.top + 10 + Math.random() * 40, width: 0, height: 0 }, 'bullet tracer', 230), j * 45);
+      for (let j = 0; j < 8; j++) setTimeout(() => fly(tk, { left: mr.left + (Math.random() - .3) * 70, top: mr.top + 10 + Math.random() * 40, width: 0, height: 0 }, 'bullet tracer', 230), j * 45);
       setTimeout(() => fxOn(mk, 'strafe', false, -10, 22), 280);
     }
     setTimeout(() => tk.classList.remove('tankfire', 'artyfire', 'mgfire'), 800);
@@ -5080,10 +5129,12 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     band.classList.add('adv'); SFX.play('land'); if (!fast) { harass(band, 4, 170); shellFall(band, 2); footFx(band, 5, 70); } await T(200);
     const toks = [...band.querySelectorAll('.awu')], per = Math.max(100, Math.min(230, 900 / Math.max(1, toks.length)));
     let chips = 0;
+    toks.forEach((t, j) => { t.style.setProperty('--j', j); const q = live.find(x => x.uid === +t.dataset.uid); if (q && q.stam <= 1) t.classList.add('tired'); });
+    if (!fast) { band.classList.add('enter'); setTimeout(() => band.classList.remove('enter'), 900); }
     for (const tk of toks) {
       const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) continue;
       const a = unitAtk(S, u); if (!a) continue;
-      tk.classList.add('fire'); SFX.play(SND_OF[u.key] || 'rifle', Math.min(u.menMax, 10));
+      landings.length = 0; tk.classList.add('fire'); SFX.play(SND_OF[u.key] || 'rifle', Math.min(u.menMax, 10));
       void tk.offsetWidth; // la pose de tir doit être affichée avant de lancer sa séquence
       requestAnimationFrame(() => tk.querySelectorAll('animate[data-once]').forEach(a => { try { a.beginElement(); } catch (e) { /* navigateur sans SMIL */ } }));
       const naval = u.cls === 'ship' && typeof VFX !== 'undefined' && VFX.broad, aerial = u.cls === 'air' && typeof VFX !== 'undefined' && VFX.strafe, rolling = (u.cls === 'wheel' || u.cls === 'track') && typeof VFX !== 'undefined' && VFX.dust;
@@ -5095,21 +5146,21 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       else if (UNARMED[SPR_OF[u.key]]) { /* observateurs et infirmiers ne tirent pas : ni flash ni balles, juste leur apport */ }
       else if (!tk.classList.contains('has-fire') || u.cls === 'air') { const mz = document.createElement('i'); mz.className = 'vmuz'; tk.appendChild(mz); setTimeout(() => mz.remove(), 260); }
       const special = naval || aerial || rolling, poses = !special && !!tk.querySelector('animate[data-once]'), shots = special || UNARMED[SPR_OF[u.key]] ? 0 : Math.min(6, Math.max(2, Math.ceil(u.menMax / 4)));
-      for (let k = 0; k < shots; k++) setTimeout(() => flyFx(tk, mk, u.cls === 'ship' || u.kw.includes('arty') ? 'shell' : u.cls === 'air' ? 'bullet air' : 'bullet', 300 + k * 30), k * 50);
+      for (let k = 0; k < shots; k++) setTimeout(() => fly(tk, mk, u.cls === 'ship' || u.kw.includes('arty') ? 'shell' : u.cls === 'air' ? 'bullet air' : 'bullet', 300 + k * 30), k * 50);
       popAt(tk, '+' + fmtN(a), '#2559b5');
-      await T(special ? Math.max(per * 0.55, 500) : poses ? Math.max(per * 0.55, 480) : per * 0.55);
-      chips += a; chEl.textContent = fmtN(chips); bump(chEl);
-      if (!special && !UNARMED[SPR_OF[u.key]]) setTimeout(() => { if (u.cls === 'foot' && !heavy) bulletHits(mk, 3); else boomOn(mk, false, (Math.random() - .5) * 40, (Math.random() - .5) * 30); }, 120);
-      await T(special ? Math.max(per * 0.45, 380) : poses ? Math.max(per * 0.45, 340) : per * 0.45); tk.classList.remove('fire');
+      await Promise.all([T(special ? Math.max(per * 0.55, 500) : poses ? Math.max(per * 0.55, 480) : per * 0.55), Promise.race([Promise.all(landings), sleep(1600)])]);
+      chips += a; chEl.textContent = fmtN(chips); bump(chEl); shk(chEl); hqImpact(a);
+      if (!special && !UNARMED[SPR_OF[u.key]]) setTimeout(() => { if (u.cls === 'foot' && !heavy) bulletHits(mk, 3); else boomOn(mk, false, (Math.random() - .5) * 40, (Math.random() - .5) * 30); }, 0);
+      await T(special ? Math.max(per * 0.45, 380) : poses ? Math.max(per * 0.45, 340) : per * 0.45); tk.classList.remove('fire'); if (u.stam <= 1) tk.classList.add('spent');
     }
     if (f.barrage) { SFX.play('shell'); boomOn(mk, true); chips += f.barrage; chEl.textContent = fmtN(chips); bump(chEl); cbs.insertAdjacentHTML('beforeend', `<i class="cb a lit">Barrage +${f.barrage}</i>`); await T(320); }
     chEl.textContent = fmtN(f.baseAtk);
     // les combos s'allument et le Mult grimpe
-    let add = 1, mul = 1;
+    let add = 1, mul = 1, ci = 0;
     for (const k of f.combos.atk.slice().sort((x, y) => (x.mul ? 1 : 0) - (y.mul ? 1 : 0))) {
       if (k.mul) mul *= k.mul; else add += k.add || 0;
       cbs.insertAdjacentHTML('beforeend', cbTag(k, 'a').replace('class="cb', 'class="cb lit'));
-      muEl.textContent = fmtMult(Math.round(add * mul * 100) / 100); bump(muEl); SFX.play(k.mul ? 'upgrade' : 'select');
+      muEl.textContent = fmtMult(Math.round(add * mul * 100) / 100); bump(muEl); SFX.play('rise', ci++); if (k.mul) SFX.play('upgrade');
       await T(k.mul ? 260 : 180);
     }
     muEl.textContent = fmtMult(f.mult.atk);
@@ -5118,7 +5169,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     if (f.strike !== f.atk) { toEl.classList.add('cut'); band.insertAdjacentHTML('beforeend', `<span class="awb-note">${f.notes.includes('bunker') ? 'Bunker ×0,7' : `Blindage −${mammothWall(S)}`}</span>`); countUp(toEl, f.atk, f.strike, fast ? 40 : 260); SFX.play('intercept'); await T(320); }
     // la salve du secteur frappe le QG
     if (f.strike > 0) {
-      SFX.play('bigcannon');
+      SFX.play('bigcannon'); band.classList.add('salvo');
       await flyFx(toEl, mk, 'salvo', 360, `<b>${SWORD}${fmtN(f.strike)}</b>`);
       boomOn(mk, true); SFX.play('hqhit'); hqBox.classList.remove('hit'); void hqBox.offsetWidth; hqBox.classList.add('hit');
       sc.classList.remove('quake'); void sc.offsetWidth; sc.classList.add('quake');
@@ -5128,7 +5179,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       if (!hold) { hpBar.style.width = (hpNow / max) * 100 + '%'; hpTx.textContent = `${fmtN(hpNow)} / ${fmtN(max)}`; }
       await T(300);
     }
-    band.classList.remove('act', 'adv');
+    band.classList.remove('act', 'adv', 'salvo', 'enter');
   }
   sc.querySelectorAll('.awb').forEach(b => b.classList.remove('dim'));
   if (n > 1) {   // le plan se resserre : tous les secteurs reviennent pour le bilan de la frappe
@@ -5168,7 +5219,10 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     hqBox.classList.remove('firing');
     await banner(`<small>Riposte ${fmtN(en.atk)} − Défense ${fmtN(en.def)}</small><b>${en.dmg ? '−' + fmtN(en.dmg) + ' à votre QG' : 'Riposte bloquée !'}</b>`, en.dmg ? 'red' : 'green', 950);
   }
-  sc.classList.add('out'); await T(260); sc.remove();
+  // les unités à leur dernier assaut se dissipent avant le retour au plateau
+  const spent = [...sc.querySelectorAll('.awu.spent')];
+  if (spent.length) { spent.forEach(t => t.classList.add('dissolve')); await T(750); }
+  clearInterval(ambT); sc.classList.add('out'); await T(260); sc.remove();
 }
 // Un secteur au combat : chaque unité tire (Attaque qui s'ajoute), les combos font grimper le Mult, puis la salve part sur le QG ennemi
 async function secAnim(st, slow, live) {
