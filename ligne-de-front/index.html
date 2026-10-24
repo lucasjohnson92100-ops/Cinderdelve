@@ -2312,6 +2312,19 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cspec .cs-sy b { color: #1f6a2f; } .cspec .cs-li b { color: #a3361d; }
 @media (max-height: 340px) { .cspec { margin-top: 4px; padding: 4px 8px; } .cspec .cs-hd { margin-bottom: 1px; font-size: .9rem; } .cspec .cs-hd > b { font-size: 1.2rem; } .cspec .cs-hd small { display: none; } .cspec p { font-size: .72rem; margin-bottom: 1px; } }
 .cspec .cs-sy b::after, .cspec .cs-li b::after { content: " :"; }
+/* ---- Bulle d'explication de la carte sélectionnée ---- */
+.btl.land { position: relative; }
+.btl.land > .cardpop { position: absolute !important; left: 10px; right: auto; grid-area: auto; z-index: 30; width: min(340px, calc(100% - var(--rw, 200px) - 30px)); padding: 8px 10px 9px; border-radius: 12px; pointer-events: none; color: #f6ecd0; background: linear-gradient(180deg, rgba(34, 46, 64, .97), rgba(20, 28, 40, .97)); border: 2px solid #ffd24a; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); animation: cppop .22s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes cppop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+.cardpop .cp-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.cardpop .cp-ic { font-size: 1.5rem; font-weight: 400; line-height: 1; }
+.cardpop .cp-nm { flex: 1; min-width: 0; font-family: var(--font-display); font-size: 1rem; line-height: 1.05; } .cardpop .cp-nm small { display: block; font-family: inherit; font-size: .6rem; color: #9fb1c9; }
+.cardpop .cp-tag { flex: none; padding: 2px 8px; border-radius: 99px; background: #ffd24a; color: #3b2a00; font-family: var(--font-display); font-size: .72rem; }
+.cardpop .cp-row { margin: 0 0 3px; display: grid; grid-template-columns: 52px 1fr; gap: 6px; font-size: .78rem; line-height: 1.22; } .cardpop .cp-row:last-child { margin: 0; }
+.cardpop .cp-row i { font-style: normal; font-weight: 800; font-size: .66rem; letter-spacing: .04em; text-transform: uppercase; color: #ffd24a; padding-top: 1px; }
+.cardpop .cp-row.ok i { color: #8be39a; } .cardpop .cp-row.lim i { color: #ff9c8a; } .cardpop .cp-row.now { color: #bff0c8; } .cardpop .cp-row.now i { color: #8be39a; }
+@media (max-height: 340px) { .cardpop { padding: 5px 8px 6px; width: min(300px, calc(100% - var(--rw, 200px) - 24px)); } .cardpop .cp-hd { margin-bottom: 2px; } .cardpop .cp-ic { font-size: 1.15rem; } .cardpop .cp-nm { font-size: .82rem; } .cardpop .cp-nm small { display: none; } .cardpop .cp-row { font-size: .64rem; grid-template-columns: 42px 1fr; gap: 4px; margin-bottom: 1px; } .cardpop .cp-row i { font-size: .56rem; } .cardpop .cp-tag { font-size: .6rem; padding: 1px 6px; } }
+@media (prefers-reduced-motion: reduce) { .cardpop { animation: none; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -3868,6 +3881,13 @@ const CARD_SPEC = {
 };
 const specBadge = card => { const t = CARD_SPEC[card.t]; return t ? `<span class="hspec" title="${t.what}"><b>${t.ic}</b> ${t.nm}</span>` : ''; };
 const specHTML = card => { const t = CARD_SPEC[card.t]; return t ? `<div class="cspec"><div class="cs-hd"><b>${t.ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${t.what}</p><p class="cs-sy"><b>Conseil</b> ${t.syn}</p><p class="cs-li"><b>À savoir</b> ${t.lim}</p></div>` : ''; };
+// bulle d'explication affichée dès qu'une carte est sélectionnée : effet, conseil, limite, et ce qui compte dans la bataille en cours
+const cardPopHTML = (card, i, n) => {
+  const t = CARD_SPEC[card.t], d = TYPES[card.t]; if (!t) return '';
+  const now = cardUseNow(card), warn = cardWarnNow(card);
+  return `<div class="cardpop" role="status"><div class="cp-hd"><b class="cp-ic">${t.ic}</b><span class="cp-nm">${d.name}${n > 1 ? `<small>carte ${i + 1} sur ${n}</small>` : ''}</span><span class="cp-tag">${t.nm}</span></div>
+    <p class="cp-row"><i>Effet</i>${t.what}</p><p class="cp-row ok"><i>Conseil</i>${t.syn}</p><p class="cp-row lim"><i>Limite</i>${t.lim}</p>${now ? `<p class="cp-row now"><i>★ Ici</i>${now}</p>` : ''}${warn ? `<p class="cp-row lim"><i>⚠</i>${warn.replace(/^Attention\s*:?\s*/, '')}</p>` : ''}</div>`;
+};
 // effet ennemi du combat en cours qui rend cette carte précieuse (affiché sur la carte et dans sa fiche)
 const cardUseNow = card => { const t = CARD_TIPS[card.t], fx = t && t.fx; if (!fx || typeof S === 'undefined' || !S || !S.fx) return ''; const k = S.fx.find(x => fx[x] && !/^Attention/.test(fx[x])); return k ? `${HQFX[k].name} : ${fx[k]}` : ''; };
 const cardWarnNow = card => { const t = CARD_TIPS[card.t], fx = t && t.fx; if (!fx || typeof S === 'undefined' || !S || !S.fx) return ''; const k = S.fx.find(x => fx[x] && /^Attention/.test(fx[x])); return k ? fx[k] : ''; };
@@ -4418,7 +4438,8 @@ function renderBattle() {
   const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : '', one = picked.length === 1 ? picked[0] : null;
   const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
-  app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">
+  const pop = picked.length && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
+  app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">${pop}
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
@@ -4428,6 +4449,7 @@ function renderBattle() {
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `${picked.length ? '' : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes : touchez des cartes puis Défausser">⟲ ${S.discards}</button>`}<button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button>${picked.length ? `<button class="btn dscgo" data-act="discard" id="bend" ${S.discards > 0 && picked.length <= MAX_DISCARD ? '' : 'disabled'}>⟲ Défausser ${picked.length} <small class="dleft">${S.discards}</small></button>` : `<button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}`}</div>
     </div></div>
   </div>`;
+  { const place = () => { const pp = app.querySelector('.cardpop'); if (!pp) return; const tops = [...app.querySelectorAll('#hand .card:not(.sel)')].map(e => e.getBoundingClientRect().top); const cb = pp.offsetParent ? pp.offsetParent.getBoundingClientRect() : { top: 0 }; pp.style.bottom = 'auto'; pp.style.top = Math.max(2, Math.round((tops.length ? Math.min(...tops) : window.innerHeight * .6) - 6 - pp.offsetHeight - cb.top)) + 'px'; }; place(); [200, 450, 800].forEach(ms => setTimeout(place, ms)); }
   if (!busy && !S.over) saveRun('battle');
   if (S.turn === 1 && tutoStage() === 1 && !tutoState().guide && !busy && !document.querySelector('.modal')) { tutoMark('guide'); setTimeout(guideModal, 300); }
   showCoach();
