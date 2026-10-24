@@ -252,7 +252,7 @@ Une touche isolée sur l'écran pendant la résolution ne passe plus l'animation
 Chaque carte (unités et ordres) a une fiche « Spécificité » dans sa fenêtre de détails : icône et nom court, ce qu'elle fait, un conseil d'usage et ses limites. En main, un badge doré sur l'illustration rappelle la spécificité d'un coup d'œil (Commando, Tir guidé, Élan, Nid défensif…). Les conseils liés à l'ennemi de la bataille en cours (★ / ⚠) restent affichés en dessous.
 
 ## Explication à la sélection d'une carte
-Dès qu'une carte est touchée dans la main, une bulle apparaît au-dessus de la main avec son nom, sa spécificité (pastille dorée) et trois lignes courtes : **Effet**, **Conseil**, **Limite** ; plus une ligne ★ si elle est précieuse contre l'ennemi du combat en cours. Avec plusieurs cartes, la bulle suit la dernière carte touchée. Elle ne bloque pas les touches (on peut viser un secteur à travers).
+Dès qu'une carte est touchée dans la main, une bulle apparaît dans la colonne de droite (hors du plateau, au-dessus de « Votre QG ») avec son nom, sa spécificité (pastille dorée) et trois lignes courtes : **Effet**, **Conseil**, **Limite** ; plus une ligne ★ si elle est précieuse contre l'ennemi du combat en cours. Avec plusieurs cartes, la bulle suit la dernière carte touchée. Elle ne bloque pas les touches (on peut viser un secteur à travers).
 
 ## Explications des jokers et des doctrines
 Toucher une doctrine (choix de départ) ou un joker (récompense) ouvre une fiche avant de confirmer : nom court de la spécificité, effet, **Conseil**, **À savoir**, et pour les doctrines le rôle des 3 cartes fournies. Les mêmes fiches s'affichent dans les jokers possédés (bouton de la barre de jokers) et dans le détail d'un joker en boutique.
