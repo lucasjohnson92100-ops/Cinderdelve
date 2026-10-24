@@ -2310,7 +2310,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cspec .cs-hd > b { font-size: 1.6rem; font-weight: 400; } .cspec .cs-hd small { display: block; font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: #8a6508; }
 .cspec p { margin: 0 0 3px; font-size: .82rem; } .cspec p:last-child { margin: 0; }
 .cspec .cs-sy b { color: #1f6a2f; } .cspec .cs-li b { color: #a3361d; }
-@media (max-height: 340px) { .cspec { margin-top: 4px; padding: 4px 8px; } .cspec .cs-hd { margin-bottom: 1px; font-size: .9rem; } .cspec .cs-hd > b { font-size: 1.2rem; } .cspec .cs-hd small { display: none; } .cspec p { font-size: .72rem; margin-bottom: 1px; } }
+@media (max-height: 340px) { .cspec .cs-cards { font-size: .66rem; margin-top: 2px; padding-left: 14px; } .cspec .cs-hd > b svg { height: 28px; } .cspec { margin-top: 4px; padding: 4px 8px; } .cspec .cs-hd { margin-bottom: 1px; font-size: .9rem; } .cspec .cs-hd > b { font-size: 1.2rem; } .cspec .cs-hd small { display: none; } .cspec p { font-size: .72rem; margin-bottom: 1px; } }
 .cspec .cs-sy b::after, .cspec .cs-li b::after { content: " :"; }
 /* ---- Bulle d'explication de la carte sélectionnée ---- */
 .btl.land { position: relative; }
@@ -2325,6 +2325,9 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cardpop .cp-row.ok i { color: #8be39a; } .cardpop .cp-row.lim i { color: #ff9c8a; } .cardpop .cp-row.now { color: #bff0c8; } .cardpop .cp-row.now i { color: #8be39a; }
 @media (max-height: 340px) { .cardpop { padding: 5px 8px 6px; width: min(300px, calc(100% - var(--rw, 200px) - 24px)); } .cardpop .cp-hd { margin-bottom: 2px; } .cardpop .cp-ic { font-size: 1.15rem; } .cardpop .cp-nm { font-size: .82rem; } .cardpop .cp-nm small { display: none; } .cardpop .cp-row { font-size: .64rem; grid-template-columns: 42px 1fr; gap: 4px; margin-bottom: 1px; } .cardpop .cp-row i { font-size: .56rem; } .cardpop .cp-tag { font-size: .6rem; padding: 1px 6px; } }
 @media (prefers-reduced-motion: reduce) { .cardpop { animation: none; } }
+.cspec .cs-cards { margin: 4px 0 0; padding-left: 18px; font-size: .78rem; } .cspec .cs-cards li { margin: 1px 0; }
+.doctrine.chosen, .off-item.chosen { outline: 4px solid #ffd24a; outline-offset: 1px; transform: translateY(-2px); }
+.cspec .cs-hd > b svg { height: 40px; width: auto; display: block; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -3947,11 +3950,55 @@ function newCampaign() {
   doctrineStep();
 }
 // Choix d'une doctrine : 3 cartes qui orientent le paquet de départ
+// Fiches de spécificité des jokers et des doctrines (nom court, effet, conseil, limite) : mêmes blocs que les cartes
+const JOKER_SPEC = {
+  moreau: { nm: 'Infanterie tenace', syn: "Parfait avec un paquet rempli de tireurs : ils restent un tour de plus au front.", lim: "Sans effet sur les véhicules, navires et avions." },
+  dubois: { nm: 'Terre +1 dégât', syn: "Très fort avec beaucoup de tirs par carte : tireurs, jeeps, mitrailleuses.", lim: "Ne concerne que les unités terrestres." },
+  ashby: { nm: 'Main élargie', syn: "Plus de choix pour former de gros combos chaque tour.", lim: "Vous avez besoin de ravitaillement pour jouer ces cartes en plus." },
+  kowalski: { nm: 'Ravitaillement +1', syn: "Utile dès que votre paquet contient des unités chères (blindés, navires).", lim: "Un seul point par tour : ne remplace pas une bonne économie de cartes." },
+  meyer: { nm: 'Endurance terrestre', syn: "Excellent avec des infirmiers : +2 au lieu de +1 pour tout le secteur.", lim: "Ne profite pas aux navires ni aux avions." },
+  ito: { nm: 'Ordres moins chers', syn: "Avec un paquet riche en ordres (Assaut, Barrage, Fumigènes) : ils enchaînent presque gratuitement.", lim: "Inutile si vous avez peu d'ordres." },
+  silva: { nm: 'Flotte économique', syn: "Idéal avec la doctrine Marine ou plusieurs destroyers.", lim: "Aucun effet sur l'armée de terre." },
+  brandt: { nm: 'QG +20 PV', syn: "Une assurance sur toute la campagne, très utile si vous encaissez des ripostes.", lim: "N'augmente pas votre Attaque." },
+  peintre: { nm: 'Même couleur', syn: "Construisez des secteurs d'une seule couleur : le multiplicateur grimpe.", lim: "Demande des cartes de la même couleur dans le même secteur." },
+  soleil: { nm: 'Jaune +1 dégât', syn: "À associer à beaucoup de cartes jaunes dans le paquet.", lim: "Ne touche que les cartes jaunes." },
+  braise: { nm: 'Rouge +25 %', syn: "À associer à beaucoup de cartes rouges : leur effectif et leur Attaque augmentent.", lim: "Ne touche que les cartes rouges." },
+  mousse: { nm: 'Vert endurant', syn: "Vos cartes vertes restent plus longtemps au front.", lim: "Ne touche que les cartes vertes." },
+  ombre: { nm: 'Noir offensif', syn: "À associer à beaucoup de cartes noires pour frapper plus fort.", lim: "Ne touche que les cartes noires." },
+  amiral: { nm: 'Mer et air durables', syn: "Vos navires et avions restent plus longtemps en jeu : bon avec la doctrine Marine.", lim: "Aucun effet sur l'armée de terre." },
+  fort: { nm: 'Départ rapide', syn: "Permet de déployer plus au premier tour, quand l'ennemi n'a pas encore frappé.", lim: "Seulement au premier tour de chaque bataille." },
+  quartier: { nm: 'Butin +50 %', syn: "À prendre tôt dans la campagne : chaque victoire rapporte davantage.", lim: "N'aide pas à gagner les batailles elles-mêmes." },
+  intendant: { nm: 'Défausses', syn: "Permet de renouveler votre main pour viser un combo précis.", lim: "Plus de défausses ne règle pas un paquet faible." },
+  blitz: { nm: 'Élan ×2', syn: "Avec la doctrine Blitz : posez les véhicules à la suite, chacun ajoute +2 dégâts.", lim: "Utile seulement avec plusieurs véhicules à Élan dans le même tour." },
+  radio: { nm: 'Tir guidé ×2', syn: "Avec observateurs, artillerie et navires dans le même secteur.", lim: "Ne sert pas sans unité de Tir guidé." },
+  sapeur: { nm: 'Génie fort', syn: "Le génie devient une vraie unité d'attaque, pas seulement anti-mines.", lim: "Dépend d'avoir du génie dans le paquet." },
+  lebrun: { nm: 'Flotte soudée', syn: "Plus vous alignez de navires en mer, plus chacun frappe.", lim: "Il faut au moins deux navires pour qu'il serve." },
+  faucon: { nm: 'Commandos', syn: "Parfait avec la doctrine Commandos : parachutistes bon marché et sabotage renforcé.", lim: "Sans parachutistes, il ne fait rien." },
+  fer: { nm: 'Armes combinées', syn: "Mêlez véhicules et infanterie dans un secteur pour gagner du Mult en plus.", lim: "Demande les deux types d'unités dans le même secteur." },
+  clairon: { nm: 'Mult par secteur', syn: "Occupez beaucoup de secteurs : chacun ajoute +1 au Mult d'Attaque.", lim: "Peu rentable si vous concentrez tout dans un seul secteur." },
+  tenaille: { nm: 'Appui ×2', syn: "Quand navires et avions soutiennent vos secteurs terrestres.", lim: "Il faut un appui aérien ou naval actif." },
+  fanfare: { nm: 'Gros secteurs', syn: "Un secteur d'au moins 3 unités terrestres gagne Attaque ×1,5 : concentrez vos troupes.", lim: "Ne s'applique pas aux petits secteurs." },
+  triade: { nm: 'Couverture ×2', syn: "Avec un chasseur en jeu : Défense ×2 au lieu de ×1,5 sur vos secteurs.", lim: "Il faut un chasseur en couverture." },
+};
+const DOCTRINE_SPEC = {
+  blitz: { nm: 'Offensive rapide', what: "Des véhicules à Élan : chaque véhicule déjà posé ce tour ajoute des dégâts aux suivants.", syn: "Posez le half-track d'abord, puis les jeeps, et finissez par l'ordre Assaut sur ce secteur.", lim: "Le blindé est interdit en forêt et en rivière : misez sur les routes, champs et villages.", cards: ["Half-track : Défense solide, lance l'Élan.", "Jeeps : profitent de chaque véhicule déjà posé.", "Assaut : Attaque ×1,5 sur votre plus gros secteur."] },
+  artillerie: { nm: 'Tir guidé', what: "Un observateur marque la cible : l'artillerie et les navires du secteur font Attaque ×1,5.", syn: "Mettez l'observateur et la reconnaissance avec vos canons, puis ajoutez un Barrage.", lim: "L'observateur ne tire pas : il faut des canons à guider.", cards: ["Observateur : guide, n'attaque pas.", "Reconnaissance : 1 de ravitaillement, guide aussi.", "Barrage : +20 d'Attaque de base avant les combos."] },
+  defense: { nm: 'Tenir le front', what: "Des unités robustes et soignées : l'ennemi s'use contre votre Défense.", syn: "Mitrailleuse avec une autre infanterie : Nid défensif ; les infirmiers à poser en dernier ; le génie contre les fortifications.", lim: "Peu d'Attaque : la bataille est plus lente.", cards: ["Mitrailleuse : Défense 7, absorbe la riposte.", "Génie : déminage et Attaque ×2 contre un QG fortifié.", "Infirmiers : +1 endurance aux unités du secteur."] },
+  commandos: { nm: 'Frappe directe', what: "Des parachutistes ignorent les protections du QG, et le Sabotage retire des PV fixes.", syn: "Posez les parachutistes là où passera votre gros score, puis jouez Sabotage dessus.", lim: "Moins d'Attaque brute que l'infanterie classique.", cards: ["Parachutistes (rouge) : Commando, ignorent bunker et blindage.", "Parachutistes (vert) : plus endurants.", "Sabotage : −8 % PV du QG, seulement sur des parachutistes."] },
+  marine: { nm: 'Flotte et débarquement', what: "Un destroyer appuie vos secteurs depuis la mer, et le Débarquement fait arriver de l'infanterie gratuite.", syn: "Ajoutez d'autres navires pour le combo Flotte ; jouez le Débarquement quand une infanterie est en tête de pioche.", lim: "La batterie côtière ennemie divise par deux vos navires.", cards: ["Destroyer : appui naval, frappe le QG.", "Tireurs : de quoi débarquer sur la côte.", "Débarquement : première infanterie de la pioche, gratuite."] },
+};
+const specBlock = (ic, t, what, extra = '') => `<div class="cspec"><div class="cs-hd"><b>${ic}</b><span><small>Spécificité</small>${t.nm}</span></div><p>${what}</p><p class="cs-sy"><b>Conseil</b> ${t.syn}</p><p class="cs-li"><b>À savoir</b> ${t.lim}</p>${extra}</div>`;
+const jokerSpecHTML = (j, ic = 56) => { const t = JOKER_SPEC[j.id]; return t ? specBlock(officerSVG(j.id, ic), t, j.desc) : ''; };
 function doctrineStep() {
   saveRun('doctrine');
   app.innerHTML = `<div class="stack briefing"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${C.deck.length} cartes</span></div>
     <div class="panel">Votre paquet de départ est court : tireurs, jeeps, un blindé, deux destroyers, un chasseur et trois ordres. Une doctrine y ajoute 3 cartes et oriente votre campagne. Les autres unités se gagnent après chaque victoire.</div>
-    ${C.docOpts.map(id => { const d = DOCTRINES[id]; return `<button class="panel doctrine" data-doctrine="${id}"><b>${d.name}</b><span class="small muted">${d.tip}</span><span class="dchips">${doctrineCards(id).map(c => `<span class="dchip"><span class="dart">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 30) : spriteSVG(SPR_OF[c.t], 'me', 34, c.c)}</span><span class="dtx"><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span></span>`).join('')}</span></button>`; }).join('')}</div>`;
+    ${C.docOpts.map(id => { const d = DOCTRINES[id]; return `<button class="panel doctrine" data-doctrine="${id}"><b>${d.name}</b><span class="small muted">${d.tip}</span><span class="dchips">${doctrineCards(id).map(c => `<span class="dchip"><span class="dart">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 30) : spriteSVG(SPR_OF[c.t], 'me', 34, c.c)}</span><span class="dtx"><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span></span>`).join('')}</span></button>`; }).join('')}
+    <p class="small muted" style="text-align:center">Touchez une doctrine pour lire son fonctionnement avant de la choisir.</p></div>`;
+}
+function doctrineModal(id) {
+  const d = DOCTRINES[id], t = DOCTRINE_SPEC[id]; if (!t) return chooseDoctrine(id);
+  openModal(`<div class="hd"><span class="ribbon">${d.name}</span><button class="pill" data-act="close">Retour</button></div>${specBlock('🎖', t, d.tip, `<ul class="cs-cards">${t.cards.map(x => `<li>${x}</li>`).join('')}</ul>`)}<button class="btn go" data-docgo="${id}">Choisir cette doctrine</button>`);
 }
 function chooseDoctrine(id) {
   if (!C.docOpts || !C.docOpts.includes(id)) return;
@@ -3965,11 +4012,15 @@ function jokerBar() {
   const slots = Array.from({ length: MAX_JOKERS }, (_, i) => (C.officers[i] ? `<button class="jk" data-joker="${i}" aria-label="${JOKERS.find(j => j.id === C.officers[i]).name}">${officerSVG(C.officers[i], 38)}</button>` : '<span class="jk empty"></span>')).join('');
   return `<div class="jbar" title="Cartes joker">${slots}</div>`;
 }
+function jokerPickModal(id) {
+  const j = JOKERS.find(x => x.id === id); if (!j) return;
+  openModal(`<div class="hd"><span class="ribbon">${j.name}</span><button class="pill" data-act="close">Retour</button></div>${jokerSpecHTML(j, 44)}<button class="btn go" data-officergo="${id}">Prendre ce joker</button>`);
+}
 function jokerModal(i) {
   const j = JOKERS.find(x => x.id === C.officers[i]); if (!j) return;
   const inBattle = S && document.getElementById('hand');
   openModal(`<div class="hd"><span class="ribbon">Joker</span><button class="pill" data-act="close">Fermer</button></div>
-    <div class="off-item">${officerSVG(j.id, 56)}<span class="tx"><b>${j.name}</b><span>${j.desc}</span></span></div>
+    <div class="off-item">${officerSVG(j.id, 56)}<span class="tx"><b>${j.name}</b><span class="small muted">Coût ${j.cost}</span></span></div>${jokerSpecHTML(j)}
     ${inBattle ? '<p class="small muted">Vous pourrez vendre ce joker entre deux batailles.</p>' : `<button class="btn" data-sell="${i}">Vendre pour $${Math.floor(j.cost / 2)}</button>`}`);
 }
 const OBJ_SHORT = { hold: 'Tenir', kills: 'Frappe', burst: 'Frappe' };
@@ -5496,7 +5547,8 @@ function jokerStep() {
   if (C.officers.length >= MAX_JOKERS || !left.length) { C.loot += 6; toast('Vos 5 emplacements de joker sont pleins : +$6 de butin à la place.'); return afterJoker(); }
   const opts = shuffle(left).slice(0, 3);
   app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Choisissez un joker</span><span class="coin num">$${C.loot}</span></div><div class="panel">Un joker est une carte à effet permanent. Vous pouvez en garder 5 au maximum.</div>
-    <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div>${jokerBar()}</div>`;
+    <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div>
+    <p class="small muted" style="text-align:center">Touchez un joker pour lire son effet avant de le prendre.</p>${jokerBar()}</div>`;
 }
 const afterJoker = () => (C.phase === 'reward' ? toShop() : finishNode());
 
@@ -5585,7 +5637,7 @@ function shopDetail(kind, i) {
   const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates, u: sh.upgrades }[kind]?.[i]; if (!it) return;
   let body = '', title = '';
   if (kind === 'c') { title = TYPES[it.card.t].name; body = `<div class="cardrow">${cardHTML(it.card, 'pick')}</div>`; }
-  if (kind === 'j') { const d = JOKERS.find(x => x.id === it.id); title = d.name; body = `<div class="row" style="flex-wrap:nowrap;gap:14px">${officerSVG(it.id, 84)}<p>${d.desc}</p></div><p class="small muted">Un joker agit à chaque bataille, pour toute la campagne (5 au plus).</p>`; }
+  if (kind === 'j') { const d = JOKERS.find(x => x.id === it.id); title = d.name; body = jokerSpecHTML(d, 44); }
   if (kind === 'm') { const c = COMBOS.find(x => x.id === it.id), lv = (C.comboLv || {})[it.id] || 1, cur = c.add ? '+' + fmtMult(c.add + c.step * (lv - 1)) : '×' + fmtMult(c.mul + c.step * (lv - 1)), nx = c.add ? '+' + fmtMult(c.add + c.step * lv) : '×' + fmtMult(c.mul + c.step * lv); title = `Manuel : ${c.name}`; body = `<p><b>${c.name}</b> (${c.txt}) passe du niveau ${lv} au niveau ${lv + 1} : <b>${cur} → ${nx} Mult</b>, pour toute la campagne.</p>`; }
   if (kind === 'u' && it.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[it.id] || 0); title = `Fortifications : ${TERRAIN[it.id].name}`; body = `<p>Les secteurs <b>${TERRAIN[it.id].name}</b> passent de <b>${cap} à ${Math.min(MAX_CAP, cap + 1)} places</b>, pour toute la campagne (${MAX_CAP} au plus). Plus de places = de plus grosses mains dans ce terrain (Bataillon dès 5 unités).</p>`; }
   if (kind === 'u' && it.kind === 'c') { const lv = ((C.catLv || {})[it.id] || 0) + 1; title = `Niveau : ${CATS[it.id].name}`; body = `<p>Toutes vos unités <b>${CATS[it.id].name.toLowerCase()}</b> passent du niveau ${lv} au niveau ${lv + 1} : <b>+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense</b> de plus, pour toute la campagne.</p>`; }
@@ -5832,7 +5884,8 @@ document.addEventListener('click', e => {
   const nd = t.closest('[data-node]'); if (nd && !nd.classList.contains('reach') && nd.title) { SFX.play('tap'); return toast(nd.title); } if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
-  const dc = t.closest('[data-doctrine]'); if (dc) return chooseDoctrine(dc.dataset.doctrine);
+  const dg = t.closest('[data-docgo]'); if (dg) { closeModal(); return chooseDoctrine(dg.dataset.docgo); }
+  const dc = t.closest('[data-doctrine]'); if (dc) { SFX.play('select'); return doctrineModal(dc.dataset.doctrine); }
   const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
   const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast('Joker acheté.'); return renderShop(); }
   const pkb = t.closest('[data-pack]'); if (pkb && !pkb.disabled) { SFX.play('tap'); return openPack(+pkb.dataset.pack); }
@@ -5857,8 +5910,10 @@ document.addEventListener('click', e => {
     if (shop) { C.loot -= REFORM_COST; return renderShop(); }
     return finishNode();
   }
-  const off = t.closest('[data-officer]');
-  if (off) { SFX.play('jokerbuy'); C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
+  const og = t.closest('[data-officergo]');
+  if (!og) { const sel = t.closest('[data-officer]'); if (sel) { SFX.play('select'); return jokerPickModal(sel.dataset.officer); } }
+  const off = og ? { dataset: { officer: og.dataset.officergo } } : null;
+  if (off) { closeModal(); SFX.play('jokerbuy'); C.officers.push(off.dataset.officer); if (off.dataset.officer === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return afterJoker(); }
   if (S && document.getElementById('hand')) {
     const info = t.closest('[data-cinfo]'); if (info) { SFX.play('tap'); return cardModal(+info.dataset.cinfo); }
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
