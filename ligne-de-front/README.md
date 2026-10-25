@@ -267,3 +267,6 @@ Ordres et combos en combat : les ordres (Assaut, Barrage, Fumigènes…) affiche
 Explications allégées : bulles et fiches se limitent à l'essentiel (Effet + Conseil, une phrase chacune) ; la ligne ★/⚠ n'apparaît que si l'ennemi du combat la rend utile. Les limites, les rôles détaillés des cartes de doctrine et les notes annexes des combos ont été retirés.
 
 Explications partout où l'on voit des cartes : une récompense de carte (butin ou dépôt) s'ouvre d'abord dans sa fiche (stats, spécificité, conseil) avec « Prendre cette carte » ; le détail d'une carte en boutique montre la carte et sa fiche côte à côte ; le paquet permet de toucher une carte pour la lire (« Retour au paquet »).
+
+## Mesures d'équilibre (bot, 300-400 parties)
+Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %, Blitz 28,5 % de campagnes terminées (écart dans le bruit). Jokers testés en départ (`JOKER=id node sim.js 300`, référence 29-30 %) : Tenaille (64 %), Fer (53 %) et Clairon (49 %) dominaient ; ajustés par de simples chiffres : Tenaille ×1,6 (39 %), Fer +1 (38 %), Clairon +0,5 (34 %). Lebrun +6 par navire. Limites : le bot ne joue pas les builds de niche (Lebrun, Triade, Faucon) comme un humain, et Brandt (+20 PV) n'est pas simulé.

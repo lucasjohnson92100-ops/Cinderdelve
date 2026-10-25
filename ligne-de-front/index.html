@@ -2617,8 +2617,8 @@ const JOKERS = [
   { id: 'lebrun', name: 'Amiral Lebrun', cost: 8, desc: "Vos navires gagnent +6 d'Attaque pour chaque autre navire en mer." },
   { id: 'faucon', name: 'Major Faucon', cost: 8, desc: 'Les parachutistes coûtent 1 de moins ; le sabotage fait +4 % de dégâts.' },
   { id: 'fer', name: 'Général de Fer', cost: 8, desc: 'Armes combinées : +1 Mult de plus.' },
-  { id: 'clairon', name: 'Sergent Clairon', cost: 7, desc: "Chaque secteur occupé : +0,75 Mult d'Attaque." },
-  { id: 'tenaille', name: 'Colonel Tenaille', cost: 8, desc: "Appui aérien et naval : ×1,75 Mult d'Attaque au lieu de +0,5." },
+  { id: 'clairon', name: 'Sergent Clairon', cost: 7, desc: "Chaque secteur occupé : +0,5 Mult d'Attaque." },
+  { id: 'tenaille', name: 'Colonel Tenaille', cost: 8, desc: "Appui aérien et naval : ×1,6 Mult d'Attaque au lieu de +0,5." },
   { id: 'fanfare', name: 'Major Fanfare', cost: 8, desc: "Secteur d'au moins 3 unités terrestres : Attaque ×1,5." },
   { id: 'triade', name: 'Amiral Triade', cost: 8, desc: 'Couverture aérienne : Défense ×2 au lieu de ×1,5.' },
 ];
@@ -3039,13 +3039,13 @@ function sectorCombos(S, c) {
     const lv = comboLv(S, k.id);
     let a = k.add ? k.add + k.step * (lv - 1) : 0, m = k.mul ? k.mul + k.step * (lv - 1) : 0;
     if (k.id === 'armes' && has(S, 'fer')) a += 1;
-    if (k.id === 'appui' && has(S, 'tenaille')) { a = 0; m = 1.75; }
+    if (k.id === 'appui' && has(S, 'tenaille')) { a = 0; m = 1.6; }
     if (k.id === 'guide' && has(S, 'radio')) m += 0.5;
     if (k.id === 'couvert' && has(S, 'triade')) m += 0.5;
     if (k.id === 'couleur' && has(S, 'peintre')) m += 0.5;
     push(k.on, { id: k.id, name: k.name, short: k.short, lv, add: a, mul: m });
   }
-  if (has(S, 'clairon') && land.length) push('atk', { id: 'clairon', name: 'Sergent Clairon', short: 'Clairon', add: 0.75 });
+  if (has(S, 'clairon') && land.length) push('atk', { id: 'clairon', name: 'Sergent Clairon', short: 'Clairon', add: 0.5 });
   if (has(S, 'fanfare') && land.length >= 3) push('atk', { id: 'fanfare', name: 'Major Fanfare', short: 'Fanfare', mul: 1.5 });
   if (S.flags && S.flags.assault && S.flags.assault.includes(c)) push('atk', { id: 'assaut', name: 'Ordre : Assaut', short: 'Assaut', mul: 1.5 });
   if (S.counterCols && S.counterCols.includes(c)) push('def', { id: 'contre', name: 'Ordre : Contre-attaque', short: 'Contre-att.', mul: 1.5 });
@@ -3990,8 +3990,8 @@ const JOKER_SPEC = {
   lebrun: { nm: 'Flotte soudée', syn: "Plus vous alignez de navires en mer, plus chacun frappe.", lim: "Il faut au moins deux navires pour qu'il serve." },
   faucon: { nm: 'Commandos', syn: "Parfait avec la doctrine Commandos : parachutistes bon marché et sabotage renforcé.", lim: "Sans parachutistes, il ne fait rien." },
   fer: { nm: 'Armes combinées', syn: "Mêlez véhicules et infanterie dans un secteur pour gagner du Mult en plus.", lim: "Demande les deux types d'unités dans le même secteur." },
-  clairon: { nm: 'Mult par secteur', syn: "Occupez beaucoup de secteurs : chacun ajoute +0,75 au Mult d'Attaque.", lim: "Peu rentable si vous concentrez tout dans un seul secteur." },
-  tenaille: { nm: 'Appui ×1,75', syn: "Quand navires et avions soutiennent vos secteurs terrestres.", lim: "Il faut un appui aérien ou naval actif." },
+  clairon: { nm: 'Mult par secteur', syn: "Occupez beaucoup de secteurs : chacun ajoute +0,5 au Mult d'Attaque.", lim: "Peu rentable si vous concentrez tout dans un seul secteur." },
+  tenaille: { nm: 'Appui ×1,6', syn: "Quand navires et avions soutiennent vos secteurs terrestres.", lim: "Il faut un appui aérien ou naval actif." },
   fanfare: { nm: 'Gros secteurs', syn: "Un secteur d'au moins 3 unités terrestres gagne Attaque ×1,5 : concentrez vos troupes.", lim: "Ne s'applique pas aux petits secteurs." },
   triade: { nm: 'Couverture ×2', syn: "Avec un chasseur en jeu : Défense ×2 au lieu de ×1,5 sur vos secteurs.", lim: "Il faut un chasseur en couverture." },
 };
