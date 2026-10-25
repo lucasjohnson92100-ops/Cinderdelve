@@ -48,7 +48,7 @@ if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,o
   console.log('fin',JSON.stringify(S.hq),S.over);process.exit(0);}
 const N=+process.argv[2]||200;const reach=PATH.map(()=>({n:0,w:0,t:0,hq:0}));let done=0;const stats={jok:0,lv:0};
 for(let r=0;r<N;r++){
-  const doc=process.env.DOC||E.pickDoctrines(rnd)[0];const C={deck:[...E.START_DECK.map(c=>({...c})),...E.doctrineCards(doc)],hq:E.HQ_START,hqMax:E.HQ_START,officers:[],loot:2};let ok=true;
+  const doc=process.env.DOC||E.pickDoctrines(rnd)[0];const C={deck:[...E.START_DECK.map(c=>({...c})),...E.doctrineCards(doc)],hq:E.HQ_START,hqMax:E.HQ_START,officers:process.env.JOKER?process.env.JOKER.split(','):[],loot:2};let ok=true;
   const MAP=E.genMap(rnd);
   for(let i=0;i<PATH.length;i++){
     const node=MAP[i][0],type=node.type;reach[i].n++;reach[i].hq+=C.hq;
