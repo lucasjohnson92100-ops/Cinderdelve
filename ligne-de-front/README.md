@@ -265,3 +265,5 @@ Jokers en combat : toucher un joker de la barre en haut à droite ouvre sa fiche
 Ordres et combos en combat : les ordres (Assaut, Barrage, Fumigènes…) affichent leur fiche dans la bulle de droite dès qu'on les sélectionne, comme les unités. Le bouton « Combos » (en haut à droite, à côté de ⋯) ouvre la liste de tous les combos avec leur bonus actuel (niveau des manuels compris) et leur condition ; ● vert = combo actif quelque part sur le plateau. La liste défile ; le bouton la referme.
 
 Explications allégées : bulles et fiches se limitent à l'essentiel (Effet + Conseil, une phrase chacune) ; la ligne ★/⚠ n'apparaît que si l'ennemi du combat la rend utile. Les limites, les rôles détaillés des cartes de doctrine et les notes annexes des combos ont été retirés.
+
+Explications partout où l'on voit des cartes : une récompense de carte (butin ou dépôt) s'ouvre d'abord dans sa fiche (stats, spécificité, conseil) avec « Prendre cette carte » ; le détail d'une carte en boutique montre la carte et sa fiche côte à côte ; le paquet permet de toucher une carte pour la lire (« Retour au paquet »).

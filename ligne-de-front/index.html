@@ -2339,6 +2339,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cardpop .cp-co { margin: 0 0 3px; font-size: .68rem; line-height: 1.15; color: #cdd6e4; } .cardpop .cp-co b { color: #fff; } .cardpop .cp-co em { font-style: normal; font-weight: 800; color: #9cc7ff; } .cardpop .cp-co em.m { color: #ff9c8a; } .cardpop .cp-co small { display: block; font-size: .6rem; color: #9fb1c9; }
 .cardpop .cp-co.on b { color: #8be39a; } .cardpop .cp-co.on { background: rgba(139, 227, 154, .1); border-radius: 5px; padding: 1px 3px; }
 @media (max-height: 340px) { .cardpop .cp-co { font-size: .6rem; margin-bottom: 2px; } .cardpop .cp-co small { font-size: .54rem; } .cardpop .cp-sub { margin-top: 2px; } }
+@media (max-height: 340px) { .cm-st { display: flex !important; flex-wrap: wrap; gap: 0 10px !important; font-size: .78rem; } .cm-st > b { flex-basis: 100%; } .modal .box .nodeart { width: 52px !important; height: 52px !important; } .modal .box .nodeart svg { max-height: 40px; width: auto; } .modal .effl { margin: 2px 0; font-size: .72rem; } .modal .box .btn.go { padding-top: 4px; padding-bottom: 4px; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -4468,17 +4469,18 @@ function handCardHTML(card, extra, attrs, style) {
     ${isOrder(card) ? '' : `<span class="cmen">${cs.st.men}</span>`}<span class="chp">${(ad => (ad ? `<i class="ca">${SWORD}${fmtN(ad.a)}</i><i class="cd">${SHIELD}${fmtN(ad.d)}</i><i class="cs">${'●'.repeat(Math.min(5, ad.s))}</i>` : cs.h))(cardAD(card))}</span></button>`;
 }
 const RANGE_TXT = r => (r[0] === r[1] ? (r[0] === 1 ? 'au contact' : `portée ${r[0]}`) : `portée ${r[0]}–${r[1]}`);
-function cardModal(reg) {
+function cardModal(reg, take) {
   const card = CARD_REG[reg]; if (!card) return;
+  const takeBtn = take === 'deck' ? `<button class="btn" data-dpg="${window.__deckPage || 0}">‹ Retour au paquet</button>` : take ? `<button class="btn go" ${take}>Prendre cette carte</button>` : '';
   if (isOrder(card)) { const d = TYPES[card.t]; return openModal(`<div class="hd"><span class="ribbon">${d.name}</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="row" style="flex-wrap:nowrap;gap:14px"><span class="nodeart" style="width:92px;height:92px">${iconSVG(ORDER_ICON[card.t], 64)}</span>
-    <div class="stack" style="gap:4px"><b>Ordre · coût ${d.cost}</b><span>Cible : ${TGT_TXT[d.tgt]}</span><span class="small" style="color:#5a4a3a">Sans couleur : se joue en plus de vos déploiements.</span></div></div>${specHTML(card)}${tipsHTML(card)}`); }
+    <div class="stack" style="gap:4px"><b>Ordre · coût ${d.cost}</b><span>Cible : ${TGT_TXT[d.tgt]}</span><span class="small" style="color:#5a4a3a">Sans couleur : se joue en plus de vos déploiements.</span></div></div>${specHTML(card)}${tipsHTML(card)}${takeBtn}`); }
   const d = TYPES[card.t], cs = cardStats(card);
   const eff = [...card.c].map(ch => `<li><i class="dot" style="background:${COLORS[ch].hex}"></i> <b>${COLORS[ch].name}</b> : ${COLORS[ch].txt}${d.land ? ` · ▲ fort en ${TERRAIN[COLOR_TERRAIN[ch].fort].name.toLowerCase()}, ▼ faible en ${TERRAIN[COLOR_TERRAIN[ch].faible].name.toLowerCase()}` : ''}</li>`).join('');
   openModal(`<div class="hd"><span class="ribbon">${d.name} ${colorName(card.c).toLowerCase()}</span><button class="pill" data-act="close">Fermer</button></div>
     <div class="row" style="flex-wrap:nowrap;gap:14px"><span class="nodeart" style="width:92px;height:92px">${squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 56, card.c)}</span>
-    <div class="stack" style="gap:4px"><b>${FAMILIES[d.fam]}</b><span>${cs.st.men} tir${cs.st.men > 1 ? 's' : ''} de ${cs.st.dmg} dégât${cs.st.dmg > 1 ? 's' : ''}</span><span>${SWORD} Attaque ${fmtN(cs.st.men * (cs.st.dmg + Math.min(2, cs.st.pierce || 0) * 0.5))} · ${SHIELD} Défense ${fmtN(cs.st.def)}</span><span>Endurance : ${cs.st.stam} tour${cs.st.stam > 1 ? 's' : ''}</span><span>Coût : ${d.cost}</span>${(card.lv || 1) > 1 ? `<span class="star">Niveau ${card.lv}</span>` : ''}</div></div>
-    ${specHTML(card)}${tipsHTML(card)}${CARD_SPEC[card.t] ? '' : `<p class="small muted">${d.txt}</p>`}<ul class="effl">${eff}</ul>`);
+    <div class="stack cm-st" style="gap:4px"><b>${FAMILIES[d.fam]}</b><span>${cs.st.men} tir${cs.st.men > 1 ? 's' : ''} de ${cs.st.dmg} dégât${cs.st.dmg > 1 ? 's' : ''}</span><span>${SWORD} Attaque ${fmtN(cs.st.men * (cs.st.dmg + Math.min(2, cs.st.pierce || 0) * 0.5))} · ${SHIELD} Défense ${fmtN(cs.st.def)}</span><span>Endurance : ${cs.st.stam} tour${cs.st.stam > 1 ? 's' : ''}</span><span>Coût : ${d.cost}</span>${(card.lv || 1) > 1 ? `<span class="star">Niveau ${card.lv}</span>` : ''}</div></div>
+    ${specHTML(card)}${tipsHTML(card)}${CARD_SPEC[card.t] ? '' : `<p class="small muted">${d.txt}</p>`}<ul class="effl">${eff}</ul>${takeBtn}`);
 }
 function objLine() {
   const o = S.obj;
@@ -5672,7 +5674,7 @@ function shopBuy(kind, i) {
 function shopDetail(kind, i) {
   const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates, u: sh.upgrades }[kind]?.[i]; if (!it) return;
   let body = '', title = '';
-  if (kind === 'c') { title = TYPES[it.card.t].name; body = `<div class="cardrow">${cardHTML(it.card, 'pick')}</div>`; }
+  if (kind === 'c') { title = TYPES[it.card.t].name; body = `<div class="row" style="flex-wrap:nowrap;gap:10px;align-items:flex-start"><div class="cardrow" style="flex:none">${cardHTML(it.card, 'pick')}</div><div style="flex:1;min-width:0">${specHTML(it.card)}</div></div>`; }
   if (kind === 'j') { const d = JOKERS.find(x => x.id === it.id); title = d.name; body = jokerSpecHTML(d, 44); }
   if (kind === 'm') { const c = COMBOS.find(x => x.id === it.id), lv = (C.comboLv || {})[it.id] || 1, cur = c.add ? '+' + fmtMult(c.add + c.step * (lv - 1)) : '×' + fmtMult(c.mul + c.step * (lv - 1)), nx = c.add ? '+' + fmtMult(c.add + c.step * lv) : '×' + fmtMult(c.mul + c.step * lv); title = `Manuel : ${c.name}`; body = `<p><b>${c.name}</b> (${c.txt}) passe du niveau ${lv} au niveau ${lv + 1} : <b>${cur} → ${nx} Mult</b>, pour toute la campagne.</p>`; }
   if (kind === 'u' && it.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[it.id] || 0); title = `Fortifications : ${TERRAIN[it.id].name}`; body = `<p>Les secteurs <b>${TERRAIN[it.id].name}</b> passent de <b>${cap} à ${Math.min(MAX_CAP, cap + 1)} places</b>, pour toute la campagne (${MAX_CAP} au plus). Plus de places = de plus grosses mains dans ce terrain (Bataillon dès 5 unités).</p>`; }
@@ -5898,7 +5900,7 @@ function deckModal(mode, pg = 0) {
   const cols = Math.max(2, Math.floor((bw + 6) / (TW + 6))), rows = Math.max(1, Math.floor((bh + 6) / (TH + 6))), per = cols * rows, pages = Math.max(1, Math.ceil(list.length / per));
   pg = Math.max(0, Math.min(pages - 1, pg)); window.__deckPage = pg;
   const tile = g => { const c = g.c, d = TYPES[c.t], ord = isOrder(c), st = ord ? null : cardStats(c).st, ad = ord ? null : cardAD(c);
-    return `<button class="dk ${d.fam} ${mode ? 'pick' : ''}" ${attr(c)} style="--w:${TW}px;height:${TH}px" title="${d.name}">
+    return `<button class="dk ${d.fam} ${mode ? 'pick' : ''}" ${attr(c)} ${mode ? '' : `data-dkinfo="${CARD_REG.push(c) - 1}"`} style="--w:${TW}px;height:${TH}px" title="${d.name}">
       <span class="dk-band" style="background:${chipBg(c.c)}"></span><span class="dk-art">${ord ? iconSVG(ORDER_ICON[c.t], 34) : squadSVG(SPR_OF[c.t], 'me', st.men, st.men, 32, c.c)}</span>
       <b class="dk-nm">${d.name}${(c.lv || 1) > 1 ? ' ' + '★'.repeat(c.lv - 1) : ''}</b>
       <span class="dk-st">${ad ? `${SWORD}${fmtN(ad.a)} ${SHIELD}${fmtN(ad.d)} · ${ad.s}t` : ORDER_SHORT[c.t] || 'Ordre'}</span>
@@ -5919,6 +5921,8 @@ document.addEventListener('click', e => {
   const bc0 = t.closest('[data-blind]'); if (bc0 && !t.closest('button')) { SFX.play('tap'); return blindModal(C.map[+bc0.dataset.blind][0]); }
   const nd = t.closest('[data-node]'); if (nd && !nd.classList.contains('reach') && nd.title) { SFX.play('tap'); return toast(nd.title); } if (nd && nd.classList.contains('reach')) { SFX.play('stamp'); const [l, i] = nd.dataset.node.split('-').map(Number); return nodeModal(C.map[l][i]); }
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
+  const dki = t.closest('[data-dkinfo]'); if (dki) { SFX.play('tap'); return cardModal(+dki.dataset.dkinfo, 'deck'); }
+  const pv = t.closest('.card[data-spoil], .card[data-add]'); if (pv && !t.closest('.modal')) { const ci = pv.querySelector('[data-cinfo]'); if (ci) { SFX.play('tap'); return cardModal(+ci.dataset.cinfo, pv.hasAttribute('data-spoil') ? `data-spoil="${pv.dataset.spoil}"` : `data-add="${pv.dataset.add}"`); } }
   const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
   const dg = t.closest('[data-docgo]'); if (dg) { closeModal(); return chooseDoctrine(dg.dataset.docgo); }
   const dc = t.closest('[data-doctrine]'); if (dc) { SFX.play('select'); return doctrineModal(dc.dataset.doctrine); }
