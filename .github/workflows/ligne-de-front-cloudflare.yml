@@ -1,0 +1,42 @@
+name: Publier Ligne de Front (Cloudflare Pages)
+
+# Lancement manuel : Actions > « Publier Ligne de Front » > Run workflow.
+# Prérequis (une seule fois), voir ligne-de-front/DEPLOY_CLOUDFLARE.md :
+#   Secrets du dépôt : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   Variable du dépôt (facultative) : CF_PAGES_PROJECT (défaut : ligne-de-front)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ligne-de-front-cloudflare
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Tests du moteur
+        run: node ligne-de-front/test_core.js
+
+      - name: Préparer le dossier à publier
+        run: |
+          mkdir -p dist
+          cp ligne-de-front/index.html dist/index.html
+          cp -r ligne-de-front/art dist/art 2>/dev/null || true
+          printf '/index.html\n  Cache-Control: no-cache\n' > dist/_headers
+
+      - name: Publier sur Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CF_PAGES_PROJECT || 'ligne-de-front' }} --branch=main
