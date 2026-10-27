@@ -620,5 +620,12 @@
  "Le saignement ronge": "The bleeding gnaws at",
  "L'œuf éclate sur": "The egg bursts on",
  "Tous les 50 monstres vaincus, tu regagnes 1 PV.": "Every 50 monsters defeated, you regain 1 HP.",
- "Sous 40 % de PV, tous les 15 monstres vaincus te rendent 3 PV.": "Below 40% HP, every 15 monsters defeated restores 3 HP."
+ "Sous 40 % de PV, tous les 15 monstres vaincus te rendent 3 PV.": "Below 40% HP, every 15 monsters defeated restores 3 HP.",
+ "Un mur de monstres avance !": "A wall of monsters advances!",
+ "Cherche la brèche dans le mur !": "Find the gap in the wall!",
+ "Ils t'encerclent !": "They're surrounding you!",
+ "Nuée !": "Swarm!",
+ "Dernier assaut !": "Final assault!",
+ "Le boss appelle des renforts !": "The boss calls for reinforcements!",
+ "Une dernière horde !": "One last horde!"
 }
