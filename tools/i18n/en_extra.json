@@ -618,5 +618,7 @@
  "Ton attaque de base fait saigner les monstres touchés (dégâts sur 3,5 s) ; +15 % de dégâts.": "Your basic attack makes the monsters it hits bleed (damage over 3.5 s); +15% damage.",
  "Le venin ronge": "The venom gnaws at",
  "Le saignement ronge": "The bleeding gnaws at",
- "L'œuf éclate sur": "The egg bursts on"
+ "L'œuf éclate sur": "The egg bursts on",
+ "Tous les 50 monstres vaincus, tu regagnes 1 PV.": "Every 50 monsters defeated, you regain 1 HP.",
+ "Sous 40 % de PV, tous les 15 monstres vaincus te rendent 3 PV.": "Below 40% HP, every 15 monsters defeated restores 3 HP."
 }
