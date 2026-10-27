@@ -1,0 +1,9 @@
+# fichiers de développement : seuls index.html et art/ sont servis
+wrangler.jsonc
+.assetsignore
+*.md
+sim.js
+test_core.js
+bl
+tools
+node_modules
