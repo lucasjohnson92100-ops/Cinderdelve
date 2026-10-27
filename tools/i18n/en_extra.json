@@ -605,5 +605,18 @@
  "Abandonner": "Give up",
  "Résurrection !": "Resurrection!",
  "Tu te relèves ! C'était ta seule résurrection.": "You get back up! That was your only resurrection.",
- "Une onde touche les monstres les plus proches à distance moyenne (9 cibles, une de plus par niveau)": "A wave hits the nearest monsters at medium range (9 targets, one more per level)"
+ "Une onde touche les monstres les plus proches à distance moyenne (9 cibles, une de plus par niveau)": "A wave hits the nearest monsters at medium range (9 targets, one more per level)",
+ "Lame venimeuse": "Venomous Blade",
+ "Lame de bourrasque": "Gale Blade",
+ "Lame hantée": "Haunted Blade",
+ "Lame fermière": "Farmhand Blade",
+ "Lame fourchue": "Pitchfork Blade",
+ "Ton attaque de base empoisonne les monstres touchés (dégâts sur 4 s) ; +15 % de dégâts.": "Your basic attack poisons the monsters it hits (damage over 4 s); +15% damage.",
+ "Ton attaque de base souffle les monstres touchés : repoussés plus loin, parfois sonnés ; +15 % de dégâts.": "Your basic attack blows monsters away: pushed back further, sometimes dazed; +15% damage.",
+ "Ton attaque de base terrifie parfois les monstres touchés (figés 1 s) ; +15 % de dégâts.": "Your basic attack sometimes terrifies the monsters it hits (frozen for 1 s); +15% damage.",
+ "Ton attaque de base fait parfois éclater un œuf sur le monstre touché (explosion en zone) ; +15 % de dégâts.": "Your basic attack sometimes bursts an egg on the monster it hits (area blast); +15% damage.",
+ "Ton attaque de base fait saigner les monstres touchés (dégâts sur 3,5 s) ; +15 % de dégâts.": "Your basic attack makes the monsters it hits bleed (damage over 3.5 s); +15% damage.",
+ "Le venin ronge": "The venom gnaws at",
+ "Le saignement ronge": "The bleeding gnaws at",
+ "L'œuf éclate sur": "The egg bursts on"
 }
