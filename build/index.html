@@ -12253,9 +12253,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var B = BASE[e.type] || { hp: e.hp }, dm = Math.max(1, state.atk * 0.8), c = survCyc();
     if (B.boss) return e.hp;
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
-    /* plus il y a de monstres à l'écran, plus chacun est fragile (de ×0,85 écran vide à ×0,64 écran plein) : la horde se fauche */
-    var crowd = Math.min(1, enemies.length / Math.max(1, survCap()));
-    return Math.max(1, Math.floor(dm * k * 0.85 * (1 - 0.25 * crowd)));
+    return Math.max(1, Math.floor(dm * k * 1.04)); /* vie d'origine, +4 % */
   }
   function survCap() { return Math.min(120, BAL.capBase + (state.survCycle || 0) * BAL.capCyc); }
   function spawnWaveBatch(frac, forceN, ringMode, layout) {
