@@ -1165,6 +1165,26 @@ body.surv .bars .xptrack.lvup { animation: xpFlash .6s ease-out; }
 #shop.surv .shop-list .row .txt b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 #shop.surv .shop-list .row .txt small { -webkit-line-clamp: 2 !important; }
 @media (orientation: landscape) and (max-height: 520px) { #shop.surv .shop-list { row-gap: 14px !important; padding-top: 4px; } #shop.surv .shop-list .row { min-height: 0 !important; padding-top: 24px !important; padding-bottom: 6px !important; } #shop.surv .shop-list .row.combo { padding-top: 26px !important; } #shop.surv .shop-list .row .txt small { -webkit-line-clamp: 2; } #shop.surv .goldline { margin: 0 0 2px; } }
+
+/* ---- HUD de survie (téléphone) : barre d'XP fine en haut, vie sur une ligne, stats dans le sac ---- */
+body.surv:not(.land) .bars { top: calc(max(4px, env(safe-area-inset-top)) + 33px); width: 128px; gap: 0; }
+body.surv:not(.land) .bars .bar-row:nth-child(2) { position: relative; height: 15px; gap: 4px; align-items: center; }
+body.surv:not(.land) .bars .bar-row:nth-child(2) .ic { width: 15px; height: 15px; flex: 0 0 auto; }
+body.surv:not(.land) .bars .bar-row:nth-child(2) .track { height: 14px !important; border-radius: 8px; border: 1px solid rgba(255,255,255,0.4); background: rgba(0,0,0,0.55); overflow: hidden; }
+body.surv:not(.land) .bars #hptext { position: absolute; left: 19px; right: 0; text-align: center; font: 800 .66rem/14px sans-serif; z-index: 2; letter-spacing: .02em; }
+body.surv:not(.land) .bars .bar-row:nth-child(4) { position: fixed; top: 0; left: 0; right: 0; height: 4px; margin: 0; padding: 0; gap: 0; z-index: 7; }
+body.surv:not(.land) .bars .bar-row:nth-child(4) .ic { display: none; }
+body.surv:not(.land) .bars .bar-row:nth-child(4) .track.xptrack { height: 4px !important; border-radius: 0 !important; border: 0 !important; min-width: 0; background: rgba(0,0,0,0.55) !important; }
+body.surv:not(.land) .bars .bar-row:nth-child(4) .track.xptrack #xpfill { border-radius: 0 !important; box-shadow: 0 0 6px rgba(120,220,255,0.7) !important; }
+body.surv:not(.land) .bars #lvl { position: absolute; left: 50%; top: 7px; transform: translateX(-50%); font: 800 .62rem/1 sans-serif; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,225,150,0.45); border-radius: 9px; padding: 2px 8px; z-index: 8; white-space: nowrap; color: #ffe9a8; }
+body.surv:not(.land) .floor { font: 700 .68rem/1 sans-serif; background: rgba(0,0,0,0.42); border-radius: 9px; padding: 3px 8px; letter-spacing: .02em; }
+body.surv:not(.land) .chips { top: calc(max(4px, env(safe-area-inset-top)) + 52px); left: max(6px, env(safe-area-inset-left)); gap: 6px; }
+body.surv:not(.land) .chips .chip:nth-child(1), body.surv:not(.land) .chips .chip:nth-child(2) { display: none; }
+body.surv:not(.land) .chips .chip { font-size: .8rem; }
+body.surv:not(.land) #kcombo { right: auto; left: max(8px, env(safe-area-inset-left)); top: calc(max(4px, env(safe-area-inset-top)) + 80px); text-align: left; transform-origin: 0 0; width: 130px; }
+body.surv:not(.land) #kcombo .kc-n { font-size: 1.5rem; }
+body.surv:not(.land) #kcombo .kc-l { font-size: .72rem; }
+body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; transform-origin: 0 0; width: 130px; }
 </style>
 </head>
 <body>
@@ -13435,7 +13455,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function armSummaryHtml() {
     var A = armTotal(), red = Math.round(armRed() * 100), T = armTierFor(), n = ARM_SLOTS.filter(function (s) { return state.armor && state.armor[s.id]; }).length;
-    var h = '<div class="dl-sum"><b>Armure ' + A + "</b><span>−" + red + " % de dégâts reçus</span><small>Pièces portées : " + n + "/5 · niveau conseillé : " + T + "</small>";
+    var h = '<div class="dl-sum"><b>Armure ' + A + "</b><span>−" + red + " % de dégâts reçus</span><small>Pièces portées : " + n + "/5 · niveau conseillé : " + T + "</small><small>⚔ Attaque : " + state.atk + "</small>";
     var bon = []; if (state.armDmg) bon.push("+" + Math.round(state.armDmg * 100) + " % de dégâts"); if (state.armDodge) bon.push("+" + Math.round(state.armDodge * 100) + " % d'esquive");
     if (bon.length) h += "<small>" + bon.join(" · ") + "</small>";
     return h + "</div>";
@@ -13542,7 +13562,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var remain = Math.max(0, Math.ceil(state.survDur - state.survT));
       document.getElementById("floor").textContent = state.survBossUp ? "Boss ! (vague " + ((state.survCycle || 0) + 1) + ")" : "Vague " + ((state.survCycle || 0) + 1) + (state.survEndless ? "" : "/" + SURV_WAVES) + " – " + Math.floor(remain / 60) + ":" + (remain % 60 < 10 ? "0" : "") + (remain % 60);
     } else document.getElementById("floor").textContent = "Étage " + state.floor;
-    document.getElementById("hptext").textContent = "PV " + state.hp + "/" + state.maxHp;
+    document.getElementById("hptext").textContent = (state.survival ? "" : "PV ") + state.hp + "/" + state.maxHp;
     document.getElementById("hpfill").style.width = Math.max(0, state.hp / state.maxHp * 100) + "%";
     document.getElementById("mp-row").style.display = state.survival ? "none" : "";
     document.getElementById("mptext").textContent = "Mana " + state.mp + "/" + state.maxMp;
@@ -14538,7 +14558,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     /* sur téléphone, la zone de jeu dépasse un peu de l'écran : on décale les éléments collés au bord droit pour qu'ils restent entièrement visibles */
     if (!(frameN++ % 30)) { try { var cwid = canvas.clientWidth, ov = Math.max(0, (cwid - window.innerWidth) / 2); hudPad = 4 + Math.ceil(ov / Math.max(0.5, cwid / vw)); } catch (e) { hudPad = 4; } }
     if (miniOn) {
-      var ms = Math.min(2, (state.survival ? 38 : 58) / Math.max(W, H)), mw = W * ms, mh = H * ms, mx = vw - mw - hudPad, my = 4; loadTop = my + mh + 4;
+      var ms = Math.min(2, (state.survival ? 38 : 58) / Math.max(W, H)), mw = W * ms, mh = H * ms, mx = vw - mw - hudPad, my = 7; loadTop = my + mh + 4;
       ctx.fillStyle = "rgba(10,8,24,0.68)"; ctx.fillRect(mx - 1, my - 1, mw + 2, mh + 2);
       for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
         if (!seen[y][x]) continue;
@@ -14561,20 +14581,23 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var LOADIC = {}, hudPad = 4, frameN = 0;
   function loadIcon(name) { var c = LOADIC[name]; if (!c) { c = mkCanvas(1, 1); try { paintIcon(c, name); } catch (e) {} LOADIC[name] = c; } return c; }
   function drawLoadout(t, vw, top) {
-    var vh = view.rows * TILE, sz = 11, gap = 1.5, acts = survActiveIds(), pas = survPasIds(), caps = [slotA(), slotP()];
+    var vh = view.rows * TILE, sz = 14, gap = 2, rowH = sz + 5.5, acts = survActiveIds(), pas = survPasIds(), caps = [slotA(), slotP()];
     ctx.save(); ctx.imageSmoothingEnabled = false; ctx.textAlign = "right"; ctx.textBaseline = "alphabetic"; ctx.font = "bold 5.5px sans-serif";
     var actCells = []; acts.forEach(function (id0) { actCells.push(id0); if (id0.charAt(0) === "w" && wCost(id0.slice(2)) === 2) actCells.push("cont"); });
+    /* niveau : une pastille par niveau sous l'icône (or quand le niveau maximum est atteint) — plus de chiffre sur l'icône */
+    function lvPips(x, y, lv, mx, col) {
+      var gp = 0.8, w = (sz - (mx - 1) * gp) / mx, full = lv >= mx;
+      for (var qi = 0; qi < mx; qi++) { ctx.fillStyle = qi < lv ? (full ? "#ffd23c" : col) : "rgba(0,0,0,0.7)"; ctx.fillRect(x + qi * (w + gp), y, w, 2.2); }
+    }
     [[actCells, "#ff9a4a"], [pas, "#6fb4ff"]].forEach(function (row, ri) {
-      var y = top + ri * (sz + 2.5);
+      var y = top + ri * rowH;
       var n = caps[ri], x0 = vw - hudPad - (n * sz + (n - 1) * gap);
       if (ri === 0) { /* arme de base, avec son niveau de maîtrise */
-        var bx = x0 - sz - 3.5, bl = baseLv(), bMax = bl >= BASE_LV_MAX;
+        var bx = x0 - sz - 4, bl = baseLv();
         ctx.fillStyle = "rgba(10,8,24,0.78)"; ctx.fillRect(bx, y, sz, sz); ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, y + 0.5, sz - 1, sz - 1);
-        ctx.drawImage(loadIcon(survHeroAtk().icon), bx + 1.2, y + 1.2, sz - 2.4, sz - 2.4);
+        ctx.drawImage(loadIcon(survHeroAtk().icon), bx + 1.4, y + 1.4, sz - 2.8, sz - 2.8);
         survImbueKeys().forEach(function (ik, ii) { ctx.fillStyle = "rgb(" + SURV_IMBUES[ik].col + ")"; ctx.fillRect(bx + 1 + ii * 3, y + 1, 2.4, 2.4); });
-        ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.fillRect(bx + 1, y + sz - 2.4, sz - 2, 1.8); ctx.fillStyle = bMax ? "#ffd23c" : "#ffffff"; ctx.fillRect(bx + 1, y + sz - 2.4, (sz - 2) * bl / BASE_LV_MAX, 1.8);
-        ctx.fillStyle = bMax ? "#ffd23c" : "rgba(10,8,24,0.9)"; ctx.fillRect(bx + sz - 6.6, y + sz - 8.2, 7.4, 6.4); ctx.strokeStyle = bMax ? "#7a4a00" : "#ffffff"; ctx.lineWidth = 0.7; ctx.strokeRect(bx + sz - 6.6, y + sz - 8.2, 7.4, 6.4);
-        ctx.font = "bold 6.2px sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = bMax ? "#3a1500" : "#ffffff"; ctx.fillText(String(bl), bx + sz - 2.9, y + sz - 3.1); ctx.textAlign = "right"; ctx.font = "bold 5.5px sans-serif";
+        lvPips(bx, y + sz + 1.2, bl, BASE_LV_MAX, "#ffffff");
       }
       for (var i = 0; i < n; i++) {
         var x = x0 + i * (sz + gap), open = true, id = row[0][i];
@@ -14586,36 +14609,29 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var icon, lv, evo = false, mxl = 5;
         if (ri === 0) { var kind = id.charAt(0), k = id.slice(2); if (kind === "w") { icon = SURV_WEAPONS[k].icon; lv = state.survW[k]; mxl = 6; evo = !!(state.survWEvo && state.survWEvo[k]); } else { icon = SPELLS[k].icon; lv = spL(k); mxl = SPELL_LV_MAX; evo = !!(state.survEvo && state.survEvo[k]); } }
         else { var pd = survPasList().filter(function (d) { return d.id === id; })[0]; if (!pd) continue; icon = pd.icon; lv = state.pas[id]; mxl = pd.max || 5; }
-        ctx.drawImage(loadIcon(icon), x + 1.2, y + 1.2, sz - 2.4, sz - 2.4);
-        if (evo) { ctx.strokeStyle = "#ffd23c"; ctx.lineWidth = 1.2; ctx.strokeRect(x + 0.5, y + 0.5, sz - 1, sz - 1); }
-        if (ri === 0 && id.charAt(0) === "w" && wRank(id.slice(2)) > 0) { /* fusion d'armes : cadre doré, étoiles et pastille « ×N » bien visibles sur l'icône */
+        ctx.drawImage(loadIcon(icon), x + 1.4, y + 1.4, sz - 2.8, sz - 2.8);
+        if (evo) { ctx.strokeStyle = "#ffd23c"; ctx.lineWidth = 1.4; ctx.strokeRect(x + 0.7, y + 0.7, sz - 1.4, sz - 1.4); }
+        if (ri === 0 && id.charAt(0) === "w" && wRank(id.slice(2)) > 0) { /* fusion d'armes : cadre doré qui pulse et étoiles dans le coin */
           var wrk = wRank(id.slice(2)), fpu = 0.5 + 0.5 * Math.sin(t / 300);
-          ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,200,60," + (0.18 + 0.12 * fpu).toFixed(2) + ")"; ctx.fillRect(x, y, sz, sz); ctx.restore();
+          ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.fillStyle = "rgba(255,200,60," + (0.16 + 0.12 * fpu).toFixed(2) + ")"; ctx.fillRect(x, y, sz, sz); ctx.restore();
           ctx.strokeStyle = "#ffd23c"; ctx.lineWidth = 1.6; ctx.strokeRect(x + 0.8, y + 0.8, sz - 1.6, sz - 1.6);
-          ctx.fillStyle = "#ffd23c"; ctx.fillRect(x - 1.5, y - 2.5, 8.5, 6); ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 0.9; ctx.strokeRect(x - 1.5, y - 2.5, 8.5, 6);
-          ctx.textAlign = "center"; ctx.font = "bold 5.2px sans-serif"; ctx.fillStyle = "#3a1500"; ctx.fillText("×" + (wrk + 1), x + 2.75, y + 2.1);
-          ctx.font = "bold 4px sans-serif"; ctx.fillStyle = "#ffe98a"; ctx.strokeStyle = "#0a0818"; ctx.lineWidth = 1; var stt = "★".repeat(wrk); ctx.strokeText(stt, x + sz / 2, y + sz + 3.4); ctx.fillText(stt, x + sz / 2, y + sz + 3.4);
-          ctx.textAlign = "right"; ctx.font = "bold 5.5px sans-serif";
+          ctx.font = "bold 5.6px sans-serif"; ctx.textAlign = "right"; ctx.lineWidth = 1.5; ctx.strokeStyle = "#0a0818"; ctx.fillStyle = "#ffe98a"; var stt = "★".repeat(wrk); ctx.strokeText(stt, x + sz - 0.8, y + 6.4); ctx.fillText(stt, x + sz - 0.8, y + 6.4);
         }
-        /* niveau bien lisible : barre de progression sous l'icône (or au niveau maximum) et pastille avec le chiffre */
-        var atMax = lv >= mxl, lt = String(lv);
-        ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.fillRect(x + 1, y + sz - 2.4, sz - 2, 1.8); ctx.fillStyle = atMax ? "#ffd23c" : row[1]; ctx.fillRect(x + 1, y + sz - 2.4, (sz - 2) * Math.min(1, lv / mxl), 1.8);
-        ctx.fillStyle = atMax ? "#ffd23c" : "rgba(10,8,24,0.9)"; ctx.fillRect(x + sz - 6.6, y + sz - 8.2, 7.4, 6.4); ctx.strokeStyle = atMax ? "#7a4a00" : row[1]; ctx.lineWidth = 0.7; ctx.strokeRect(x + sz - 6.6, y + sz - 8.2, 7.4, 6.4);
-        ctx.font = "bold 6.2px sans-serif"; ctx.textAlign = "center"; ctx.fillStyle = atMax ? "#3a1500" : "#ffffff"; ctx.fillText(lt, x + sz - 2.9, y + sz - 3.1); ctx.textAlign = "right"; ctx.font = "bold 5.5px sans-serif";
+        lvPips(x, y + sz + 1.2, lv, mxl, row[1]);
       }
     });
     var gifts = []; Object.keys(state.leg || {}).forEach(function (id) { if (state.leg[id] && LEGENDS[id]) gifts.push({ icon: LEGENDS[id].icon }); }); Object.keys(state.trans || {}).forEach(function (id) { if (state.trans[id] && SPELLS[id]) gifts.push({ icon: SPELLS[id].icon }); });
     var gn = Math.max(TRANS_MAX, gifts.length);
     if (gifts.length || survTransReady()) {
-      var gy = top + 2 * (sz + 2.5), gx0 = vw - hudPad - (gn * sz + (gn - 1) * gap);
+      var gy = top + 2 * rowH, gx0 = vw - hudPad - (gn * sz + (gn - 1) * gap);
       for (var gi = 0; gi < gn; gi++) {
         var gxx = gx0 + gi * (sz + gap), gg = gifts[gi];
         ctx.fillStyle = gg ? "rgba(40,28,6,0.82)" : "rgba(10,8,24,0.35)"; ctx.fillRect(gxx, gy, sz, sz);
         ctx.strokeStyle = gg ? "#ffd23c" : "rgba(255,210,60,0.3)"; ctx.lineWidth = gg ? 1.2 : 0.6; if (!gg) ctx.setLineDash([1.5, 1.5]); ctx.strokeRect(gxx + 0.5, gy + 0.5, sz - 1, sz - 1); ctx.setLineDash([]);
-        if (gg) ctx.drawImage(loadIcon(gg.icon), gxx + 1.2, gy + 1.2, sz - 2.4, sz - 2.4);
+        if (gg) ctx.drawImage(loadIcon(gg.icon), gxx + 1.4, gy + 1.4, sz - 2.8, sz - 2.8);
       }
     }
-    var ry = top + (gifts.length || survTransReady() ? 3 : 2) * (sz + 2.5) + 6, rn = state.runeN || 0, lines = [];
+    var ry = top + (gifts.length || survTransReady() ? 3 : 2) * rowH + 4, rn = state.runeN || 0, lines = [];
     ctx.textAlign = "right"; ctx.font = "bold 6px sans-serif"; ctx.lineWidth = 1.4; ctx.strokeStyle = "#0a0818";
     function edgeArrow(wx0, wy0, col, pu, big) {
       var wx = wx0 * TILE + 8, wy = wy0 * TILE + 8, sx = ISO ? isoX(wx, wy) - camX : wx - camX, sy = ISO ? isoY(wx, wy) - camY : wy - camY, m = big ? 16 : 9;
@@ -14639,11 +14655,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.restore();
     }
     if (survRuneWanted()) {
-      lines.push(["#d9b8ff", "Cases " + (slotA() + slotP()) + "/" + SLOT_TOTAL + " · Runes " + "◆".repeat(Math.min(rn, runeNeed())) + "◇".repeat(Math.max(0, runeNeed() - rn))]);
+      lines.push(["#d9b8ff", "Runes " + "◆".repeat(Math.min(rn, runeNeed())) + "◇".repeat(Math.max(0, runeNeed() - rn))]);
       var best = null, bd = 1e9; gems.forEach(function (gm) { if (gm.k !== "rune") return; var dd = Math.hypot(gm.x - p.vx, gm.y - p.vy); if (dd < bd) { bd = dd; best = gm; } });
       gems.forEach(function (gm) { if (gm.k === "rune") runeBeam(gm.x, gm.y); }); if (best) edgeArrow(best.x, best.y, "#d9a8ff", 0.8 + 0.2 * Math.sin(t / 200), true);
     }
-    var fcs = famCounts(); Object.keys(fcs).forEach(function (fk) { if (fcs[fk] >= 2) lines.push([FAMS[fk][1], FAMS[fk][0] + " ×" + fcs[fk] + " : +" + Math.round(famBonus(fcs[fk]) * 100) + " %"]); });
+    var fcs = famCounts(); Object.keys(fcs).forEach(function (fk) { if (fcs[fk] >= 2) lines.push([FAMS[fk][1], FAMS[fk][0] + " ×" + fcs[fk]]); });
     if (state.survDanger) lines.push(["#ff8a7a", "Danger " + state.survDanger]);
     if (state.survMod && SURV_MODS[state.survMod]) lines.push(["#ffb06a", "Défi : " + SURV_MODS[state.survMod].name]);
     if (state.blessT > 0) lines.push(["#ffe07a", "Bénédiction " + Math.ceil(state.blessT) + " s"]);
