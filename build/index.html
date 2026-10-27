@@ -12231,7 +12231,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     hpLin: 1.15, hpQuad: 0.28,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
     atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
     spawnCyc: 0.75,                      /* nombre de monstres par lot : + 80 % par vague passée */
-    capBase: 52, capCyc: 12,            /* nombre maximal de monstres à l'écran */
+    capBase: 70, capCyc: 14,            /* nombre maximal de monstres à l'écran */
     firstWaveN: 0.75,                   /* vague 1 : proportion du lot normal (débutants) */
     ivStart: 2.5, ivSlope: 1.2, ivMin: 0.75, ivCyc: 0.18,   /* cadence des lots : intervalle en secondes */
     eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
@@ -12253,9 +12253,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var B = BASE[e.type] || { hp: e.hp }, dm = Math.max(1, state.atk * 0.8), c = survCyc();
     if (B.boss) return e.hp;
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
-    return Math.max(1, Math.floor(dm * k));
+    return Math.max(1, Math.floor(dm * k * 1.15 * (1 + 0.04 * Math.max(0, (state.lvl || 1) - 1))));
   }
-  function survCap() { return Math.min(100, BAL.capBase + (state.survCycle || 0) * BAL.capCyc); }
+  function survCap() { return Math.min(120, BAL.capBase + (state.survCycle || 0) * BAL.capCyc); }
   function spawnWaveBatch(frac, forceN, ringMode, layout) {
     var cycW = state.survCycle || 0, capW = survCap() + (forceN ? 12 : 0);
     if (enemies.length >= capW) return;
@@ -12581,6 +12581,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       else {
         state.survSpawnT -= dt;
         if (state.survSpawnT <= 0) { var frac = state.survT / state.survDur; state.survSpawnT = Math.max(0.6, Math.max(BAL.ivMin, BAL.ivStart - frac * BAL.ivSlope) / (1 + (state.survCycle || 0) * BAL.ivCyc)) * survPhaseIv(); spawnWaveBatch(frac); }
+        /* directeur de densité : si l'écran se vide (le héros tue vite), de nouvelles meutes arrivent pour garder la pression */
+        state.survDirT = (state.survDirT || 0) - dt;
+        if (state.survDirT <= 0) {
+          state.survDirT = 0.8; var cyD = state.survCycle || 0, fD = state.survT / state.survDur, capD = survCap();
+          var tgt = cyD === 0 ? 14 + fD * 24 : capD * (0.62 + 0.36 * fD); tgt *= state.phPeak ? 1.2 : 0.92; tgt = Math.min(tgt, capD - 4);
+          if (enemies.length < tgt * 0.9) spawnWaveBatch(fD, Math.min(10, Math.max(3, Math.round((tgt - enemies.length) * 0.5))));
+        }
       }
     } else if (!enemies.some(function (e) { return e.survivalBoss; })) survivalWin(null);
   }
