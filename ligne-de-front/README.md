@@ -270,3 +270,6 @@ Explications partout où l'on voit des cartes : une récompense de carte (butin 
 
 ## Mesures d'équilibre (bot, 300-400 parties)
 Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %, Blitz 28,5 % de campagnes terminées (écart dans le bruit). Jokers testés en départ (`JOKER=id node sim.js 300`, référence 29-30 %) : Tenaille (64 %), Fer (53 %) et Clairon (49 %) dominaient ; ajustés par de simples chiffres : Tenaille ×1,6 (39 %), Fer +1 (38 %), Clairon +0,5 (34 %). Lebrun +6 par navire. Limites : le bot ne joue pas les builds de niche (Lebrun, Triade, Faucon) comme un humain, et Brandt (+20 PV) n'est pas simulé.
+
+## Installation sur le téléphone (PWA) et hébergement Cloudflare
+`index.html` porte maintenant son en-tête complet (doctype, viewport, thème, manifeste). Sur une adresse https, le jeu enregistre un service worker (`sw.js`, index en réseau d'abord, copie hors ligne en secours) et propose « 📲 Installer » à l'écran titre (invite native sur Android/Chrome, consigne « Partager > Sur l'écran d'accueil » sur iPhone). Fichiers : `manifest.webmanifest`, `sw.js`, `icons/` (192, 512, maskable, apple-touch), `_headers` (pas de cache sur index et sw). Déploiement Workers : `wrangler.jsonc` + `.assetsignore` (voir `DEPLOY_CLOUDFLARE.md`).
