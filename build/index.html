@@ -14554,10 +14554,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.beginPath(); ctx.arc(hx, hy, 3.5, 0, Math.PI * 2); ctx.fill();
     }
 
-    var loadTop = 4;
+    var loadTop = state.survival ? 9 : 4;
     /* sur téléphone, la zone de jeu dépasse un peu de l'écran : on décale les éléments collés au bord droit pour qu'ils restent entièrement visibles */
     if (!(frameN++ % 30)) { try { var cwid = canvas.clientWidth, ov = Math.max(0, (cwid - window.innerWidth) / 2); hudPad = 4 + Math.ceil(ov / Math.max(0.5, cwid / vw)); } catch (e) { hudPad = 4; } }
-    if (miniOn) {
+    if (miniOn && !state.survival) { /* en survie : pas de mini-carte */
       var ms = Math.min(2, (state.survival ? 38 : 58) / Math.max(W, H)), mw = W * ms, mh = H * ms, mx = vw - mw - hudPad, my = 7; loadTop = my + mh + 4;
       ctx.fillStyle = "rgba(10,8,24,0.68)"; ctx.fillRect(mx - 1, my - 1, mw + 2, mh + 2);
       for (y = 0; y < H; y++) for (x = 0; x < W; x++) {
