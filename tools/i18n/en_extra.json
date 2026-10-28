@@ -686,5 +686,17 @@
  "Trois rebonds de plus": "Three more bounces",
  "Le sabot repousse": "The hoof pushes back",
  "La fourche transperce": "The pitchfork pierces",
- "Le fer rebondit sur": "The horseshoe bounces off"
+ "Le fer rebondit sur": "The horseshoe bounces off",
+ "Un fouet frappe un monstre puis rebondit sur 5 autres": "A whip hits a monster then bounces to 5 others",
+ "+6 % de dégâts, +6 % de zone (un rebond de plus aux niveaux pairs)": "+6% damage, +6% area (one more bounce at even levels)",
+ "Pompe la vie des 2 monstres les plus proches (un de plus tous les 3 niveaux) : 1 PV rendu tous les 6 coups": "Drains the 2 nearest monsters (one more every 3 levels): 1 HP restored every 6 hits",
+ "Rafale de coups de bec sur les 3 monstres au corps à corps (un de plus aux niveaux pairs)": "A flurry of pecks on the 3 monsters in melee range (one more at even levels)",
+ "Un coup de hache monstrueux sur le monstre le plus costaud (pas les boss), l'onde blesse aussi les monstres autour (arme lourde : 2 cases)": "A monstrous axe blow on the toughest monster (not bosses), the shockwave also hurts monsters around it (heavy weapon: 2 slots)",
+ "Une pièce lancée sur un monstre puis qui rebondit sur 2 autres : dégâts aléatoires (×1 à ×4) et un peu d'or": "A coin thrown at a monster that bounces to 2 others: random damage (×1 to ×4) and a bit of gold",
+ "Une onde touche les monstres les plus proches à distance moyenne (14 cibles, deux de plus par niveau)": "A wave hits the nearest monsters at medium range (14 targets, two more per level)",
+ "Tire vite et sans arrêt ; chaque grain transperce 2 monstres": "Fires fast and non-stop; each kernel pierces 2 monsters",
+ "Des abeilles pourchassent des monstres au hasard et en transpercent 2": "Bees chase random monsters and pierce through 2",
+ "Plante un épouvantail qui tire des projectiles perçants sur les monstres": "Plants a scarecrow that fires piercing shots at monsters",
+ "Des plumes tranchantes partent en éventail et transpercent 2 monstres chacune": "Sharp feathers fan out, each piercing 2 monsters",
+ "Des corbeaux fondent sur plusieurs monstres proches et blessent leurs voisins": "Crows swoop down on several nearby monsters and hurt those beside them"
 }
