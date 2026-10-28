@@ -1809,6 +1809,10 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units .awu.k-foot { margin-top: calc(var(--uh, 60px) * -.55); }   /* la rangée du fond se rapproche : les deux rangées forment un même groupe */
 .aws.focus .awb[data-rows="2"] .awb-units .awu:nth-child(even) { margin-left: calc(var(--uh, 60px) * .18); }
 .aws.focus .awb-units { justify-content: safe center; right: 2%; gap: calc(var(--uh, 60px) * .05); }
+/* formation resserrée : sur une rangée, les groupes se chevauchent un peu pour des unités plus grandes dans la même largeur */
+.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awb-units { gap: 0; }
+.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu + .awu { margin-left: calc(var(--uh, 60px) * -.5); }
+.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu .awn { z-index: 6; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }   /* un engin ne se laisse pas écraser par un gros groupe de fantassins : c'est l'ajustement commun qui réduit tout le monde ensemble */
