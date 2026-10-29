@@ -5,6 +5,9 @@ let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split(
 for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
 const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,applyUpgrade,packOptions,applyPackPick,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
+// STRAT=inf|blinde|arty|marine|air : le bot ne recrute que (en priorité) ces unités, pour comparer des tactiques de paquet
+const STRATS={inf:['tireurs','mitrailleuse','infirmiers','genie','paras'],blinde:['blinde','halftrack','jeep','antichar'],arty:['artillerie','observateur','reco','croiseur','destroyer'],marine:['destroyer','croiseur','sousmarin','tireurs'],air:['chasseur','bombardier','tireurs','reco']};
+const PREF=process.env.STRAT?STRATS[process.env.STRAT]:null;
 // Valeur d'une position : fraction du QG ennemi frappée ce tour, moins la fraction de votre QG perdue ; les unités qui restent comptent un peu
 function evalPos(S){
   if(S.over)return S.over==='win'?1e6:-1e6;
@@ -57,11 +60,11 @@ for(let r=0;r<N;r++){
     C.hq=Math.min(C.hqMax,f.S.hq.me+12);C.loot+=E.lootFor(f.S,C,type).total;
     if(type==='boss'&&i<PATH.length-1)E.addSupplyBonus(C);
     // carte de récompense : de préférence un type que le paquet n'a pas encore, sinon une unité
-    {const opts=E.rewardCards(rnd,type==='battle'?1:2,C.deck);const own=new Set(C.deck.map(c=>c.t));const pick=opts.find(c=>!own.has(c.t)&&!E.isOrder(c))||opts.find(c=>!E.isOrder(c))||opts[0];if(pick&&!process.env.NOREWARD)C.deck.push({...pick});}
+    {const opts=E.rewardCards(rnd,type==='battle'?1:2,C.deck);const own=new Set(C.deck.map(c=>c.t));const pick=(PREF&&(opts.find(c=>PREF.includes(c.t)&&!own.has(c.t))||opts.find(c=>PREF.includes(c.t))))||opts.find(c=>!own.has(c.t)&&!E.isOrder(c))||opts.find(c=>!E.isOrder(c))||opts[0];if(pick&&!process.env.NOREWARD)C.deck.push({...pick});}
     let shop=E.genShop(C,rnd,type!=='battle');
     while(C.hq<C.hqMax*0.6&&C.loot>=4&&!process.env.NOHEAL){C.loot-=4;C.hq=Math.min(C.hqMax,C.hq+12);}
     // packs : le bot achète par ordre de priorité et garde la meilleure carte
-    const prio={staff:0,amelio:1,mega:2,recrues:3,ordres:4},score=o=>o.k==='joker'?9:o.k==='up'?(o.kind==='c'?7:6):o.k==='manual'?5:E.isOrder(o.card)?(['assaut','barrage','contreattaque'].includes(o.card.t)?3:1):(C.deck.some(c=>c.t===o.card.t)?2:4)+(E.TYPES[o.card.t].rar||0);
+    const prio={staff:0,amelio:1,mega:2,recrues:3,ordres:4},score=o=>o.k==='joker'?9:o.k==='up'?(o.kind==='c'?7:6):o.k==='manual'?5:E.isOrder(o.card)?(['assaut','barrage','contreattaque'].includes(o.card.t)?3:1):(PREF&&PREF.includes(o.card.t)?8:0)+(C.deck.some(c=>c.t===o.card.t)?2:4)+(E.TYPES[o.card.t].rar||0);
     for(const pk of shop.packs.slice().sort((x,y)=>prio[x.kind]-prio[y.kind])){
       if(pk.price>C.loot)continue;if(pk.kind==='ordres'&&C.loot<10)continue;
       const opts=E.packOptions(C,pk.kind,rnd,type!=='battle');if(!opts.length)continue;C.loot-=pk.price;
