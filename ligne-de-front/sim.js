@@ -22,7 +22,11 @@ function bestMove(S){
     const card=S.hand[hi],d=E.TYPES[card.t];if(!E.canDeployNow(S,card).ok)continue;
     if(card.t==='ravitaillement')return {hi,tg:{c:E.landCols(S)[0]},v:99};
     if(card.t==='repli')continue;
-    for(const tg of E.deployTargets(S,card)){
+    let tgs=E.deployTargets(S,card);
+    // PLAN=conc : tout dans un seul secteur terrestre ; PLAN=spread : on équilibre les secteurs
+    if(process.env.PLAN&&!d.order&&card.t!=='bombardier'&&d.cls!=='ship'&&d.cls!=='air'){const cnt=c=>E.units(S,'me').filter(u=>u.c===c).length;const land=tgs.filter(t=>E.landCols(S).includes(t.c));
+      if(land.length){const sorted=land.slice().sort((a,b)=>process.env.PLAN==='conc'?cnt(b.c)-cnt(a.c)||a.c-b.c:cnt(a.c)-cnt(b.c)||a.c-b.c);tgs=process.env.PLAN==='conc'?[sorted[0]]:sorted.filter(t=>cnt(t.c)===cnt(sorted[0].c));}}
+    for(const tg of tgs){
       const snap=E.snapshotState(S);
       let ok;
       if(card.t==='bombardier')ok=E.airStrike(S,hi,tg.c);else if(d.order)ok=E.playOrder(S,hi,tg);else ok=E.placeCard(S,hi,tg.c);
