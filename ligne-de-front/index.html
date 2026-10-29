@@ -3029,7 +3029,7 @@ function unitDef(S, u) {
 const COMBOS = [
   { id: 'binome', on: 'atk', name: 'Paire', short: 'Paire', txt: '2 unités', add: 0.5, step: 0.5, test: g => g.all.length === 2 },
   { id: 'trio', on: 'atk', name: 'Trio', short: 'Trio', txt: '3 ou 4 unités', add: 1, step: 0.5, test: g => g.all.length >= 3 && g.all.length <= 4 },
-  { id: 'bataillon', on: 'atk', name: 'Bataillon', short: 'Bataillon', txt: '5 unités ou plus', add: 2.5, step: 0.5, test: g => g.all.length >= 5 },
+  { id: 'bataillon', on: 'atk', name: 'Bataillon', short: 'Bataillon', txt: '5 unités ou plus', add: 2, step: 0.5, test: g => g.all.length >= 5 },
   { id: 'armes', on: 'atk', name: 'Armes combinées', short: 'Armes comb.', txt: 'infanterie + véhicule', add: 1, step: 1, test: g => g.land.some(u => u.cls === 'foot') && g.land.some(isVehicle) },
   { id: 'appui', on: 'atk', name: 'Appui aérien et naval', short: 'Appui', txt: 'des avions ou des navires armés tiennent leur zone', add: 0.5, step: 0.5, test: g => g.land.length > 0 && g.zoneArmed },
   { id: 'flotte', on: 'atk', name: 'Flotte', short: 'Flotte', txt: '2 navires ou plus en mer', add: 1, step: 0.5, test: g => g.zone === 'mer' && g.all.length >= 2 },
@@ -5862,6 +5862,12 @@ const HELP_PAGES = () => [
     '<b>Lire le score</b> : à droite de chaque secteur, Attaque (bleu) × Mult (rouge) = sa frappe, en gros chiffres dorés. Les étiquettes du secteur montrent ses combos ; une étiquette qui clignote est un combo que la main va déclencher.',
     '<b>Places</b> : 3 par secteur au départ (les ronds sous le nom). <b>Fortifications</b> : +1 place pour un terrain. <b>Niveaux</b> (Infanterie, Véhicules, Aviation, Marine) : +20 % d\'Attaque et de Défense. À l\'intendance, ou en passant une blinde.',
     '<b>Ordres</b> : ils ne prennent pas de place. Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
+  { t: 'Tactique gagnante', l: [
+    '<b>Concentrez, ne dispersez pas.</b> Un secteur gagne un Mult à chaque unité de plus (Paire, Trio, Bataillon…) : trois secteurs chargés valent bien plus que quatre secteurs à moitié vides.',
+    '<b>Mais gardez 2 ou 3 secteurs forts.</b> Tout poser dans un seul secteur est une impasse : une seule frappe, et une Défense trop faible face à la riposte.',
+    '<b>Choisissez le terrain de vos couleurs</b> : ▲ fort, ▼ faible. Une même carte vaut nettement plus dans le bon secteur.',
+    '<b>Un style de paquet, pas tous à la fois</b> : infanterie en masse, blindés, artillerie guidée, marine ou aviation sont tous viables. Faites-les progresser avec les niveaux et choisissez des jokers qui les soutiennent.',
+    '<b>Chaque tour</b> : 1) regardez la riposte annoncée, 2) assurez la Défense, 3) lancez le Mult le plus fort sur votre meilleur secteur (★), 4) gardez des unités fraîches pour le tour suivant.'] },
   { t: 'Vos unités', l: [
     '<b>Usure</b> : chaque unité a une <b>endurance</b> (les points sous elle) : infanterie 2 tours, blindés, mitrailleuses et navires 3. Elle perd 1 point par tour, puis quitte le front.',
     '<b>Prolonger</b> : couleur verte (+1), ordres Retranchement et Relève (+1), infirmiers (+1 aux voisins). <b>Repli</b> renvoie la carte dans votre main.',

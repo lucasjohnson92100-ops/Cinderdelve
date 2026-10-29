@@ -273,3 +273,10 @@ Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %,
 
 ## Installation sur le téléphone (PWA) et hébergement Cloudflare
 `index.html` porte maintenant son en-tête complet (doctype, viewport, thème, manifeste). Sur une adresse https, le jeu enregistre un service worker (`sw.js`, index en réseau d'abord, copie hors ligne en secours) et propose « 📲 Installer » à l'écran titre (invite native sur Android/Chrome, consigne « Partager > Sur l'écran d'accueil » sur iPhone). Fichiers : `manifest.webmanifest`, `sw.js`, `icons/` (192, 512, maskable, apple-touch), `_headers` (pas de cache sur index et sw). Déploiement Workers : `wrangler.jsonc` + `.assetsignore` (voir `DEPLOY_CLOUDFLARE.md`).
+
+## Revue des proportions et de l'équilibrage (octobre)
+- **Proportions** (scène d'assaut, mesurées en scène réelle) : à taille de fantassin égale, jeeps et half-tracks étaient 25 % trop petits. `VEH_K` : char 1,7 · chasseur de chars 1,8 · half-track 2,0 · jeep 1,7 · artillerie 1,85 · nid de mitrailleuse 2,4. Groupes resserrés (recouvrement 0,6 hauteur d'unité).
+- **Stratégies de paquet** (`STRAT=… node sim.js 300`, campagnes terminées par le bot) : mixte 25-30 %, air 28, marine 26, blindés 25, artillerie 24, infanterie 21. Aucune ne domine, aucune n'est morte ; le paquet mixte reste le meilleur.
+- **Répartition des troupes** (`PLAN=…`) : étaler à égalité 3 %, un seul secteur 15 %, deux 21 %, trois 25 %, libre 27 %. D'où la page d'aide « Tactique gagnante » : concentrer, mais sur 2 ou 3 secteurs, selon le terrain.
+- **Jokers** : voir la section précédente ; Tenaille, Fer et Clairon ajustés.
+- Bataillon reste à +2 (un test à +2,5 n'a rien donné de net).
