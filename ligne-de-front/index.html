@@ -1811,7 +1811,7 @@ svg.spr.tint-N { filter: grayscale(1) brightness(.78) contrast(1.25) drop-shadow
 .aws.focus .awb-units { justify-content: safe center; right: 2%; gap: calc(var(--uh, 60px) * .05); }
 /* formation resserrée : sur une rangée, les groupes se chevauchent un peu pour des unités plus grandes dans la même largeur */
 .aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awb-units { gap: 0; }
-.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu + .awu { margin-left: calc(var(--uh, 60px) * -.5); }
+.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu + .awu { margin-left: calc(var(--uh, 60px) * -.6); }
 .aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu .awn { z-index: 6; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }   /* les groupes de fantassins, dessinés plus petits dans leur case, sont agrandis pour rester lisibles */
@@ -3029,7 +3029,7 @@ function unitDef(S, u) {
 const COMBOS = [
   { id: 'binome', on: 'atk', name: 'Paire', short: 'Paire', txt: '2 unités', add: 0.5, step: 0.5, test: g => g.all.length === 2 },
   { id: 'trio', on: 'atk', name: 'Trio', short: 'Trio', txt: '3 ou 4 unités', add: 1, step: 0.5, test: g => g.all.length >= 3 && g.all.length <= 4 },
-  { id: 'bataillon', on: 'atk', name: 'Bataillon', short: 'Bataillon', txt: '5 unités ou plus', add: 2, step: 0.5, test: g => g.all.length >= 5 },
+  { id: 'bataillon', on: 'atk', name: 'Bataillon', short: 'Bataillon', txt: '5 unités ou plus', add: 2.5, step: 0.5, test: g => g.all.length >= 5 },
   { id: 'armes', on: 'atk', name: 'Armes combinées', short: 'Armes comb.', txt: 'infanterie + véhicule', add: 1, step: 1, test: g => g.land.some(u => u.cls === 'foot') && g.land.some(isVehicle) },
   { id: 'appui', on: 'atk', name: 'Appui aérien et naval', short: 'Appui', txt: 'des avions ou des navires armés tiennent leur zone', add: 0.5, step: 0.5, test: g => g.land.length > 0 && g.zoneArmed },
   { id: 'flotte', on: 'atk', name: 'Flotte', short: 'Flotte', txt: '2 navires ou plus en mer', add: 1, step: 0.5, test: g => g.zone === 'mer' && g.all.length >= 2 },
@@ -3681,7 +3681,7 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
 const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 const UNARMED = { obs: 1, medic: 1 };
 // échelle des engins dans la scène d'assaut, relative à la taille d'un soldat (char ≈ 1,45 soldat de haut, jeep ≈ 1,1…)
-const VEH_K = { tank: 1.7, td: 1.7, halftrack: 1.8, jeep: 1.5, arty: 1.65, mgnest: 2.4 };
+const VEH_K = { tank: 1.7, td: 1.8, halftrack: 2.0, jeep: 1.7, arty: 1.85, mgnest: 2.4 };
 const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
