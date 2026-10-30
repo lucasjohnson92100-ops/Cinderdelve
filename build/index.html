@@ -4877,7 +4877,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     function low() { return typeof perf !== "undefined" && perf && perf.low; }
     function rg(c, a) { return "rgba(" + c + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")"; }
     function px(v) { return v * TILE + 8; }
-    var NOSC = { crow: 1, drain: 1, rope: 1, cracks: 1, icering: 1, swirl: 1, axechop: 1, quills: 1, sonarw: 1, eggarc: 1, hoof: 1, fork: 1, shoe: 1, coin: 1, bellring: 1, firecol: 1, fwork: 1, stormhit: 1, grains: 1, crater: 1, bramble: 1, pop: 1, shout: 1, milkwave: 1, bog: 1, scarecrow: 1, healup: 1 };
+    var NOSC = { crow: 1, drain: 1, rope: 1, cracks: 1, icering: 1, swirl: 1, axechop: 1, quills: 1, sonarw: 1, eggarc: 1, hoof: 1, fork: 1, shoe: 1, coin: 1, bellring: 1, firecol: 1, fwork: 1, stormhit: 1, grains: 1, crater: 1, bramble: 1, pop: 1, shout: 1, milkwave: 1, bog: 1, scarecrow: 1, healup: 1, wolf: 1, howl: 1, nuke: 1, peacock: 1, hypno: 1, dawn: 1 };
     function add(k, x, y, dur, ex) {
       var f = { k: k, x: px(x), y: px(y), t0: now() + ((ex && ex.delay) || 0), dur: dur, seed: Math.random() * T2 };
       if (ex) for (var q in ex) f[q] = ex[q];
@@ -5279,7 +5279,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       var P = PAL[id], x = p.vx, y = p.vy, i;
       switch (id) {
         case "cocotte": add("sun", x, y, 1100, { R: 6, pal: P }); add("feather", x, y, 1300, { n: 24, R: 9, spin: 3, pal: P }); add("shock", x, y, 800, { R: 9, pal: P }); break;
-        case "cochon": SPV.add("boom", x, y, 7.5, 900); add("shock", x, y, 800, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 5, pal: PAL.cochon, delay: 150 });
+        case "cochon": add("nuke", x, y, 1600, { R: 7.5 }); add("cracks", x, y, 1500, { R: 7, n: 14, glow: "255,120,160" }); SPV.add("boom", x, y, 7.5, 900); add("shock", x, y, 800, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 5, pal: PAL.cochon, delay: 150 });
           add("drops", x, y, 1100, { n: 34, R: 8, pal: P, col: "255,150,180" }); SPV.add("quake", x, y, 6, 900); break;
         case "meuh": add("shock", x, y, 900, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 7, pal: PAL.cochon, delay: 140 }); add("shock", x, y, 900, { R: 4.5, pal: P, delay: 280 });
           add("drops", x, y, 1200, { n: 36, R: 9, pal: P, col: "255,255,255" }); add("drops", x, y, 1200, { n: 16, R: 8, pal: P, col: "40,30,40" }); SPV.add("quake", x, y, 7.5, 1000); break;
@@ -5290,20 +5290,19 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
         case "cheval": add("shock", x, y, 800, { R: 6.5, pal: P }); add("shock", x, y, 800, { R: 3.5, pal: PAL.dinde, delay: 150 }); add("sun", x, y, 900, { R: 4, pal: P }); break;
         case "oie": add("feather", x, y, 1400, { n: 30, R: 9, spin: 3.2, pal: P }); add("shock", x, y, 700, { R: 5.5, pal: P }); add("sun", x, y, 800, { R: 4, pal: P }); break;
         case "bouc": add("shock", x, y, 800, { R: 8, pal: P }); for (i = 0; i < 4; i++) add("cone", x, y, 600, { a: i * 1.5708 + 0.785, sp: 0.5, R: 8, pal: P, delay: i * 70 });
-          SPV.add("quake", x, y, 7, 1000); break;
-        case "chien": add("moon", x, y, 2200, { pal: P }); add("shock", x, y, 900, { R: 8, pal: P }); add("shock", x, y, 900, { R: 5, pal: PAL.canard, delay: 160 });
-          s.near.slice(0, 8).forEach(function (q, j) { slashAt(P, q, j); }); break;
+          SPV.add("quake", x, y, 7, 1000); add("cracks", x, y, 1500, { R: 8, n: 16, glow: "255,180,80" }); add("hoof", x, y, 900, { R: 6 }); break;
+        case "chien": add("moon", x, y, 2200, { pal: P }); add("shock", x, y, 900, { R: 8, pal: P }); add("howl", x, y, 1300, { R: 6.5, n: 10 }); break;
         case "dinde": add("sun", x, y, 1100, { R: 7, pal: P }); add("shock", x, y, 800, { R: 5.5, pal: P }); add("drops", x, y, 1200, { n: 30, R: 7, pal: P, col: "255,150,40" }); SPV.add("boom", x, y, 4, 800); break;
         case "ane": for (i = 0; i < 3; i++) { add("shock", x, y, 700, { R: 6, pal: P, delay: i * 400 }); SPV.add("quake", x, y, 6, 900, { delay: i * 400 }); add("drops", x, y, 900, { n: 16, R: 6, pal: P, col: "130,110,90", delay: i * 400 }); } break;
         case "chat": add("shock", x, y, 800, { R: 9, pal: P }); add("shock", x, y, 800, { R: 5, pal: PAL.paon, delay: 120 }); s.near.slice(0, 10).forEach(function (q, j) { slashAt(P, q, j); }); break;
-        case "paon": add("fan", x, y, 1300, { R: 10.5, pal: P }); add("fan", x, y, 1300, { R: 7, pal: P, delay: 220 }); break;
+        case "paon": add("peacock", x, y, 2200, { R: 4.6, RR: 10.5 }); add("fan", x, y, 1300, { R: 10.5, pal: P, delay: 300 }); s.near.slice(0, 14).forEach(function (q) { add("hypno", q[0], q[1], 4600, { delay: 350 }); }); break;
         case "taureau": add("shock", x, y, 700, { R: 5, pal: P }); add("sun", x, y, 800, { R: 3.5, pal: P }); break;
         case "lama": add("drops", x, y, 1100, { n: 30, R: 8.5, pal: P, col: "190,255,110" }); add("shock", x, y, 800, { R: 9, pal: P });
           for (i = 0; i < 8; i++) add("beam", x, y, 700, { a: i * 0.785, R: 6, w: 0.9, pal: P, delay: i * 40 }); break;
         case "cavia": SPV.add("boom", x, y, 7, 900); add("shock", x, y, 900, { R: 9, pal: P });
           s.near.slice(0, 7).forEach(function (q, j) { boltTo(P, [q], j * 60); }); add("drops", x, y, 1000, { n: 20, R: 7, pal: P, col: "190,140,255" }); break;
-        case "pintade": add("sonic", x, y, 1100, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 6, pal: P }); add("feather", x, y, 1000, { n: 16, R: 7, pal: P }); break;
-        case "coq": add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
+        case "pintade": add("sonic", x, y, 1100, { R: 8.5, pal: P }); add("shock", x, y, 800, { R: 6, pal: P }); add("feather", x, y, 1000, { n: 16, R: 7, pal: P }); for (i = 0; i < 3; i++) add("sonarw", x, y, 1100, { R: 9, delay: i * 350 }); add("bellring", x, y, 1400); break;
+        case "coq": add("dawn", x, y, 2000, { R: 9.5 }); add("sun", x, y, 1500, { R: 9.5, pal: P }); add("shock", x, y, 900, { R: 9.5, pal: P }); add("feather", x, y, 1100, { n: 18, R: 8, pal: P }); break;
       }
     }
     function bossPhase(e) { add("shock", e.vx, e.vy, 1000, { R: 10, pal: PAL.taureau, rays: 24 }); add("sun", e.vx, e.vy, 1100, { R: 5, pal: PAL.dinde }); add("shock", e.vx, e.vy, 900, { R: 6, pal: PAL.coq, delay: 200 }); }
@@ -5788,6 +5787,95 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     };
     /* fourche volante : la fourche file sur toute la ligne */
     /* (réutilise DR.fork) */
+    /* loup spectral : bondit depuis l'extérieur, plante ses crocs, puis s'évapore */
+    function ghostWolf(c, x, y, s, flip, a, run) {
+      var sp = SP.wolf; if (!sp) return;
+      var im = sp.vf ? sp.vf[run ? (1 + Math.floor(now() / 90) % 2) : 0] : sp.h, px0 = Math.round(18 * s * (scaleK || 3)), fim = fitImg(im, px0), sil = silOf(fim, "#9fdcff");
+      c.save(); c.translate(x, y); if (flip) c.scale(-1, 1);
+      c.globalAlpha = a * 0.55; c.globalCompositeOperation = "lighter"; c.drawImage(sil, -9 * s - 1.5, -16 * s - 1.5, 18 * s + 3, 18 * s + 3);
+      c.globalCompositeOperation = "source-over"; c.globalAlpha = a * 0.92; c.drawImage(fim, -9 * s, -16 * s, 18 * s, 18 * s);
+      c.globalAlpha = a * 0.45; c.globalCompositeOperation = "lighter"; c.drawImage(sil, -9 * s, -16 * s, 18 * s, 18 * s);
+      c.restore();
+    }
+    DR.wolf = function (c, f, k) {
+      var sx = px(f.sx), sy = px(f.sy), x = f.x, y = f.y, flip = x < sx, s = f.s || 1.35, i;
+      if (k < 0.55) {
+        var u = k / 0.55, e = u * u * (3 - 2 * u), wx = sx + (x - sx) * e, wy = sy + (y - sy) * e - Math.sin(u * Math.PI) * 14 * s;
+        c.globalCompositeOperation = "lighter";
+        for (i = 1; i <= 4; i++) { var u2 = Math.max(0, u - i * 0.07), e2 = u2 * u2 * (3 - 2 * u2); disc(c, sx + (x - sx) * e2, sy + (y - sy) * e2 - Math.sin(u2 * Math.PI) * 14 * s - 8, 9 * s, "130,200,255", 0.3 * (1 - i / 5)); }
+        c.globalCompositeOperation = "source-over";
+        c.globalAlpha = 0.3; c.fillStyle = "#000"; c.beginPath(); c.ellipse(sx + (x - sx) * e, sy + (y - sy) * e + 2, 7 * s, 2 * s, 0, 0, T2); c.fill(); c.globalAlpha = 1;
+        ghostWolf(c, wx, wy + 2, s, flip, Math.min(1, u * 4), true);
+      } else {
+        var q = (k - 0.55) / 0.45, al = 1 - q;
+        ghostWolf(c, x + (flip ? 4 : -4), y + 2 - q * 10, s, flip, al, false);
+        c.globalCompositeOperation = "lighter";
+        if (q < 0.5) { var jq = q / 0.5; c.strokeStyle = rg("235,248,255", 1 - jq); c.lineWidth = 2.4; c.lineCap = "round";
+          for (i = -1; i <= 1; i += 2) { c.beginPath(); c.arc(x, y - 4, 6 + jq * 3, i < 0 ? Math.PI + 0.5 : 0.5, i < 0 ? T2 - 0.5 : Math.PI - 0.5); c.stroke(); }
+          for (i = 0; i < 4; i++) { var tx = x - 4.5 + i * 3; c.beginPath(); c.moveTo(tx, y - 11 + jq * 3); c.lineTo(tx + 0.8, y - 6.5 + jq * 3); c.stroke(); c.beginPath(); c.moveTo(tx, y + 3 - jq * 3); c.lineTo(tx + 0.8, y - 1.5 - jq * 3); c.stroke(); } }
+        disc(c, x, y - 4, 12 * s, "130,200,255", 0.5 * al);
+        for (i = 0; i < 6; i++) { var an = f.seed + i * 1.05, r = 4 + 14 * q; c.fillStyle = rg("190,230,255", al); c.fillRect(x + Math.cos(an) * r - 1, y - 4 + Math.sin(an) * r - 1 - q * 6, 2, 2); }
+      }
+    };
+    /* hurlement : onde bleue et silhouettes de loups qui jaillissent en cercle */
+    DR.howl = function (c, f, k) {
+      var x = f.x, y = f.y, n = f.n || 8, i, R = (f.R || 6) * TILE;
+      c.globalCompositeOperation = "lighter";
+      for (i = 0; i < 3; i++) { var kk = k * 1.4 - i * 0.15; if (kk <= 0 || kk >= 1) continue; c.strokeStyle = rg(i === 1 ? "235,248,255" : "120,195,255", 0.9 * (1 - kk)); c.lineWidth = 5 * (1 - kk) + 1; c.beginPath(); c.ellipse(x, y, R * ease(kk), R * ease(kk) * 0.8, 0, 0, T2); c.stroke(); }
+      c.globalCompositeOperation = "source-over";
+      for (i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2, d = R * ease(Math.min(1, k * 1.3)) * 0.95, wx = x + Math.cos(an) * d, wy = y + Math.sin(an) * d * 0.8;
+        ghostWolf(c, wx, wy + 6, 1.45, Math.cos(an) < 0, fadeOut(k, 0.6), true);
+      }
+    };
+    /* cochon-bombe : boule de feu rose, champignon de fumée, débris */
+    DR.nuke = function (c, f, k, t) {
+      var x = f.x, y = f.y, R = (f.R || 7) * TILE, e = ease(Math.min(1, k * 1.6)), i;
+      c.globalCompositeOperation = "lighter";
+      if (k < 0.2) disc(c, x, y, R * 1.2, "255,255,240", 1 - k / 0.2);
+      disc(c, x, y, R * (0.4 + 0.7 * e), "255,120,160", 0.85 * (1 - k));
+      disc(c, x, y - R * 0.15 * k, R * (0.25 + 0.4 * e), "255,220,140", 0.9 * (1 - k));
+      c.strokeStyle = rg("255,200,220", 1 - k); c.lineWidth = 8 * (1 - k) + 1; c.beginPath(); c.ellipse(x, y, R * e, R * e * 0.75, 0, 0, T2); c.stroke();
+      c.globalCompositeOperation = "source-over";
+      for (i = 0; i < 14; i++) { var an = f.seed + i / 14 * T2, d = R * (0.5 + 0.55 * e), sx = x + Math.cos(an) * d, sy = y + Math.sin(an) * d * 0.75 - k * 10, sr = (8 + 6 * Math.sin(i * 3.1)) * (0.5 + e); c.fillStyle = rg(i % 2 ? "90,70,80" : "130,100,110", 0.55 * fadeOut(k, 0.4)); c.beginPath(); c.arc(sx, sy, sr, 0, T2); c.fill(); }
+      if (k > 0.1) { var q = (k - 0.1) / 0.9, ch = R * 0.9 * ease(q); c.fillStyle = rg("110,80,90", 0.6 * (1 - q)); c.fillRect(x - 6, y - ch, 12, ch); for (i = 0; i < 7; i++) { var ca = i / 7 * T2 + f.seed; c.beginPath(); c.arc(x + Math.cos(ca) * R * 0.25, y - ch + Math.sin(ca) * R * 0.12, R * 0.22 * (0.6 + 0.4 * q), 0, T2); c.fill(); } c.globalCompositeOperation = "lighter"; disc(c, x, y - ch, R * 0.3, "255,150,180", 0.5 * (1 - q)); c.globalCompositeOperation = "source-over"; }
+      for (i = 0; i < 18; i++) { var da = f.seed * 2 + i * 0.35, dd = R * 1.1 * ease(k), dh = Math.sin(Math.min(1, k * 1.2) * Math.PI) * (18 + (i % 4) * 10); if (k * 1.2 > 1) continue; c.fillStyle = i % 3 ? "#ff9ab4" : "#5a3a2a"; c.fillRect(x + Math.cos(da) * dd - 1.5, y + Math.sin(da) * dd * 0.75 - dh - 1.5, 3, 3); }
+    };
+    /* paon : immense roue de plumes à ocelles derrière le héros, les yeux s'ouvrent */
+    DR.peacock = function (c, f, k, t) {
+      var x = px(p.vx), y = px(p.vy) - 4, R = (f.R || 5) * TILE, op = ease(Math.min(1, k / 0.25)), a = fadeOut(k, 0.75), n = 17, i;
+      c.globalAlpha = a;
+      for (i = 0; i < n; i++) {
+        var an = Math.PI + (i + 0.5) / n * Math.PI, sp = (an - Math.PI * 1.5) * op + Math.PI * 1.5, L0 = R * (0.75 + 0.25 * Math.sin(i * 2.3 + 1)) * op, ex = x + Math.cos(sp) * L0, ey = y + Math.sin(sp) * L0 * 0.9;
+        c.strokeStyle = "rgba(40,110,90,0.9)"; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(ex, ey); c.stroke();
+        c.fillStyle = "rgba(40,170,130,0.75)"; c.beginPath(); c.ellipse(x + Math.cos(sp) * L0 * 0.7, y + Math.sin(sp) * L0 * 0.63, L0 * 0.32, 5, sp, 0, T2); c.fill();
+        var er = 6.5 * op, blink = Math.max(0.15, Math.min(1, (k - 0.18 - i * 0.012) * 6));
+        c.fillStyle = "#2a8a7a"; c.beginPath(); c.ellipse(ex, ey, er * 1.3, er * 1.1, sp, 0, T2); c.fill();
+        c.fillStyle = "#e0b030"; c.beginPath(); c.ellipse(ex, ey, er, er * 0.85 * blink, sp, 0, T2); c.fill();
+        c.fillStyle = "#2a40c0"; c.beginPath(); c.ellipse(ex, ey, er * 0.62, er * 0.55 * blink, sp, 0, T2); c.fill();
+        c.fillStyle = "#0a0a20"; c.beginPath(); c.ellipse(ex, ey, er * 0.3, er * 0.3 * blink, sp, 0, T2); c.fill();
+        c.fillStyle = "rgba(255,255,255,0.9)"; c.fillRect(ex - er * 0.25, ey - er * 0.3, 1.6, 1.6);
+      }
+      c.globalAlpha = 1;
+      if (k > 0.2) { c.globalCompositeOperation = "lighter"; var q = (k - 0.2) / 0.8; for (i = 0; i < 3; i++) { var kk = q * 1.3 - i * 0.2; if (kk <= 0 || kk >= 1) continue; c.strokeStyle = rg(i % 2 ? "120,90,255" : "40,220,200", 0.8 * (1 - kk)); c.lineWidth = 3 * (1 - kk) + 1; c.beginPath(); c.ellipse(x, y + 4, (f.RR || 10) * TILE * ease(kk), (f.RR || 10) * TILE * ease(kk) * 0.8, 0, 0, T2); c.stroke(); } }
+    };
+    /* œil hypnotique au-dessus d'un monstre figé */
+    DR.hypno = function (c, f, k, t) {
+      var x = f.x, y = f.y - 14, a = k < 0.1 ? k / 0.1 : fadeOut(k, 0.8), op = Math.min(1, k * 8);
+      c.globalAlpha = a; c.fillStyle = "#e8e0ff"; c.strokeStyle = "#3a2a80"; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y, 5, 3 * op, 0, 0, T2); c.fill(); c.stroke();
+      c.fillStyle = "#7a58ff"; c.beginPath(); c.arc(x, y, 2.2 * op, 0, T2); c.fill(); c.fillStyle = "#0a0a20"; c.beginPath(); c.arc(x, y, 1 * op, 0, T2); c.fill();
+      c.strokeStyle = rg("150,120,255", 0.6); c.beginPath(); c.arc(x, y, 6 + Math.sin(t / 120) * 1.2, t / 300, t / 300 + 4); c.stroke(); c.globalAlpha = 1;
+    };
+    /* aube sanglante : un soleil géant se lève derrière le héros, rayons qui balaient l'écran */
+    DR.dawn = function (c, f, k, t) {
+      var x = px(p.vx), y = px(p.vy), R = (f.R || 9) * TILE, rise = ease(Math.min(1, k / 0.35)), a = fadeOut(k, 0.6), sy = y + 30 - rise * 60, i;
+      c.globalCompositeOperation = "lighter";
+      disc(c, x, sy, R * 1.3, "255,120,40", 0.45 * a);
+      for (i = 0; i < 16; i++) { var an = -Math.PI / 2 + (i - 7.5) * 0.19 + Math.sin(t / 400 + i) * 0.03; c.strokeStyle = rg(i % 2 ? "255,200,90" : "255,120,60", 0.5 * a); c.lineWidth = 6 + (i % 3) * 3; c.beginPath(); c.moveTo(x + Math.cos(an) * 24, sy + Math.sin(an) * 24); c.lineTo(x + Math.cos(an) * R * 1.4, sy + Math.sin(an) * R * 1.4); c.stroke(); }
+      disc(c, x, sy, 30, "255,240,190", 0.95 * a); disc(c, x, sy, 16, "255,255,255", a);
+      c.globalCompositeOperation = "source-over";
+      c.strokeStyle = rg("255,220,120", 0.9 * a); c.lineWidth = 2.4; c.beginPath(); c.ellipse(x, y + 4, R * ease(k), R * ease(k) * 0.78, 0, 0, T2); c.stroke();
+    };
     /* petit éclat à l'impact d'un projectile d'arme (couleur de l'arme) */
     DR.pop = function (c, f, k) {
       var x = f.x, y = f.y, i, col = f.col || "255,230,120"; c.globalCompositeOperation = "lighter";
@@ -12040,11 +12128,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       } },
     chien: { name: "Meute", cd: 18, desc: "La meute mord les monstres un peu partout",
       evoName: "Meute infernale", evoDesc: "12 s, morsures plus nombreuses et plus rapides",
-      run: function () { var E = pEvo(); state.farmAct = { id: "chien", t: E ? 12 : 9 + 1 * (pL() - 1), acc: 0 }; addFloat(p.vx, p.vy - 0.6, "Ouaf !", "#9fd8ff"); fmRing(p.vx, p.vy, "#9fd8ff", 70); sfx("rage"); },
+      run: function () { var E = pEvo(); state.farmAct = { id: "chien", t: E ? 12 : 9 + 1 * (pL() - 1), acc: 0 }; addFloat(p.vx, p.vy - 0.6, "Ouaf !", "#9fd8ff"); AFX.add("howl", p.vx, p.vy, 900, { R: 3.2, n: E ? 5 : 4 }); sfx("rage"); },
       tick: function (A) {
         var E = pEvo(); if (A.acc < (E ? 0.32 : 0.4)) return; A.acc = 0;
         var ve = visibleEnemies(), n = Math.min(E ? 3 : 2, ve.length);
-        for (var i = 0; i < n; i++) { var e = ve[rnd(ve.length)]; if (e && e.hp > 0) { burst(e.vx, e.vy, "#9fd8ff", 8, 70); fmHit(e, fmDmg(0.45), "La meute mord", 0.3, 0.2); } }
+        for (var i = 0; i < n; i++) { var e = ve[rnd(ve.length)]; if (e && e.hp > 0) wolfBite(e, fmDmg(0.45), "La meute mord", i * 0.08); }
       } },
     dinde: { name: "Panache !", cd: 22, desc: "Gros bonus de dégâts un moment et repousse les voisins",
       evoName: "Panache royal", evoDesc: "+100 % de dégâts pendant 12 s",
@@ -12162,6 +12250,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     for (var i = 0; i < n; i++) launchProj(ve.length ? ve[rnd(ve.length)] : null, i * 6.283 / n, ulD(m), "energy", 0, 1, true);
     fmRing(p.vx, p.vy, col || "#ffffff", 110);
   }
+  /* un loup spectral bondit sur la cible ; la morsure tombe quand il arrive */
+  function wolfBite(e, d, verb, dl, sc) {
+    var a = Math.random() * 6.283, r = 2.8 + Math.random() * 1.8, sx = e.vx + Math.cos(a) * r, sy = e.vy + Math.sin(a) * r * 0.8, ms = 460;
+    AFX.add("wolf", e.vx, e.vy, ms, { sx: sx, sy: sy, s: sc || 1.35, delay: (dl || 0) * 1000 });
+    legDefer((dl || 0) + ms * 0.55 / 1000, function () { if (e.hp > 0 && enemies.indexOf(e) >= 0) { var o0 = dmgSrc; fmHit(e, d, verb, 0.3, 0.2); dmgSrc = o0; } });
+  }
   function ulFx(c1, c2, flash) { fmRing(p.vx, p.vy, c1, 150); fmRing(p.vx, p.vy, c2, 100); screenFlash(flash || "255,220,160", 450); shake(6, 420); }
   function ulBuffAtk(f, sec) {
     if (state.farmAtkT > 0) state.atk = Math.max(1, state.atk - (state.farmAtkB || 0));
@@ -12183,7 +12277,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     bouc: { name: "Choc des cornes", desc: "Charge circulaire qui projette tout loin", run: function () { ulAll(8, 1.7, "Le choc des cornes", 3.2, 1.6); ulFx("#ffb02e", "#ffffff"); hitStop(90); sfx("boom"); } },
     chien: { name: "Meute de loups", desc: "8 s de meute déchaînée", 
       run: function () { state.farmAct = { id: "u_chien", t: 8, acc: 0 }; ulFx("#9fd8ff", "#ffffff", "170,210,255"); },
-      tick: function (A) { if (A.acc < 0.25) return; A.acc = 0; var ve = visibleEnemies(); for (var i = 0; i < 3 && ve.length; i++) { var e = ve[rnd(ve.length)]; if (e && e.hp > 0) { burst(e.vx, e.vy, "#9fd8ff", 8, 70); fmHit(e, ulD(0.3), "Les loups mordent", 0.3, 0.2); } } } },
+      tick: function (A) { if (A.acc < 0.25) return; A.acc = 0; var ve = visibleEnemies(); for (var i = 0; i < 3 && ve.length; i++) { var e = ve[rnd(ve.length)]; if (e && e.hp > 0) wolfBite(e, ulD(0.3), "Les loups mordent", i * 0.07, 1.55); } } },
     dinde: { name: "Panache de feu", desc: "+150 % de dégâts pendant 10 s et grosse explosion", run: function () { ulBuffAtk(1.5, 10); ulAll(5.5, 0.9, "Le panache brûle", 1.4, 0.8); ulFx("#ff6a3c", "#ffd23c", "255,150,70"); sfx("rage"); } },
     ane: { name: "Séisme", desc: "Trois ruades qui secouent tout l'écran",
       run: function () { state.farmAct = { id: "u_ane", t: 1.3, acc: 0.4 }; ulFx("#d8d0c0", "#ffffff", "230,220,200"); },
