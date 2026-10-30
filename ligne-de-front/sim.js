@@ -47,7 +47,10 @@ function botTurn(S){
   }
 }
 const RES=0;
-function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));for(let k=0;k<40&&!S.over;k++){botTurn(S);E.endTurn(S);if(S.over)break;}return{S,win:S.over==='win'};}
+const DIAG={n:0,turns:0,enHpLeft:0,defGap:0,causes:{}};
+function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));let last=null;for(let k=0;k<40&&!S.over;k++){botTurn(S);if(process.env.DIAG){const F=E.frontForecast(S);last={toEn:F.toEn,enHp:S.hq.en,max:S.lvl.hq,def:F.def,enAtk:F.enAtk,units:E.units(S,'me').length,sup:S.supply,turn:S.turn,fx:S.fx.join(',')};}E.endTurn(S);if(S.over)break;}
+  if(process.env.DIAG&&S.over!=='win'){DIAG.n++;DIAG.turns+=S.turn;DIAG.enHpLeft+=last.enHp/Math.max(1,last.max);DIAG.defGap+=last.enAtk-last.def;const c=last.units<=2?'peu_unites':last.def<last.enAtk*0.6?'defense_faible':last.toEn<last.enHp*0.5?'attaque_faible':'serre';DIAG.causes[c]=(DIAG.causes[c]||0)+1;(DIAG.fx=DIAG.fx||{})[last.fx]=((DIAG.fx||{})[last.fx]||0)+1;}
+  return{S,win:S.over==='win'};}
 const PATH=Array.from({length:+process.env.BLINDS||20},(_,i)=>[['battle','battle','elite','boss'][i%4],i]);
 // ONE=n : trace une seule bataille du niveau n-1 (TYPE=boss|elite pour le type de nœud)
 if(process.env.ONE){const C={deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],loot:0};const S=E.newBattle(C,rnd,E.battleCfg(E.genMap(rnd)[+process.env.ONE-1][0]));
@@ -84,3 +87,5 @@ for(let r=0;r<N;r++){
 }
 console.log('campagne terminée par le bot :',(done*100/N).toFixed(1)+'%','| jokers moyens',(stats.jok/N).toFixed(1),'| niveaux achetés',(stats.lv/N).toFixed(1));
 reach.forEach((x,i)=>console.log(`étape ${i+1} ${PATH[i][0].padEnd(6)} niveau ${PATH[i][1]} : atteinte ${x.n}  victoires ${x.n?Math.round(x.w*100/x.n):0}%  tours moy ${x.n?(x.t/x.n).toFixed(1):0}  QG à l'entrée ${x.n?Math.round(x.hq/x.n):0}`));
+
+if(process.env.DIAG){console.log('DIAG défaites',DIAG.n,'tours moy',(DIAG.turns/DIAG.n).toFixed(1),'PV ennemi restants (fraction)',(DIAG.enHpLeft/DIAG.n).toFixed(2),'écart riposte-déf moy',(DIAG.defGap/DIAG.n).toFixed(0),JSON.stringify(DIAG.causes));console.log(JSON.stringify(Object.entries(DIAG.fx||{}).sort((a,b)=>b[1]-a[1]).slice(0,8)));}
