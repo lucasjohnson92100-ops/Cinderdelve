@@ -699,5 +699,16 @@
  "Plante un épouvantail qui tire des projectiles perçants sur les monstres": "Plants a scarecrow that fires piercing shots at monsters",
  "Des plumes tranchantes partent en éventail et transpercent 2 monstres chacune": "Sharp feathers fan out, each piercing 2 monsters",
  "Des corbeaux fondent sur plusieurs monstres proches et blessent leurs voisins": "Crows swoop down on several nearby monsters and hurt those beside them",
- "Le bec frappe d'un trait les 3 monstres les plus proches (un de plus aux niveaux pairs)": "The beak strikes the 3 nearest monsters in a flash (one more at even levels)"
+ "Le bec frappe d'un trait les 3 monstres les plus proches (un de plus aux niveaux pairs)": "The beak strikes the 3 nearest monsters in a flash (one more at even levels)",
+ "Exploits des héros": "Heroes' feats",
+ "🏆 Exploits des héros": "🏆 Heroes' feats",
+ "Par lieu": "By place",
+ "Par héros": "By hero",
+ "victoires": "victories",
+ "lieux terminés": "places cleared",
+ "Aucun héros ne l'a encore terminé": "No hero has cleared it yet",
+ "Lieu verrouillé": "Locked place",
+ "héros": "heroes",
+ "Fermer": "Close",
+ "Danger": "Danger"
 }
