@@ -4520,7 +4520,7 @@ function hintText() {
   const fore = `<span class="fore">Fin du tour maintenant : QG ennemi <b class="up">−${fmtN(F.toEn)}</b> · votre QG <b class="dn">−${fmtN(F.toMe)}</b>${tired ? ` · ${tired} unité${tired > 1 ? 's' : ''} usée${tired > 1 ? 's' : ''} après ce tour` : ''}</span>`;
   if (S.turn === 1 && !units(S, 'me').length) return `<b class="advl">Touchez une ou plusieurs cartes, puis un secteur.</b> Dans chaque secteur, Attaque × Mult (combos) = sa frappe ; tous les secteurs frappent ensemble le QG ennemi en fin de tour.${fore}`;
   if (F.toMe > Math.ceil(F.enAtk * MIN_THROUGH)) return `<b class="advl dn">⚠ La riposte ennemie (${SWORD}${fmtN(F.enAtk)}) dépasse votre Défense (${SHIELD}${fmtN(F.def)}) : votre QG perdra ${F.toMe}.</b> Ajoutez de la Défense (mitrailleuse, blindé, chasseur, Contre-attaque) ou jouez Fumigènes.${fore}`;
-  return `<b class="advl">✔ Votre Défense tient.</b> Choisissez plusieurs cartes pour un gros combo : le ★ montre le meilleur secteur.${fore}`;
+  return `<b class="advl">✔ Votre Défense ${F.def >= F.enAtk * (1 - MIN_THROUGH) ? 'est au maximum utile : misez tout sur l’Attaque.' : 'tient.'}</b> Choisissez plusieurs cartes pour un gros combo : le ★ montre le meilleur secteur.${fore}`;
 }
 // Largeur de la colonne de droite (blinde, totaux, commandes) en paysage
 const sideW = () => Math.round(Math.max(150, Math.min(230, Math.min(window.innerWidth, 1400) * 0.185)));

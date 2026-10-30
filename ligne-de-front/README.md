@@ -283,3 +283,6 @@ Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %,
 
 ## Durcissement
 `HQ_MULT` 21 → 24 (PV du QG ennemi +14 %). Mesure du bot (300 campagnes) : 24 % → 16 % de campagnes terminées ; les 8 premières étapes restent gagnées à 100 %, la difficulté monte à partir de l'étape 9. Essais écartés : `ENEMY_ATK` 0,75 → 0,85 (12 %) et les deux ensemble (6 %), jugés trop durs pour un bot qui joue moins bien qu'un humain.
+
+## Stratégie : la Défense compte jusqu'au bout
+Diagnostic (`DIAG=1 node sim.js`) : toutes les défaites du bot venaient d'une Attaque trop faible, jamais d'une Défense insuffisante : avec un plancher de riposte de 25 %, toute Défense au-delà de 75 % de la riposte ne servait à rien. Le plancher passe à **15 %** (`MIN_THROUGH`), et la riposte ennemie monte à **×1,05** (`ENEMY_ATK`) pour garder la difficulté (bot : 17 %). Résultat : chaque point de Défense reste utile jusqu'à 85 % de la riposte, donc l'arbitrage Attaque / Défense est réel. Doctrines (300 campagnes) : Marine 20 %, Blitz 18, Commandos 18, Artillerie 17, Défense 17 : toutes viables. Le conseil du tour dit « Défense au maximum utile : misez tout sur l'Attaque » quand le seuil est atteint.
