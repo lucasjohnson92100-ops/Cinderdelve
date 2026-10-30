@@ -14748,28 +14748,38 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     paon: "Hypnotiseur", taureau: "Charges en série", coq: "Pistolero", pintade: "Étourdisseur", lama: "Cracheur", cavia: "Savant fou" };
   var hpAnim = null;
   /* médaillon : le héros (illustration en pied, fond transparent) dépasse du cercle par le haut, rien n'est coupé */
-  var HPCROP = {};
+  var HPCROP = {}, HPFADE = {};
+  /* cadre de l'illustration en pied : toute la largeur du personnage (armes comprises), du haut de la tête jusqu'à la taille */
   function hpCrop(im, id) {
     if (HPCROP[id]) return HPCROP[id];
-    var n = 150, c = mkCanvas(n, n), x = c.getContext("2d"); x.drawImage(im, 0, 0, n, n);
-    var d; try { d = x.getImageData(0, 0, n, n).data; } catch (e) { return (HPCROP[id] = { x: 0.2, y: 0, s: 0.6 }); }
-    var top = n, i, j; for (j = 0; j < n && top === n; j++) for (i = 0; i < n; i++) if (d[(j * n + i) * 4 + 3] > 60) { top = j; break; }
-    var sx = 0, sc = 0; for (j = top; j < Math.min(n, top + n * 0.28); j++) for (i = 0; i < n; i++) if (d[(j * n + i) * 4 + 3] > 60) { sx += i; sc++; }
-    var cx = sc ? sx / sc / n : 0.5, sz = 0.6;
-    return (HPCROP[id] = { x: Math.max(0, Math.min(1 - sz, cx - sz / 2)), y: Math.max(0, top / n - 0.015), s: sz });
+    var n = 180, c = mkCanvas(n, n), x = c.getContext("2d"); x.drawImage(im, 0, 0, n, n);
+    var d; try { d = x.getImageData(0, 0, n, n).data; } catch (e) { return (HPCROP[id] = { x: 0, y: 0, s: 1 }); }
+    var top = n, l = n, r = 0, i, j;
+    for (j = 0; j < n; j++) for (i = 0; i < n; i++) if (d[(j * n + i) * 4 + 3] > 40) { if (j < top) top = j; }
+    var yMax = Math.min(n, top + n * 0.78);
+    for (j = top; j < yMax; j++) for (i = 0; i < n; i++) if (d[(j * n + i) * 4 + 3] > 40) { if (i < l) l = i; if (i > r) r = i; }
+    var w = Math.max(r - l, n * 0.55), sz = Math.min(n, Math.max(w * 1.04, (yMax - top) * 0.92)), cx = (l + r) / 2;
+    return (HPCROP[id] = { x: (cx - sz / 2) / n, y: Math.max(0, top / n - 0.01), s: sz / n });
+  }
+  /* bas du personnage estompé (pas de coupure nette) */
+  function hpFaded(src, cr, key) {
+    if (HPFADE[key]) return HPFADE[key];
+    var N = 360, c = mkCanvas(N, N), x = c.getContext("2d"), W0 = src.width, sx = cr.x * W0, sy = cr.y * W0, ss = cr.s * W0;
+    x.drawImage(src, sx, sy, ss, ss, 0, 0, N, N);
+    x.globalCompositeOperation = "destination-in"; var g = x.createLinearGradient(0, N * 0.72, 0, N); g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, N, N);
+    return (HPFADE[key] = c);
   }
   function hpPortrait(cv, id, locked) {
     var him = typeof ARTX !== "undefined" && ARTX.get("h_" + id);
     if (him && him.width) {
-      var x2 = cv.getContext("2d"), W3 = cv.width, cy = W3 * 0.56, r = W3 * 0.42, cr = hpCrop(him, id), ac2 = locked ? "#2a2238" : FARM.accent(id), src = locked ? silh(him, "#120c1c") : him;
-      var S3 = cr.s * him.width, dz = r * 2.3, dx = W3 / 2 - dz / 2, dy = cy - r * 1.32;
+      var x2 = cv.getContext("2d"), W3 = cv.width, cy = W3 * 0.55, r = W3 * 0.4, cr = hpCrop(him, id), ac2 = locked ? "#2a2238" : FARM.accent(id);
+      var fig = hpFaded(locked ? silh(him, "#120c1c") : him, cr, id + (locked ? "L" : ""));
       x2.clearRect(0, 0, W3, W3);
-      x2.save(); x2.beginPath(); x2.arc(W3 / 2, cy, r, 0, 6.2832); x2.clip();
-      var gb2 = x2.createRadialGradient(W3 / 2, cy - r * 0.5, 2, W3 / 2, cy, r * 1.15); gb2.addColorStop(0, FARM.lite(ac2, 0.5)); gb2.addColorStop(0.6, ac2); gb2.addColorStop(1, "#0a0408"); x2.fillStyle = gb2; x2.fillRect(0, 0, W3, W3);
-      x2.drawImage(src, cr.x * him.width, cr.y * him.height, S3, S3, dx, dy, dz, dz); x2.restore();
-      x2.lineWidth = Math.max(2, W3 * 0.035); x2.strokeStyle = locked ? "#4a4060" : "#ffc83a"; x2.beginPath(); x2.arc(W3 / 2, cy, r - x2.lineWidth / 2 + 1, 0, 6.2832); x2.stroke();
-      /* ce qui dépasse au-dessus du centre (oreilles, cornes, chapeau, armes) passe devant l'anneau */
-      x2.save(); x2.beginPath(); x2.rect(0, 0, W3, cy - r * 0.15); x2.clip(); x2.drawImage(src, cr.x * him.width, cr.y * him.height, S3, S3, dx, dy, dz, dz); x2.restore();
+      var gb2 = x2.createRadialGradient(W3 / 2, cy - r * 0.5, 2, W3 / 2, cy, r * 1.1); gb2.addColorStop(0, FARM.lite(ac2, 0.5)); gb2.addColorStop(0.6, ac2); gb2.addColorStop(1, "#0a0408");
+      x2.fillStyle = gb2; x2.beginPath(); x2.arc(W3 / 2, cy, r, 0, 6.2832); x2.fill();
+      x2.lineWidth = Math.max(2, W3 * 0.03); x2.strokeStyle = locked ? "#4a4060" : "#ffc83a"; x2.beginPath(); x2.arc(W3 / 2, cy, r, 0, 6.2832); x2.stroke();
+      /* le personnage entier devant le médaillon : rien n'est coupé */
+      x2.drawImage(fig, W3 * 0.03, W3 * 0.01, W3 * 0.94, W3 * 0.94);
       return;
     }
     var x = cv.getContext("2d"), W2 = cv.width, pt = FARM.portrait(id), ac = locked ? "#2a2238" : FARM.accent(id);
