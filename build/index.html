@@ -7716,10 +7716,11 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     if (e.shieldHp > 0) { e.shieldHp--; addFloat(e.vx, e.vy - 0.4, "Bloqué", "#7fb8ff"); burst(e.vx, e.vy, "#7fb8ff", 5, 40); return false; }
     if (state.survival) { var ds = dmgSrc || "Autre"; state.survDmg = state.survDmg || {}; state.survDmg[ds] = (state.survDmg[ds] || 0) + Math.min(d, Math.max(0, e.hp)); }
     if (e.brittleT > 0) d = Math.round(d * 1.5);
-    if (state.survival && e.boss) {   /* aucun pouvoir ne tue un boss d'un coup : plafond par coup et par seconde */
-      d = Math.min(d, Math.max(2, Math.ceil(e.maxHp * (e.superBoss ? 0.018 : 0.025))));
+    if (state.survival && (e.boss || e.survivalBoss || e.miniBoss)) {   /* aucun pouvoir ne tue un boss ni un champion d'un coup : plafond par coup et par seconde */
+      var mb = e.miniBoss && !e.boss && !e.survivalBoss;
+      d = Math.min(d, Math.max(2, Math.ceil(e.maxHp * (e.superBoss ? 0.018 : mb ? 0.07 : 0.025))));
       var tw = now(); if (!(tw < e.dwT)) { e.dwT = tw + 1000; e.dw = 0; }
-      var capW = Math.ceil(e.maxHp * (e.superBoss ? 0.03 : 0.045)); d = Math.max(0, Math.min(d, capW - e.dw)); e.dw += d;
+      var capW = Math.ceil(e.maxHp * (e.superBoss ? 0.03 : mb ? 0.14 : 0.045)); d = Math.max(0, Math.min(d, capW - e.dw)); e.dw += d;
       if (d <= 0) { if (!(e.dwF > tw)) { e.dwF = tw + 400; addFloat(e.vx, e.vy - 0.6, "Résiste", "#c9d1e8"); } return false; }
     }
     e.hp -= d;
@@ -10528,7 +10529,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     });
     return L;
   }
-  var WNERF = {"acorns":1.258,"aura":0.456,"bees":3.728,"bell":1.597,"boom":0.073,"cleaver":3.23,"cone":1.641,"crows":1.57,"eggbomb":0.977,"fireworks":1.027,"frost":1.102,"gust":0.707,"haybale":1.296,"hedgehog":0.288,"leech":1.282,"lucky":1.602,"meteor":6.18,"mines":0.415,"orbit":0.223,"peck":0.513,"pillar":12.936,"plumes":2.392,"quake":0.657,"scythe":0.474,"sling":1.621,"sonar":2.27,"spikes":0.191,"storm":0.356,"summon":3.442,"thorns":2.689,"trail":1.799,"turret":2.628,"whip":0.927,"wolves":2.514,"javelin":0.5,"horseshoe":2.5,"hooves":1.0}, WEVO = {"spikes":0.581,"aura":1.067,"boom":0.896,"orbit":0.78,"plumes":0.924,"storm":0.574,"summon":1.52,"wolves":1.395,"hooves":1.3}, WNERFN = null;
+  var WNERF = {"acorns":1.258,"aura":0.456,"bees":3.728,"bell":1.597,"boom":0.073,"cleaver":3.23,"cone":1.641,"crows":1.57,"eggbomb":0.977,"fireworks":1.027,"frost":1.102,"gust":0.707,"haybale":1.296,"hedgehog":0.288,"leech":1.282,"lucky":1.602,"meteor":6.18,"mines":0.415,"orbit":0.223,"peck":0.513,"pillar":12.936,"plumes":2.392,"quake":0.657,"scythe":0.474,"sling":1.621,"sonar":2.27,"spikes":0.191,"storm":0.356,"summon":3.442,"thorns":2.689,"trail":1.799,"turret":2.628,"whip":0.927,"wolves":2.514,"javelin":0.5,"horseshoe":2.5,"hooves":1.0}, WEVO = {"spikes":0.581,"aura":1.067,"boom":0.896,"orbit":0.78,"plumes":0.924,"storm":0.4,"summon":1.52,"wolves":1.395,"hooves":1.3}, WNERFN = null;
   function survWDmg(mult) {
     if (!WNERFN) { WNERFN = {}; Object.keys(WNERF).forEach(function (k) { if (SURV_WEAPONS[k]) WNERFN[SURV_WEAPONS[k].name] = WNERF[k]; if (SURV_WEVOS[k]) WNERFN[SURV_WEVOS[k].name] = WNERF[k] * (WEVO[k] || 1); }); }
     if (!WKEYN) { WKEYN = {}; Object.keys(SURV_WEAPONS).forEach(function (k) { WKEYN[SURV_WEAPONS[k].name] = k; if (SURV_WEVOS[k]) WKEYN[SURV_WEVOS[k].name] = k; }); }
@@ -10842,11 +10843,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (SW.gust) { ar = arB * survWAreaK("gust");
       state.xGuT = (state.xGuT || 0) - d2;
       if (state.xGuT <= 0) {
-        var gur = (4.2 + 0.3 * SW.gust) * ar, gul = survNearEnemies(gur);
+        var gur = Math.min(5.2, (3.6 + 0.2 * SW.gust) * ar), gul = survNearEnemies(gur); /* portée plafonnée : elle ne balaie plus tout l'écran */
         if (gul.length >= 2) {
           state.xGuT = Math.max(3.5, 7 - 0.4 * SW.gust); dmgSrc = survWName("gust"); sfx("energy");
           AFX.add("swirl", p.vx, p.vy, 750, { R: gur });
-          gul.forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.gust - 1)) * 0.7), "La bourrasque souffle")) return; var dd = Math.hypot(o.vx - p.vx, o.vy - p.vy); if (dd > 1.1) survPush(o, p.vx, p.vy, -Math.min(2.4, dd - 1)); });
+          gul.forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.gust - 1)) * 0.7), "La bourrasque souffle")) return; var dd = Math.hypot(o.vx - p.vx, o.vy - p.vy); if (dd > 1.1) survPush(o, p.vx, p.vy, -Math.min(1.4, dd - 1)); });
           if (mode !== "play") return;
         } else state.xGuT = 0.4;
       }
