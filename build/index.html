@@ -7507,7 +7507,9 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   var trails = [], sparks = [], puffs = [], stars = [], banners = [], orbs = [], corpses = [], freezeUntil = 0, slowUntil = 0, slowK = 1, flashCol = "255,255,255", flashT0 = -9999, flashDur = 1;
   var lvlBeam = null, levelPopupAt = 0, floatBoost = 1, orbChain = 0, orbChainT = 0, lowHpT = 0, hudPrev = {};
   /* petit écran : on allège l'action (moins de textes, d'étincelles et d'effets) pour qu'on voie toujours son héros et les dangers */
-  function smallScr() { return state && state.survival && Math.min(window.innerWidth, window.innerHeight) < 620; }
+  var smallScrV = Math.min(window.innerWidth, window.innerHeight) < 620;
+  window.addEventListener("resize", function () { smallScrV = Math.min(window.innerWidth, window.innerHeight) < 620; });
+  function smallScr() { return state && state.survival && smallScrV; }
   function addFloat(tx, ty, text, color, size) {
     if (floats.length > 28 && !(size > 1.2)) return;
     if (smallScr() && color !== "#ff5a4f" && !(size > 1.2)) {
@@ -12918,7 +12920,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
     return Math.max(1, Math.floor(dm * k * 1.04)); /* vie d'origine, +4 % */
   }
-  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); return Math.round(perf && perf.low ? c * 0.7 : c); }
+  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); return Math.round(perf && perf.low ? c * 0.7 : kCap <= 3 ? c * 0.85 : c); }
   /* Brotato : quand il y a trop de monstres, les plus éloignés disparaissent (sans butin) au lieu de bloquer les arrivées */
   function survCull(keep) {
     var cand = enemies.filter(function (e) { return e.hp > 0 && !e.elite && !e.survivalBoss && !e.boss && !e.mini; });
@@ -15304,6 +15306,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     g.addColorStop(0, "rgba(" + col + ",0)"); g.addColorStop(1, "rgba(" + col + ",1)"); x.fillStyle = g; x.fillRect(0, 0, w, h); return (EDGE[k] = c);
   }
   function edgeFlash(col, a, dur) { var t = now(); if (t - edgeFx.t0 < edgeFx.dur * 0.5 && edgeFx.a > a) return; edgeFx = { t0: t, dur: dur || 420, col: col, a: a || 0.5 }; }
+  /* position du canevas gardée en mémoire (la relire à chaque image force le navigateur à recalculer la page) */
+  var CVR = { r: null, t: 0 };
+  function cvRect() { var t = now(); if (!CVR.r || t - CVR.t > 500) { CVR.r = canvas.getBoundingClientRect(); CVR.t = t; } return CVR.r; }
+  window.addEventListener("resize", function () { CVR.r = null; });
   function drawOverlay(t, vw, vh) {
     var i, x, y;
     if (!state.survival) { /* en survie, la vignette vient déjà de l'éclairage */
@@ -15318,7 +15324,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (t - edgeFx.t0 < edgeFx.dur) { var ek = (t - edgeFx.t0) / edgeFx.dur; ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = edgeFx.a * (1 - ek) * (1 - ek); ctx.drawImage(edgeTex(vw, vh, edgeFx.col), 0, 0, vw, vh); ctx.restore(); }
     if (t - flashT0 < flashDur) { ctx.fillStyle = "rgba(" + flashCol + "," + (0.5 * (1 - (t - flashT0) / flashDur)).toFixed(3) + ")"; ctx.fillRect(0, 0, vw, vh); }
     if (state.survival && state.survDeadT0) {
-      var dper = canvas.getBoundingClientRect().width / vw, del = now() - state.survDeadT0, dk = Math.min(1, del / 1400);
+      var dper = cvRect().width / vw, del = now() - state.survDeadT0, dk = Math.min(1, del / 1400);
       var dv = ctx.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * 0.15, vw / 2, vh / 2, Math.max(vw, vh) * 0.75);
       dv.addColorStop(0, "rgba(40,0,0," + (0.25 * dk).toFixed(2) + ")"); dv.addColorStop(1, "rgba(90,0,0," + (0.75 * dk).toFixed(2) + ")");
       ctx.fillStyle = dv; ctx.fillRect(0, 0, vw, vh);
@@ -15333,7 +15339,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       }
     }
     if (state.survival) {
-      var xper = canvas.getBoundingClientRect().width / vw, xh = 7 / xper, xr = Math.max(0, Math.min(1, state.xp / need()));
+      var xper = cvRect().width / vw, xh = 7 / xper, xr = Math.max(0, Math.min(1, state.xp / need()));
       ctx.fillStyle = "rgba(8,6,16,0.72)"; ctx.fillRect(0, 0, vw, xh);
       var xg = ctx.createLinearGradient(0, 0, vw * xr, 0); xg.addColorStop(0, "#2f7fe0"); xg.addColorStop(1, "#7fe8ff");
       ctx.fillStyle = xg; ctx.fillRect(0, 0, vw * xr, xh);
@@ -15341,7 +15347,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.fillStyle = "#b98a34"; ctx.fillRect(0, xh, vw, 1 / xper);
     }
     if (banners.length) {
-      var bper = canvas.getBoundingClientRect().width / vw;
+      var bper = cvRect().width / vw;
       for (i = banners.length - 1; i >= 0; i--) {
         var bn = banners[i], bage = t - bn.t0;
         if (bage > bn.dur) { banners.splice(i, 1); continue; }
@@ -15369,7 +15375,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
 
     if (isLand()) {
-      var rc2 = canvas.getBoundingClientRect(), pr2 = rc2.width / vw;
+      var rc2 = cvRect(), pr2 = rc2.width / vw;
       var sxc = stick ? stick.ox : 74, syc = stick ? stick.oy : window.innerHeight - 70;
       var bx2 = (sxc - rc2.left) / pr2, by2 = (syc - rc2.top) / pr2, R2 = 42 / pr2;
       ctx.strokeStyle = "rgba(255,255,255," + (stick ? 0.5 : 0.22) + ")"; ctx.lineWidth = 1.4;
@@ -15384,7 +15390,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (hintEl && (hintEl.style.display === "block") !== hintOn) hintEl.style.display = hintOn ? "block" : "none";
 
     if (holdActive && holdPtr) {
-      var hrect = canvas.getBoundingClientRect(), hper = hrect.width / vw;
+      var hrect = cvRect(), hper = hrect.width / vw;
       var hx = (holdPtr.x - hrect.left) / hper, hy = (holdPtr.y - hrect.top) / hper;
       ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.stroke();
@@ -16029,7 +16035,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function chunk(ccx, ccy, th) {
       var k = ccx + "," + ccy, c = GC.map[k];
       if (c) return c;
-      c = GC.map[k] = gradeCanvas(bake(ccx, ccy, th)); GC.order.push(k);
+      c = GC.map[k] = bake(ccx, ccy, th); GC.order.push(k); GC.nb = (GC.nb || 0) + 1;
       if (GC.order.length > GC.max) delete GC.map[GC.order.shift()];
       return c;
     }
@@ -16037,8 +16043,11 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var key = W + "x" + H + "|" + th + "|" + GFX + "|" + GC.ver + "|" + scaleK;
       if (key !== GC.key) { GC.key = key; GC.map = {}; GC.order = []; }
       var c0 = Math.floor(tx0 / CS), c1 = Math.floor(tx1 / CS), r0 = Math.floor(ty0 / CS), r1 = Math.floor(ty1 / CS), S = CS * TILE;
-      GC.max = (c1 - c0 + 1) * (r1 - r0 + 1) + 4; /* blocs visibles + une petite réserve : mémoire maîtrisée */
+      GC.max = (c1 - c0 + 3) * (r1 - r0 + 3) + 2; /* blocs visibles + la couronne autour */
+      var nb0 = GC.nb || 0;
       for (var cy = r0; cy <= r1; cy++) for (var cx = c0; cx <= c1; cx++) c.drawImage(chunk(cx, cy, th), cx * S, cy * S, S, S);
+      /* si rien n'a été préparé à cette image, on prépare un bloc de la couronne autour de l'écran (évite les à-coups en se déplaçant) */
+      if ((GC.nb || 0) === nb0) { outer: for (var py0 = r0 - 1; py0 <= r1 + 1; py0++) for (var px0 = c0 - 1; px0 <= c1 + 1; px0++) if (!GC.map[px0 + "," + py0]) { chunk(px0, py0, th); break outer; } }
       /* eau et lave restent animées : dessinées par-dessus */
       var fr = Math.floor(t / 420) % 2;
       for (var uy = ty0; uy <= ty1; uy++) for (var ux = tx0; ux <= tx1; ux++) {
@@ -16605,7 +16614,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var last = 0;
-  var perf = { ema: 16, n: 0, low: false, flat: false }, kCap = ((window.devicePixelRatio || 1) >= 2.6 && (navigator.hardwareConcurrency || 4) >= 6) ? 5 : 4; /* écrans très fins et appareils puissants : pleine résolution ; on redescend tout seul si le jeu ralentit */
+  var perf = { ema: 16, n: 0, low: false, flat: false }, kCap = 4;
   function loop() {
     requestAnimationFrame(loop);
     var t = now();
@@ -16613,7 +16622,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (last && mode === "play") {
       perf.ema += (Math.min(120, t - last) - perf.ema) * 0.02; perf.n++;
       /* qualité adaptative : on ne baisse la résolution que si le jeu reste lent longtemps (pas sur un à-coup de démarrage) */
-      if (!perf.low && perf.n > 360 && perf.ema > (kCap > 3 ? 36 : 44)) { if (kCap > 4) kCap = 4; else if (kCap > 3) kCap = 3; else if (kCap > 2) { kCap = 2; perf.flat = true; } else { perf.low = true; document.body.classList.add("lowfx"); } perf.n = 0; perf.ema = 16; try { resize(); } catch (err) {} }
+      if (!perf.low && perf.n > 150 && perf.ema > (kCap > 3 ? 30 : 40)) { if (kCap > 4) kCap = 4; else if (kCap > 3) kCap = 3; else if (kCap > 2) { kCap = 2; perf.flat = true; } else { perf.low = true; document.body.classList.add("lowfx"); } perf.n = 0; perf.ema = 16; try { resize(); } catch (err) {} }
     }
     last = t;
     if (!g) return;
