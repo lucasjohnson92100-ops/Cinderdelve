@@ -4877,10 +4877,11 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     function low() { return typeof perf !== "undefined" && perf && perf.low; }
     function rg(c, a) { return "rgba(" + c + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")"; }
     function px(v) { return v * TILE + 8; }
+    var NOSC = { crow: 1, drain: 1, rope: 1, cracks: 1, icering: 1, swirl: 1, axechop: 1, quills: 1, sonarw: 1, eggarc: 1, hoof: 1, fork: 1, shoe: 1, coin: 1, bellring: 1, firecol: 1, fwork: 1, stormhit: 1, grains: 1, crater: 1, bramble: 1, pop: 1, shout: 1, milkwave: 1, bog: 1, scarecrow: 1, healup: 1 };
     function add(k, x, y, dur, ex) {
       var f = { k: k, x: px(x), y: px(y), t0: now() + ((ex && ex.delay) || 0), dur: dur, seed: Math.random() * T2 };
       if (ex) for (var q in ex) f[q] = ex[q];
-      if (f.R && k !== "beam" && typeof state !== "undefined" && state && state.survival) f.R *= (k === "slash" ? 1.9 : 1.35); /* effets plus gros et plus lisibles en survie */
+      if (f.R && k !== "beam" && !NOSC[k] && typeof state !== "undefined" && state && state.survival) f.R *= (k === "slash" ? 1.9 : 1.35); /* effets plus gros et plus lisibles en survie */
       L.push(f); if (L.length > 80) L.shift(); return f;
     }
     function disc(c, x, y, r, col, a) { var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(col, a)); g.addColorStop(1, rg(col, 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill(); }
@@ -5416,6 +5417,381 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       auras(c, t);
       c.restore(); c.globalAlpha = 1; c.globalCompositeOperation = "source-over";
     }
+    /* ================= effets propres à chaque arme de survie ================= */
+    function ease(k) { return 1 - Math.pow(1 - k, 3); }
+    function fadeOut(k, from) { return k < from ? 1 : Math.max(0, (1 - k) / (1 - from)); }
+    /* corbeau qui fond sur sa cible puis repart */
+    function crowShape(c, x, y, s, flap, ang) {
+      c.save(); c.translate(x, y); c.rotate(ang); c.scale(s, s);
+      var w = Math.sin(flap) * 0.9;
+      c.fillStyle = "#1c1428"; c.strokeStyle = "#0a0610"; c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(-1, 0); c.quadraticCurveTo(-5, -4 * w - 1, -9, -6 * w); c.quadraticCurveTo(-5, -1, -1, 1.2); c.fill();
+      c.beginPath(); c.moveTo(-1, 0); c.quadraticCurveTo(-5, 4 * w + 1, -9, 6 * w); c.quadraticCurveTo(-5, 1, -1, -1.2); c.fill();
+      c.beginPath(); c.ellipse(0, 0, 5, 2.3, 0, 0, T2); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-4.5, 0); c.lineTo(-8, -1.8); c.lineTo(-8, 1.8); c.closePath(); c.fill();
+      c.fillStyle = "#ffb02e"; c.beginPath(); c.moveTo(4.6, -0.8); c.lineTo(7.4, 0); c.lineTo(4.6, 0.8); c.closePath(); c.fill();
+      c.fillStyle = "#ff3a3a"; c.beginPath(); c.arc(3.2, -0.7, 0.7, 0, T2); c.fill();
+      c.fillStyle = "rgba(150,120,255,0.55)"; c.beginPath(); c.ellipse(0.5, -0.9, 2.6, 0.6, 0, 0, T2); c.fill();
+      c.restore();
+    }
+    DR.crow = function (c, f, k) {
+      var sx = f.x + f.ox * TILE, sy = f.y + f.oy * TILE, x, y, ang, a = fadeOut(k, 0.75);
+      if (k < 0.5) { var u = k / 0.5, e = u * u; x = sx + (f.x - sx) * e; y = sy + (f.y - sy) * e - Math.sin(u * Math.PI) * 10; ang = Math.atan2(f.y - sy, f.x - sx); }
+      else { var v = (k - 0.5) / 0.5; x = f.x + v * 3.5 * TILE * (f.ox > 0 ? -1 : 1); y = f.y - v * 3 * TILE; ang = Math.atan2(-3, 3.5 * (f.ox > 0 ? -1 : 1)); }
+      c.globalAlpha = a * 0.35; c.fillStyle = "#000"; c.beginPath(); c.ellipse(x, f.y + 6, 5, 1.8, 0, 0, T2); c.fill();
+      c.globalAlpha = a * 0.7; c.globalCompositeOperation = "lighter"; disc(c, x, y, 13, "150,110,255", 0.55); c.globalCompositeOperation = "source-over";
+      c.globalAlpha = a; crowShape(c, x, y, 1.75, k * 40, ang);
+      if (k > 0.45 && k < 0.75) { var q = (k - 0.45) / 0.3; c.globalAlpha = 1 - q; c.fillStyle = "#2a2038"; for (var i = 0; i < 6; i++) { var an = f.seed + i * 1.05; c.beginPath(); c.ellipse(f.x + Math.cos(an) * q * 12, f.y + Math.sin(an) * q * 9 + q * q * 6, 2.2, 0.8, an, 0, T2); c.fill(); } }
+      c.globalAlpha = 1;
+    };
+    /* sangsue : un filet de sang qui coule du monstre vers le héros */
+    DR.drain = function (c, f, k, t) {
+      var hx = px(p.vx), hy = px(p.vy) - 2, x = f.x, y = f.y, a = k < 0.15 ? k / 0.15 : fadeOut(k, 0.6), dx = hx - x, dy = hy - y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+      function pt(u) { var w = Math.sin(u * 9 + t / 70 + f.seed) * 3.2 * Math.sin(u * Math.PI); return [x + dx * u + nx * w, y + dy * u + ny * w]; }
+      c.lineCap = "round"; c.lineJoin = "round";
+      for (var pass = 0; pass < 2; pass++) {
+        c.strokeStyle = pass ? rg("255,120,140", 0.9 * a) : rg("120,0,20", 0.75 * a); c.lineWidth = pass ? 1.2 : 3.4;
+        c.beginPath(); for (var i = 0; i <= 14; i++) { var q = pt(i / 14); if (i) c.lineTo(q[0], q[1]); else c.moveTo(q[0], q[1]); } c.stroke();
+      }
+      for (var j = 0; j < 4; j++) { var u = (k * 1.8 + j / 4) % 1, q2 = pt(u); c.fillStyle = rg("255,40,60", a); c.beginPath(); c.arc(q2[0], q2[1], 2.1 * (1 - u * 0.4), 0, T2); c.fill(); c.fillStyle = rg("255,200,210", a); c.beginPath(); c.arc(q2[0] - 0.6, q2[1] - 0.6, 0.7, 0, T2); c.fill(); }
+      if (k > 0.5) { c.globalCompositeOperation = "lighter"; disc(c, hx, hy, 9, "255,60,90", 0.4 * (1 - k)); }
+    };
+    /* fouet : une chaîne dorée qui claque de cible en cible */
+    DR.rope = function (c, f, k) {
+      var P = f.pts, n = P.length - 1, shown = Math.min(n, k * n * 2.2), a = fadeOut(k, 0.45);
+      c.lineCap = "round"; c.lineJoin = "round"; c.globalCompositeOperation = "lighter";
+      for (var pass = 0; pass < 2; pass++) {
+        c.strokeStyle = pass ? rg("255,250,220", a) : rg("255,170,40", 0.75 * a); c.lineWidth = pass ? 1.4 : 4.2;
+        c.beginPath(); c.moveTo(px(P[0][0]), px(P[0][1]));
+        for (var i = 1; i <= n && i - 1 < shown; i++) {
+          var x0 = px(P[i - 1][0]), y0 = px(P[i - 1][1]), x1 = px(P[i][0]), y1 = px(P[i][1]), u = Math.min(1, shown - (i - 1));
+          var mx = (x0 + x1) / 2 + (y1 - y0) * 0.18 * (i % 2 ? 1 : -1), my = (y0 + y1) / 2 - (x1 - x0) * 0.18 * (i % 2 ? 1 : -1);
+          var ex = x0 + (x1 - x0) * u, ey = y0 + (y1 - y0) * u; c.quadraticCurveTo(x0 + (mx - x0) * u, y0 + (my - y0) * u, ex, ey);
+        }
+        c.stroke();
+      }
+      for (var j = 1; j <= n && j - 1 < shown; j++) { var cx = px(P[j][0]), cy = px(P[j][1]); disc(c, cx, cy, 8, "255,210,90", 0.8 * a); }
+    };
+    /* séisme : le sol se fissure, des pierres sautent */
+    DR.cracks = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, g = Math.min(1, k / 0.18), a = fadeOut(k, 0.55), i, j;
+      if (!f.cr) { f.cr = []; for (i = 0; i < (f.n || 9); i++) { var an = f.seed + i / (f.n || 9) * T2 + Math.sin(i * 7.3) * 0.25, pts = [[0, 0]], cx = 0, cy = 0, L0 = R * (0.55 + 0.4 * Math.abs(Math.sin(i * 3.7 + f.seed))); for (j = 1; j <= 5; j++) { an += Math.sin(i * 11 + j * 5.1) * 0.45; cx += Math.cos(an) * L0 / 5; cy += Math.sin(an) * L0 / 5 * 0.75; pts.push([cx, cy]); } f.cr.push(pts); } }
+      c.lineCap = "round"; c.lineJoin = "round";
+      for (var pass = 0; pass < 3; pass++) {
+        c.strokeStyle = pass === 0 ? rg("10,6,4", 0.75 * a) : pass === 1 ? rg(f.glow || "255,140,60", 0.85 * a * (1 - k)) : rg("255,240,200", 0.5 * a * (1 - k));
+        c.lineWidth = pass === 0 ? 2.8 : pass === 1 ? 1.4 : 0.6;
+        for (i = 0; i < f.cr.length; i++) { var P2 = f.cr[i], m = Math.max(1, Math.floor(g * (P2.length - 1))); c.beginPath(); c.moveTo(x, y); for (j = 1; j <= m; j++) c.lineTo(x + P2[j][0], y + P2[j][1]); c.stroke(); }
+      }
+      if (f.rocks !== 0) for (i = 0; i < 10; i++) {
+        var ra = f.seed * 3 + i * 0.63, rd = R * (0.25 + 0.7 * ((i * 37) % 10) / 10) * ease(k), rh = Math.sin(Math.min(1, k * 1.6) * Math.PI) * (10 + (i % 3) * 6), rx = x + Math.cos(ra) * rd, ry = y + Math.sin(ra) * rd * 0.75 - rh, rs = 2 + (i % 3);
+        if (k * 1.6 > 1) continue;
+        c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(rx, y + Math.sin(ra) * rd * 0.75 + 2, rs, rs * 0.4, 0, 0, T2); c.fill();
+        c.fillStyle = i % 2 ? "#8a7a6a" : "#6a5c50"; c.strokeStyle = "#150f26"; c.lineWidth = 0.8; c.save(); c.translate(rx, ry); c.rotate(k * 9 + i); c.beginPath(); c.moveTo(-rs, -rs * 0.4); c.lineTo(-rs * 0.2, -rs); c.lineTo(rs, -rs * 0.3); c.lineTo(rs * 0.6, rs * 0.8); c.lineTo(-rs * 0.7, rs * 0.6); c.closePath(); c.fill(); c.stroke(); c.restore();
+      }
+      if (k < 0.5) for (i = 0; i < 12; i++) { var da = i / 12 * T2 + f.seed, dr = R * (0.4 + 0.75 * ease(k * 2)); c.fillStyle = rg("190,170,150", 0.45 * (1 - k * 2)); c.beginPath(); c.arc(x + Math.cos(da) * dr, y + Math.sin(da) * dr * 0.75, 4 + 6 * k, 0, T2); c.fill(); }
+    };
+    /* anneau de givre : éclats de glace qui jaillissent en cercle */
+    DR.icering = function (c, f, k, t) {
+      var R = f.R * TILE, x = f.x, y = f.y, up = Math.min(1, k / 0.22), a = fadeOut(k, 0.5), n = 16, i;
+      var g = c.createRadialGradient(x, y, R * 0.2, x, y, R * 1.05); g.addColorStop(0, rg("200,240,255", 0)); g.addColorStop(0.75, rg("170,225,255", 0.28 * a)); g.addColorStop(1, rg("230,250,255", 0));
+      c.fillStyle = g; c.beginPath(); c.ellipse(x, y, R * 1.05, R * 0.8, 0, 0, T2); c.fill();
+      for (i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2, rr = R * (0.82 + 0.1 * Math.sin(i * 5.3)), bx = x + Math.cos(an) * rr, by = y + Math.sin(an) * rr * 0.78, h = (10 + 7 * ((i * 7) % 3)) * up * (k > 0.5 ? 1 - (k - 0.5) * 1.2 : 1), w = 3.4;
+        if (h <= 0.5) continue;
+        c.fillStyle = rg("190,235,255", 0.9 * a); c.strokeStyle = rg("40,90,160", 0.9 * a); c.lineWidth = 0.9;
+        c.beginPath(); c.moveTo(bx - w, by); c.lineTo(bx - w * 0.3, by - h * 0.85); c.lineTo(bx, by - h); c.lineTo(bx + w * 0.4, by - h * 0.8); c.lineTo(bx + w, by); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle = rg("255,255,255", 0.8 * a); c.beginPath(); c.moveTo(bx - w * 0.5, by - 1); c.lineTo(bx - w * 0.15, by - h * 0.8); c.lineTo(bx + w * 0.05, by - 1); c.closePath(); c.fill();
+      }
+      c.globalCompositeOperation = "lighter";
+      for (i = 0; i < 14; i++) { var sa = f.seed * 2 + i * 0.45, sr = R * (0.3 + 0.8 * ((i * 13) % 7) / 7), sx = x + Math.cos(sa) * sr + Math.sin(t / 300 + i) * 4, sy = y + Math.sin(sa) * sr * 0.75 - k * 14; c.fillStyle = rg("235,250,255", 0.9 * a); c.fillRect(sx - 1.2, sy - 0.3, 2.4, 0.6); c.fillRect(sx - 0.3, sy - 1.2, 0.6, 2.4); }
+      if (k < 0.15) disc(c, x, y, R * 0.6, "220,245,255", 0.5 * (1 - k / 0.15));
+    };
+    /* bourrasque : spirales de vent et feuilles aspirées vers le héros */
+    DR.swirl = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, a = k < 0.15 ? k / 0.15 : fadeOut(k, 0.6), i, j;
+      c.lineCap = "round";
+      for (i = 0; i < 5; i++) {
+        var a0 = f.seed + i / 5 * T2 + k * 5, r0 = R * (1.05 - 0.65 * ease(k));
+        c.strokeStyle = rg(i % 2 ? "235,245,255" : "190,220,240", 0.75 * a); c.lineWidth = 2.2 - i * 0.2;
+        c.beginPath(); for (j = 0; j <= 16; j++) { var u = j / 16, rr = r0 * (1 - u * 0.45), an = a0 + u * 2.2; var qx = x + Math.cos(an) * rr, qy = y + Math.sin(an) * rr * 0.78; if (j) c.lineTo(qx, qy); else c.moveTo(qx, qy); } c.stroke();
+      }
+      for (i = 0; i < 8; i++) {
+        var la = f.seed * 1.7 + i * 0.79 + k * 6, lr = R * (1.1 - ease(k) * 0.85) * (0.7 + 0.3 * ((i * 3) % 4) / 4), lx = x + Math.cos(la) * lr, ly = y + Math.sin(la) * lr * 0.78;
+        c.save(); c.translate(lx, ly); c.rotate(la * 2 + k * 12); c.fillStyle = rg(i % 3 ? "120,190,70" : "210,170,60", a); c.beginPath(); c.ellipse(0, 0, 2.6, 1.2, 0, 0, T2); c.fill(); c.strokeStyle = rg("40,70,20", a); c.lineWidth = 0.5; c.beginPath(); c.moveTo(-2.4, 0); c.lineTo(2.4, 0); c.stroke(); c.restore();
+      }
+    };
+    /* hache du boucher : un couperet géant s'abat sur la cible */
+    DR.axechop = function (c, f, k) {
+      var x = f.x, y = f.y, S = 2.2 * TILE, im = SP.axe && SP.axe.h, a = fadeOut(k, 0.6), sw = k < 0.3 ? ease(k / 0.3) : 1, ang = -2.1 + 2.2 * sw;
+      if (k >= 0.3) { var q = (k - 0.3) / 0.7; c.globalCompositeOperation = "lighter"; disc(c, x, y + 4, S * 0.7 * (0.6 + q), "255,90,60", 0.5 * (1 - q)); c.globalCompositeOperation = "source-over"; }
+      c.save(); c.globalAlpha = a; c.translate(x - S * 0.45, y - S * 0.15); c.rotate(ang);
+      if (k < 0.3) { c.globalAlpha = 0.22 * a; for (var g2 = 1; g2 <= 3; g2++) { c.save(); c.rotate(-g2 * 0.2); cleaverShape(c, S); c.restore(); } c.globalAlpha = a; }
+      cleaverShape(c, S);
+      c.restore();
+    };
+    function cleaverShape(c, S) {
+      var u = S / 30; c.save(); c.scale(u, u); c.lineJoin = "round";
+      c.fillStyle = "#5a3418"; c.strokeStyle = "#150f26"; c.lineWidth = 1.6; c.beginPath(); c.rect(-1.5, -16, 4, 15); c.fill(); c.stroke();
+      c.fillStyle = "#3a200e"; c.fillRect(-1.5, -12, 4, 1.4); c.fillRect(-1.5, -7, 4, 1.4);
+      c.fillStyle = "#cfd6e2"; c.beginPath(); c.moveTo(-2, -1); c.lineTo(22, -1); c.lineTo(24, 2); c.lineTo(24, 14); c.lineTo(-2, 14); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = "#8a92a8"; c.beginPath(); c.moveTo(-2, 10); c.lineTo(24, 10); c.lineTo(24, 14); c.lineTo(-2, 14); c.closePath(); c.fill();
+      c.fillStyle = "#ffffff"; c.fillRect(1, 1, 19, 1.4); c.fillStyle = "#150f26"; c.beginPath(); c.arc(19, 4.5, 1.6, 0, T2); c.fill();
+      c.fillStyle = "rgba(180,20,30,0.85)"; c.beginPath(); c.moveTo(8, 14); c.lineTo(12, 14); c.lineTo(10.5, 17); c.closePath(); c.fill();
+      c.restore();
+    }
+    /* hérisson : des piquants volent dans toutes les directions */
+    DR.quills = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, e = ease(k), a = fadeOut(k, 0.55), n = 20;
+      c.lineCap = "round";
+      for (var i = 0; i < n; i++) {
+        var an = f.seed + i / n * T2, r0 = R * (0.15 + 0.85 * e), r1 = r0 + 7, ca = Math.cos(an), sa = Math.sin(an) * 0.8;
+        c.strokeStyle = rg("90,60,40", a); c.lineWidth = 1.8; c.beginPath(); c.moveTo(x + ca * r0, y + sa * r0); c.lineTo(x + ca * r1, y + sa * r1); c.stroke();
+        c.strokeStyle = rg("255,250,235", a); c.lineWidth = 1.1; c.beginPath(); c.moveTo(x + ca * (r1 - 2.5), y + sa * (r1 - 2.5)); c.lineTo(x + ca * r1, y + sa * r1); c.stroke();
+      }
+    };
+    /* sonar : ondes « ((( » qui balaient la zone et font tinter les cibles */
+    DR.sonarw = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, i;
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (i = 0; i < 3; i++) {
+        var kk = k * 1.35 - i * 0.16; if (kk <= 0 || kk >= 1) continue;
+        var r = R * ease(kk), al = 1 - kk;
+        for (var s = 0; s < 6; s++) { var a0 = f.seed + s / 6 * T2; c.strokeStyle = rg("60,160,255", 0.45 * al); c.lineWidth = 9 * al + 2; c.beginPath(); c.ellipse(x, y, r, r * 0.8, 0, a0, a0 + 0.75); c.stroke(); c.strokeStyle = rg(i === 1 ? "255,255,255" : "150,230,255", al); c.lineWidth = 3.6 * al + 1.2; c.stroke(); }
+      }
+      if (f.tg) for (i = 0; i < f.tg.length; i++) { var tx = px(f.tg[i][0]), ty = px(f.tg[i][1]), dk = Math.hypot(tx - x, (ty - y) / 0.8) / R, z = k * 1.35 - ease(dk) * 0.9; if (z < 0 || z > 0.35) continue; var zz = z / 0.35; c.strokeStyle = rg("180,240,255", 1 - zz); c.lineWidth = 1.6; c.beginPath(); c.arc(tx, ty - 4, 3 + 8 * zz, 0, T2); c.stroke(); disc(c, tx, ty - 4, 6, "200,250,255", 0.7 * (1 - zz)); }
+    };
+    /* œuf piégé : lancé en cloche, il tremble avant d'exploser */
+    DR.eggarc = function (c, f, k, t) {
+      var sx = px(f.sx), sy = px(f.sy), x = f.x, y = f.y, T = Math.min(1, k / 0.42), ex, ey, sc = 1;
+      ex = sx + (x - sx) * T; ey = sy + (y - sy) * T - Math.sin(T * Math.PI) * 26;
+      c.fillStyle = "rgba(0,0,0,0.3)"; c.beginPath(); c.ellipse(sx + (x - sx) * T, sy + (y - sy) * T + 5, 4 * (0.6 + 0.4 * T), 1.6, 0, 0, T2); c.fill();
+      var rot = T < 1 ? T * 9 : Math.sin(t / 30) * 0.3 * (k - 0.42) / 0.58;
+      if (k > 0.85) sc = 1 + (k - 0.85) * 2.4;
+      c.save(); c.translate(ex, ey); c.rotate(rot); c.scale(sc, sc);
+      c.fillStyle = k > 0.6 && Math.floor(t / 70) % 2 ? "#ffd0c0" : "#fff8ec"; c.strokeStyle = "#150f26"; c.lineWidth = 1.2;
+      c.beginPath(); c.ellipse(0, 0, 4.2, 5.4, 0, 0, T2); c.fill(); c.stroke();
+      c.fillStyle = "#e8b878"; c.beginPath(); c.arc(-1.4, 1, 0.9, 0, T2); c.arc(1.6, -1.6, 0.7, 0, T2); c.fill();
+      c.fillStyle = "#ffffff"; c.beginPath(); c.ellipse(-1.4, -2.2, 1, 1.6, -0.3, 0, T2); c.fill();
+      c.restore();
+      if (T >= 1) { var sp = Math.floor(t / 60) % 2; c.globalCompositeOperation = "lighter"; disc(c, x + 2, y - 7, sp ? 5 : 3.5, "255,180,60", 0.9); c.fillStyle = "#fff4c0"; c.fillRect(x + 1.5, y - 7.5, 1, 1);
+        c.strokeStyle = rg("255,90,60", 0.35 + 0.3 * sp); c.lineWidth = 1.2; c.setLineDash([3, 3]); c.beginPath(); c.ellipse(x, y + 3, f.R * TILE, f.R * TILE * 0.78, 0, 0, T2); c.stroke(); c.setLineDash([]); }
+    };
+    /* cercle de sabots : empreintes frappées tout autour, poussière qui s'envole */
+    DR.hoof = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, n = 10, i;
+      for (i = 0; i < n; i++) {
+        var on = k * 2.4 - i * 0.07; if (on <= 0) continue;
+        var an = f.seed + i / n * T2, rr = R * 0.62, hx = x + Math.cos(an) * rr, hy = y + Math.sin(an) * rr * 0.78, al = Math.min(1, on * 3) * fadeOut(k, 0.55), s = 1 + Math.max(0, 0.6 - on * 2);
+        c.save(); c.translate(hx, hy); c.rotate(an + Math.PI / 2); c.scale(s, s); c.globalAlpha = al;
+        c.strokeStyle = "#3a2410"; c.lineWidth = 2.6; c.lineCap = "round"; c.beginPath(); c.arc(0, 0, 3.4, 0.25, Math.PI - 0.25, true); c.stroke();
+        c.strokeStyle = "#c8a070"; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, 3.4, 0.3, Math.PI - 0.3, true); c.stroke();
+        c.restore();
+      }
+      c.globalAlpha = 1;
+      for (i = 0; i < 14; i++) { var da = f.seed + i / 14 * T2, dr = R * (0.55 + 0.6 * ease(k)), al2 = 0.55 * (1 - k); c.fillStyle = rg("210,190,160", al2); c.beginPath(); c.arc(x + Math.cos(da) * dr, y + Math.sin(da) * dr * 0.78, 3 + 7 * k, 0, T2); c.fill(); }
+    };
+    /* fourche-javelot : une vraie fourche qui file et transperce */
+    DR.fork = function (c, f, k) {
+      var ex = px(f.ex), ey = px(f.ey), x = f.x, y = f.y, u = ease(Math.min(1, k / 0.55)), a = fadeOut(k, 0.6), ang = Math.atan2(ey - y, ex - x), cx = x + (ex - x) * u, cy = y + (ey - y) * u;
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      var g = c.createLinearGradient(x, y, cx, cy); g.addColorStop(0, rg("255,170,60", 0.25 * a)); g.addColorStop(1, rg("255,230,150", 0.8 * a)); c.strokeStyle = g; c.lineWidth = (f.w || 0.5) * TILE * 1.3; c.beginPath(); c.moveTo(x, y); c.lineTo(cx, cy); c.stroke();
+      c.strokeStyle = rg("255,250,230", 0.7 * a); c.lineWidth = 1.4; c.stroke(); disc(c, cx, cy, 12, "255,230,150", 0.6 * a);
+      c.globalCompositeOperation = "source-over"; c.globalAlpha = a;
+      c.save(); c.translate(cx, cy); c.rotate(ang); var S = (f.big ? 1.45 : 1.25);  c.scale(S, S);
+      c.strokeStyle = "#150f26"; c.lineWidth = 3; c.beginPath(); c.moveTo(-20, 0); c.lineTo(-2, 0); c.stroke();
+      c.strokeStyle = "#a06a34"; c.lineWidth = 1.8; c.beginPath(); c.moveTo(-20, 0); c.lineTo(-2, 0); c.stroke();
+      c.strokeStyle = "#150f26"; c.lineWidth = 2.6; c.beginPath(); c.moveTo(-2, -4); c.lineTo(-2, 4); c.moveTo(-2, -4); c.lineTo(7, -4); c.moveTo(-2, 0); c.lineTo(8, 0); c.moveTo(-2, 4); c.lineTo(7, 4); c.stroke();
+      c.strokeStyle = "#dfe6f0"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-2, -4); c.lineTo(-2, 4); c.moveTo(-2, -4); c.lineTo(7, -4); c.moveTo(-2, 0); c.lineTo(8, 0); c.moveTo(-2, 4); c.lineTo(7, 4); c.stroke();
+      c.restore(); c.globalAlpha = 1;
+    };
+    /* fer à cheval : il tournoie et rebondit d'un monstre à l'autre */
+    function shoe(c, x, y, rot, s) {
+      c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s); c.lineCap = "round";
+      c.strokeStyle = "#150f26"; c.lineWidth = 4.4; c.beginPath(); c.arc(0, 0, 4.4, 0.35, Math.PI * 2 - 0.35 - Math.PI, true); c.stroke();
+      c.strokeStyle = "#b8c0d0"; c.lineWidth = 2.6; c.beginPath(); c.arc(0, 0, 4.4, 0.35, Math.PI * 2 - 0.35 - Math.PI, true); c.stroke();
+      c.strokeStyle = "#ffffff"; c.lineWidth = 0.9; c.beginPath(); c.arc(0, 0, 4.4, -0.2, -1.6, true); c.stroke();
+      c.restore();
+    }
+    DR.shoe = function (c, f, k) {
+      var ex = px(f.ex), ey = px(f.ey), x = f.x, y = f.y, u = Math.min(1, k / 0.6), cx = x + (ex - x) * u, cy = y + (ey - y) * u - Math.sin(u * Math.PI) * 8;
+      c.globalCompositeOperation = "lighter"; for (var i = 1; i <= 4; i++) { var u2 = Math.max(0, u - i * 0.08); disc(c, x + (ex - x) * u2, y + (ey - y) * u2 - Math.sin(u2 * Math.PI) * 8, 4, f.elec ? "140,200,255" : "255,220,140", 0.35 * (1 - i / 5)); }
+      c.globalCompositeOperation = "source-over";
+      if (k < 0.6) shoe(c, cx, cy, k * 22, 1.4);
+      else { var q = (k - 0.6) / 0.4; c.globalCompositeOperation = "lighter"; disc(c, ex, ey, 10 * (0.5 + q), f.elec ? "140,200,255" : "255,230,150", 0.8 * (1 - q)); c.strokeStyle = rg("255,255,255", 1 - q); c.lineWidth = 1.2; for (var j = 0; j < 6; j++) { var sa = f.seed + j; c.beginPath(); c.moveTo(ex + Math.cos(sa) * 3, ey + Math.sin(sa) * 3); c.lineTo(ex + Math.cos(sa) * (5 + 9 * q), ey + Math.sin(sa) * (5 + 9 * q)); c.stroke(); } }
+    };
+    /* pièce porte-bonheur : une pièce d'or qui tournoie en cloche */
+    DR.coin = function (c, f, k) {
+      var ex = px(f.ex), ey = px(f.ey), x = f.x, y = f.y, u = Math.min(1, k / 0.55), cx = x + (ex - x) * u, cy = y + (ey - y) * u - Math.sin(u * Math.PI) * 16, i;
+      c.globalCompositeOperation = "lighter";
+      for (i = 0; i < 6; i++) { var u2 = Math.max(0, u - i * 0.06), sx = x + (ex - x) * u2, sy = y + (ey - y) * u2 - Math.sin(u2 * Math.PI) * 16; c.fillStyle = rg("255,230,120", 0.5 * (1 - i / 6)); c.fillRect(sx - 0.8, sy - 0.8, 1.6, 1.6); }
+      c.globalCompositeOperation = "source-over";
+      if (k < 0.55) {
+        var w = (Math.abs(Math.cos(k * 40)) * 4.2 + 0.6) * 1.35; c.save(); c.translate(cx, cy); c.scale(1.35, 1.35); c.translate(-cx, -cy); w /= 1.35;
+        c.fillStyle = "#c99a12"; c.strokeStyle = "#150f26"; c.lineWidth = 1; c.beginPath(); c.ellipse(cx, cy, w, 4.6, 0, 0, T2); c.fill(); c.stroke();
+        c.fillStyle = "#ffd23c"; c.beginPath(); c.ellipse(cx - w * 0.15, cy - 0.4, w * 0.75, 3.6, 0, 0, T2); c.fill();
+        if (w > 2.5) { c.fillStyle = "#fff3a6"; c.fillRect(cx - 0.6, cy - 2.4, 1.2, 4.8); }
+        c.restore();
+      } else {
+        var q = (k - 0.55) / 0.45; c.globalCompositeOperation = "lighter"; disc(c, ex, ey, 14 * (0.4 + q), "255,214,80", 0.85 * (1 - q));
+        for (i = 0; i < 8; i++) { var sa = f.seed + i * 0.785, sr = 4 + 16 * ease(q); c.fillStyle = rg(i % 2 ? "255,240,160" : "255,200,60", 1 - q); c.save(); c.translate(ex + Math.cos(sa) * sr, ey + Math.sin(sa) * sr - q * 6); c.rotate(q * 4 + i); c.fillRect(-1.6, -0.5, 3.2, 1); c.fillRect(-0.5, -1.6, 1, 3.2); c.restore(); }
+      }
+    };
+    /* cloche d'alarme : une cloche dorée se balance au-dessus du héros */
+    DR.bellring = function (c, f, k) {
+      var x = px(p.vx), y = px(p.vy) - 1.7 * TILE, sw = Math.sin(k * 16) * 0.55 * (1 - k), a = k < 0.1 ? k / 0.1 : fadeOut(k, 0.7), i;
+      c.save(); c.globalAlpha = a; c.translate(x, y - 6); c.rotate(sw);
+      c.strokeStyle = "#150f26"; c.lineWidth = 1.4; c.fillStyle = "#ffcf3a";
+      c.beginPath(); c.moveTo(-3, 0); c.quadraticCurveTo(-3.2, 4, -6.5, 11); c.lineTo(6.5, 11); c.quadraticCurveTo(3.2, 4, 3, 0); c.quadraticCurveTo(0, -2.6, -3, 0); c.fill(); c.stroke();
+      c.fillStyle = "#c98a12"; c.fillRect(-6.5, 9.4, 13, 1.8);
+      c.fillStyle = "#fff6c8"; c.beginPath(); c.ellipse(-2, 5, 0.9, 3, 0.2, 0, T2); c.fill();
+      c.fillStyle = "#6a4a1a"; c.beginPath(); c.arc(Math.sin(k * 16 + 1.2) * 2.4, 12.6, 1.7, 0, T2); c.fill();
+      c.restore();
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      for (i = 0; i < 3; i++) { var kk = k * 1.6 - i * 0.18; if (kk <= 0 || kk >= 1) continue; var r = 8 + 22 * kk; c.strokeStyle = rg("255,220,110", 0.9 * (1 - kk)); c.lineWidth = 2.4 * (1 - kk) + 0.6; c.beginPath(); c.arc(x, y, r, -0.5, 0.5); c.stroke(); c.beginPath(); c.arc(x, y, r, Math.PI - 0.5, Math.PI + 0.5); c.stroke(); }
+    };
+    /* colonne de feu : une vraie colonne de flammes qui ronfle */
+    DR.firecol = function (c, f, k, t) {
+      var x = f.x, y = f.y + 4, R = f.R * TILE, Hh = 2.8 * TILE, a = k < 0.12 ? k / 0.12 : fadeOut(k, 0.82), i;
+      c.globalCompositeOperation = "lighter";
+      disc(c, x, y, R * 1.15, "255,110,30", 0.45 * a);
+      c.fillStyle = rg("255,80,20", 0.28 * a); c.beginPath(); c.ellipse(x, y, R, R * 0.42, 0, 0, T2); c.fill();
+      for (i = 0; i < 7; i++) {
+        var ph = t / 70 + i * 1.9 + f.seed, hh = Hh * (0.55 + 0.45 * Math.abs(Math.sin(ph * 0.7))) * (i < 3 ? 1 : 0.7) * Math.min(1, k / 0.12), ww = R * (0.5 - i * 0.04), ox = Math.sin(ph) * R * 0.25;
+        var col = i < 2 ? "255,90,30" : i < 5 ? "255,160,40" : "255,240,170";
+        c.fillStyle = rg(col, (i < 5 ? 0.55 : 0.8) * a);
+        c.beginPath(); c.moveTo(x - ww + ox * 0.3, y); c.quadraticCurveTo(x - ww * 0.8 + ox, y - hh * 0.55, x + ox * 1.4, y - hh); c.quadraticCurveTo(x + ww * 0.8 + ox, y - hh * 0.55, x + ww + ox * 0.3, y); c.closePath(); c.fill();
+      }
+      for (i = 0; i < 8; i++) { var ey = ((t / 9 + i * 13 + f.seed * 40) % Hh), exx = x + Math.sin(t / 120 + i * 2.3) * R * 0.5; c.fillStyle = rg("255,220,120", a * (1 - ey / Hh)); c.fillRect(exx - 0.8, y - ey - 0.8, 1.6, 1.6); }
+    };
+    /* feux d'artifice : une fusée monte, puis une gerbe multicolore */
+    DR.fwork = function (c, f, k) {
+      var sx = px(f.sx), sy = px(f.sy), x = f.x, y = f.y, kb = f.kb || 0.5, i;
+      c.globalCompositeOperation = "lighter";
+      if (k < kb) {
+        var u = k / kb, e = u * u, rx = sx + (x - sx) * e, ry = sy + (y - sy) * e - Math.sin(u * Math.PI) * 30;
+        for (i = 0; i < 7; i++) { var u2 = Math.max(0, u - i * 0.05), e2 = u2 * u2; c.fillStyle = rg(i % 2 ? "255,200,90" : "255,255,220", 0.8 * (1 - i / 7)); c.fillRect(sx + (x - sx) * e2 - 1, sy + (y - sy) * e2 - Math.sin(u2 * Math.PI) * 30 - 1, 2, 2); }
+        disc(c, rx, ry, 5, f.col || "255,120,200", 0.9);
+        c.strokeStyle = "rgba(255,255,255,0.4)"; c.lineWidth = 1; c.setLineDash([2, 3]); c.beginPath(); c.ellipse(x, y, f.R * TILE, f.R * TILE * 0.78, 0, 0, T2); c.stroke(); c.setLineDash([]);
+        return;
+      }
+      var q = (k - kb) / (1 - kb), R = f.R * TILE * 1.1, cols = f.cols || ["255,90,170", "120,220,255", "255,230,100"];
+      if (q < 0.2) disc(c, x, y, R * 0.8, "255,255,240", 0.75 * (1 - q / 0.2));
+      for (i = 0; i < 26; i++) {
+        var an = f.seed + i / 26 * T2, sp = R * (0.6 + 0.4 * ((i * 7) % 5) / 5), d = sp * ease(q), gx = x + Math.cos(an) * d, gy = y + Math.sin(an) * d * 0.85 + q * q * 14, col = cols[i % cols.length];
+        c.strokeStyle = rg(col, 1 - q); c.lineWidth = 2 * (1 - q) + 0.6; c.lineCap = "round"; c.beginPath(); c.moveTo(gx - Math.cos(an) * 5 * (1 - q), gy - Math.sin(an) * 5 * (1 - q)); c.lineTo(gx, gy); c.stroke();
+        if (q > 0.5 && (i + Math.floor(q * 20)) % 3 === 0) { c.fillStyle = rg("255,255,255", 1 - q); c.fillRect(gx - 0.7, gy - 0.7, 1.4, 1.4); }
+      }
+    };
+    /* foudre du ciel : nuage noir qui gronde, impact éclatant au sol */
+    DR.stormhit = function (c, f, k) {
+      var x = f.x, y = f.y, cy = y - 5.5 * TILE, a = fadeOut(k, 0.4), i;
+      c.globalAlpha = 0.85 * a;
+      for (i = 0; i < 5; i++) { var bx = x + (i - 2) * 7 + Math.sin(i * 3.1) * 2, br = 7 + (i % 2) * 3; c.fillStyle = i % 2 ? "#3a3550" : "#4a4566"; c.beginPath(); c.arc(bx, cy + Math.cos(i * 2.1) * 2, br, 0, T2); c.fill(); }
+      c.fillStyle = "#5c5880"; c.beginPath(); c.arc(x - 3, cy - 4, 6, 0, T2); c.fill();
+      c.globalAlpha = 1; c.globalCompositeOperation = "lighter";
+      if (k < 0.25) disc(c, x, cy, 18, "200,200,255", 0.6 * (1 - k / 0.25));
+      disc(c, x, y, 18 * (0.5 + k), "190,170,255", 0.7 * (1 - k));
+      c.strokeStyle = rg("220,210,255", 1 - k); c.lineWidth = 2 * (1 - k) + 0.6; c.beginPath(); c.ellipse(x, y + 2, 6 + 16 * ease(k), (6 + 16 * ease(k)) * 0.45, 0, 0, T2); c.stroke();
+      for (i = 0; i < 6; i++) { var sa = f.seed + i * 1.05, sr = 3 + 14 * ease(k); c.fillStyle = rg("255,255,255", 1 - k); c.fillRect(x + Math.cos(sa) * sr - 0.8, y + Math.sin(sa) * sr * 0.6 - 0.8 - k * 6, 1.6, 1.6); }
+    };
+    /* mines : gerbe de grains à l'explosion */
+    DR.grains = function (c, f, k) {
+      var x = f.x, y = f.y, R = f.R * TILE, i;
+      for (i = 0; i < 22; i++) { var an = f.seed + i * 0.286, d = R * (0.3 + 0.8 * ((i * 7) % 6) / 6) * ease(k), h = Math.sin(Math.min(1, k * 1.3) * Math.PI) * (8 + (i % 4) * 4); if (k * 1.3 > 1) continue; var gx = x + Math.cos(an) * d, gy = y + Math.sin(an) * d * 0.78 - h; c.fillStyle = i % 3 ? (f.c1 || "#ffd23c") : (f.c2 || "#f0a830"); c.strokeStyle = "#5a3a10"; c.lineWidth = 0.5; c.beginPath(); c.ellipse(gx, gy, 1.6, 1.1, an, 0, T2); c.fill(); c.stroke(); }
+    };
+    /* météorite : cratère fumant après l'impact */
+    DR.crater = function (c, f, k, t) {
+      var x = f.x, y = f.y, R = f.R * TILE, a = fadeOut(k, 0.55), i;
+      var g = c.createRadialGradient(x, y, R * 0.1, x, y, R); g.addColorStop(0, rg("20,10,8", 0.75 * a)); g.addColorStop(0.7, rg("40,20,12", 0.45 * a)); g.addColorStop(1, rg("40,20,12", 0)); c.fillStyle = g; c.beginPath(); c.ellipse(x, y, R, R * 0.72, 0, 0, T2); c.fill();
+      c.globalCompositeOperation = "lighter";
+      for (i = 0; i < 9; i++) { var an = f.seed + i * 0.7, r0 = R * 0.2, r1 = R * (0.55 + 0.3 * Math.abs(Math.sin(i * 2.7))); c.strokeStyle = rg("255,120,40", 0.8 * a * (0.6 + 0.4 * Math.sin(t / 120 + i))); c.lineWidth = 1.4; c.beginPath(); c.moveTo(x + Math.cos(an) * r0, y + Math.sin(an) * r0 * 0.72); c.lineTo(x + Math.cos(an + 0.2) * r1 * 0.6, y + Math.sin(an + 0.2) * r1 * 0.45); c.lineTo(x + Math.cos(an) * r1, y + Math.sin(an) * r1 * 0.72); c.stroke(); }
+      disc(c, x, y, R * 0.45, "255,110,40", 0.35 * a);
+      c.globalCompositeOperation = "source-over";
+      for (i = 0; i < 5; i++) { var sm = ((t / 14 + i * 37) % 40) / 40, sx = x + Math.sin(i * 2.3 + t / 400) * R * 0.3; c.fillStyle = rg("90,80,90", 0.35 * a * (1 - sm)); c.beginPath(); c.arc(sx, y - sm * 26, 3 + sm * 7, 0, T2); c.fill(); }
+    };
+    /* mur d'épines : des ronces jaillissent en ligne */
+    DR.bramble = function (c, f, k) {
+      var x = f.x, y = f.y, L = f.L * TILE, an = f.a, up = Math.min(1, k / 0.25), a = fadeOut(k, 0.6), ca = Math.cos(an), sa = Math.sin(an), nx = -sa, ny = ca, w = (f.w || 1.6) * TILE * 0.5, i, j;
+      c.lineCap = "round"; c.lineJoin = "round";
+      for (j = -1; j <= 1; j++) {
+        c.beginPath(); for (i = 0; i <= 20; i++) { var u = i / 20 * up, d = 8 + u * (L - 8), wv = Math.sin(u * 14 + j * 2 + f.seed) * w * 0.35 + j * w * 0.45; var qx = x + ca * d + nx * wv, qy = y + sa * d + ny * wv * 0.8; if (i) c.lineTo(qx, qy); else c.moveTo(qx, qy); }
+        c.strokeStyle = rg("20,30,10", a); c.lineWidth = j ? 4.2 : 5.4; c.stroke();
+        c.strokeStyle = rg(j ? "100,160,50" : "130,190,60", a); c.lineWidth = j ? 2.6 : 3.6; c.stroke();
+      }
+      c.fillStyle = rg("235,225,200", a); c.strokeStyle = rg("40,30,20", a); c.lineWidth = 0.7;
+      for (i = 0; i < 24; i++) { var u2 = ((i * 7) % 24) / 24; if (u2 > up) continue; var d2 = 8 + u2 * (L - 8), j2 = (i % 3) - 1, wv2 = Math.sin(u2 * 14 + j2 * 2 + f.seed) * w * 0.35 + j2 * w * 0.45, bx = x + ca * d2 + nx * wv2, by = y + sa * d2 + ny * wv2 * 0.8, h = 7 + (i % 3) * 2.5, ta = -Math.PI / 2 + (i % 2 ? 0.5 : -0.5); c.beginPath(); c.moveTo(bx - 2, by); c.lineTo(bx + Math.cos(ta) * h, by + Math.sin(ta) * h); c.lineTo(bx + 2, by); c.closePath(); c.fill(); c.stroke(); }
+    };
+    /* cri du coq : arcs sonores « ))) » qui partent dans la direction du cri */
+    DR.shout = function (c, f, k) {
+      var R = f.R * TILE, x = f.x, y = f.y, A0 = f.a - f.sp, A1 = f.a + f.sp, i;
+      c.globalCompositeOperation = "lighter"; c.lineCap = "round";
+      var gf = c.createRadialGradient(x, y, 0, x, y, R * ease(Math.min(1, k * 1.4))); gf.addColorStop(0, rg("255,220,120", 0)); gf.addColorStop(1, rg("255,200,90", 0.28 * (1 - k)));
+      c.fillStyle = gf; c.beginPath(); c.moveTo(x, y); c.arc(x, y, Math.max(1, R * ease(Math.min(1, k * 1.4))), A0, A1); c.closePath(); c.fill();
+      for (i = 0; i < 4; i++) {
+        var kk = k * 1.5 - i * 0.15; if (kk <= 0 || kk >= 1) continue;
+        var r = R * (0.2 + 0.85 * ease(kk)), al = 1 - kk;
+        c.strokeStyle = rg("255,170,60", 0.55 * al); c.lineWidth = 8 * al + 2; c.beginPath(); c.arc(x, y, r, A0 + 0.08, A1 - 0.08); c.stroke();
+        c.strokeStyle = rg("255,250,220", al); c.lineWidth = 3 * al + 1; c.beginPath(); c.arc(x, y, r, A0 + 0.08, A1 - 0.08); c.stroke();
+      }
+    };
+    /* lait bouillant : une vague blanche qui déferle en anneau, avec gouttes et vapeur */
+    DR.milkwave = function (c, f, k, t) {
+      var R = f.R * TILE, x = f.x, y = f.y, e = ease(k), r = Math.max(2, R * (0.25 + 0.75 * e)), a = fadeOut(k, 0.45), i, hot = f.hot;
+      c.fillStyle = rg(hot ? "255,200,140" : "250,248,240", 0.32 * a); c.beginPath(); c.ellipse(x, y, r, r * 0.78, 0, 0, T2); c.fill();
+      c.lineCap = "round";
+      for (i = 0; i < 28; i++) {
+        var an = f.seed + i / 28 * T2, wv = Math.sin(i * 2.7 + t / 60) * 3, rr = r + wv, bx = x + Math.cos(an) * rr, by = y + Math.sin(an) * rr * 0.78, h = (5 + 4 * Math.abs(Math.sin(i * 1.7))) * (1 - k * 0.6);
+        c.fillStyle = rg(hot ? "255,236,200" : "255,255,255", 0.95 * a); c.beginPath(); c.arc(bx, by - h * 0.4, 2.6 + h * 0.25, 0, T2); c.fill();
+        c.fillStyle = rg(hot ? "230,170,110" : "200,205,225", 0.7 * a); c.beginPath(); c.arc(bx + 1, by + 1, 1.6, 0, T2); c.fill();
+      }
+      for (i = 0; i < 14; i++) { var da = f.seed * 2 + i * 0.45, dd = r * (0.85 + 0.35 * ((i * 7) % 5) / 5), hh = Math.sin(Math.min(1, k * 1.6) * Math.PI) * (8 + (i % 3) * 5); if (k * 1.6 > 1) continue; c.fillStyle = rg("255,255,255", a); c.beginPath(); c.arc(x + Math.cos(da) * dd, y + Math.sin(da) * dd * 0.78 - hh, 1.6, 0, T2); c.fill(); }
+      for (i = 0; i < 6; i++) { var sm = (k + i * 0.17) % 1, sx = x + Math.cos(f.seed + i) * r * 0.6; c.fillStyle = rg("240,240,250", 0.35 * a * (1 - sm)); c.beginPath(); c.arc(sx, y + Math.sin(f.seed + i) * r * 0.45 - sm * 22, 3 + sm * 6, 0, T2); c.fill(); }
+    };
+    /* purin : une flaque brune qui s'étale, bulles qui éclatent, mouches */
+    DR.bog = function (c, f, k, t) {
+      var R = f.R * TILE, x = f.x, y = f.y, sp = ease(Math.min(1, k / 0.18)), a = fadeOut(k, 0.75), i;
+      c.fillStyle = rg("70,45,20", 0.5 * a); c.beginPath();
+      for (i = 0; i <= 18; i++) { var an = i / 18 * T2, rr = R * sp * (0.85 + 0.15 * Math.sin(i * 3.3 + f.seed)); var qx = x + Math.cos(an) * rr, qy = y + Math.sin(an) * rr * 0.72; if (i) c.lineTo(qx, qy); else c.moveTo(qx, qy); } c.closePath(); c.fill();
+      c.strokeStyle = rg("40,24,8", 0.8 * a); c.lineWidth = 1.4; c.stroke();
+      c.fillStyle = rg("120,85,40", 0.55 * a); c.beginPath(); c.ellipse(x - R * 0.2 * sp, y - R * 0.12 * sp, R * 0.45 * sp, R * 0.2 * sp, -0.2, 0, T2); c.fill();
+      for (i = 0; i < 7; i++) { var bp = ((t / 700) + i * 0.143) % 1, ba = f.seed + i * 0.9, br = R * sp * (0.15 + 0.6 * ((i * 5) % 7) / 7), bx = x + Math.cos(ba) * br, by = y + Math.sin(ba) * br * 0.72, bs = 1 + bp * 2.6; c.strokeStyle = rg("170,130,70", a * (1 - bp)); c.lineWidth = 0.9; c.beginPath(); c.arc(bx, by - bs * 0.3, bs, 0, T2); c.stroke(); }
+      for (i = 0; i < 3; i++) { var fa = t / 160 + i * 2.1, fx = x + Math.cos(fa) * R * 0.5, fy = y - 10 + Math.sin(fa * 1.7) * 5; c.fillStyle = rg("20,20,20", a); c.beginPath(); c.arc(fx, fy, 1, 0, T2); c.fill(); c.fillStyle = rg("220,230,255", 0.7 * a); c.fillRect(fx - 1.6, fy - 1.2, 1.2, 0.8); c.fillRect(fx + 0.4, fy - 1.2, 1.2, 0.8); }
+    };
+    /* épouvantail : il jaillit du sol, bras écartés, yeux qui flambent */
+    DR.scarecrow = function (c, f, k, t) {
+      var x = f.x, y = f.y + 6, pop = k < 0.2 ? ease(k / 0.2) : 1, a = fadeOut(k, 0.75), s = 1.3 * pop * (1 + (k < 0.28 ? Math.sin(k / 0.28 * Math.PI) * 0.15 : 0)), sw = Math.sin(t / 120) * 0.08, i;
+      c.globalCompositeOperation = "lighter"; disc(c, x, y - 14 * s, 24 * pop, "255,170,40", 0.35 * a); c.globalCompositeOperation = "source-over";
+      c.save(); c.globalAlpha = a; c.translate(x, y); c.scale(s, s); c.rotate(sw); c.lineCap = "round";
+      c.strokeStyle = "#150f26"; c.lineWidth = 3.4; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -18); c.moveTo(-11, -12); c.lineTo(11, -12); c.stroke();
+      c.strokeStyle = "#8a5a2a"; c.lineWidth = 2; c.stroke();
+      c.fillStyle = "#6a3a8a"; c.strokeStyle = "#150f26"; c.lineWidth = 1; c.beginPath(); c.moveTo(-6, -13); c.lineTo(6, -13); c.lineTo(5, -4); c.lineTo(-5, -4); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = "#ffd88a"; c.lineWidth = 1; c.beginPath(); for (i = -1; i <= 1; i += 2) { c.moveTo(i * 11, -12); c.lineTo(i * 13, -10); c.moveTo(i * 11, -12); c.lineTo(i * 13, -13.5); } c.stroke();
+      c.fillStyle = "#e8c070"; c.beginPath(); c.arc(0, -18, 4.4, 0, T2); c.fill(); c.stroke();
+      c.fillStyle = "#3a2410"; c.beginPath(); c.ellipse(0, -21.6, 7.5, 1.8, 0, 0, T2); c.fill(); c.beginPath(); c.moveTo(-3.6, -22); c.lineTo(0, -28); c.lineTo(3.6, -22); c.closePath(); c.fill();
+      var ey = Math.floor(t / 90) % 2 ? "#ffe07a" : "#ff8a2a"; c.fillStyle = ey; c.beginPath(); c.arc(-1.7, -18.6, 1.1, 0, T2); c.arc(1.7, -18.6, 1.1, 0, T2); c.fill();
+      c.strokeStyle = "#150f26"; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-2, -16); c.lineTo(-1, -15.4); c.lineTo(0, -16); c.lineTo(1, -15.4); c.lineTo(2, -16); c.stroke();
+      c.restore();
+      if (k > 0.1 && k < 0.7) { var q = (k - 0.1) / 0.6; c.globalCompositeOperation = "lighter"; c.strokeStyle = rg("255,200,80", 0.8 * (1 - q)); c.lineWidth = 2.4 * (1 - q) + 0.6; c.beginPath(); c.ellipse(x, y, f.R * TILE * ease(q), f.R * TILE * ease(q) * 0.78, 0, 0, T2); c.stroke();
+        c.font = "900 " + Math.round(10 + 6 * (1 - q)) + "px sans-serif"; c.textAlign = "center"; c.globalCompositeOperation = "source-over"; c.fillStyle = rg("255,230,120", 1 - q); c.strokeStyle = rg("20,10,30", 1 - q); c.lineWidth = 2.4;
+        for (i = 0; i < 4; i++) { var ma = f.seed + i * 1.57, mx = x + Math.cos(ma) * f.R * TILE * 0.7 * ease(q), my = y + Math.sin(ma) * f.R * TILE * 0.5 * ease(q) - 12; c.strokeText("!", mx, my); c.fillText("!", mx, my); } }
+    };
+    /* soupe de mamie : colonne de lumière verte, cœurs et étincelles qui montent */
+    DR.healup = function (c, f, k, t) {
+      var x = px(p.vx), y = px(p.vy) + 4, a = k < 0.15 ? k / 0.15 : fadeOut(k, 0.55), i;
+      c.globalCompositeOperation = "lighter";
+      var g = c.createLinearGradient(x, y, x, y - 46); g.addColorStop(0, rg("120,255,160", 0.32 * a)); g.addColorStop(1, rg("120,255,160", 0));
+      c.fillStyle = g; c.beginPath(); c.ellipse(x, y - 23, 11, 26, 0, 0, T2); c.fill();
+      c.strokeStyle = rg("180,255,200", 0.9 * a); c.lineWidth = 1.6; c.beginPath(); c.ellipse(x, y, 13 * (0.7 + 0.3 * ease(k)), 5 * (0.7 + 0.3 * ease(k)), 0, 0, T2); c.stroke();
+      for (i = 0; i < 9; i++) { var u = (k * 1.3 + i * 0.11) % 1, hx = x + Math.sin(i * 2.4 + t / 200) * 9, hy = y - u * 44; c.fillStyle = rg(i % 3 ? "150,255,170" : "255,120,150", a * (1 - u)); if (i % 3) { c.fillRect(hx - 1, hy - 1, 2, 2); } else { c.beginPath(); c.moveTo(hx, hy + 2); c.bezierCurveTo(hx - 4, hy - 1, hx - 2, hy - 4, hx, hy - 2); c.bezierCurveTo(hx + 2, hy - 4, hx + 4, hy - 1, hx, hy + 2); c.fill(); } }
+    };
+    /* fourche volante : la fourche file sur toute la ligne */
+    /* (réutilise DR.fork) */
+    /* petit éclat à l'impact d'un projectile d'arme (couleur de l'arme) */
+    DR.pop = function (c, f, k) {
+      var x = f.x, y = f.y, i, col = f.col || "255,230,120"; c.globalCompositeOperation = "lighter";
+      disc(c, x, y, 9 * (0.5 + k), col, 0.8 * (1 - k));
+      for (i = 0; i < 6; i++) { var an = f.seed + i * 1.047, r = 3 + 9 * ease(k); c.fillStyle = rg(col, 1 - k); c.fillRect(x + Math.cos(an) * r - 0.9, y + Math.sin(an) * r - 0.9, 1.8, 1.8); }
+    };
     return { list: function () { return L; }, weapon: wshape, snap: snap, power: power, ult: ult, egg: egg, bossPhase: bossPhase, bossNova: bossNova, plumes: plumes, spikes: spikes, chain: chain, hole: hole, nova: nova, legend: legend, add: add, draw: draw, clear: function () { L.length = 0; TR.length = 0; }, PAL: PAL };
   })();
   /* ================= EFFETS : niveau, ramassage, auras ================= */
@@ -7377,7 +7753,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       var stl = Math.min(state.gold, 3 + Math.floor(state.floor / 2)); state.gold -= stl; e.stolen = (e.stolen || 0) + stl; e.fleeT = 4.5;
       say("Le gobelin te vole " + stl + " œufs d'or !"); addFloat(p.vx, p.vy, "-" + stl + " œufs d'or", "#ffd23c");
     }
-    if (state.survival && state.survW && state.survW.hedgehog && state.hp > 0) { var hhl = state.survW.hedgehog, hhr = (2 + 0.2 * hhl) * survArea(); AFX.add("shock", p.vx, p.vy, 450, { R: hhr, pal: AFX.PAL.bouc }); for (var hhi = 0; hhi < 6; hhi++) AFX.add("spike", p.vx + Math.cos(hhi * 1.047) * hhr * 0.7, p.vy + Math.sin(hhi * 1.047) * hhr * 0.7, 420, { R: 0.7 }); dmgSrc = survWName("hedgehog"); enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - p.vx, o.vy - p.vy) <= hhr + o.r * 0.3) { if (dmgEnemy(o, survWDmg((1 + 0.12 * (hhl - 1)) * 1.2), "Le hérisson pique")) return; survPush(o, p.vx, p.vy, 0.9); } }); }
+    if (state.survival && state.survW && state.survW.hedgehog && state.hp > 0) { var hhl = state.survW.hedgehog, hhr = (2 + 0.2 * hhl) * survArea(); AFX.add("quills", p.vx, p.vy, 420, { R: hhr }); AFX.add("shock", p.vx, p.vy, 380, { R: hhr * 0.6, pal: AFX.PAL.bouc, rays: 6 }); dmgSrc = survWName("hedgehog"); enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - p.vx, o.vy - p.vy) <= hhr + o.r * 0.3) { if (dmgEnemy(o, survWDmg((1 + 0.12 * (hhl - 1)) * 1.2), "Le hérisson pique")) return; survPush(o, p.vx, p.vy, 0.9); } }); }
     var thN = fx().thorns + ((ht() && ht().thorns) || 0) + 2 * pasLv("pThorn");
     if (!verb && thN > 0 && e.hp > 0) {
       e.hp -= thN; e.flash = t + 130;
@@ -8544,7 +8920,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function launchProj(tg, ang, dmg, kind, splash, lvl, noPierce) {
     var a = ang;
     if (tg) a = Math.atan2(tg.vy - p.vy, tg.vx - p.vx);
-    projs.push({ own: "player", target: tg || null, x: p.vx + 0.5, y: p.vy + 0.5, vx: Math.cos(a) * 11, vy: Math.sin(a) * 11, spd: 11, kind: kind, life: 2.5, dmg: dmg, splash: splash || 0, lvl: lvl || 1, pierce: state.survival && !splash && !noPierce ? 2 : 0 });
+    projs.push({ own: "player", target: tg || null, x: p.vx + 0.5, y: p.vy + 0.5, vx: Math.cos(a) * 11, vy: Math.sin(a) * 11, spd: 11, kind: kind, life: 2.5, look: projLook, dmg: dmg, splash: splash || 0, lvl: lvl || 1, pierce: state.survival && !splash && !noPierce ? 2 : 0 });
   }
   function applyIce(e, L, weak) {
     if (e.hp <= 0) return;
@@ -8563,7 +8939,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (pr.src) dmgSrc = pr.src;
     var col = pr.kind === "ice" ? "#6fd6ff" : pr.kind === "energy" ? "#a56bff" : "#ff9a3c";
     burst(e.vx, e.vy, col, 10, 70);
-    if (state.survival && pr.own === "player" && pr.kind === "energy") { burst(e.vx, e.vy, "#d8c0ff", 16, 110); AFX.add("shock", e.vx, e.vy, 330, { R: 1.1, pal: AFX.PAL.cavia }); }
+    if (state.survival && pr.own === "player" && pr.look && PLOOKC[pr.look]) AFX.add("pop", e.vx, e.vy, 260, { col: PLOOKC[pr.look] });
+    else if (state.survival && pr.own === "player" && pr.kind === "energy") { burst(e.vx, e.vy, "#d8c0ff", 16, 110); AFX.add("shock", e.vx, e.vy, 330, { R: 1.1, pal: AFX.PAL.cavia }); }
     if (pr.kind === "ice" || pr.kind === "fire") { SPV.add(pr.kind === "ice" ? "frost" : "boom", e.vx, e.vy, pr.splash ? pr.splash * 0.9 : 0.95, 650); burst(e.vx, e.vy, pr.kind === "ice" ? "#e8fbff" : "#ffd23c", 8, 110); hitStop(28); }
     var dead = dmgEnemy(e, pr.dmg, pr.kind === "ice" ? "L'éclat de glace frappe" : pr.kind === "energy" ? "L'énergie frappe" : "La boule de feu brûle");
     if (pr.kind === "ice" && !dead) applyIce(e, pr.lvl, false);
@@ -8589,7 +8966,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var L = fsL("eggs"), ev = isEvo("eggs"), sc = fsSc(L), n = 3 + Math.floor(L / 2) + (ev ? 3 : 0), pool = enemies.filter(function (o) { return Math.hypot(o.vx - p.vx, o.vy - p.vy) < (ev ? 8 : 6.5); });
         if (!pool.length) { say("Aucune cible en vue."); return false; }
         pool = shuffle(pool).slice(0, n); var dmg = Math.round((state.atk * 0.65 + 2 + sb()) * sc * (ev ? 1.3 : 1)), r = ev ? 1.9 : L >= 3 ? 1.35 : 1.05;
-        pool.forEach(function () { var ta = Math.random() * 6.283, tr = 1.5 + Math.random() * 5.5, tx = p.vx + Math.cos(ta) * tr, ty = p.vy + Math.sin(ta) * tr; enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - tx, o.vy - ty) <= r) dmgEnemy(o, dmg, ev ? "L'omelette atomique explose" : "L'œuf explose"); }); burst(tx, ty, "#fff3c0", ev ? 20 : 12, 70); burst(tx, ty, ev ? "#ff5a2a" : "#ff9a2a", ev ? 18 : 10, 90); rings.push({ x: tx, y: ty, t0: now(), dur: ev ? 520 : 380, c: ev ? "#ff7a2a" : "#ffd23c" }); });
+        pool.forEach(function (_, ei) { var ta = Math.random() * 6.283, tr = 1.5 + Math.random() * 5.5, tx = p.vx + Math.cos(ta) * tr, ty = p.vy + Math.sin(ta) * tr; AFX.add("grains", tx, ty, 650, { R: r * 1.2, c1: "#fff8ec", c2: "#ffd23c" }); AFX.add("splat", tx, ty, 650, { R: r * 0.9, pal: ev ? ["255,90,40", "255,220,80"] : ["255,210,80", "255,255,235"], delay: 0 }); enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - tx, o.vy - ty) <= r) dmgEnemy(o, dmg, ev ? "L'omelette atomique explose" : "L'œuf explose"); }); burst(tx, ty, "#fff3c0", ev ? 20 : 12, 70); burst(tx, ty, ev ? "#ff5a2a" : "#ff9a2a", ev ? 18 : 10, 90); rings.push({ x: tx, y: ty, t0: now(), dur: ev ? 520 : 380, c: ev ? "#ff7a2a" : "#ffd23c" }); });
         
         say(ev ? "Omelette atomique !" : "Pluie d'œufs !"); sfx("meteor"); return true;
       }
@@ -8608,7 +8985,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
             if (st % 1 === 0) burst(lx, ly, ev ? "#ffd23c" : "#e8c070", ev ? 5 : 3, 40);
             enemies.slice().forEach(function (o) { if (hitSet.indexOf(o) < 0 && Math.hypot(o.vx - lx, o.vy - ly) < (ev ? 1 : 0.75)) { hitSet.push(o); dmgEnemy(o, dmg, ev ? "Le fléau des moissons fauche" : "La fourche transperce"); } });
           }
-          rings.push({ x: p.vx + dx * len, y: p.vy + dy * len, t0: now(), dur: 300, c: ev ? "#ffd23c" : "#e8c070" });
+          AFX.add("fork", p.vx, p.vy, 700, { ex: p.vx + dx * len, ey: p.vy + dy * len, w: ev ? 0.7 : 0.55, big: !!ev });
         });
         say(ev ? "Fléau des moissons !" : "Fourche volante !"); sfx("shock"); return true;
       }
@@ -8620,7 +8997,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var L = fsL("milk"), ev = isEvo("milk"), sc = fsSc(L), r = 2.1 + (L >= 3 ? 0.6 : 0) + (L >= 5 ? 0.5 : 0) + (ev ? 1.2 : 0), dmg = Math.round((state.atk * 0.7 + 2 + sb()) * sc * (ev ? 1.5 : 1)), hit = 0;
         enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - p.vx, o.vy - p.vy) <= r) { dmgEnemy(o, dmg, ev ? "La crème brûlée caramélise" : "Le lait bouillant brûle"); o.stunT = Math.max(o.stunT || 0, ev ? 1.2 : L >= 2 ? 0.7 : 0.45); hit++; } });
         if (!hit) { say("Personne à ébouillanter."); return false; }
-        rings.push({ x: p.vx, y: p.vy, t0: now(), dur: 450, c: ev ? "#ffb04a" : "#ffffff" }); rings.push({ x: p.vx, y: p.vy, t0: now() + 90, dur: 450, c: "#ffe0c0" }); burst(p.vx, p.vy, ev ? "#ffc070" : "#ffffff", ev ? 34 : 22, 110);
+        AFX.add("milkwave", p.vx, p.vy, 800, { R: r, hot: !!ev }); burst(p.vx, p.vy, ev ? "#ffc070" : "#ffffff", ev ? 18 : 12, 110);
         say(ev ? "Crème brûlée !" : "Lait bouillant !"); sfx("ice"); return true;
       }
     },
@@ -8635,8 +9012,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           if ((L >= 2 || ev) && d > 0.05) { moveBody(o, (o.vx - p.vx) / d * (ev ? 0.8 : 0.5), (o.vy - p.vy) / d * (ev ? 0.8 : 0.5), o.r, o.ghost); tileOfBody(o); }
         });
         if (!hit) { say("Rien à plumer."); return false; }
-        for (var f = 0; f < (ev ? 18 : 10); f++) { var an = f / (ev ? 18 : 10) * 6.2832; burst(p.vx + Math.cos(an) * r * 0.7, p.vy + Math.sin(an) * r * 0.7, "#ffffff", 2, 50); }
-        rings.push({ x: p.vx, y: p.vy, t0: now(), dur: 420, c: "#cfe6ff" }); if (ev) rings.push({ x: p.vx, y: p.vy, t0: now() + 120, dur: 420, c: "#ffffff" });
+        AFX.add("feather", p.vx, p.vy, 700, { n: ev ? 12 : 9, R: r, pal: AFX.PAL.oie }); AFX.add("swirl", p.vx, p.vy, 600, { R: r * 0.9 });
         say(ev ? "Ouragan de duvet !" : "Tempête de plumes !"); sfx("chain"); return true;
       }
     },
@@ -8646,7 +9022,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       run: function () {
         var e = pickTarget(); if (!e) { say("Aucune cible en vue."); return false; }
         var L = fsL("manure"), ev = isEvo("manure"), sc = fsSc(L), r = 2 + (L >= 3 ? 0.6 : 0) + (L >= 5 ? 0.8 : 0) + (ev ? 1 : 0), dmg = Math.round((state.atk * 0.5 + 1 + sb()) * sc), ex = e.vx, ey = e.vy, mul = castMul || 1, src = dmgSrc;
-        function splash(k) { enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - ex, o.vy - ey) <= r) { dmgEnemy(o, Math.max(1, Math.round(dmg * (k ? mul : 1))), ev ? "La fosse à lisier engloutit" : "Le purin intoxique"); o.stunT = Math.max(o.stunT || 0, ev ? 1.4 : L >= 2 ? 1.1 : 0.8); } }); rings.push({ x: ex, y: ey, t0: now(), dur: 600, c: "#8a6230" }); burst(ex, ey, "#7a5428", 16, 50); burst(ex, ey, "#b8d060", 8, 40); }
+        function splash(k) { enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - ex, o.vy - ey) <= r) { dmgEnemy(o, Math.max(1, Math.round(dmg * (k ? mul : 1))), ev ? "La fosse à lisier engloutit" : "Le purin intoxique"); o.stunT = Math.max(o.stunT || 0, ev ? 1.4 : L >= 2 ? 1.1 : 0.8); } }); if (!k) AFX.add("bog", ex, ey, ev ? 1900 : 1300, { R: r }); AFX.add("splat", ex, ey, 500, { R: r * 0.6, pal: ["120,80,30", "200,160,90"] }); burst(ex, ey, "#7a5428", 10, 50); burst(ex, ey, "#b8d060", 8, 40); }
         splash(0);
         if (ev) [900, 1800].forEach(function (d) { setTimeout(function () { if (mode === "play" && state && state.survival) { var o0 = dmgSrc; dmgSrc = src; splash(1); dmgSrc = o0; } }, d); });
         say(ev ? "Fosse à lisier !" : "Purin !"); sfx("shock"); return true;
@@ -8659,7 +9035,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var e = pickTarget(); if (!e) { say("Aucune cible en vue."); return false; }
         var L = fsL("scare"), ev = isEvo("scare"), r = 2.4 + (L >= 2 ? 0.6 : 0) + (L >= 5 ? 0.6 : 0) + (ev ? 1.2 : 0), dmg = Math.round((state.atk * 0.4 + 1 + sb()) * fsSc(L) * (ev ? 2 : 1)), st = 1.2 + (L >= 3 ? 0.5 : 0) + (L >= 5 ? 0.5 : 0) + (ev ? 1 : 0);
         enemies.slice().forEach(function (o) { if (Math.hypot(o.vx - e.vx, o.vy - e.vy) <= r) { dmgEnemy(o, dmg, ev ? "Le Grand Épouvantail glace le sang" : "L'épouvantail terrifie"); o.stunT = Math.max(o.stunT || 0, o.survivalBoss ? st * 0.3 : st); } });
-        rings.push({ x: e.vx, y: e.vy, t0: now(), dur: 500, c: "#ffd23c" }); rings.push({ x: e.vx, y: e.vy, t0: now() + 120, dur: 500, c: "#ffffff" }); if (ev) rings.push({ x: e.vx, y: e.vy, t0: now() + 240, dur: 600, c: "#ff5a2a" }); burst(e.vx, e.vy, "#d8b04a", ev ? 24 : 14, 60);
+        AFX.add("scarecrow", e.vx, e.vy, 1300, { R: r }); burst(e.vx, e.vy, "#d8b04a", ev ? 18 : 10, 60);
         say(ev ? "Grand Épouvantail !" : "Épouvantail !"); sfx("warn"); return true;
       }
     },
@@ -8704,7 +9080,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           set.push(nx); cur = nx;
         }
         var pts = [[p.vx + 0.5, p.vy + 0.5]].concat(set.map(function (o) { return [o.vx + 0.5, o.vy + 0.5]; }));
-        bolts.push({ pts: pts, t0: now() }); boltSparks(pts); pts.forEach(function (q, qi) { if (qi) SPV.add("zap", q[0] - 0.5, q[1] - 0.5, 1, 320, { delay: qi * 45 }); });
+        bolts.push({ pts: pts, t0: now() }); boltSparks(pts); AFX.chain([[p.vx, p.vy]].concat(set.map(function (o) { return [o.vx, o.vy]; })), "cavia"); set.forEach(function (o, i) { AFX.add("stormhit", o.vx, o.vy, 420, { delay: i * 45 }); }); pts.forEach(function (q, qi) { if (qi) SPV.add("zap", q[0] - 0.5, q[1] - 0.5, 1, 320, { delay: qi * 45 }); });
         set.forEach(function (o, i) {
           var dead = dmgEnemy(o, Math.max(1, Math.round(dmg * Math.pow(0.85, i))), "La foudre frappe");
           if (!dead && stun) o.stunT = Math.max(o.stunT || 0, stun);
@@ -8743,7 +9119,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (L >= 4) state.hotT = state.survival ? (L >= 5 ? 5 : 3) : (L >= 5 ? 8 : 6);
         say("Soupe de mamie ! +" + n + " PV."); sfx("heal");
         addFloat(p.vx, p.vy, "+" + n, "#47e0a8");
-        burst(p.vx, p.vy, "#47e0a8", 12, 45); SPV.add("heal", p.vx, p.vy, 1.3, 1100);
+        burst(p.vx, p.vy, "#47e0a8", 12, 45); SPV.add("heal", p.vx, p.vy, 1.3, 1100); AFX.add("healup", p.vx, p.vy, 1200);
         return true;
       }
     },
@@ -9374,7 +9750,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (dd > stop) { var st3 = Math.min(dd - stop, al.spd * dt); al.x += dx / dd * st3; al.y += dy / dd * st3; if (Math.abs(dx) > 0.1) al.face = dx > 0 ? 1 : -1; }
       al.x = Math.max(2, Math.min(W - 3, al.x)); al.y = Math.max(2, Math.min(H - 3, al.y));
       al.cd -= dt;
-      if (best && bd < 0.95 && al.cd <= 0) { al.cd = al.cdMax; dmgSrc = survWName(al.kind); dmgEnemy(best, survWDmg(al.mul), "Ton allié frappe"); if (mode !== "play") return; }
+      if (best && bd < 0.95 && al.cd <= 0) { al.cd = al.cdMax; al.atkT = now(); al.adx = best.vx - al.x; al.ady = best.vy - al.y; AFX.add("slash", best.vx, best.vy, 260, { R: 0.55, pal: al.kind === "wolves" ? AFX.PAL.chien : AFX.PAL.canard, flip: Math.random() < 0.5 }); dmgSrc = survWName(al.kind); dmgEnemy(best, survWDmg(al.mul), "Ton allié frappe"); if (mode !== "play") return; }
       al.hurtT -= dt;
       if (al.hurtT <= 0) {
         var hit = null; enemies.forEach(function (e) { if (!hit && e.hp > 0 && Math.hypot(e.vx - al.x, e.vy - al.y) < 0.75) hit = e; });
@@ -9387,9 +9763,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     allies.forEach(function (al) {
       var sp = SP[al.type]; if (!sp) return;
       var fr = sp.frames && sp.frames.length ? sp.frames[Math.floor(t / 180) % sp.frames.length] : sp.h, dw = al.type === "wolf" ? 17 : 18, px = al.x * TILE + 8, py = al.y * TILE + 15, fl = al.flash > now();
-      var sg = ctx.createRadialGradient(px, py, 0, px, py, 8); sg.addColorStop(0, "rgba(120,220,255,0.4)"); sg.addColorStop(1, "rgba(120,220,255,0)");
-      ctx.fillStyle = sg; ctx.fillRect(px - 9, py - 6, 18, 12);
-      ctx.save(); ctx.translate(px, py); if (al.face < 0) ctx.scale(-1, 1);
+      /* élan vers la cible quand l'allié frappe, petit rebond en marchant */
+      var ak = al.atkT ? (t - al.atkT) / 220 : 1, ld = Math.hypot(al.adx || 0, al.ady || 0) || 1, lu = ak < 1 ? Math.sin(ak * Math.PI) * 4 : 0;
+      px += (al.adx || 0) / ld * lu; py += (al.ady || 0) / ld * lu * 0.7;
+      var bob = -Math.abs(Math.sin(t / 110 + al.x * 3)) * 1.6;
+      ctx.drawImage(GX.soft("120,220,255", 0.4), px - 9, py - 4, 18, 8);
+      ctx.save(); ctx.translate(px, py + bob); if (al.face < 0) ctx.scale(-1, 1); if (ak < 1) ctx.rotate(Math.sin(ak * Math.PI) * 0.22);
       ctx.globalAlpha = 0.85; ctx.drawImage(fr, -dw / 2, -dw, dw, dw);
       ctx.globalAlpha = fl ? 0.8 : 0.38; ctx.drawImage(silOf(fr, fl ? "#ffffff" : "#6fd6ff"), -dw / 2, -dw, dw, dw);
       ctx.restore();
@@ -10077,8 +10456,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var ptg = nearestTarget();
         if (ptg) {
           state.survPlT = 1.5; var nf = 3 + Math.floor(SW.plumes / 2) + (pev ? 3 : 0), pa = Math.random() * 6.283; dmgSrc = survWName("plumes");
-          for (var pf = 0; pf < nf; pf++) launchProj(null, pa + (pf - (nf - 1) / 2) * 0.22, survWDmg(pm), "energy", 0, 1);
-          AFX.plumes(pa); sfx("energy");
+          projLook = "feather"; for (var pf = 0; pf < nf; pf++) launchProj(null, pa + (pf - (nf - 1) / 2) * 0.22, survWDmg(pm), "energy", 0, 1); projLook = null;
+          sfx("energy");
         } else state.survPlT = 0.3;
       }
     }
@@ -10101,7 +10480,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (vst.length) {
           state.survStT = 1.05;
           for (var si = 0; si < 2 + Math.floor(SW.storm / 3) + (tev ? 2 : 0); si++) {
-            var tgs = vst[rnd(vst.length)]; AFX.chain([[tgs.vx + 0.3, tgs.vy - 6], [tgs.vx, tgs.vy]], "cavia"); dmgSrc = survWName("storm");
+            var tgs = vst[rnd(vst.length)]; AFX.chain([[tgs.vx + 0.3, tgs.vy - 6], [tgs.vx, tgs.vy]], "cavia"); AFX.add("stormhit", tgs.vx, tgs.vy, 520, {}); dmgSrc = survWName("storm");
             enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - tgs.vx, o.vy - tgs.vy) <= 1.2 * survWAreaK("storm")) dmgEnemy(o, survWDmg(tm), "La foudre frappe"); });
           }
           sfx("energy");
@@ -10128,7 +10507,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var mhit = survNearEnemies(0.7, mn.x, mn.y).length > 0;
         if (mhit || mn.t > 30) {
           survMines.splice(mi, 1);
-          if (mhit) { SPV.add("boom", mn.x, mn.y, mr, 650); sfx("boom"); shake(1.6, 120); dmgSrc = survWName("mines"); survNearEnemies(mr, mn.x, mn.y).forEach(function (o) { dmgEnemy(o, survWDmg(mdm), "La mine explose"); }); if (mode !== "play") return; }
+          if (mhit) { SPV.add("boom", mn.x, mn.y, mr, 650); AFX.add("grains", mn.x, mn.y, 700, { R: mr }); sfx("boom"); shake(1.6, 120); dmgSrc = survWName("mines"); survNearEnemies(mr, mn.x, mn.y).forEach(function (o) { dmgEnemy(o, survWDmg(mdm), "La mine explose"); }); if (mode !== "play") return; }
         }
       }
     }
@@ -10148,7 +10527,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.xSlT = (state.xSlT || 0) - d2;
       if (state.xSlT <= 0) {
         var stg = nearestTarget();
-        if (stg) { state.xSlT = 0.6; var sn = 1 + Math.floor(SW.sling / 3), sa = Math.random() * 6.283; dmgSrc = survWName("sling"); for (var si = 0; si < sn; si++) launchProj(null, sa + (si - (sn - 1) / 2) * 0.16, survWDmg((1 + 0.06 * (SW.sling - 1)) * 0.5), "energy", 0, 1); }
+        if (stg) { state.xSlT = 0.6; var sn = 1 + Math.floor(SW.sling / 3), sa = Math.random() * 6.283; dmgSrc = survWName("sling"); projLook = "corn"; for (var si = 0; si < sn; si++) launchProj(null, sa + (si - (sn - 1) / 2) * 0.16, survWDmg((1 + 0.06 * (SW.sling - 1)) * 0.5), "energy", 0, 1); projLook = null; }
         else state.xSlT = 0.25;
       }
     }
@@ -10156,7 +10535,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.xBeT = (state.xBeT || 0) - d2;
       if (state.xBeT <= 0) {
         var bl = enemies.filter(function (e) { return e.hp > 0 && vis[e.y] && vis[e.y][e.x] && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 10; });
-        if (bl.length) { state.xBeT = 3.0; var bn = 2 + Math.floor(SW.bees / 2); dmgSrc = survWName("bees"); for (var bi = 0; bi < bn; bi++) launchProj(bl[rnd(bl.length)], 0, survWDmg((1 + 0.06 * (SW.bees - 1)) * 0.7), "energy", 0, 1); sfx("energy"); }
+        if (bl.length) { state.xBeT = 3.0; var bn = 2 + Math.floor(SW.bees / 2); dmgSrc = survWName("bees"); projLook = "bee"; for (var bi = 0; bi < bn; bi++) launchProj(bl[rnd(bl.length)], 0, survWDmg((1 + 0.06 * (SW.bees - 1)) * 0.7), "energy", 0, 1); projLook = null; sfx("energy"); }
         else state.xBeT = 0.4;
       }
     }
@@ -10166,7 +10545,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var fl = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 8; });
         if (fl.length) {
           state.xFwT = 3.4; var fn = 3 + Math.floor(SW.fireworks / 2), fr = 1.5 * ar, fdm = (1 + 0.06 * (SW.fireworks - 1)) * 1.3;
-          for (var fi = 0; fi < fn; fi++) { var fa = Math.random() * 6.283, fd0 = 2 + Math.random() * 5.5, fx2 = p.vx + Math.cos(fa) * fd0, fy2 = p.vy + Math.sin(fa) * fd0; SPV.add("meteorfall", fx2, fy2, 1.2, 600); (function (fx3, fy3) { legDefer(0.55 + fi * 0.12, function () { SPV.add("boom", fx3, fy3, fr, 650); sfx("boom"); dmgSrc = survWName("fireworks"); survNearEnemies(fr, fx3, fy3).forEach(function (o) { dmgEnemy(o, survWDmg(fdm), "La gerbe explose"); }); }); })(fx2, fy2); }
+          for (var fi = 0; fi < fn; fi++) { var fa = Math.random() * 6.283, fd0 = 2 + Math.random() * 5.5, fx2 = p.vx + Math.cos(fa) * fd0, fy2 = p.vy + Math.sin(fa) * fd0, fwD = 0.55 + fi * 0.12, fwC = [["255,90,170", "255,220,120", "255,255,255"], ["120,220,255", "180,120,255", "255,255,255"], ["120,255,140", "255,240,120", "255,120,90"]][fi % 3]; AFX.add("fwork", fx2, fy2, fwD * 1000 + 700, { sx: p.vx, sy: p.vy, kb: fwD * 1000 / (fwD * 1000 + 700), R: fr, cols: fwC, col: fwC[0] }); (function (fx3, fy3) { legDefer(fwD, function () { shake(1.2, 90); sfx("boom"); dmgSrc = survWName("fireworks"); survNearEnemies(fr, fx3, fy3).forEach(function (o) { dmgEnemy(o, survWDmg(fdm), "La gerbe explose"); }); }); })(fx2, fy2); }
         } else state.xFwT = 0.4;
       }
     }
@@ -10185,7 +10564,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xBlT <= 0) {
         if (survNearEnemies(3.4 * ar).length) {
           state.xBlT = Math.max(3.2, 7 - 0.5 * SW.bell); var br = (2.6 + 0.2 * SW.bell) * ar; dmgSrc = survWName("bell");
-          AFX.add("shock", p.vx, p.vy, 700, { R: br, pal: P.paon }); AFX.add("shock", p.vx, p.vy, 700, { R: br * 0.6, pal: P.cheval, delay: 120 }); sfx("rage"); shake(2, 160);
+          AFX.add("bellring", p.vx, p.vy, 900); AFX.add("sonic", p.vx, p.vy, 750, { R: br / 1.35, pal: P.cheval, delay: 80 }); sfx("rage"); shake(2, 160);
           survNearEnemies(br).forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.bell - 1)) * 0.6), "La cloche sonne")) return; survPush(o, p.vx, p.vy, 1.7); if (!o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 0.9); o.wind = 0; } });
           if (mode !== "play") return;
         } else state.xBlT = 0.4;
@@ -10199,7 +10578,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (tu.t <= 0) { survTurrets.splice(ui, 1); continue; }
         if (tu.c <= 0) {
           var best = null, bd = 7.5; enemies.forEach(function (e) { if (e.hp <= 0) return; var dd = Math.hypot(e.vx - tu.x, e.vy - tu.y); if (dd < bd) { bd = dd; best = e; } });
-          if (best) { tu.c = 0.7; var ta = Math.atan2(best.vy - tu.y, best.vx - tu.x); dmgSrc = survWName("turret"); projs.push({ own: "player", target: best, x: tu.x + 0.5, y: tu.y + 0.5, vx: Math.cos(ta) * 11, vy: Math.sin(ta) * 11, spd: 11, kind: "energy", life: 2, pierce: 2, dmg: survWDmg((1 + 0.06 * (SW.turret - 1)) * 0.6), splash: 0, lvl: 1 }); }
+          if (best) { tu.c = 0.7; var ta = Math.atan2(best.vy - tu.y, best.vx - tu.x); dmgSrc = survWName("turret"); tu.f = now(); tu.fa = ta; projs.push({ own: "player", target: best, x: tu.x + 0.5, y: tu.y + 0.5, vx: Math.cos(ta) * 11, vy: Math.sin(ta) * 11, spd: 11, kind: "energy", life: 2, pierce: 2, look: "straw", dmg: survWDmg((1 + 0.06 * (SW.turret - 1)) * 0.6), splash: 0, lvl: 1 }); }
           else tu.c = 0.2;
         }
       }
@@ -10225,7 +10604,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var ctg = nearestTarget();
         if (ctg && Math.hypot(ctg.vx - p.vx, ctg.vy - p.vy) < 5.5) {
           state.xCoT = Math.max(2.2, 4.4 - 0.25 * SW.cone); var ca = Math.random() * 6.283, cr = 4.6 * ar, sp = 0.65 + 0.05 * SW.cone; dmgSrc = survWName("cone");
-          AFX.add("cone", p.vx, p.vy, 600, { a: ca, sp: sp, R: cr, pal: P.coq }); sfx("energy"); shake(1.4, 120);
+          AFX.add("shout", p.vx, p.vy, 650, { a: ca, sp: sp, R: cr }); sfx("energy"); shake(1.4, 120);
           survNearEnemies(cr).forEach(function (o) { var an = Math.atan2(o.vy - p.vy, o.vx - p.vx), df = Math.abs(((an - ca + 3.1416) % 6.2832 + 6.2832) % 6.2832 - 3.1416); if (df > sp) return; if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.cone - 1)) * 1.1), "Le cri frappe")) return; survPush(o, p.vx, p.vy, 1.2); if (!o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 0.7); o.wind = 0; } });
           if (mode !== "play") return;
         } else state.xCoT = 0.3;
@@ -10238,7 +10617,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var crl = survNearEnemies(6 * ar);
         if (crl.length) {
           state.xCrT = Math.max(1.8, 4 - 0.25 * SW.crows); var crn = 2 + Math.floor(SW.crows / 2); dmgSrc = survWName("crows"); sfx("slash");
-          for (var ci = 0; ci < crn; ci++) { var ct = crl[rnd(crl.length)]; survTracer(ct.vx, ct.vy, P.paon); AFX.add("shock", ct.vx, ct.vy, 360, { R: 1.1, pal: P.paon, delay: ci * 90 }); AFX.add("slash", ct.vx, ct.vy, 380, { R: 1.1, pal: P.paon, flip: ci % 2, delay: ci * 90 }); var crd = survWDmg((1 + 0.06 * (SW.crows - 1)) * 1.1), cx0 = ct.vx, cy0 = ct.vy; dmgEnemy(ct, crd, "Un corbeau pique"); survNearEnemies(1.1 * ar, cx0, cy0).filter(function (o) { return o !== ct; }).slice(0, 3).forEach(function (o) { dmgEnemy(o, Math.max(1, Math.round(crd * 0.5)), "Un corbeau pique"); }); }
+          for (var ci = 0; ci < crn; ci++) { var ct = crl[rnd(crl.length)], cside = Math.random() < 0.5 ? -1 : 1; AFX.add("crow", ct.vx, ct.vy, 520, { ox: cside * (2.6 + Math.random()), oy: -3.2 - Math.random(), delay: ci * 110 }); (function (ct, dl) { legDefer(dl, function () { if (ct.hp <= 0 || enemies.indexOf(ct) < 0) return; dmgSrc = survWName("crows"); AFX.add("slash", ct.vx, ct.vy, 300, { R: 0.8, pal: P.paon, flip: 1 }); var crd = survWDmg((1 + 0.06 * (SW.crows - 1)) * 1.1), cx0 = ct.vx, cy0 = ct.vy; dmgEnemy(ct, crd, "Un corbeau pique"); survNearEnemies(1.1 * ar, cx0, cy0).filter(function (o) { return o !== ct; }).slice(0, 3).forEach(function (o) { dmgEnemy(o, Math.max(1, Math.round(crd * 0.5)), "Un corbeau pique"); }); }); })(ct, 0.26 + ci * 0.11); }
           if (mode !== "play") return;
         } else state.xCrT = 0.4;
       }
@@ -10248,12 +10627,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xPiT <= 0) {
         var pit = nearestTarget();
         if (pit && Math.hypot(pit.vx - p.vx, pit.vy - p.vy) < 6) {
-          state.xPiT = Math.max(4.8, 8.2 - 0.4 * SW.pillar); var pla = Math.random() * 6.283, plr = 2 + Math.random() * 4.5, plx = p.vx + Math.cos(pla) * plr, ply = p.vy + Math.sin(pla) * plr; survTracer(plx, ply, P.bouc); survPillars.push({ x: plx, y: ply, t: 2.4, c: 0 }); SPV.add("meteorfall", plx, ply, 1.3, 500); sfx("boom");
+          state.xPiT = Math.max(4.8, 8.2 - 0.4 * SW.pillar); var pla = Math.random() * 6.283, plr = 2 + Math.random() * 4.5, plx = p.vx + Math.cos(pla) * plr, ply = p.vy + Math.sin(pla) * plr; survPillars.push({ x: plx, y: ply, t: 2.4, c: 0 }); AFX.add("firecol", plx, ply, 2400, { R: 1.15 * ar }); sfx("boom");
         } else state.xPiT = 0.4;
       }
       for (var pj = survPillars.length - 1; pj >= 0; pj--) {
         var pl = survPillars[pj]; pl.t -= dt; pl.c -= dt;
-        if (pl.c <= 0) { pl.c = 0.7; AFX.add("shock", pl.x, pl.y, 420, { R: 1.15 * ar, pal: P.bouc }); dmgSrc = survWName("pillar"); survNearEnemies(1.15 * ar, pl.x, pl.y).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.05 * (SW.pillar - 1)) * 0.32), "La colonne brûle"); }); if (mode !== "play") return; }
+        if (pl.c <= 0) { pl.c = 0.7; dmgSrc = survWName("pillar"); survNearEnemies(1.15 * ar, pl.x, pl.y).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.05 * (SW.pillar - 1)) * 0.32), "La colonne brûle"); }); if (mode !== "play") return; }
         if (pl.t <= 0) survPillars.splice(pj, 1);
       }
     }
@@ -10263,7 +10642,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var qr = (3 + 0.25 * SW.quake) * ar;
         if (survNearEnemies(qr).length) {
           state.xQkT = Math.max(4, 8 - 0.5 * SW.quake); dmgSrc = survWName("quake"); shake(3.2, 260); sfx("boom");
-          AFX.add("shock", p.vx, p.vy, 700, { R: qr, pal: P.taureau }); AFX.add("shock", p.vx, p.vy, 700, { R: qr * 0.55, pal: P.taureau, delay: 150 });
+          AFX.add("cracks", p.vx, p.vy, 1100, { R: qr, n: 11, glow: "255,150,70" }); AFX.add("shock", p.vx, p.vy, 600, { R: qr * 0.75, pal: P.taureau, rays: 6 });
           survNearEnemies(qr).forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.quake - 1)) * 1.2), "Le sol tremble")) return; survPush(o, p.vx, p.vy, 1.3); });
           if (mode !== "play") return;
         } else state.xQkT = 0.4;
@@ -10274,12 +10653,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xWhT <= 0) {
         var wt0 = nearestTarget();
         if (wt0 && Math.hypot(wt0.vx - p.vx, wt0.vy - p.vy) < 5.5) {
-          state.xWhT = Math.max(1.4, 2.8 - 0.2 * SW.whip); var hit = {}, cur = wt0, jumps = 5 + Math.floor(SW.whip / 2), fx0 = p.vx, fy0 = p.vy; dmgSrc = survWName("whip"); sfx("shoot"); survTracer(wt0.vx, wt0.vy, P.coq);
+          state.xWhT = Math.max(1.4, 2.8 - 0.2 * SW.whip); var hit = {}, cur = wt0, jumps = 5 + Math.floor(SW.whip / 2), fx0 = p.vx, fy0 = p.vy; dmgSrc = survWName("whip"); sfx("shoot"); var wpts = [[p.vx, p.vy]];
           for (var wj = 0; wj <= jumps && cur; wj++) {
-            hit[enemies.indexOf(cur)] = 1; AFX.add("slash", cur.vx, cur.vy, 320, { R: 0.9, pal: P.coq, flip: wj % 2, delay: wj * 70 });
+            hit[enemies.indexOf(cur)] = 1; wpts.push([cur.vx, cur.vy]); if (wj < 4) AFX.add("slash", cur.vx, cur.vy, 280, { R: 0.7, pal: P.coq, flip: wj % 2, delay: wj * 45 });
             var cx2 = cur.vx, cy2 = cur.vy; dmgEnemy(cur, survWDmg((1 + 0.06 * (SW.whip - 1)) * 1.0), "Le fouet claque");
             var nx = null, nd = 4; enemies.forEach(function (o, oi) { var dd = Math.hypot(o.vx - cx2, o.vy - cy2); if (o.hp > 0 && !hit[oi] && dd < nd) { nd = dd; nx = o; } }); cur = nx;
           }
+          AFX.add("rope", p.vx, p.vy, 460, { pts: wpts });
           if (mode !== "play") return;
         } else state.xWhT = 0.3;
       }
@@ -10289,7 +10669,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xAcT <= 0) {
         if (enemies.some(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; })) {
           state.xAcT = 3; var acn = 3 + Math.floor(SW.acorns / 2), acr = 1.1 * ar, acd = (1 + 0.06 * (SW.acorns - 1)) * 1.0;
-          for (var ai = 0; ai < acn; ai++) { var aa = Math.random() * 6.283, ad0 = 1.5 + Math.random() * 6.5, ax = p.vx + Math.cos(aa) * ad0, ay = p.vy + Math.sin(aa) * ad0, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); sfx("acorn"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
+          for (var ai = 0; ai < acn; ai++) { var aa = Math.random() * 6.283, ad0 = 1.5 + Math.random() * 6.5, ax = p.vx + Math.cos(aa) * ad0, ay = p.vy + Math.sin(aa) * ad0, fall = 0.5 + ai * 0.12; SPV.add("acorn", ax, ay, acr, fall * 1000); (function (x, y, fl) { legDefer(fl, function () { SPV.add("acornhit", x, y, acr, 420); AFX.add("grains", x, y, 600, { R: acr, c1: "#8a5a2a", c2: "#5a8a3a" }); AFX.add("shock", x, y, 380, { R: acr * 0.7, pal: P.bouc, rays: 8 }); sfx("acorn"); dmgSrc = survWName("acorns"); survNearEnemies(acr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(acd), "Un gland s'écrase"); }); }); })(ax, ay, fall); }
         } else state.xAcT = 0.4;
       }
     }
@@ -10299,7 +10679,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var frr = (2.2 + 0.15 * SW.frost) * ar;
         if (survNearEnemies(frr).length) {
           state.xFrT = Math.max(3, 5.6 - 0.4 * SW.frost); dmgSrc = survWName("frost"); sfx("energy");
-          AFX.add("shock", p.vx, p.vy, 650, { R: frr, pal: P.canard }); AFX.add("shock", p.vx, p.vy, 650, { R: frr * 0.6, pal: P.canard, delay: 100 });
+          AFX.add("icering", p.vx, p.vy, 950, { R: frr });
           survNearEnemies(frr).forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.frost - 1)) * 0.5), "Le givre mord")) return; if (!o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 1.2 + 0.15 * SW.frost); o.wind = 0; } });
           if (mode !== "play") return;
         } else state.xFrT = 0.4;
@@ -10310,7 +10690,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xLeT <= 0) {
         var letL = survNearEnemies(2.6 * ar).sort(function (a, b) { return Math.hypot(a.vx - p.vx, a.vy - p.vy) - Math.hypot(b.vx - p.vx, b.vy - p.vy); }), let0 = letL[0];
         if (let0) {
-          state.xLeT = 0.9; dmgSrc = survWName("leech"); AFX.add("slash", let0.vx, let0.vy, 300, { R: 0.8, pal: P.pintade || P.chat }); letL.slice(0, 2 + Math.floor(SW.leech / 3)).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.06 * (SW.leech - 1)) * 0.7), "La sangsue pompe"); });
+          state.xLeT = 0.9; dmgSrc = survWName("leech"); letL.slice(0, 2).forEach(function (o, li) { AFX.add("drain", o.vx, o.vy, 620, { delay: li * 90 }); }); letL.slice(0, 2 + Math.floor(SW.leech / 3)).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.06 * (SW.leech - 1)) * 0.7), "La sangsue pompe"); });
           state.xLeN = (state.xLeN || 0) + 1; if (state.xLeN >= Math.max(3, 7 - Math.floor(SW.leech / 2))) { state.xLeN = 0; var lh = healHp(1); if (lh) addFloat(p.vx, p.vy - 0.6, "+" + lh, "#ff6b81"); }
           if (mode !== "play") return;
         } else state.xLeT = 0.3;
@@ -10335,7 +10715,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var gur = (4.2 + 0.3 * SW.gust) * ar, gul = survNearEnemies(gur);
         if (gul.length >= 2) {
           state.xGuT = Math.max(3.5, 7 - 0.4 * SW.gust); dmgSrc = survWName("gust"); sfx("energy");
-          AFX.add("shock", p.vx, p.vy, 600, { R: gur * 0.5, pal: P.oie }); AFX.add("shock", p.vx, p.vy, 600, { R: gur * 0.9, pal: P.oie, delay: 120 });
+          AFX.add("swirl", p.vx, p.vy, 750, { R: gur });
           gul.forEach(function (o) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.gust - 1)) * 0.7), "La bourrasque souffle")) return; var dd = Math.hypot(o.vx - p.vx, o.vy - p.vy); if (dd > 1.1) survPush(o, p.vx, p.vy, -Math.min(2.4, dd - 1)); });
           if (mode !== "play") return;
         } else state.xGuT = 0.4;
@@ -10347,8 +10727,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var mel = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 7 && Math.hypot(e.vx - p.vx, e.vy - p.vy) > 2; }), mbest = null, mbn = 0;
         mel.forEach(function (e) { var n = mel.filter(function (o) { return Math.hypot(o.vx - e.vx, o.vy - e.vy) < 2; }).length; if (n > mbn) { mbn = n; mbest = e; } });
         if (mbest) {
-          state.xMeT = Math.max(5, 9.5 - 0.6 * SW.meteor); var mra = Math.random() * 6.283, mrr0 = 3 + Math.random() * 4.5, mx = p.vx + Math.cos(mra) * mrr0, my = p.vy + Math.sin(mra) * mrr0; survTracer(mx, my, P.taureau); var mrr = 2.2 * ar, mdd = (1 + 0.06 * (SW.meteor - 1)) * 2.6;
-          SPV.add("meteorfall", mx, my, 2, 800); legDefer(0.75, function () { SPV.add("boom", mx, my, mrr, 800); shake(3, 220); sfx("boom"); dmgSrc = survWName("meteor"); survNearEnemies(mrr, mx, my).forEach(function (o) { dmgEnemy(o, survWDmg(mdd), "La météorite s'écrase"); }); });
+          state.xMeT = Math.max(5, 9.5 - 0.6 * SW.meteor); var mra = Math.random() * 6.283, mrr0 = 3 + Math.random() * 4.5, mx = p.vx + Math.cos(mra) * mrr0, my = p.vy + Math.sin(mra) * mrr0; var mrr = 2.2 * ar, mdd = (1 + 0.06 * (SW.meteor - 1)) * 2.6;
+          SPV.add("meteorfall", mx, my, 2, 800); legDefer(0.75, function () { SPV.add("boom", mx, my, mrr, 800); AFX.add("crater", mx, my, 2600, { R: mrr * 0.8 }); AFX.add("cracks", mx, my, 900, { R: mrr, n: 9, glow: "255,120,40" }); shake(3, 220); sfx("boom"); dmgSrc = survWName("meteor"); survNearEnemies(mrr, mx, my).forEach(function (o) { dmgEnemy(o, survWDmg(mdd), "La météorite s'écrase"); }); });
         } else state.xMeT = 0.5;
       }
     }
@@ -10358,7 +10738,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var tht = nearestTarget();
         if (tht && Math.hypot(tht.vx - p.vx, tht.vy - p.vy) < 5) {
           state.xThT = Math.max(2.8, 5.4 - 0.35 * SW.thorns); var tha = Math.atan2(tht.vy - p.vy, tht.vx - p.vx), tw = 1.6 + 0.2 * SW.thorns; dmgSrc = survWName("thorns"); sfx("slash");
-          for (var tk = 0; tk < 5; tk++) { var tdx = p.vx + Math.cos(tha) * (1.2 + tk * 0.7), tdy = p.vy + Math.sin(tha) * (1.2 + tk * 0.7); AFX.add("spike", tdx, tdy, 500, { R: 0.9 }); }
+          AFX.add("bramble", p.vx, p.vy, 800, { a: tha, L: 5, w: tw });
           enemies.slice().forEach(function (o) { if (o.hp <= 0) return; var rx = o.vx - p.vx, ry = o.vy - p.vy, al = rx * Math.cos(tha) + ry * Math.sin(tha), pe = Math.abs(-rx * Math.sin(tha) + ry * Math.cos(tha)); if (al > 0.4 && al < 5 && pe < tw * 0.5) { if (dmgEnemy(o, survWDmg((1 + 0.06 * (SW.thorns - 1)) * 0.9), "Les épines percent")) return; if (!o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 0.8); o.wind = 0; } } });
           if (mode !== "play") return;
         } else state.xThT = 0.3;
@@ -10369,7 +10749,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xClT <= 0) {
         var clb = null; enemies.forEach(function (e) { if (e.hp > 0 && !e.survivalBoss && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 5.5 && (!clb || e.maxHp > clb.maxHp)) clb = e; });
         if (clb) {
-          state.xClT = Math.max(4.5, 8.5 - 0.5 * SW.cleaver); dmgSrc = survWName("cleaver"); survTracer(clb.vx, clb.vy, P.taureau); AFX.add("shock", clb.vx, clb.vy, 520, { R: 2.4, pal: P.taureau }); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau }); AFX.add("slash", clb.vx, clb.vy, 450, { R: 1.8, pal: P.taureau, flip: 1, delay: 90 }); sfx("slash"); shake(2.4, 180);
+          state.xClT = Math.max(4.5, 8.5 - 0.5 * SW.cleaver); dmgSrc = survWName("cleaver"); AFX.add("axechop", clb.vx, clb.vy, 640); AFX.add("cracks", clb.vx, clb.vy, 900, { R: 1.6 * ar, n: 7, delay: 190, glow: "255,90,60" }); AFX.add("shock", clb.vx, clb.vy, 480, { R: 1.8, pal: P.taureau, delay: 190 }); sfx("slash"); setTimeout(function () { shake(2.6, 180); }, 190);
           var cld = survWDmg((1 + 0.06 * (SW.cleaver - 1)) * 5), clx = clb.vx, cly = clb.vy; dmgEnemy(clb, cld, "La hache s'abat"); survNearEnemies(2 * ar, clx, cly).filter(function (o) { return o !== clb; }).slice(0, 6).forEach(function (o) { dmgEnemy(o, Math.max(1, Math.round(cld * 0.35)), "La hache s'abat"); });
           if (mode !== "play") return;
         } else state.xClT = 0.4;
@@ -10380,9 +10760,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (state.xLkT <= 0) {
         var lkl = survNearEnemies(6 * ar);
         if (lkl.length) {
-          state.xLkT = Math.max(1.4, 2.6 - 0.15 * SW.lucky); var lkt = lkl[rnd(lkl.length)], lkm = 1 + rnd(4); dmgSrc = survWName("lucky"); survTracer(lkt.vx, lkt.vy, P.cocotte); AFX.add("slash", lkt.vx, lkt.vy, 320, { R: 0.9, pal: P.cocotte }); AFX.add("shock", lkt.vx, lkt.vy, 380, { R: 1.3, pal: P.cocotte }); burst(lkt.vx, lkt.vy, "#ffd23c", 14, 100);
+          state.xLkT = Math.max(1.4, 2.6 - 0.15 * SW.lucky); var lkt = lkl[rnd(lkl.length)], lkm = 1 + rnd(4); dmgSrc = survWName("lucky"); AFX.add("coin", p.vx, p.vy, 520, { ex: lkt.vx, ey: lkt.vy }); burst(lkt.vx, lkt.vy, "#ffd23c", 10, 100);
           addFloat(lkt.vx, lkt.vy - 0.5, lkm === 4 ? "JACKPOT ×4" : "×" + lkm, lkm === 4 ? "#ffd23c" : "#ffe9a8");
-          var lkd = survWDmg((1 + 0.06 * (SW.lucky - 1)) * 0.6 * lkm); dmgEnemy(lkt, lkd, "La pièce frappe"); shuffle(lkl.filter(function (o) { return o !== lkt && o.hp > 0; })).slice(0, 2 + Math.floor(SW.lucky / 3)).forEach(function (o) { dmgEnemy(o, Math.max(1, Math.round(lkd * 0.6)), "La pièce rebondit"); }); earn(lkm + Math.floor(SW.lucky / 2), lkt.vx, lkt.vy);
+          var lkd = survWDmg((1 + 0.06 * (SW.lucky - 1)) * 0.6 * lkm); dmgEnemy(lkt, lkd, "La pièce frappe"); var lkFrom = lkt, lkN = 0; shuffle(lkl.filter(function (o) { return o !== lkt && o.hp > 0; })).slice(0, 2 + Math.floor(SW.lucky / 3)).forEach(function (o) { AFX.add("coin", lkFrom.vx, lkFrom.vy, 420, { ex: o.vx, ey: o.vy, delay: 260 + lkN * 150 }); lkFrom = o; lkN++; dmgEnemy(o, Math.max(1, Math.round(lkd * 0.6)), "La pièce rebondit"); }); earn(lkm + Math.floor(SW.lucky / 2), lkt.vx, lkt.vy);
           if (mode !== "play") return;
         } else state.xLkT = 0.4;
       }
@@ -10393,7 +10773,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var sor = Math.min(4, (3.4 + 0.3 * SW.sonar) * ar), sol = enemies.filter(function (e) { var dd = Math.hypot(e.vx - p.vx, e.vy - p.vy); return e.hp > 0 && dd >= 3 && dd <= sor + 3; });
         if (sol.length) {
           state.xSoT = Math.max(3.6, 6.4 - 0.4 * SW.sonar); dmgSrc = survWName("sonar"); sfx("energy");
-          AFX.add("shock", p.vx, p.vy, 900, { R: sor + 3, pal: P.canard }); AFX.add("shock", p.vx, p.vy, 900, { R: (sor + 3) * 0.75, pal: P.canard, delay: 150 });
+          AFX.add("sonarw", p.vx, p.vy, 900, { R: sor + 3, tg: sol.slice(0, 14).map(function (o) { return [o.vx, o.vy]; }) });
           sol.sort(function (u, v) { return Math.hypot(u.vx - p.vx, u.vy - p.vy) - Math.hypot(v.vx - p.vx, v.vy - p.vy); }); sol.slice(0, 12 + 2 * SW.sonar).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.06 * (SW.sonar - 1)) * 0.9), "Le sonar résonne"); });
           if (mode !== "play") return;
         } else state.xSoT = 0.4;
@@ -10405,7 +10785,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var egl = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; });
         if (egl.length) {
           state.xEgT = Math.max(2.6, 4.6 - 0.3 * SW.eggbomb); var egn = 2 + (SW.eggbomb >= 3 ? 1 : 0) + (SW.eggbomb >= 5 ? 1 : 0), egd = (1 + 0.05 * (SW.eggbomb - 1)) * 1.35, egr = 1.35 * ar;
-          for (var ei = 0; ei < egn; ei++) { var ega = Math.random() * 6.283, egd0 = 1.5 + Math.random() * 5, ex = p.vx + Math.cos(ega) * egd0, ey = p.vy + Math.sin(ega) * egd0; survTracer(ex, ey, P.cocotte); AFX.add("shock", ex, ey, 600, { R: 0.8, pal: P.cocotte }); (function (x, y) { legDefer(1, function () { SPV.add("boom", x, y, egr, 600); sfx("boom"); dmgSrc = survWName("eggbomb"); survNearEnemies(egr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(egd), "L'œuf explose"); }); }); })(ex, ey); }
+          for (var ei = 0; ei < egn; ei++) { var ega = Math.random() * 6.283, egd0 = 1.5 + Math.random() * 5, ex = p.vx + Math.cos(ega) * egd0, ey = p.vy + Math.sin(ega) * egd0; AFX.add("eggarc", ex, ey, 1000, { sx: p.vx, sy: p.vy, R: egr }); (function (x, y) { legDefer(1, function () { SPV.add("boom", x, y, egr, 600); AFX.add("splat", x, y, 900, { R: egr * 0.6, pal: ["255,220,80", "255,255,240"] }); sfx("boom"); dmgSrc = survWName("eggbomb"); survNearEnemies(egr, x, y).forEach(function (o) { dmgEnemy(o, survWDmg(egd), "L'œuf explose"); }); }); })(ex, ey); }
         } else state.xEgT = 0.4;
       }
     }
@@ -10416,7 +10796,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var hev = state.survWEvo && state.survWEvo.hooves, hr = 2.2 * ar, hl = survNearEnemies(hr);
         if (hl.length >= 2) {
           state.xHoT = Math.max(1.8, 3.2 - 0.2 * SW.hooves); dmgSrc = survWName("hooves"); sfx("swing", "slam"); shake(1.6, 140);
-          AFX.add("shock", p.vx, p.vy, 460, { R: hr + 1.2, pal: P.cheval || P.cocotte });
+          AFX.add("hoof", p.vx, p.vy, 620, { R: hr + 1.2 }); if (hev) AFX.add("shock", p.vx, p.vy, 380, { R: hr * 0.8, pal: P.cheval, rays: 10 });
           hl.forEach(function (o) { if (o.hp <= 0) return; var dd = Math.hypot(o.vx - p.vx, o.vy - p.vy); if (dmgEnemy(o, survWDmg((1 + 0.05 * (SW.hooves - 1)) * 0.7 * (hev ? 1.6 : 1)), "Le sabot repousse")) return; survPush(o, p.vx, p.vy, Math.max(0.6, hr + 1.3 - dd)); if (hev && !o.survivalBoss) { o.stunT = Math.max(o.stunT || 0, 0.7); o.wind = 0; } });
           if (mode !== "play") return;
         } else state.xHoT = 0.3;
@@ -10432,7 +10812,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           state.xJvT = Math.max(1.1, 1.9 - 0.1 * SW.javelin); dmgSrc = survWName("javelin"); sfx("shoot");
           for (var ji = 0; ji < jn; ji++) {
             var ja = ja0 + (ji - (jn - 1) / 2) * 0.3, jc = Math.cos(ja), js = Math.sin(ja);
-            AFX.add("beam", p.vx, p.vy, 280, { R: jL, a: ja, w: jw, pal: P.cochon || P.cocotte });
+            AFX.add("fork", p.vx, p.vy, 430, { ex: p.vx + jc * jL, ey: p.vy + js * jL, w: jw, big: !!jev, delay: ji * 40 });
             enemies.slice().forEach(function (o) { if (o.hp <= 0) return; var rx = o.vx - p.vx, ry = o.vy - p.vy, al = rx * jc + ry * js, pe = Math.abs(rx * js - ry * jc); if (al > -0.2 && al <= jL && pe <= jw + o.r * 0.4) dmgEnemy(o, survWDmg(jdm), "La fourche transperce"); });
             if (mode !== "play") return;
           }
@@ -10449,12 +10829,69 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           state.xHsT = Math.max(1.2, 2.2 - 0.12 * SW.horseshoe); sfx("shoot");
           var hsFrom = { vx: p.vx, vy: p.vy }, hsT = hs0, hsHit = [];
           for (var hj = 0; hj < hsn && hsT; hj++) {
-            (function (fx, fy, tg, dl) { legDefer(dl, function () { if (tg.hp <= 0 || enemies.indexOf(tg) < 0) return; AFX.add("beam", fx, fy, 200, { R: Math.hypot(tg.vx - fx, tg.vy - fy), a: Math.atan2(tg.vy - fy, tg.vx - fx), w: 0.3, pal: P.cheval || P.cocotte }); dmgSrc = survWName("horseshoe"); dmgEnemy(tg, survWDmg(hsm), "Le fer rebondit sur"); }); })(hsFrom.vx, hsFrom.vy, hsT, hj * 0.09);
+            (function (fx, fy, tg, dl) { legDefer(dl, function () { if (tg.hp <= 0 || enemies.indexOf(tg) < 0) return; AFX.add("shoe", fx, fy, 170, { ex: tg.vx, ey: tg.vy, elec: !!(state.survWEvo && state.survWEvo.horseshoe) }); dmgSrc = survWName("horseshoe"); dmgEnemy(tg, survWDmg(hsm), "Le fer rebondit sur"); }); })(hsFrom.vx, hsFrom.vy, hsT, hj * 0.09);
             hsHit.push(hsT); hsFrom = { vx: hsT.vx, vy: hsT.vy };
             var hsN = null, hsD = hsr; enemies.forEach(function (o) { if (o.hp <= 0 || hsHit.indexOf(o) >= 0) return; var dd = Math.hypot(o.vx - hsFrom.vx, o.vy - hsFrom.vy); if (dd < hsD) { hsD = dd; hsN = o; } }); hsT = hsN;
           }
         } else state.xHsT = 0.3;
       }
+    }
+  }
+  /* ---- apparence des projectiles d'armes : maïs, abeilles, plumes, paille ---- */
+  var projLook = null;
+  var PLOOK = {
+    corn: function (pr, x, y, dx, dy, t) {
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+      var g = ctx.createLinearGradient(x, y, x - dx * 16, y - dy * 16); g.addColorStop(0, "rgba(255,220,90,0.75)"); g.addColorStop(1, "rgba(255,180,40,0)");
+      ctx.strokeStyle = g; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - dx * 16, y - dy * 16); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(dy, dx) + t / 40);
+      ctx.fillStyle = "#ffd23c"; ctx.strokeStyle = "#5a3a10"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(4, 0); ctx.quadraticCurveTo(1, -3.4, -3, -2.4); ctx.quadraticCurveTo(-4.4, 0, -3, 2.4); ctx.quadraticCurveTo(1, 3.4, 4, 0); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fff3a6"; ctx.beginPath(); ctx.ellipse(0.5, -1, 1.6, 0.8, 0, 0, 6.283); ctx.fill(); ctx.restore();
+    },
+    bee: function (pr, x, y, dx, dy, t) {
+      var ph = (pr.ph = pr.ph || Math.random() * 6), wob = Math.sin(t / 55 + ph) * 3, nx = -dy, ny = dx, bx = x + nx * wob, by = y + ny * wob - 2, fl = Math.sin(t / 18 + ph);
+      ctx.save(); ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.ellipse(x, y + 5, 3, 1.2, 0, 0, 6.283); ctx.fill();
+      ctx.translate(bx, by); ctx.scale(dx < 0 ? -1 : 1, 1);
+      ctx.fillStyle = "rgba(235,248,255," + (0.65 + 0.25 * fl).toFixed(2) + ")"; ctx.strokeStyle = "rgba(60,80,110,0.8)"; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.ellipse(-0.5, -3, 2.4, 1.5 + fl * 0.8, -0.5, 0, 6.283); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(1.6, -3, 2, 1.3 - fl * 0.6, 0.5, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#ffcf2e"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.ellipse(0, 0, 4, 2.8, 0, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#2a1a10"; ctx.fillRect(-1.6, -2.6, 1.2, 5.2); ctx.fillRect(0.8, -2.6, 1.2, 5.2); ctx.beginPath(); ctx.arc(3.6, -0.3, 1.5, 0, 6.283); ctx.fill();
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(3.8, -1, 0.8, 0.8); ctx.strokeStyle = "#150f26"; ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(-5.6, 0.3); ctx.stroke();
+      ctx.restore();
+    },
+    feather: function (pr, x, y, dx, dy, t) {
+      var an = Math.atan2(dy, dx), fl = Math.sin(t / 45 + (pr.ph = pr.ph || Math.random() * 6)) * 0.18, ev = state.survWEvo && state.survWEvo.plumes;
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.drawImage(GX.soft(ev ? "150,220,255" : "220,235,255", 0.5), x - 9, y - 9, 18, 18); ctx.restore();
+      ctx.save(); ctx.translate(x, y); ctx.rotate(an + fl); ctx.scale(1.3, 1.3);
+      ctx.fillStyle = ev ? "#cfefff" : "#ffffff"; ctx.strokeStyle = "#2a3050"; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(6.5, 0); ctx.quadraticCurveTo(1, -3.6, -5.5, -1.2); ctx.lineTo(-5.5, 1.2); ctx.quadraticCurveTo(1, 3.6, 6.5, 0); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = ev ? "#4a9ad8" : "#9aa8c8"; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(6, 0); ctx.stroke();
+      ctx.beginPath(); for (var i = -3; i <= 4; i += 1.5) { ctx.moveTo(i, 0); ctx.lineTo(i - 1.6, -2.2); ctx.moveTo(i, 0); ctx.lineTo(i - 1.6, 2.2); } ctx.stroke();
+      ctx.restore();
+    },
+    straw: function (pr, x, y, dx, dy, t) {
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+      ctx.strokeStyle = "rgba(255,200,90,0.5)"; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - dx * 14, y - dy * 14); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.lineCap = "round"; ctx.strokeStyle = "#5a3a10"; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(x + dx * 5, y + dy * 5); ctx.lineTo(x - dx * 6, y - dy * 6); ctx.stroke();
+      ctx.strokeStyle = "#ffd88a"; ctx.lineWidth = 1.3; ctx.stroke(); ctx.restore();
+    }
+  };
+  var PLOOKC = { corn: "255,220,90", bee: "255,190,50", feather: "220,235,255", straw: "255,210,120" };
+  function boomShape(x, y, rot, s, alpha) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = "#150f26"; ctx.lineWidth = 4.4; ctx.beginPath(); ctx.moveTo(-8, -4); ctx.quadraticCurveTo(-3, 2.6, 0, 2.6); ctx.quadraticCurveTo(3, 2.6, 8, -4); ctx.stroke();
+    ctx.strokeStyle = "#c98a3a"; ctx.lineWidth = 2.8; ctx.stroke();
+    ctx.strokeStyle = "#ffd08a"; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-7.4, -4.2); ctx.quadraticCurveTo(-3, 1.8, 0, 1.8); ctx.stroke();
+    ctx.strokeStyle = "#e0402a"; ctx.lineWidth = 2.8; ctx.beginPath(); ctx.moveTo(-8, -4); ctx.lineTo(-6.6, -2.2); ctx.moveTo(8, -4); ctx.lineTo(6.6, -2.2); ctx.stroke();
+    ctx.restore();
+  }
+  function aliveFlames(x, y, w, h, t, ph, col, col2, a) {
+    for (var i = 0; i < 3; i++) {
+      var fl = 0.6 + 0.4 * Math.sin(t / 70 + ph + i * 2.1), hh = h * fl * (i === 1 ? 1 : 0.75), ox = (i - 1) * w * 0.45 + Math.sin(t / 110 + ph + i) * 1.2;
+      ctx.fillStyle = "rgba(" + col + "," + (0.6 * a).toFixed(3) + ")";
+      ctx.beginPath(); ctx.moveTo(x + ox - w * 0.45, y); ctx.quadraticCurveTo(x + ox - w * 0.35, y - hh * 0.6, x + ox + Math.sin(t / 90 + i) * 1.5, y - hh); ctx.quadraticCurveTo(x + ox + w * 0.35, y - hh * 0.6, x + ox + w * 0.45, y); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(" + col2 + "," + (0.75 * a).toFixed(3) + ")";
+      ctx.beginPath(); ctx.moveTo(x + ox - w * 0.2, y); ctx.quadraticCurveTo(x + ox - w * 0.15, y - hh * 0.4, x + ox, y - hh * 0.6); ctx.quadraticCurveTo(x + ox + w * 0.15, y - hh * 0.4, x + ox + w * 0.2, y); ctx.closePath(); ctx.fill();
     }
   }
   function drawSurvWeapons2(t) {
@@ -10467,25 +10904,46 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     });
     if (survPatches.length && SW.trail) survPatches.forEach(function (pt) {
       var x = pt.x * TILE + 8, y = pt.y * TILE + 8, a = Math.min(1, pt.t / 1.2), r = (0.8 * survArea()) * TILE * (0.8 + 0.12 * Math.sin(t / 90 + x));
-      var g = ctx.createRadialGradient(x, y, 1, x, y, r); g.addColorStop(0, "rgba(255,220,120," + (0.55 * a).toFixed(2) + ")"); g.addColorStop(0.5, "rgba(255,110,30," + (0.4 * a).toFixed(2) + ")"); g.addColorStop(1, "rgba(255,60,10,0)");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
+      ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = a; ctx.drawImage(GX.soft("255,100,30", 0.55), x - r, y - r * 0.7, r * 2, r * 1.4);
+      aliveFlames(x, y + 3, r * 0.9, r * 1.1, t, pt.x * 3.1 + pt.y, "255,110,30", "255,230,140", a); ctx.restore();
     });
     if (survMines.length && SW.mines) survMines.forEach(function (m) {
-      var x = m.x * TILE + 8, y = m.y * TILE + 9, armed = m.t >= 0.7;
-      ctx.fillStyle = "#2a2230"; ctx.beginPath(); ctx.ellipse(x, y, 5, 3.2, 0, 0, 6.283); ctx.fill();
-      ctx.strokeStyle = "#8a7aa0"; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = armed ? (Math.floor(t / 250) % 2 ? "#ff4a3a" : "#ffb02e") : "#6a6a7a"; ctx.beginPath(); ctx.arc(x, y - 1.5, 1.6, 0, 6.283); ctx.fill();
+      var x = m.x * TILE + 8, y = m.y * TILE + 9, armed = m.t >= 0.7, bl = Math.floor(t / 260) % 2, pop = Math.min(1, m.t / 0.25), mrd = 1.5 * survArea() * survWAreaK("mines") * TILE;
+      if (armed) { ctx.strokeStyle = "rgba(255,90,60," + (bl ? 0.35 : 0.18) + ")"; ctx.lineWidth = 1; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.ellipse(x, y, mrd, mrd * 0.78, 0, 0, 6.283); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.save(); ctx.translate(x, y); ctx.scale(pop, pop);
+      ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 3, 6, 2, 0, 0, 6.283); ctx.fill();
+      ctx.fillStyle = "#b08a52"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(-5, 3); ctx.quadraticCurveTo(-6.5, -3, -2, -5); ctx.lineTo(2, -5); ctx.quadraticCurveTo(6.5, -3, 5, 3); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#8a6430"; ctx.fillRect(-2.6, -6.4, 5.2, 1.8); ctx.fillStyle = "#ffd23c"; ctx.beginPath(); ctx.arc(-1.2, -7, 1, 0, 6.283); ctx.arc(1.4, -7.4, 1, 0, 6.283); ctx.fill();
+      ctx.fillStyle = "#d8b47a"; ctx.fillRect(-3.4, -2, 1.4, 3);
+      ctx.fillStyle = armed ? (bl ? "#ff4a3a" : "#ffb02e") : "#6a6a7a"; ctx.beginPath(); ctx.arc(2, -1, 1.5, 0, 6.283); ctx.fill();
+      if (armed && bl) { ctx.globalCompositeOperation = "lighter"; ctx.drawImage(GX.soft("255,80,50", 0.8), -4, -7, 12, 12); }
+      ctx.restore();
     });
     if (survTurrets.length && SW.turret) survTurrets.forEach(function (u) {
       var x = u.x * TILE + 8, y = u.y * TILE + 8, a = Math.min(1, u.t / 0.8);
-      ctx.globalAlpha = a; ctx.strokeStyle = "#8a5a2a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 7); ctx.lineTo(x, y - 6); ctx.moveTo(x - 6, y - 2); ctx.lineTo(x + 6, y - 2); ctx.stroke();
-      ctx.fillStyle = "#d8b060"; ctx.beginPath(); ctx.arc(x, y - 8, 3.4, 0, 6.283); ctx.fill(); ctx.fillStyle = "#14102a"; ctx.fillRect(x - 1.6, y - 9, 1, 1); ctx.fillRect(x + 0.7, y - 9, 1, 1);
+      var sw = Math.sin(t / 400 + x) * 0.06, rec = u.f ? Math.max(0, 1 - (now() - u.f) / 160) : 0;
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(x, y + 8, 7, 2.2, 0, 0, 6.283); ctx.fill();
+      ctx.translate(x, y + 8); ctx.rotate(sw - rec * 0.08); ctx.lineCap = "round";
+      ctx.strokeStyle = "#150f26"; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -17); ctx.moveTo(-9, -11); ctx.lineTo(9, -11); ctx.stroke();
+      ctx.strokeStyle = "#8a5a2a"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#a8402a"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -12); ctx.lineTo(5, -12); ctx.lineTo(4, -4); ctx.lineTo(-4, -4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#ffd88a"; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.moveTo(-9, -11); ctx.lineTo(-11, -9); ctx.moveTo(9, -11); ctx.lineTo(11, -9); ctx.moveTo(-3, -4); ctx.lineTo(-4, -1.5); ctx.moveTo(3, -4); ctx.lineTo(4, -1.5); ctx.stroke();
+      ctx.fillStyle = "#e8c070"; ctx.beginPath(); ctx.arc(0, -16, 3.6, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#6a4a1a"; ctx.beginPath(); ctx.ellipse(0, -19, 6, 1.6, 0, 0, 6.283); ctx.fill(); ctx.fillRect(-3, -23, 6, 4);
+      ctx.fillStyle = rec > 0 ? "#ffe07a" : "#14102a"; ctx.fillRect(-1.8, -17, 1.2, 1.2); ctx.fillRect(0.7, -17, 1.2, 1.2);
+      ctx.restore();
+      if (rec > 0) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = rec; var mfx = x + Math.cos(u.fa || 0) * 8, mfy = y - 6 + Math.sin(u.fa || 0) * 8; ctx.drawImage(GX.soft("255,220,120", 1), mfx - 8, mfy - 8, 16, 16); ctx.restore(); }
       ctx.globalAlpha = 1;
     });
     if (survBales.length && SW.haybale) survBales.forEach(function (b) {
-      var x = b.x * TILE + 8, y = b.y * TILE + 8; ctx.save(); ctx.translate(x, y); ctx.rotate(b.d * 3);
-      ctx.fillStyle = "#e0b84a"; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 6.283); ctx.fill(); ctx.strokeStyle = "#8a6a1a"; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.moveTo(0, -8); ctx.lineTo(0, 8); ctx.moveTo(-5.6, -5.6); ctx.lineTo(5.6, 5.6); ctx.stroke(); ctx.restore();
+      var x = b.x * TILE + 8, y = b.y * TILE + 8, bs = 1.15;
+      if (!b.pt || t - b.pt > 110) { b.pt = t; puffFx(x - b.dx * 9, y + 6, false); }
+      ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(x, y + 8 * bs, 9 * bs, 2.6, 0, 0, 6.283); ctx.fill();
+      ctx.save(); ctx.translate(x, y); ctx.scale(bs, bs); ctx.rotate(b.d * 3);
+      ctx.strokeStyle = "#b08a2a"; ctx.lineWidth = 1; for (var fr = 0; fr < 16; fr++) { var fa = fr / 16 * 6.283; ctx.beginPath(); ctx.moveTo(Math.cos(fa) * 7.5, Math.sin(fa) * 7.5); ctx.lineTo(Math.cos(fa + 0.1) * 10, Math.sin(fa + 0.1) * 10); ctx.stroke(); }
+      ctx.fillStyle = "#e8c050"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, 8.4, 0, 6.283); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "#b08a2a"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, 5.6, 0, 6.283); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 2.8, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = "#8a3a1a"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(-8.4, 0); ctx.lineTo(8.4, 0); ctx.stroke(); ctx.restore();
     });
   }
   function drawSurvWeapons(t) {
@@ -10501,33 +10959,45 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.restore();
     }
     if (SW.aura) {
-      var arp = (1.4 + 0.2 * (SW.aura - 1) + (state.survWEvo && state.survWEvo.aura ? 0.6 : 0)) * survArea() * TILE;
-      var ag = ctx.createRadialGradient(cx0, cy0, arp * 0.3, cx0, cy0, arp);
-      var acol = state.survWEvo && state.survWEvo.aura ? "90,210,90" : "255,120,30"; ag.addColorStop(0, "rgba(" + acol + ",0)"); ag.addColorStop(0.8, "rgba(" + acol + "," + (0.3 + 0.08 * Math.sin(t / 200)).toFixed(2) + ")"); ag.addColorStop(1, "rgba(" + acol + ",0)");
-      ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(cx0, cy0, arp, 0, 6.283); ctx.fill();
-      var afk = state.survAuraFx ? Math.min(1, (t - state.survAuraFx) / 420) : 1;
-      ctx.save(); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(" + acol + ",0.55)"; ctx.setLineDash([5, 4]); ctx.lineDashOffset = -t / 40; ctx.beginPath(); ctx.arc(cx0, cy0, arp * 0.96, 0, 6.283); ctx.stroke(); ctx.setLineDash([]);
-      if (afk < 1) { ctx.globalAlpha = 1 - afk; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,230,160,0.9)"; ctx.beginPath(); ctx.arc(cx0, cy0, arp * (0.55 + 0.5 * afk), 0, 6.283); ctx.stroke(); ctx.fillStyle = "rgba(" + acol + ",0.22)"; ctx.fill(); }
+      /* aura ardente : un cercle de flammes vivantes, des braises qui montent, une pulsation à chaque brûlure */
+      var aev = state.survWEvo && state.survWEvo.aura, arp = (1.4 + 0.2 * (SW.aura - 1) + (aev ? 0.6 : 0)) * survArea() * TILE;
+      var acol = aev ? "90,210,90" : "255,110,30", acol2 = aev ? "200,255,140" : "255,225,130", afk = state.survAuraFx ? Math.min(1, (t - state.survAuraFx) / 420) : 1;
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = 0.5 + 0.15 * Math.sin(t / 200); ctx.drawImage(GX.glow(acol), cx0 - arp, cy0 - arp, arp * 2, arp * 2); ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(" + acol + ",0.4)"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cx0, cy0, arp * 0.97, 0, 6.283); ctx.stroke();
+      var na = Math.max(22, Math.min(56, Math.round(arp / 1.7)));
+      for (var ai = 0; ai < na; ai++) {
+        var aan = ai / na * 6.283 + t / 2600, hv = 0.6 + 0.7 * Math.abs(Math.sin(ai * 12.9898)), afl = (0.55 + 0.45 * Math.sin(t / 75 + ai * 2.3)) * hv, abx = cx0 + Math.cos(aan) * arp * 0.95, aby = cy0 + Math.sin(aan) * arp * 0.95, aw = arp * 6.283 / na * 0.42, ah = (4 + arp * 0.11) * afl, sway = Math.sin(t / 95 + ai * 1.7) * aw * 0.9;
+        ctx.fillStyle = "rgba(" + acol + ",0.42)"; ctx.beginPath(); ctx.moveTo(abx - aw, aby); ctx.bezierCurveTo(abx - aw, aby - ah * 0.45, abx + sway - aw * 0.3, aby - ah * 0.7, abx + sway, aby - ah); ctx.bezierCurveTo(abx + sway + aw * 0.2, aby - ah * 0.6, abx + aw, aby - ah * 0.4, abx + aw, aby); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(" + acol2 + ",0.5)"; ctx.beginPath(); ctx.moveTo(abx - aw * 0.45, aby); ctx.quadraticCurveTo(abx + sway * 0.5, aby - ah * 0.65, abx + aw * 0.45, aby); ctx.closePath(); ctx.fill();
+      }
+      for (var ae = 0; ae < 12; ae++) { var aph = ((t / 1500) + ae * 0.137) % 1, aea = ae * 2.4 + Math.floor((t / 1500) + ae * 0.137) * 1.3, aer = arp * (0.25 + 0.7 * ((ae * 7) % 10) / 10); ctx.fillStyle = "rgba(" + acol2 + "," + (0.9 * (1 - aph)).toFixed(2) + ")"; ctx.fillRect(cx0 + Math.cos(aea) * aer - 0.9, cy0 + Math.sin(aea) * aer * 0.8 - aph * arp * 0.5 - 0.9, 1.8, 1.8); }
+      if (afk < 1) { ctx.globalAlpha = 0.6 * (1 - afk); ctx.lineWidth = 2 * (1 - afk) + 0.8; ctx.strokeStyle = "rgba(" + acol2 + ",0.9)"; ctx.beginPath(); ctx.arc(cx0, cy0, arp * (0.55 + 0.45 * afk), 0, 6.283); ctx.stroke(); }
       ctx.restore();
     }
     if (SW.orbit) {
       var nb = Math.min(5, 1 + Math.floor(SW.orbit / 2) + (state.survWEvo && state.survWEvo.orbit ? 1 : 0)), orKd = survWAreaK("orbit"), orRd = 2.1 * (1 + (orKd - 1) * 0.35), si = SP.dagger && SP.dagger.h || SP.sword && SP.sword.h;
       for (var b = 0; b < nb; b++) {
         var an = (state.survOrbA || 0) + b / nb * 6.283, bx = cx0 + Math.cos(an) * orRd * TILE, by = cy0 + Math.sin(an) * orRd * TILE;
-        var bg = ctx.createRadialGradient(bx, by, 0, bx, by, 13); bg.addColorStop(0, "rgba(200,230,255,0.65)"); bg.addColorStop(1, "rgba(200,230,255,0)");
-        ctx.fillStyle = bg; ctx.fillRect(bx - 13, by - 13, 26, 26);
+        var oevd = state.survWEvo && state.survWEvo.orbit, ocol = oevd ? "150,225,255" : "210,230,255";
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+        for (var tr2 = 0; tr2 < 4; tr2++) { ctx.strokeStyle = "rgba(" + ocol + "," + (0.42 - tr2 * 0.1).toFixed(2) + ")"; ctx.lineWidth = (7 - tr2 * 1.5) * orKd; ctx.beginPath(); ctx.arc(cx0, cy0, orRd * TILE, an - 0.16 * (tr2 + 1), an - 0.16 * tr2); ctx.stroke(); }
+        ctx.drawImage(GX.soft(ocol, 0.7), bx - 13, by - 13, 26, 26); ctx.restore();
         ctx.save(); ctx.translate(bx, by); ctx.rotate(an + 1.57);
         if (si) ctx.drawImage(si, -11 * orKd, -11 * orKd, 22 * orKd, 22 * orKd); else { ctx.fillStyle = "#dfe8ff"; ctx.fillRect(-2, -9, 4, 18); }
         ctx.restore();
       }
     }
     if (survBooms.length) {
-      var bi = SP.axe && SP.axe.h;
+      var bevd = state.survWEvo && state.survWEvo.boom, bks = survWAreaK("boom");
       survBooms.forEach(function (bo) {
-        var bx2 = bo.x * TILE + 8, by2 = bo.y * TILE + 8;
-        ctx.save(); ctx.translate(bx2, by2); ctx.rotate(t / 60);
-        ctx.globalAlpha = 0.35; ctx.fillStyle = "#ffe0a0"; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1; if (bi) ctx.drawImage(bi, -11, -11, 22, 22); else { ctx.fillStyle = "#c98a2a"; ctx.fillRect(-7, -2, 14, 4); }
-        ctx.restore();
+        var bx2 = bo.x * TILE + 8, by2 = bo.y * TILE + 8; bo.tr = bo.tr || []; bo.tr.push([bx2, by2, t]); if (bo.tr.length > 7) bo.tr.shift();
+        ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ctx.strokeStyle = bevd ? "rgba(150,200,255,0.45)" : "rgba(255,220,150,0.4)"; ctx.lineWidth = 6 * bks; ctx.beginPath(); bo.tr.forEach(function (q, qi) { if (qi) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.stroke();
+        ctx.drawImage(GX.soft(bevd ? "150,200,255" : "255,220,150", 0.55), bx2 - 13 * bks, by2 - 13 * bks, 26 * bks, 26 * bks); ctx.restore();
+        for (var gi = 1; gi <= 2; gi++) boomShape(bx2 - (bo.back ? -1 : 1) * bo.dx * gi * 4, by2 - (bo.back ? -1 : 1) * bo.dy * gi * 4, t / 45 - gi * 0.5, 0.8 * bks, 0.22 / gi);
+        boomShape(bx2, by2, t / 45, 0.8 * bks, 1);
+        if (bevd && Math.floor(t / 60) % 2) { ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.strokeStyle = "rgba(190,220,255,0.9)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(bx2 - 6, by2 - 4); ctx.lineTo(bx2 - 1, by2 + 1); ctx.lineTo(bx2 + 2, by2 - 3); ctx.lineTo(bx2 + 7, by2 + 3); ctx.stroke(); ctx.restore(); }
       });
     }
   }
@@ -15750,6 +16220,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var pr = projs[i];
       var fx = (pr.x - 0.5) * TILE, fy = (pr.y - 0.5) * TILE;
       var pvm = Math.hypot(pr.vx, pr.vy) || 1, adx = pr.vx / pvm, ady = pr.vy / pvm;
+      if (pr.look && PLOOK[pr.look]) { PLOOK[pr.look](pr, fx + 8, fy + 8, adx, ady, t); continue; }
       if (pr.kind === "arrow") {
         var acx = fx + 8, acy = fy + 8;
         ctx.save(); ctx.lineCap = "round"; ctx.strokeStyle = "#150f26"; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(acx - adx * 5, acy - ady * 5); ctx.lineTo(acx + adx * 4, acy + ady * 4); ctx.stroke();
@@ -15791,7 +16262,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.restore();
     }
     ctx.globalAlpha = 1;
-    var sm = smallScr(); if (sm) ctx.globalAlpha = 0.55;
+    var sm = smallScr(); if (sm) ctx.globalAlpha = 0.88;
     SPV.draw(ctx, t, TILE);
     AFX.draw(ctx, t);
     ctx.globalAlpha = 1;
