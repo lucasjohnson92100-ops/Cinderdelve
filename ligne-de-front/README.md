@@ -280,3 +280,6 @@ Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %,
 - **Répartition des troupes** (`PLAN=…`) : étaler à égalité 3 %, un seul secteur 15 %, deux 21 %, trois 25 %, libre 27 %. D'où la page d'aide « Tactique gagnante » : concentrer, mais sur 2 ou 3 secteurs, selon le terrain.
 - **Jokers** : voir la section précédente ; Tenaille, Fer et Clairon ajustés.
 - Bataillon reste à +2 (un test à +2,5 n'a rien donné de net).
+
+## Durcissement
+`HQ_MULT` 21 → 24 (PV du QG ennemi +14 %). Mesure du bot (300 campagnes) : 24 % → 16 % de campagnes terminées ; les 8 premières étapes restent gagnées à 100 %, la difficulté monte à partir de l'étape 9. Essais écartés : `ENEMY_ATK` 0,75 → 0,85 (12 %) et les deux ensemble (6 %), jugés trop durs pour un bot qui joue moins bien qu'un humain.
