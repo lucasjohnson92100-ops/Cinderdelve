@@ -723,5 +723,9 @@
  "Moyenne": "Medium",
  "Basse": "Low",
  "Afficher les images par seconde": "Show frames per second",
- "Petit compteur en bas à gauche (utile pour mesurer la fluidité)": "Small counter at the bottom left (useful to measure smoothness)"
+ "Petit compteur en bas à gauche (utile pour mesurer la fluidité)": "Small counter at the bottom left (useful to measure smoothness)",
+ "Ton ultime est prêt : tape trois fois sur l'écran pour dévaster tout autour de toi !": "Your ultimate is ready: tap three times on the screen to devastate everything around you!",
+ "Images par seconde": "Frame rate",
+ "30 : le jeu fait deux fois moins de travail et ménage la batterie (un peu moins fluide)": "30: the game does half the work and saves battery (slightly less smooth)",
+ "30 (économie)": "30 (battery saver)"
 }
