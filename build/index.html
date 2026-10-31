@@ -7990,11 +7990,11 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   }
 
   /* ================= SON ET VIBRATIONS ================= */
-  var AU = { ctx: null, master: null, sfxG: null, musG: null, noise: null, sfxOn: true, musOn: true, vibOn: true, mus: null, theme: -1, boss: false, nextT: 0, beat: 0, tacc: 0, lastHit: 0 };
+  var AU = { ctx: null, master: null, sfxG: null, musG: null, noise: null, sfxOn: true, musOn: true, vibOn: false, mus: null, theme: -1, boss: false, nextT: 0, beat: 0, tacc: 0, lastHit: 0 };
   try {
     AU.sfxOn = localStorage.getItem("donjon-snd") !== "0";
     AU.musOn = localStorage.getItem("donjon-mus") !== "0";
-    AU.vibOn = localStorage.getItem("donjon-vib") !== "0";
+    AU.vibOn = false; /* les vibrations ont été retirées du jeu */
   } catch (err) {}
   var stepAcc = 0;
   function auInit() {
@@ -8054,19 +8054,11 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     if (AU.wet && AU.rev && !dest) { var wg2 = c.createGain(); wg2.gain.value = AU.wet * 0.7; g.connect(wg2); wg2.connect(AU.rev); }
     sr.start(t); sr.stop(t + dur + 0.06);
   }
-  var VIBP = { hit: 8, crit: [10, 20, 14], parry: [20, 30, 36], block: 22, hurt: 45, guardbreak: [60, 30, 80], kill: 12, bossdeath: [40, 40, 100],
-    boom: 70, levelup: [20, 40, 20, 40, 60], death: [120, 60, 220], dodge: 12, chest: 25, trap: 55, gear: 18, rage: [50, 30, 50] };
   /* cadence maximale par son (ms), réverbération et variation de hauteur : les hordes ne saturent plus et les sons ne se répètent plus à l'identique */
   var SFX_THR = { hit: 30, kill: 38, orb: 30, energy: 50, slash: 50, swing: 55, boom: 70, coin: 45, chain: 60, acorn: 60, egg: 60 };
   var SFX_WET = { crit: 0.22, kill: 0.1, boom: 0.35, ice: 0.35, fire: 0.18, heal: 0.45, levelup: 0.4, level2: 0.45, cast: 0.4, coin: 0.25, chain: 0.2, rune: 0.55, trans: 0.7, pick: 0.15, meteor: 0.3, energy: 0.2, bossdeath: 0.4, revive: 0.4, acorn: 0.1, egg: 0.15, shock: 0.2 };
   var SFX_JIT = { hit: 0.2, kill: 0.22, slash: 0.14, swing: 0.14, energy: 0.1, orb: 0.06, boom: 0.1, coin: 0.04, chain: 0.12, acorn: 0.14, egg: 0.16, hurt: 0.06 };
   function sfx(name, a) {
-    var v = VIBP[name];
-    if (v && AU.vibOn) {
-      /* chaque appel de vibration est un échange avec le système (et le moteur consomme de la batterie) : en jeu, seulement les moments importants, 6 fois par seconde au plus */
-      var tvb = performance.now(), okv = !(state && state.survival) || (name !== "hit" && name !== "kill" && name !== "gear" && name !== "dodge" && name !== "chest" && name !== "boom");
-      if (okv && tvb - (AU.vibT || 0) > (name === "hurt" ? 120 : 170)) { AU.vibT = tvb; try { if (navigator.vibrate) navigator.vibrate(v); } catch (err) {} }
-    }
     if (!AU.ctx || !AU.sfxOn || !AU.noise) return;
     var th = SFX_THR[name]; if (th) { var tn0 = performance.now(); AU.lastT = AU.lastT || {}; if (tn0 - (AU.lastT[name] || -1e9) < th) return; AU.lastT[name] = tn0; }
     var c = AU.ctx, t = c.currentTime + 0.002, i;
@@ -16899,13 +16891,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       lastTap.n = third ? 3 : dbl && lastTap.n !== 2 ? 2 : 1;
       if (lastTap.n === 2) {
         lastTap.tp = t;
-        var firePw = function () { lastTap.pend = 0; if (farmUse()) { try { navigator.vibrate && navigator.vibrate(18); } catch (er) {} } };
+        var firePw = function () { lastTap.pend = 0; farmUse(); };
         /* ultime chargé : on attend un instant pour voir si un 3e tape suit (sinon le pouvoir partirait aussi) */
         if ((state.survUlt || 0) >= 100) lastTap.pend = setTimeout(firePw, 430); else firePw();
       } else if (lastTap.n === 3) {
         if (lastTap.pend) { clearTimeout(lastTap.pend); lastTap.pend = 0; }
         lastTap.n = 0; lastTap.t = 0;
-        if ((state.survUlt || 0) >= 100) { useUlt(); try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch (er) {} } else { say("Ultime pas encore chargé."); sfx("nomana"); }
+        if ((state.survUlt || 0) >= 100) { useUlt(); } else { say("Ultime pas encore chargé."); sfx("nomana"); }
       }
     } else if (dbl) {
       lastTap.t = 0;
@@ -17801,7 +17793,6 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           AU.musOn = v; try { localStorage.setItem("donjon-mus", v ? "1" : "0"); } catch (err) {}
           if (AU.musG) AU.musG.gain.setTargetAtTime(musGain(), AU.ctx.currentTime, 0.2);
         } },
-      { label: "Vibrations", desc: navigator.vibrate ? "" : "Non disponible sur cet appareil", get: function () { return AU.vibOn; }, set: function (v) { AU.vibOn = v; try { localStorage.setItem("donjon-vib", v ? "1" : "0"); } catch (err) {} } },
       { label: "Langue / Language", cycle: { names: ["Français", "English"], get: function () { return window.__lang === "en" ? 1 : 0; }, set: function (v) { if (window.I18N) window.I18N.set(v === 1 ? "en" : "fr"); } } },
       { label: "Donjon classique", desc: "Affiche le Donjon classique et le Sanctuaire sur l'accueil (mode expérimental)", get: function () { try { return localStorage.getItem("donjon-classic-on") === "1"; } catch (e) { return false; } }, set: function (v) { try { localStorage.setItem("donjon-classic-on", v ? "1" : "0"); } catch (e) {} window.__homeDirty = true; } },
       { label: "Partager le jeu", desc: "Envoie-le à un ami", action: function () { doShare(inviteText()); } },
