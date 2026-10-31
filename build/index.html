@@ -6905,7 +6905,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     c = mkCanvas(px, Math.round(px * im.height / im.width)); var cx = c.getContext("2d"); cx.imageSmoothingEnabled = true; if ("imageSmoothingQuality" in cx) cx.imageSmoothingQuality = "high"; if (GRADE.on && "filter" in cx) cx.filter = GRADE.f; cx.drawImage(src, 0, 0, c.width, c.height);
     im._fit[px] = c; return c;
   }
-  var hordeN = 0;
+  var hordeN = 0, entLod = 0; /* entLod : niveau de détail des monstres (0 = complet … 3 = très simple) */
   function entImage(name, o, t, isPlayer) {
     var sp = SP[name], img = sp.h;
     if (isPlayer && isFarmHero() && FARM.anim) {
@@ -8946,7 +8946,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
 
   var choiceSeen = false;
   function update(dt) {
-    fxBudget = smallScr() ? 4 : 8;
+    fxBudget = entLod >= 2 ? 3 : smallScr() ? 4 : 8;
     if (mode !== "play") { if (mode === "levelup" || mode === "shop" || mode === "altar" || mode === "gear") choiceSeen = true; return; }
     if (choiceSeen) { choiceSeen = false; if (state && !state.dead) { p.invuln = Math.max(p.invuln || 0, gtime + 2000); addFloat(p.vx, p.vy, "Protégé 2 s", "#6fd6ff"); } }
     var t = now();
@@ -12930,7 +12930,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
     return Math.max(1, Math.floor(dm * k * 1.04)); /* vie d'origine, +4 % */
   }
-  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 2 ? c * 0.85 : c); }
+  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
   /* Brotato : quand il y a trop de monstres, les plus éloignés disparaissent (sans butin) au lieu de bloquer les arrivées */
   function survCull(keep) {
     var cand = enemies.filter(function (e) { return e.hp > 0 && !e.elite && !e.survivalBoss && !e.boss && !e.mini; });
@@ -14933,7 +14933,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (wsp) { ctx.save(); ctx.translate(sx, sy); ctx.rotate(phi - Math.PI / 2); ctx.drawImage(armImg, 0, 5, 6, 5, -1.5, 2.5, 3, 2.5); ctx.restore(); }
   }
   var barT = -1, barN = 0;
-  function barOk(t) { if (barT !== t) { barT = t; barN = 0; } return ++barN <= 36; }
+  function barOk(t) { if (barT !== t) { barT = t; barN = 0; } return ++barN <= (entLod >= 3 ? 4 : entLod >= 2 ? 10 : entLod >= 1 ? 22 : 36); }
   function drawEnt(name, o, t, isPlayer) {
     if (isPlayer && state && state.survDeadT0 && now() - state.survDeadT0 > 220) return;
     var sp = SP[name], sc = (o.scale || 1) * (isPlayer && state && HERO.customBase[state.cls] ? 1.4 : (isPlayer && isFarmHero() ? 1.3 : 1)), dw = 16 * sc;
@@ -14951,11 +14951,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (o.mv) bob = -2 * Math.abs(Math.sin(t / 115 + (o.phase || 0)));
     var farmA = isPlayer && isFarmHero() && FARM.anim;
     if (farmA) bob = 0;
-    var mo = (!isPlayer && ENEMY_MOTION[name] && !(o.stunT > 0)) ? ENEMY_MOTION[name](t, o.phase || 0, !!o.mv, o) : null;
+    var lite = false;
+    if (!isPlayer && entLod > 0 && !o.survivalBoss && !o.boss && !o.miniBoss && !o.elite && !o.kami && !ISO) { var dm0 = Math.abs(o.vx - p.vx) + Math.abs(o.vy - p.vy); lite = entLod >= 3 || dm0 > (entLod >= 2 ? 2.4 : 3.6); }
+    var mo = (!isPlayer && !lite && ENEMY_MOTION[name] && !(o.stunT > 0)) ? ENEMY_MOTION[name](t, o.phase || 0, !!o.mv, o) : null;
     if (mo) bob = mo.bob;
     if (!isPlayer && o.hitT && t - o.hitT < 150) { var hk0 = 1 - (t - o.hitT) / 150; px += (o.hdx || 0) * 2.4 * hk0; py += (o.hdy || 0) * 1.5 * hk0; }
     var bornK = (!isPlayer && o.born) ? Math.max(0, Math.min(1, (t - o.born) / 340)) : 1;
-    if (bornK < 1) {
+    if (bornK < 1 && !lite) {
       ctx.strokeStyle = "rgba(190,150,255," + ((1 - bornK) * 0.85).toFixed(2) + ")"; ctx.lineWidth = 1.3;
       ctx.beginPath(); ctx.ellipse(px + 8, py + 14.5, (3 + bornK * 8) * sc, (3 + bornK * 8) * sc * 0.4, 0, 0, 6.283); ctx.stroke();
     }
@@ -14971,7 +14973,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.max(0, Math.min(1, ga)); ctx.drawImage(GX.soft(gcol, 1), px + 8 - gr0, py + 8 - gr0, gr0 * 2, gr0 * 2); ctx.restore();
     }
     var sx0 = px + 8, sy0 = py + 14.5, sw = 6.8 * sc;
-    ctx.drawImage(GX.shadow(), sx0 - sw, sy0 - sw * 0.34, sw * 2, sw * 0.68);
+    if (!lite || entLod === 1) ctx.drawImage(GX.shadow(), sx0 - sw, sy0 - sw * 0.34, sw * 2, sw * 0.68);
     var img = entImage(name, o, t, isPlayer);
     if (t < o.flash) img = silOf(img, isPlayer ? "#ff2d3d" : "#ffffff");
     else if (!isPlayer && o.wind > 0 && Math.floor(t / 90) % 2 === 0) img = silOf(img, "#ffffff");
@@ -14990,8 +14992,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       else if (o.mv && !(sp.frames && !isPlayer) && !farmA) rot = Math.sin(t / 110 + (o.phase || 0)) * 0.06;
       if (mo && !(!isPlayer && o.wind > 0) && !(lk >= 0 && lk < 1)) rot = mo.rot;
       /* grosse horde : les monstres éloignés et calmes sont copiés tels quels (sans rotation ni déformation), beaucoup plus rapide */
-      if (!isPlayer && hordeN > 45 && !ISO && GFX !== "toon" && bornK >= 1 && !(o.wind > 0) && !(lk >= 0 && lk < 1) && !(o.hitT && t - o.hitT < 150) && Math.abs(o.vx - p.vx) + Math.abs(o.vy - p.vy) > 3.2) {
-        var fim = fitImg(img, Math.round(dw * scaleK), fcs < 0), fdx = Math.round((px + 8 + hitx - dw / 2) * scaleK) / scaleK, fdy = Math.round((py + 16 + bob - dw) * scaleK) / scaleK;
+      if (!isPlayer && !ISO && GFX !== "toon" && bornK >= 1 && !(o.wind > 0) && !(lk >= 0 && lk < 1) && !(o.hitT && t - o.hitT < 150) && (lite || (hordeN > 45 && Math.abs(o.vx - p.vx) + Math.abs(o.vy - p.vy) > 3.2))) {
+        var lq = lite ? (entLod >= 3 ? 0.55 : entLod >= 2 ? 0.7 : 0.85) : 1; /* image plus petite = moins de travail pour le téléphone */
+        var fim = fitImg(img, Math.max(8, Math.round(dw * scaleK * lq)), fcs < 0), fdx = Math.round((px + 8 + hitx - dw / 2) * scaleK) / scaleK, fdy = Math.round((py + 16 + bob - dw) * scaleK) / scaleK;
         ctx.drawImage(fim, fdx, fdy, dw, dw);
       } else {
       var camM0 = (ISO && ISO_BASEM) ? ISO_BASEM : ctx.getTransform();
@@ -16323,6 +16326,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var list = enemies.filter(function (e) { return (vis[e.y] && vis[e.y][e.x]) || (vis[Math.round(e.vy)] && vis[Math.round(e.vy)][Math.round(e.vx)]); });
     list.sort(function (a, b) { return a.vy - b.vy; });
     hordeN = list.length;
+    /* la fluidité passe avant tout : plus il y a de monstres, ou plus le jeu ralentit, plus les monstres ordinaires sont dessinés simplement (les boss et les élites gardent tous leurs détails) */
+    entLod = perf.lvl >= 5 ? 3 : (perf.lvl >= 3 || hordeN > 140) ? 2 : (perf.lvl >= 1 || hordeN > 90) ? 1 : 0;
     for (i = 0; i < list.length; i++) drawEnt(list[i].skin && SP[list[i].skin] ? list[i].skin : list[i].type, list[i], t, false);
     drawEnt(CLASSES[state.cls || "warrior"].spr, p, t, true);
     if (state.famT > 0) {
@@ -16624,19 +16629,19 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var last = 0;
-  var perf = { ema: 16, n: 0, low: false, flat: false, lvl: 0, prev: 0, locked: false }, kCap = 4;
+  var perf = { ema: 16, n: 0, low: false, flat: false, lvl: 0, prev: 0, locked: false, win: [] }, kCap = 4;
   /* qualité : Auto (s'adapte à la fluidité mesurée), Haute, Moyenne, Basse.
-     niveau 0 : pleine netteté + éclairage ; 1 : netteté réduite ; 2 : sans éclairage ; 3 : effets réduits */
+     6 niveaux (netteté de l'image / éclairage / effets) : 0 = 4 / oui / complets ; 1 = 3,5 / oui ; 2 = 3 / oui ; 3 = 3 / non ; 4 = 2,5 / non ; 5 = 2 / non / effets réduits */
   var QMODE = "auto"; try { var qm0 = localStorage.getItem("donjon-q"); if (qm0 === "high" || qm0 === "mid" || qm0 === "low") QMODE = qm0; } catch (err) {}
   function setPerfLevel(l, noResize) {
-    perf.lvl = l; kCap = l <= 0 ? 4 : l === 1 ? 3 : 2; perf.flat = l >= 2; perf.low = l >= 3;
-    try { document.body.classList.toggle("lowfx", l >= 3); } catch (err) {}
-    perf.n = 0; perf.ema = 16; if (!noResize) { try { resize(); } catch (err) {} }
+    perf.lvl = l; kCap = [4, 3.5, 3, 3, 2.5, 2][l]; perf.flat = l >= 3; perf.low = l >= 5;
+    try { document.body.classList.toggle("lowfx", l >= 5); } catch (err) {}
+    perf.n = 0; perf.ema = 16; perf.win = []; if (!noResize) { try { resize(); } catch (err) {} }
   }
   function perfStartLevel() {
-    if (QMODE === "high") return 0; if (QMODE === "mid") return 1; if (QMODE === "low") return 2;
+    if (QMODE === "high") return 0; if (QMODE === "mid") return 2; if (QMODE === "low") return 4;
     var dpr0 = window.devicePixelRatio || 1, px = window.innerWidth * window.innerHeight * dpr0 * dpr0;
-    return px > 2000000 ? 1 : 0; /* grand écran très fin (téléphone récent en plein écran) : on commence un cran plus bas */
+    return px > 2600000 ? 2 : px > 1700000 ? 1 : 0; /* grand écran très fin (téléphone récent en plein écran) : on commence plus bas */
   }
   setPerfLevel(perfStartLevel(), true);
   var fpsEl = null, fpsOn = false, fpsN = 0, fpsT = 0;
@@ -16653,12 +16658,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var dt = last ? Math.min(50, t - last) : 16;
     if (last && mode === "play") {
       perf.ema += (Math.min(120, t - last) - perf.ema) * 0.05; perf.n++;
+      perf.win[perf.n % 90] = Math.min(200, t - last);
       /* qualité adaptative : si le jeu passe sous ~42 images/s pendant 1,5 s, on baisse d'un cran. Si le cran ne change rien (appareil bridé à 30 Hz par exemple), on revient et on s'arrête. */
-      if (QMODE === "auto" && !perf.locked && perf.n > 90) {
-        if (perf.ema > 24 && perf.lvl < 3) {
-          if (perf.prev && perf.ema > perf.prev * 0.9) { setPerfLevel(perf.lvl - 1); perf.locked = true; }
-          else { perf.prev = perf.ema; setPerfLevel(perf.lvl + 1); }
-        } else if (perf.prev && perf.ema <= 24) perf.prev = 0;
+      if (QMODE === "auto" && !perf.locked && perf.n > 90 && perf.n % 15 === 0) {
+        var ws = perf.win.slice().sort(function (a, b) { return a - b; }), med = ws[45], p75 = ws[67], p10 = ws[9]; /* médiane et centiles des 90 dernières images : insensibles à un à-coup isolé */
+        if ((p75 > 26 || med > 21) && perf.lvl < 5) {
+          /* appareil bridé (écran à 30 Hz, économie d'énergie) : après 2 crans, même les meilleures images ne vont pas plus vite → on revient au cran de départ et on s'arrête */
+          if (perf.prev && perf.lvl - perf.prev.lvl >= 2 && p10 >= 29 && p10 > perf.prev.p10 - 2) { setPerfLevel(perf.prev.lvl); perf.locked = true; }
+          else { if (!perf.prev) perf.prev = { lvl: perf.lvl, p10: p10 }; setPerfLevel(Math.min(5, perf.lvl + (med > 38 ? 2 : 1))); }
+        } else if (perf.prev && med <= 24) perf.prev = 0;
       }
     }
     last = t; fpsTick(t);
