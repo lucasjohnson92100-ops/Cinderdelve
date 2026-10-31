@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='AIRC,genTerrain,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -15,19 +15,19 @@ let S=mk();
 check('ravitaillement de base',S.supply,E.BASE_SUPPLY);check('main de 6',S.hand.length,6);check('pas d\'unités ennemies',S.units.length,0);
 check('QG ennemi = blinde du niveau',S.hq.en,E.LEVELS[0].hq);
 // pose : terrain praticable, 3 unités terrestres et 1 appui par secteur
-S=blank(['mer','route','foret','riviere','champ']);
+S=blank(['mer','route','foret','riviere']);
 S.hand=[E.mkCard('tireurs','J'),E.mkCard('destroyer','J'),E.mkCard('chasseur','J'),E.mkCard('blinde','J'),E.mkCard('jeep','J')];
 const tg=c=>E.deployTargets(S,c).map(x=>x.c).join(',');
-check('tireurs : partout sauf la mer',tg(S.hand[0]),'1,2,3,4');check('blindé : ni forêt ni rivière',tg(S.hand[3]),'1,4');check('jeep : pas la rivière',tg(S.hand[4]),'1,2,4');
+check('tireurs : partout sauf la mer',tg(S.hand[0]),'1,2,3');check('blindé : ni forêt ni rivière',tg(S.hand[3]),'1');check('jeep : pas la rivière',tg(S.hand[4]),'1,2');
 check('navire : toujours en mer',tg(S.hand[1]),'0');check('chasseur : toujours dans le ciel',tg(S.hand[2]),String(E.AIRC));
 let u1=E.placeCard(S,0,1);check('pose',!!u1&&u1.c===1,true);check('coût payé',S.supply,38);check('carte gardée sur l\'unité (repli)',u1.card.t,'tireurs');
 S.hand=[E.mkCard('tireurs','R'),E.mkCard('tireurs','V'),E.mkCard('tireurs','N')];E.placeCard(S,0,1);E.placeCard(S,0,1);
 check('3 places par secteur',E.placeCard(S,0,1),null);S.capLv={[S.lanes[1]]:1};check('Fortification : 4e place',!!E.placeCard(S,0,1)&&E.queue(S,'me',1).length,4);
 S.hand=[E.mkCard('chasseur','J'),E.mkCard('chasseur','R')];const sup=E.placeCard(S,0,E.AIRC);check('avion posé dans le ciel',E.supportAt(S,E.AIRC)===sup,true);check('plusieurs avions dans le ciel',tg(S.hand[0]),String(E.AIRC));
 // endurance
-check('infanterie : 2 tours',E.statsFor(E.TYPES.tireurs,'J',S,'me').stam,2);check('blindé : 3 tours',E.statsFor(E.TYPES.blinde,'R',S,'me').stam,3);
-check('vert : +1 tour',E.statsFor(E.TYPES.tireurs,'V',S,'me').stam,3);check('chasseur : 2 tours',E.statsFor(E.TYPES.chasseur,'J',S,'me').stam,2);
-check('Moreau : infanterie +1',E.statsFor(E.TYPES.tireurs,'J',{officers:['moreau']},'me').stam,3);
+check('infanterie : 3 tours',E.statsFor(E.TYPES.tireurs,'J',S,'me').stam,3);check('blindé : 3 tours',E.statsFor(E.TYPES.blinde,'R',S,'me').stam,3);
+check('vert : +1 tour',E.statsFor(E.TYPES.tireurs,'V',S,'me').stam,4);check('chasseur : 2 tours',E.statsFor(E.TYPES.chasseur,'J',S,'me').stam,2);
+check('Moreau : infanterie +1',E.statsFor(E.TYPES.tireurs,'J',{officers:['moreau']},'me').stam,4);
 // terrains forts et faibles des couleurs
 check('jaune sur route ×1,5',E.terrainMult('J','route'),1.5);check('jaune en forêt ×0,75',E.terrainMult('J','foret'),0.75);check('jaune+vert en forêt ×1,25',E.terrainMult('JV','foret'),1.25);
 // Attaque et Défense
@@ -48,8 +48,8 @@ let F=E.frontForecast(S);check('frappe = somme des secteurs',F.strike,40);check(
 check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('au moins un quart passe',F.toMe,Math.max(Math.ceil(F.enAtk*E.MIN_THROUGH),F.enAtk-6));
 let st=E.endTurn(S);check('QG ennemi frappé',500-S.hq.en,40);check('votre QG prend la riposte',60-S.hq.me,F.toMe);
 check('étapes : secteurs, frappe, riposte, usure',['sec','strike','enemy','wear'].every(p=>st.some(x=>x.ph===p)),true);
-check('usure : −1 endurance',E.units(S,'me').every(u=>u.stam===1),true);
-E.endTurn(S);check('usées après 2 tours : elles quittent le front',E.units(S,'me').length,0);
+check('usure : −1 endurance',E.units(S,'me').every(u=>u.stam===2),true);check('effectif : 10 → 7 hommes',E.menNow(E.units(S,'me')[0]),7);
+E.endTurn(S);check('effectif : 7 → 4 hommes',E.menNow(E.units(S,'me')[0]),4);E.endTurn(S);check('usées après 3 tours : elles quittent le front',E.units(S,'me').length,0);
 // riposte : la Défense réduit, la fumée divise par deux
 S=blank(['mer','champ','champ','champ','champ']);E.placeUnit(S,E.mkUnit(S,'me','blinde','V'),1);
 F=E.frontForecast(S);check('Défense du blindé vert',F.def,Math.ceil(16*1.25));S.smoke=true;check('fumigènes : riposte ÷2',E.frontForecast(S).enAtk,Math.round(E.enemyAtk(S)/2));
@@ -62,7 +62,7 @@ S.fx=['nids'];check('nids : infanterie −25 %',E.unitAtk(S,E.queue(S,'me',1)[0]
 S.fx=['panzer'];check('Division blindée : riposte +30 %',E.enemyAtk(S),Math.round(E.LEVELS[0].atk*1.3));
 S=blank(['mer','champ','champ','champ','champ']);S.fx=['train'];S.plan={train:2};S.hand=[E.mkCard('tireurs','J')];check('train : secteur coupé',E.deployTargets(S,S.hand[0]).some(t=>t.c===2),false);
 S=blank(['mer','champ','champ','champ','champ']);S.fx=['batterie'];S.hq.en=S.lvl.hq;check('batterie : dégâts ÷2 au-dessus de la moitié',E.hqTake(S,'en',10),5);S.hq.en=1;check('batterie : plus sous la moitié',E.hqTake(S,'en',10),10);
-S=blank(['mer','champ','champ','champ','champ']);S.mineCol=2;S.hand=[E.mkCard('tireurs','J'),E.mkCard('genie','J')];let mu=E.placeCard(S,0,2);check('mines : −1 endurance',mu.stam,1);check('mines déclenchées',S.mineCol,undefined);
+S=blank(['mer','champ','champ','champ','champ']);S.mineCol=2;S.hand=[E.mkCard('tireurs','J'),E.mkCard('genie','J')];let mu=E.placeCard(S,0,2);check('mines : −1 endurance',mu.stam,2);check('mines déclenchées',S.mineCol,undefined);
 S.mineCol=3;const gu=E.placeCard(S,0,3);check('génie : déminé sans perte',gu.stam+'/'+S.mineCol,gu.stamMax+'/undefined');
 S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.hq.en=1e6;S.plan={shell:1};E.endTurn(S);check('obus : −1 endurance de plus',E.units(S,'me')[0].stam,1);
 S=blank(['mer','champ','champ','champ','champ']);S.fx=['artillerie'];E.placeUnit(S,E.mkUnit(S,'me','blinde','R'),1);S.hq.en=1e6;S.plan={shell:1};S.smoke=true;E.endTurn(S);check('obus intercepté par la fumée',E.units(S,'me')[0].stam,2);
@@ -74,17 +74,17 @@ S=blank(['mer','champ','champ','champ','champ']);E.placeUnit(S,E.mkUnit(S,'me','
 S.hand=[E.mkCard('barrage','')];E.playOrder(S,0,{c:1});check('barrage : +20 Attaque de base',E.sectorForecast(S,1).atk,20+E.BARRAGE_ATK);
 S.hand=[E.mkCard('assaut','')];E.playOrder(S,0,{c:1});check('assaut ×1,5',E.sectorForecast(S,1).atk,60);
 S.hand=[E.mkCard('fumigenes','')];E.playOrder(S,0,{c:1});check('fumigènes',S.smoke,true);
-S.hand=[E.mkCard('embuscade','')];E.playOrder(S,0,{c:1});check('relève : +1 endurance',E.queue(S,'me',1)[0].stam,3);
-const ru=E.queue(S,'me',1)[0];S.hand=[E.mkCard('retranchement','')];E.playOrder(S,0,{uid:ru.uid});check('retranchement : +1 tour et Défense',ru.stam+'/'+ru.dig,'4/0.5');
+S.hand=[E.mkCard('embuscade','')];E.playOrder(S,0,{c:1});check('relève : +1 endurance',E.queue(S,'me',1)[0].stam,4);
+const ru=E.queue(S,'me',1)[0];S.hand=[E.mkCard('retranchement','')];E.playOrder(S,0,{uid:ru.uid});check('retranchement : +1 tour et Défense',ru.stam+'/'+ru.dig,'5/0.5');
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('repli','')];const rp=E.placeCard(S,0,2);
 E.playOrder(S,0,{uid:rp.uid});check('repli : la carte revient en main',S.hand.length===1&&S.hand[0].t==='tireurs',true);check('repli : l\'unité quitte le front',E.units(S,'me').length,0);check('repli : retirée de la défausse',S.discard.filter(c=>c.t==='tireurs').length,0);
 S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;const p=E.placeUnit(S,E.mkUnit(S,'me','paras',''),1);S.hand=[E.mkCard('sabotage','')];E.playOrder(S,0,{uid:p.uid});check('sabotage : 8 %',1000-S.hq.en,Math.ceil(S.lvl.hq*0.08));
 S=blank(['mer','champ','champ','champ','champ']);S.hq.en=1000;S.hand=[E.mkCard('bombardier','J')];const br=E.airStrike(S,0,E.AIRC);check('bombardier : frappe directe',1000-S.hq.en,br.raw);
 // infirmiers
-S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('infirmiers','J')];const t0=E.placeCard(S,0,1);E.placeCard(S,0,1);check('infirmiers : +1 tour aux voisins',t0.stam,3);
+S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J'),E.mkCard('infirmiers','J')];const t0=E.placeCard(S,0,1);E.placeCard(S,0,1);check('infirmiers : +1 tour aux voisins',t0.stam,4);
 // mains : plusieurs cartes posées ensemble dans un secteur
 {const Sx=blank(['mer','champ','route','champ','champ']);Sx.supply=20;Sx.capLv={route:4};Sx.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','J'),E.mkCard('chasseur','J'),E.mkCard('assaut',''),E.mkCard('retranchement','')];
- const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+3+3+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3,4');
+ const g=[Sx.hand[0],Sx.hand[1],Sx.hand[2],Sx.hand[3]];check('coût de la main',E.groupCost(Sx,g),2+3+3+2);check('secteurs possibles (jeep : pas la forêt…)',E.groupSectors(Sx,g).join(),'1,2,3');
  check('ordre sur unité : seul',E.canPlayGroup(Sx,[Sx.hand[0],Sx.hand[4]]).reason,'solo');
  const pv=E.previewGroup(Sx,g,2);check('aperçu sans rien toucher',Sx.units.length+'/'+Sx.hand.length+'/'+Sx.supply,'0/5/20');
  const r=E.playGroup(Sx,g,2);check('main posée',r.length,4);check('2 unités terrestres dans le secteur, 1 avion dans le ciel',E.queue(Sx,'me',2).length+'/'+E.supportsAt(Sx,E.AIRC).length+'/'+E.supportsAt(Sx,2).length,'2/1/0');check('ravitaillement payé',Sx.supply,10);
@@ -93,7 +93,7 @@ S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')
  // zones : navires → mer, avions → ciel, avec leurs combos
  {const Sz=blank(['mer','champ','route','champ','champ']);Sz.supply=40;Sz.hand=[E.mkCard('destroyer','J'),E.mkCard('croiseur','J'),E.mkCard('chasseur','J'),E.mkCard('chasseur','J'),E.mkCard('tireurs','J')];
   check('navires seuls : la mer',E.groupSectors(Sz,[Sz.hand[0],Sz.hand[1]]).join(),'0');check('navires + avions : mer et ciel',E.groupSectors(Sz,[Sz.hand[0],Sz.hand[2]]).sort().join(),[0,E.AIRC].sort().join());
-  check('avec des troupes : un secteur terrestre',E.groupSectors(Sz,[Sz.hand[4],Sz.hand[0],Sz.hand[2]]).join(),'1,2,3,4');
+  check('avec des troupes : un secteur terrestre',E.groupSectors(Sz,[Sz.hand[4],Sz.hand[0],Sz.hand[2]]).join(),'1,2,3');
   E.playGroup(Sz,[Sz.hand[0],Sz.hand[1],Sz.hand[2],Sz.hand[3],Sz.hand[4]],2);
   check('2 navires en mer',E.supportsAt(Sz,0).length,2);check('2 avions dans le ciel',E.supportsAt(Sz,E.AIRC).length,2);check('1 fantassin en secteur',E.queue(Sz,'me',2).length,1);
   check('Flotte en mer',E.sectorCombos(Sz,0).list.atk.some(k=>k.id==='flotte'),true);check('Escadrille dans le ciel',E.sectorCombos(Sz,E.AIRC).list.atk.some(k=>k.id==='escadrille'),true);

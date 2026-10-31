@@ -2494,7 +2494,7 @@ const colorHex = c => (c.length === 1 ? COLORS[c].hex : c.length === 2 ? MIXES[c
 // ---- Types de cartes. men = nombre d'hommes (= nombre de tirs), dmg = dégâts par tir, hpm = PV par homme ----
 const FAMILIES = { terre: 'Armée de terre', mer: 'Marine', air: "Armée de l'air" };
 const TYPES = {
-  tireurs: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Tireurs', cost: 2, men: 10, dmg: 1, hpm: 1, def: 3, stam: 2, rar: 1, txt: '10 tireurs : Attaque 10, Défense 3. Tiennent 2 tours. Le plus économique.' },
+  tireurs: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Tireurs', cost: 2, men: 10, dmg: 1, hpm: 1, def: 3, stam: 3, rar: 1, txt: '10 tireurs : Attaque 10, Défense 3. Perdent un tiers de leur effectif par tour (3 tours). Le plus économique.' },
   jeep: { cls: 'wheel', rng: [1, 2], fam: 'terre', land: true, name: 'Jeeps MG', cost: 3, men: 4, dmg: 4, hpm: 4, def: 5, stam: 2, kw: ['elan'], rar: 1, txt: '4 jeeps à mitrailleuse : Attaque 16, Défense 5. 2 tours. Élan : +1 dégât par tir par véhicule déjà posé ce tour.' },
   blinde: { cls: 'track', rng: [1, 2], fam: 'terre', land: true, name: 'Blindé', cost: 4, men: 1, dmg: 18, hpm: 16, def: 16, stam: 3, kw: ['elan'], rar: 2, txt: '1 char : Attaque 18, Défense 16. Robuste : 3 tours. Élan.' },
   destroyer: { cls: 'ship', rng: [1, 3], fam: 'mer', name: 'Destroyer', cost: 3, men: 4, dmg: 4, def: 6, stam: 3, rar: 1, txt: 'Se pose en mer : Attaque 16, Défense 6. 3 tours.' },
@@ -2503,8 +2503,8 @@ const TYPES = {
   chasseur: { cls: 'air', rng: [1, 3], fam: 'air', name: 'Chasseur', cost: 3, men: 2, dmg: 6, def: 7, stam: 2, kw: ['cover'], rar: 1, txt: "Se pose dans le ciel : Attaque 12, Défense 7. Couverture aérienne (Défense ×1,25 à tous vos secteurs) ; intercepte l'obus visant son secteur. 2 tours." },
   bombardier: { cls: 'air', rng: [1, 1], fam: 'air', name: 'Bombardier', cost: 5, men: 1, dmg: 6, def: 0, stam: 1, kw: ['bomb'], rar: 3, txt: 'Frappe aérienne immédiate : 60 dégâts directement sur le QG ennemi.' },
   observateur: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Observateurs', cost: 1, men: 2, dmg: 0, hpm: 3, def: 1, stam: 3, kw: ['spot'], rar: 1, txt: "2 guetteurs radio. Ne tirent pas : avec de l'artillerie ou un navire, combo Tir guidé (Attaque ×1,5). 3 tours." },
-  infirmiers: { cls: 'foot', rng: [0, 0], fam: 'terre', land: true, name: 'Infirmiers', cost: 1, men: 2, dmg: 0, hpm: 3, def: 2, stam: 2, kw: ['heal'], rar: 1, txt: "À leur arrivée : +1 endurance aux autres unités du secteur. Combo Soutien sanitaire (Défense +0,5)." },
-  genie: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Génie', cost: 2, men: 4, dmg: 1, hpm: 2, def: 2, stam: 2, kw: ['mines'], rar: 1, txt: '4 sapeurs. Déminent leur secteur ; Attaque ×2 contre un QG fortifié (Bunker), dont leur secteur ignore la protection.' },
+  infirmiers: { cls: 'foot', rng: [0, 0], fam: 'terre', land: true, name: 'Infirmiers', cost: 1, men: 2, dmg: 0, hpm: 3, def: 2, stam: 3, kw: ['heal'], rar: 1, txt: "À leur arrivée : +1 endurance aux autres unités du secteur. Combo Soutien sanitaire (Défense +0,5)." },
+  genie: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Génie', cost: 2, men: 4, dmg: 1, hpm: 2, def: 2, stam: 3, kw: ['mines'], rar: 1, txt: '4 sapeurs. Déminent leur secteur ; Attaque ×2 contre un QG fortifié (Bunker), dont leur secteur ignore la protection.' },
   mitrailleuse: { cls: 'foot', rng: [1, 2], fam: 'terre', land: true, name: 'Mitrailleuse', cost: 2, men: 3, dmg: 2, hpm: 3, def: 7, stam: 3, kw: ['guard'], rar: 1, txt: '3 servants : Attaque 6, Défense 7. 3 tours. Avec une autre infanterie : combo Nid défensif (Défense +1).' },
   artillerie: { cls: 'wheel', rng: [2, 3], fam: 'terre', land: true, name: 'Artillerie', cost: 4, men: 2, dmg: 9, hpm: 5, def: 2, stam: 3, kw: ['arty'], rar: 2, txt: '2 canons : Attaque 18, Défense 2. 3 tours. Avec des observateurs : combo Tir guidé (Attaque ×1,5).' },
   halftrack: { cls: 'wheel', rng: [1, 2], fam: 'terre', land: true, name: 'Half-track', cost: 4, men: 2, dmg: 5, hpm: 7, def: 12, stam: 3, kw: ['carrier', 'elan'], rar: 2, txt: "2 half-tracks : Attaque 10, Défense 12. 3 tours. Véhicule : combo Armes combinées avec l'infanterie. Élan." },
@@ -2521,7 +2521,7 @@ const TYPES = {
   embuscade: { order: true, tgt: 'myCol', fam: 'ordre', name: 'Relève', cost: 2, rar: 2, txt: "Les unités d'un de vos secteurs gagnent +1 endurance." },
   debarquement: { order: true, tgt: 'landing', fam: 'ordre', name: 'Débarquement', cost: 2, rar: 2, txt: "La première carte d'infanterie de votre pioche débarque aussitôt dans ce secteur, sans coût." },
   sabotage: { order: true, tgt: 'raider', fam: 'ordre', name: 'Sabotage', cost: 2, rar: 2, txt: 'Le QG ennemi perd 8 % de ses PV de départ. Se joue sur vos parachutistes.' },
-  paras: { cls: 'foot', rng: [1, 1], fam: 'air', land: true, name: 'Parachutistes', cost: 2, men: 6, dmg: 1, hpm: 1, def: 2, stam: 2, kw: ['raid'], rar: 2, txt: '6 parachutistes : Attaque 6. Commando : leur secteur ignore les protections du QG (Bunker, Blindage). Permettent le Sabotage.' },
+  paras: { cls: 'foot', rng: [1, 1], fam: 'air', land: true, name: 'Parachutistes', cost: 2, men: 6, dmg: 1, hpm: 1, def: 2, stam: 3, kw: ['raid'], rar: 2, txt: '6 parachutistes : Attaque 6. Commando : leur secteur ignore les protections du QG (Bunker, Blindage). Permettent le Sabotage.' },
 };
 const TYPE_KEYS = Object.keys(TYPES);
 TYPE_KEYS.forEach(k => { TYPES[k].id = k; });
@@ -2656,7 +2656,7 @@ const has = (S, id) => S.officers.includes(id);
 // Seul le joueur a une tactique par secteur : autant d'unités et d'appuis (avions, navires) qu'il veut dans chacun.
 // L'ennemi n'est qu'un QG, comme une « blinde » de Balatro : vos secteurs additionnent leur frappe sur lui, et il frappe
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
-const GW = 5, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
+const GW = 4, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
   ENEMY_GROWTH = 0.08, HQ_MULT = 24, HQ_GROW = 1.10, ENEMY_ATK = 1.05, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
@@ -2682,16 +2682,16 @@ function terrainMult(cols, ter) {
 const unitMult = (S, u) => (u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1);
 const coverOf = (S, u) => (u.land ? (TERRAIN[S.lanes[u.c]] || {}).cover || 0 : 0);
 
-// Tire les terrains des secteurs : une mer sur un bord, puis 4 secteurs terrestres variés
+// Tire les terrains des secteurs : une mer sur un bord, puis 3 secteurs terrestres variés
 function genLanes(rng = Math.random) {
   const pick = a => a[Math.floor(rng() * a.length)];
   let land = null;
   for (let t = 0; t < 60 && !land; t++) {
     const l = Array.from({ length: GW - 1 }, () => pick(['route', 'route', 'champ', 'champ', 'foret', 'foret', 'village', 'riviere']));
-    if (l.filter(x => x === 'riviere').length > 1 || l.filter(x => x === 'village').length > 1 || !l.some(x => x === 'route' || x === 'champ') || new Set(l).size < 3) continue;
+    if (l.filter(x => x === 'riviere').length > 1 || l.filter(x => x === 'village').length > 1 || !l.some(x => x === 'route' || x === 'champ') || new Set(l).size < 2) continue;
     land = l;
   }
-  land = land || ['route', 'foret', 'champ', 'village'];
+  land = land || ['route', 'foret', 'champ'];
   return rng() < 0.5 ? ['mer', ...land] : [...land, 'mer'];
 }
 // Le plateau affiché garde 2 rangées par camp pour le décor ; le terrain est le même sur toute la colonne
@@ -2763,8 +2763,13 @@ function mkUnit(S, side, key, cols, lv, parts) {
     cls: def.cls || 'foot', c: 0, ord: 0, dig: 0, born: S.turn || 1,
   };
 }
-const shotsOf = u => u.menMax;
-const menNow = u => u.menMax;
+// Infanterie : l'« endurance » devient un effectif qui fond tour après tour (10 → 7 → 4 hommes) ; les engins gardent leur nombre et s'usent seulement (traces de dégâts à l'écran)
+const isInf = u => !!u && u.side === 'me' && u.land && u.cls === 'foot';
+const menFrac = u => (isInf(u) ? Math.max(0, Math.min(1, u.stam / Math.max(1, u.stamMax))) : 1);
+const menNow = u => (isInf(u) ? Math.max(1, Math.ceil(u.menMax * menFrac(u) - 1e-9)) : u.menMax);
+const shotsOf = u => menNow(u);
+// usure d'un engin : 0 neuf, 1 éraflé, 2 très abîmé
+const wearLv = u => (!u || isInf(u) || !u.land || u.cls === 'foot' || u.stamMax < 2 ? 0 : u.stam >= u.stamMax ? 0 : u.stam <= 1 ? 2 : 1);
 
 function newBattle(C, rng = Math.random, cfg = null) {
   const lvl = cfg || LEVELS[C.level], T = genTerrain(rng);
@@ -3011,7 +3016,7 @@ function checkOver(S) {
 // Attaque = hommes × (dégâts par tir + perçage), × terrain de la couleur, et les effets du QG ennemi
 function unitAtk(S, u) {
   if (!u || u.dmg <= 0) return 0;
-  let a = u.menMax * (u.dmg + Math.min(2, u.pierce || 0) * 0.5) * unitMult(S, u);
+  let a = menNow(u) * (u.dmg + Math.min(2, u.pierce || 0) * 0.5) * unitMult(S, u);
   if (u.kw.includes('antitank') && hasFx(S, 'panzer')) a *= 2;
   if (u.kw.includes('mines') && (hasFx(S, 'bunker') || has(S, 'sapeur'))) a *= 2;
   if (u.land && u.cls === 'foot' && hasFx(S, 'nids')) a *= 0.75;
@@ -3023,7 +3028,7 @@ function unitAtk(S, u) {
 // Défense = valeur de l'unité + couvert du terrain et retranchement
 function unitDef(S, u) {
   if (!u) return 0;
-  return Math.round((u.def || 0) * (1 + coverOf(S, u) + (u.dig || 0)) * (u.side === 'me' ? catMult(S, u) : 1) * 10) / 10;
+  return Math.round((u.def || 0) * (isInf(u) ? 0.5 + 0.5 * menFrac(u) : 1) * (1 + coverOf(S, u) + (u.dig || 0)) * (u.side === 'me' ? catMult(S, u) : 1) * 10) / 10;
 }
 // Combinaisons de secteur : en Attaque ou en Défense ; « + » s'additionnent, puis « × » multiplient
 const COMBOS = [
@@ -3217,7 +3222,7 @@ function blindAt(b, rng = Math.random) {
   if (type !== 'boss' && b >= 2) {
     const keys = Object.keys(SKIP_TAGS); let x = rng() * keys.reduce((t, k) => t + SKIP_TAGS[k].w, 0), tag = keys[0];
     for (const k of keys) { if (x < SKIP_TAGS[k].w) { tag = k; break; } x -= SKIP_TAGS[k].w; }
-    node.bonus = { tag, n: tag === 'loot' ? 6 + node.ante * 2 : 0 };
+    node.bonus = { tag, n: tag === 'loot' ? 10 + node.ante * 3 : 0 };
     if (tag === 'fortif') node.bonus.id = LAND_TERRAINS[Math.floor(rng() * LAND_TERRAINS.length)];
     if (tag === 'niveau') { const ks = Object.keys(CATS); node.bonus.id = ks[Math.floor(rng() * ks.length)]; }
   }
@@ -3251,11 +3256,12 @@ function rewardCards(rng = Math.random, minRar = 1, deck = null) {
 }
 
 // ---- Butin de guerre et intendance ----
+const LOOT_BASE = { battle: 7, elite: 10, boss: 15 };
 function lootFor(S, C, nodeType) {
-  const base = { battle: 4, elite: 6, boss: 9 }[nodeType] || 4, lines = [['Victoire', base]];
-  const speed = Math.max(0, Math.min(2, 6 - S.turn)); if (speed) lines.push(['Victoire rapide', speed]);
-  if (S.hq.me >= S.hqMax * 0.8) lines.push(['QG intact', 1]);
-  const interest = Math.min(1, Math.floor((C.loot || 0) / 5)); if (interest) lines.push(['Intérêts', interest]);
+  const base = LOOT_BASE[nodeType] || 7, lines = [['Victoire', base]];
+  const speed = Math.max(0, Math.min(3, 7 - S.turn)); if (speed) lines.push(['Victoire rapide', speed]);
+  if (S.hq.me >= S.hqMax * 0.8) lines.push(['QG intact', 2]);
+  const interest = Math.min(3, Math.floor((C.loot || 0) / 5)); if (interest) lines.push(['Intérêts', interest]);
   let total = lines.reduce((t, l) => t + l[1], 0);
   if (has(S, 'quartier')) { const b = Math.ceil(total * 0.5); lines.push(['Quartier-maître', b]); total += b; }
   return { lines, total };
@@ -4089,7 +4095,7 @@ const clearCoach = () => document.querySelectorAll('.coach').forEach(x => x.remo
 // ---- La campagne façon Balatro : 4 blindes par manche ; on affronte ou on passe (bonus à la clé) ----
 const BL_COLOR = ['#3b8fd9', '#52b34f', '#e8892b', '#d9453b'];
 const objShort = o => (o.type === 'hold' ? `Tenir ${o.n} tours` : o.type === 'burst' || o.type === 'kills' ? 'Frappe décisive' : 'Détruire le QG');
-const blindLoot = n => ({ battle: 4, elite: 6, boss: 9 }[n.type]);
+const blindLoot = n => LOOT_BASE[n.type];
 const blindsDone = () => Object.values(C.trail || {}).filter(v => v === 1).length;
 function blindState(n) { const r = (C.trail || {})[n.layer]; return r === 2 ? 'skipped' : r ? 'done' : n.layer === (C.next || 0) ? 'cur' : 'lock'; }
 function blindCardHTML(n) {
@@ -4328,13 +4334,13 @@ function decoSVG(g, r, c, owner, hqPct) {
 const SHIELD = '<svg class="ico" viewBox="0 0 12 14" aria-hidden="true"><path d="M6 1 L11 3 V7 Q11 11 6 13 Q1 11 1 7 V3 Z" fill="currentColor"/></svg>';
 const SWORD = '<svg class="ico" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 12 L9 5 M8 3 L11 3 L11 6 M3 9 L5 11 M1.5 12.5 L3.5 10.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 const fmtN = n => (n >= 10000 ? (Math.round(n / 100) / 10 + 'k').replace('.', ',') : String(Math.round(n)));
-const pipsHTML = u => `<span class="pips" title="Endurance : encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>`;
+const pipsHTML = u => isInf(u) ? `<span class="menbar" title="Effectif : ${menNow(u)} sur ${u.menMax}"><i style="width:${Math.round(menFrac(u) * 100)}%"></i></span>` : u.land && u.cls !== 'foot' ? `<span class="pips wearp" title="${wearLv(u) ? 'Usure : traces de dégâts' : 'Neuf'} · encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>` : `<span class="pips" title="Endurance : encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>`;
 function slotUnitHTML(u, sel, tgt) {
   const key = SPR_OF[u.key], um = u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1;
-  return `<button class="gu me tok k-${kindOf(key)} ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
-    <span class="gart">${u.land ? squadSVG(key, 'me', u.menMax, u.menMax, 30, u.cols) : spriteSVG(key, 'me', 26, u.cols)}</span><i class="ifx"></i>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
+  return `<button class="gu me tok k-${kindOf(key)} ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''} wear${wearLv(u)}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
+    <span class="gart">${u.land ? squadSVG(key, 'me', menNow(u), u.menMax, 30, u.cols) : spriteSVG(key, 'me', 26, u.cols)}</span><i class="ifx"></i>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
     ${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${um !== 1 ? `<span class="gtm ${um > 1 ? 'up' : 'dn'}">${um > 1 ? '▲' : '▼'}</span>` : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
-    <span class="gbase"><span class="gmen" title="${u.menMax} ${noun(u.key, u.menMax)}">${u.menMax}</span>${pipsHTML(u)}</span></button>`;
+    <span class="gbase"><span class="gmen" title="${menNow(u)} ${noun(u.key, menNow(u))}${menNow(u) < u.menMax ? ' sur ' + u.menMax : ''}">${menNow(u)}</span>${pipsHTML(u)}</span></button>`;
 }
 // Bilan des forces d'un secteur : soldats, véhicules, avions, navires
 function laneForcesHTML(q) {
@@ -5069,7 +5075,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const u = live.find(x => x.uid === uid); if (!u) return '';
     window.__wade = WADE_ON && ter === 'riviere';   // les fantassins d'une rivière sont dessinés dans l'eau (désactivé en attendant une vraie vidéo)
     const k0 = SPR_OF[u.key], k = ter === 'riviere' && k0 === 'inf' && typeof IDLE !== 'undefined' && IDLE.inf_eau ? 'inf_eau' : k0, fk = fireKey(k);
-    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', u.menMax, u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', u.menMax, u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
+    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
   };
   const hasAir = () => false;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
@@ -5854,7 +5860,7 @@ function guideModal() {
 const HELP_PAGES = () => [
   { t: 'Le but', l: [
     '<b>Faire tomber le QG ennemi</b> à 0 PV (sa « blinde », comme dans Balatro) avant que <b>votre QG</b> tombe. Vos PV de QG vous suivent de bataille en bataille.',
-    '<b>Le front</b> : 4 secteurs terrestres, plus deux zones : le <b>Ciel</b> (avions) en haut et la <b>Mer</b> (navires) en bas. Chaque zone compte comme un secteur : ses places, son score Attaque × Mult, ses combos (Flotte, Escadrille). Les navires et les avions partent seuls dans leur zone, même quand vous posez une main sur un secteur terrestre.',
+    '<b>Le front</b> : 3 secteurs terrestres, plus deux zones : le <b>Ciel</b> (avions) en haut et la <b>Mer</b> (navires) en bas. Chaque zone compte comme un secteur : ses places, son score Attaque × Mult, ses combos (Flotte, Escadrille). Les navires et les avions partent seuls dans leur zone, même quand vous posez une main sur un secteur terrestre.',
     '<b>Score d\'un secteur</b> : Attaque de ses unités × ses <b>combos</b>. Les scores de tous les secteurs <b>s\'additionnent</b> et frappent le QG ennemi en fin de tour.',
     `<b>Riposte</b> : l'ennemi attaque d'un seul front, avec une Attaque annoncée qui grimpe. Votre <b>Défense totale</b> la réduit ; au moins ${Math.round(MIN_THROUGH * 100)} % passe toujours.`] },
   { t: 'Jouer une main', l: [
@@ -5863,8 +5869,8 @@ const HELP_PAGES = () => [
     '<b>Places</b> : 3 par secteur au départ (les ronds sous le nom). <b>Fortifications</b> : +1 place pour un terrain. <b>Niveaux</b> (Infanterie, Véhicules, Aviation, Marine) : +20 % d\'Attaque et de Défense. À l\'intendance, ou en passant une blinde.',
     '<b>Ordres</b> : ils ne prennent pas de place. Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
   { t: 'Tactique gagnante', l: [
-    '<b>Concentrez, ne dispersez pas.</b> Un secteur gagne un Mult à chaque unité de plus (Paire, Trio, Bataillon…) : trois secteurs chargés valent bien plus que quatre secteurs à moitié vides.',
-    '<b>Mais gardez 2 ou 3 secteurs forts.</b> Tout poser dans un seul secteur est une impasse : une seule frappe, et une Défense trop faible face à la riposte.',
+    '<b>Concentrez, ne dispersez pas.</b> Un secteur gagne un Mult à chaque unité de plus (Paire, Trio, Bataillon…) : deux secteurs chargés valent bien plus que trois secteurs à moitié vides.',
+    '<b>Mais gardez 2 secteurs forts.</b> Tout poser dans un seul secteur est une impasse : une seule frappe, et une Défense trop faible face à la riposte.',
     '<b>Choisissez le terrain de vos couleurs</b> : ▲ fort, ▼ faible. Une même carte vaut nettement plus dans le bon secteur.',
     '<b>Un style de paquet, pas tous à la fois</b> : infanterie en masse, blindés, artillerie guidée, marine ou aviation sont tous viables. Faites-les progresser avec les niveaux et choisissez des jokers qui les soutiennent.',
     '<b>Chaque tour</b> : 1) regardez la riposte annoncée, 2) assurez la Défense, 3) lancez le Mult le plus fort sur votre meilleur secteur (★), 4) gardez des unités fraîches pour le tour suivant.'] },
