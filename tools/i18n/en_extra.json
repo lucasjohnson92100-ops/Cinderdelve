@@ -710,5 +710,7 @@
  "Lieu verrouillé": "Locked place",
  "héros": "heroes",
  "Fermer": "Close",
- "Danger": "Danger"
+ "Danger": "Danger",
+ "Fusion d'armes : une 2e copie de ton arme au niveau 3 ou plus fusionne avec elle : +30 % de dégâts par rang, 3 rangs au maximum. Une seule arme peut être fusionnée par partie.": "Weapon fusion: a 2nd copy of your weapon at level 3 or higher merges with it: +30% damage per rank, 3 ranks max. Only one weapon can be fused per run.",
+ " Une seule arme peut être fusionnée par partie.": " Only one weapon can be fused per run."
 }
