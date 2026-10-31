@@ -2222,8 +2222,8 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 
 /* ---- Animations d'attente : chaque unité reste vivante (soldats qui respirent, moteurs qui tournent, navires qui tanguent, avions qui volent) ---- */
 .gu .gart { animation: none; }
-.gu .gart > svg, .awu .awu-idle > svg, .awu .awu-fire > svg, .awu .awu-rkt > svg { animation: var(--idle, ifoot) var(--idur, 2s) ease-in-out infinite; animation-delay: calc(var(--d, 0) * -2s); transform-origin: 50% 100%; will-change: transform; }
-.k-air { --idle: iair; --idur: 2.6s; } .k-ship { --idle: iship; --idur: 3.4s; } .k-veh { --idle: iveh; --idur: .26s; } .k-gun { --idle: igun; --idur: 2.8s; } .k-fort { --idle: none; }
+.gu .gart > svg, .awu .awu-idle > svg, .awu .awu-fire > svg, .awu .awu-rkt > svg { animation: var(--idle, ifoot) var(--idur, 2s) ease-in-out infinite; animation-delay: calc(var(--d, 0) * -2s); transform-origin: 50% 100%; }
+.k-air { --idle: iair; --idur: 2.6s; } .k-ship { --idle: iship; --idur: 3.4s; } .k-veh { --idle: none; --idur: .26s; } .k-gun { --idle: none; --idur: 2.8s; } .k-fort { --idle: none; }
 @keyframes ifoot { 0%, 100% { transform: none; } 50% { transform: scaleY(1.018); } }
 @keyframes iair { 0%, 100% { transform: translate(0, 0) rotate(-2.5deg); } 35% { transform: translate(3%, -14%) rotate(3deg); } 70% { transform: translate(-2%, -5%) rotate(-1deg); } }
 @keyframes iship { 0%, 100% { transform: rotate(-3.5deg) translateY(0); } 50% { transform: rotate(3deg) translateY(6%); } }
@@ -2355,6 +2355,36 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .cardpop .cp-co.on b { color: #8be39a; } .cardpop .cp-co.on { background: rgba(139, 227, 154, .1); border-radius: 5px; padding: 1px 3px; }
 @media (max-height: 340px) { .cardpop .cp-co { font-size: .6rem; margin-bottom: 2px; } .cardpop .cp-co small { font-size: .54rem; } .cardpop .cp-sub { margin-top: 2px; } }
 @media (max-height: 340px) { .cm-st { display: flex !important; flex-wrap: wrap; gap: 0 10px !important; font-size: .78rem; } .cm-st > b { flex-basis: 100%; } .modal .box .nodeart { width: 52px !important; height: 52px !important; } .modal .box .nodeart svg { max-height: 40px; width: auto; } .modal .effl { margin: 2px 0; font-size: .72rem; } .modal .box .btn.go { padding-top: 4px; padding-bottom: 4px; } }
+.replist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } .replist .off-item { padding: 5px 8px; text-align: left; } .replist .off-item .tx .small { font-size: .66rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-height: 340px) { .replist .off-item svg { width: 30px; height: 30px; } .replist .off-item .tx b { font-size: .75rem; } .replist .off-item .tx .small { -webkit-line-clamp: 1; font-size: .6rem; } }
+
+.ms-jok { display: flex; justify-content: center; } .ms-jok .jk { width: 34px; height: 34px; } .ms-jok .jk svg { width: 100%; height: 100%; }
+.aws-jok { position: absolute; z-index: 60; top: 4px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; padding: 3px 8px; border-radius: 99px; background: rgba(13, 18, 24, .6); pointer-events: none; }
+.aws-jok span { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 210, 74, .85); background: #1b2540; display: grid; place-items: center; } .aws-jok svg { width: 100%; height: 100%; display: block; }
+@media (max-height: 340px) { .aws-jok span { width: 22px; height: 22px; } .aws-jok { top: 2px; padding: 2px 6px; } .ms-jok .jk { width: 28px; height: 28px; } }
+
+/* ---- Assaut épuré : pas de flash ni de secousse de la scène ; seules les ressources qui attaquent s'animent ---- */
+.aws .aws-wipe, .aws-bolt, .aws-motes { display: none !important; }
+.aws.flash, .aws.quake, .aws.kick { animation: none !important; }
+.aws.focus .awb.cur.act .awb-bg, .aws.focus .awb.cur.salvo .awb-bg { transform: none !important; }
+.awb.enter .awu { animation: none !important; }
+.awb.adv .awb-units { transform: none !important; }
+.awb.dim { filter: none !important; }
+.awb-eq.shk { animation: none !important; }
+.awu.dissolve { animation: none !important; opacity: 1 !important; filter: none !important; }
+/* usure des engins : traces de dégâts (le nombre ne baisse pas) */
+.awu.wear1 svg, .gu.wear1 .gart svg { filter: brightness(.9) contrast(1.06) saturate(.9) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.wear2 svg, .gu.wear2 .gart svg { filter: brightness(.76) contrast(1.12) saturate(.75) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.wear1::before, .awu.wear2::before, .gu.wear1 .gart::before, .gu.wear2 .gart::before { content: ""; position: absolute; z-index: 5; left: 14%; bottom: 30%; width: 70%; height: 55%; pointer-events: none; background: radial-gradient(circle at 22% 62%, rgba(20, 14, 10, .85) 0 3px, transparent 4px), radial-gradient(circle at 55% 38%, rgba(20, 14, 10, .8) 0 2.5px, transparent 3.5px), radial-gradient(circle at 78% 70%, rgba(20, 14, 10, .8) 0 3px, transparent 4px), linear-gradient(115deg, transparent 42%, rgba(20, 14, 10, .5) 43% 45%, transparent 46%); }
+.awu.wear2::before, .gu.wear2 .gart::before { background: radial-gradient(circle at 22% 62%, rgba(20, 14, 10, .9) 0 4px, transparent 5px), radial-gradient(circle at 55% 38%, rgba(20, 14, 10, .9) 0 3.5px, transparent 4.5px), radial-gradient(circle at 78% 70%, rgba(20, 14, 10, .9) 0 4px, transparent 5px), radial-gradient(circle at 40% 80%, rgba(20, 14, 10, .85) 0 3px, transparent 4px), linear-gradient(115deg, transparent 38%, rgba(20, 14, 10, .6) 39% 42%, transparent 43%), linear-gradient(70deg, transparent 58%, rgba(20, 14, 10, .55) 59% 61%, transparent 62%); }
+.awu.wear2::after { content: ""; position: absolute; z-index: 6; left: 30%; top: 8%; width: 28%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(70, 64, 60, .75), rgba(70, 64, 60, 0) 68%); filter: blur(3px); animation: wsmoke 2.4s ease-out infinite; }
+@keyframes wsmoke { 0% { transform: translateY(20%) scale(.6); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-120%) scale(1.5); opacity: 0; } }
+.awu.k-foot.wear1::before, .awu.k-foot.wear2::before { display: none; }
+.menbar { display: block; width: 100%; height: 4px; border-radius: 3px; background: rgba(0, 0, 0, .35); overflow: hidden; margin-top: 1px; } .menbar i { display: block; height: 100%; background: linear-gradient(90deg, #e5543f, #ffd24a 55%, #52b34f); background-size: 300% 100%; }
+/* pas de glissement ni de ré-entrée : les secteurs se remplacent par un fondu bref, et la vue d'ensemble ne rejoue pas l'entrée */
+.aws.focus .awb, .aws.focus .awb.cur, .aws.focus .awb.gone { transform: none !important; transition: opacity .18s linear !important; }
+.aws.overview .awb { animation: none !important; transform: none !important; opacity: 1 !important; visibility: visible !important; }
+@media (max-height: 340px) { .jokstep > .panel, .jokstep > .small { display: none; } .jokstep .jbar { justify-content: center; } .jokstep .officers { gap: 4px; } .jokstep .off-item { padding: 4px 8px; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2408,7 +2438,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 /* marche : les fantassins avancent en balançant le pas, les engins vibrent plus fort */
 .awu.k-foot.fire { animation: none; } /* l'infanterie ne se balance plus à l'attaque : ses images animées suffisent */
 @keyframes march { from { transform: translateY(0) rotate(-2.2deg); } to { transform: translateY(-5%) rotate(2.2deg); } }
-.awb.adv .awu.k-veh svg, .awb.adv .awu.k-gun svg { animation: vroll .16s linear infinite alternate; }
+
 @keyframes vroll { from { transform: translateY(0); } to { transform: translateY(-1.8%) rotate(-.4deg); } }
 /* terrain accidenté : forêt et village ralentissent un peu la marche */
 .awb.t-foret.adv .awu.k-foot svg, .awb.t-village.adv .awu.k-foot svg { animation-duration: .34s; }
@@ -2658,7 +2688,7 @@ const has = (S, id) => S.officers.includes(id);
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
 const GW = 4, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
-  ENEMY_GROWTH = 0.08, HQ_MULT = 24, HQ_GROW = 1.10, ENEMY_ATK = 1.05, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
+  ENEMY_GROWTH = 0.08, HQ_MULT = 28, HQ_GROW = 1.10, ENEMY_ATK = 1.05, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
   MIN_THROUGH = 0.15, BARRAGE_ATK = 20;
 const TERRAIN = {
@@ -4070,9 +4100,24 @@ function comboPop() {
   const pp = btl.querySelector('.cardpop'), mq = btl.querySelector('.bt-hint, .hq.me'); pp.style.maxHeight = Math.max(100, Math.round((btl.querySelector('.dock') || mq).getBoundingClientRect().top - btl.getBoundingClientRect().top - 38 - 4)) + 'px';
   SFX.play('select');
 }
+// Vendre ou remplacer un joker (emplacements pleins) : le joker vendu rapporte la moitié de son prix
+function dropJoker(i) {
+  const j = JOKERS.find(x => x.id === C.officers[i]); if (!j) return null;
+  C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1);
+  if (j.id === 'brandt') { C.hqMax = Math.max(1, C.hqMax - 20); C.hq = Math.min(C.hq, C.hqMax); }
+  return j;
+}
+function gainJoker(id) { C.officers.push(id); if (id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } }
+function replaceModal(id, src, si, price = 0) {
+  const nj = JOKERS.find(x => x.id === id); if (!nj) return;
+  window.__repl = { id, src, si, price };
+  openModal(`<div class="hd"><span class="ribbon">Remplacer un joker</span><button class="pill" data-act="close">Annuler</button></div>
+    <p class="small">Emplacements pleins : <b>${nj.name}</b> prend la place d'un de vos jokers, qui est vendu à moitié prix.</p>
+    <div class="replist">${C.officers.map((oid, i) => { const o = JOKERS.find(x => x.id === oid); return `<button class="off-item" data-repj="${i}">${officerSVG(oid, 40)}<span class="tx"><b>${o.name}</b><span class="small muted">${short1(o.desc)} · vendu +$${Math.floor(o.cost / 2)}</span></span></button>`; }).join('')}</div>`);
+}
 function jokerPickModal(id) {
   const j = JOKERS.find(x => x.id === id); if (!j) return;
-  openModal(`<div class="hd"><span class="ribbon">${j.name}</span><button class="pill" data-act="close">Retour</button></div>${jokerSpecHTML(j, 44)}<button class="btn go" data-officergo="${id}">Prendre ce joker</button>`);
+  openModal(`<div class="hd"><span class="ribbon">${j.name}</span><button class="pill" data-act="close">Retour</button></div>${jokerSpecHTML(j, 44)}${C.officers.length >= MAX_JOKERS ? `<button class="btn go" data-repnew="${id}">Remplacer un de mes jokers</button>` : `<button class="btn go" data-officergo="${id}">Prendre ce joker</button>`}`);
 }
 function jokerModal(i) {
   const j = JOKERS.find(x => x.id === C.officers[i]); if (!j) return;
@@ -4122,9 +4167,10 @@ function toMap() {
   app.innerHTML = `<div class="mapscreen h bls" style="grid-template-columns:${sideW}px minmax(0,1fr)">
     <aside class="mapbar side">
       <div class="ms-top"><span class="ribbon sm">Campagne</span><span class="coin num" title="Butin de guerre">$${C.loot}</span></div>
+      ${C.officers.length ? `<div class="ms-jok">${jokerBar()}</div>` : ''}
       <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>${endless ? `Blinde ${nxt + 1} · ∞` : `Blinde ${nxt + 1} sur ${BLINDS_TO_WIN}`}</b><span>${endless ? 'Mode infini : toujours plus dur' : `${BLINDS_TO_WIN} blindes vaincues = victoire`}</span></div></div>
       <div class="hq me hqbar compact">${hqPic('me')}<span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
-      <div class="ms-foot">${C.officers.length ? `<div class="mb3">${jokerBar()}</div>` : ''}<div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
+      <div class="ms-foot"><div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
     </aside>
     <div class="mapwrap bw"><div class="bw-head"><span class="bw-ante">Manche ${ante}</span><span class="bw-sub">Affrontez la blinde ou passez-la pour un bonus. Le boss est obligatoire.</span></div>
       <div class="blrow">${cards}</div></div>
@@ -5075,7 +5121,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const u = live.find(x => x.uid === uid); if (!u) return '';
     window.__wade = WADE_ON && ter === 'riviere';   // les fantassins d'une rivière sont dessinés dans l'eau (désactivé en attendant une vraie vidéo)
     const k0 = SPR_OF[u.key], k = ter === 'riviere' && k0 === 'inf' && typeof IDLE !== 'undefined' && IDLE.inf_eau ? 'inf_eau' : k0, fk = fireKey(k);
-    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${u.menMax}</i></span>`;
+    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${menNow(u)}</i></span>`;
   };
   const hasAir = () => false;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
@@ -5089,7 +5135,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const sc = document.createElement('div'); sc.className = 'aws'; sc.style.setProperty('--rw', sideW() + 'px'); sc.dataset.amb = sceneMood(S.lvl);
   sc.innerHTML = `<div class="aws-bands">${bands}</div>
     <div class="aws-hq"><i class="aws-pic"></i>${marks}<div class="aws-hp"><b>${hold ? 'Tenir' : S.lvl.name}</b><div class="bar"><i style="width:${hold ? 100 : (hq0.en / max) * 100}%"></i></div><span>${hold ? '' : `${fmtN(hq0.en)} / ${fmtN(max)}`}</span></div></div>
-    <div class="aws-wipe"></div><div class="aws-banner"><b>Assaut !</b></div>`;
+    ${C.officers.length ? `<div class="aws-jok">${C.officers.map(id => `<span>${officerSVG(id, 30)}</span>`).join('')}</div>` : ''}<div class="aws-wipe"></div><div class="aws-banner"><b>Assaut !</b></div>`;
   document.body.appendChild(sc);
   // ambiance : poussière en suspension le jour, éclairs et tonnerre sous la pluie
   let ambT = 0;
@@ -5296,18 +5342,17 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     if (i > 0 && sc.classList.contains('focus')) {
       // transition : le secteur précédent glisse vers la gauche, un éclair balaie l'écran, le suivant arrive de la droite
       const prev = sc.querySelector(`.awb[data-i="${i - 1}"]`); prev.classList.remove('cur', 'act'); prev.classList.add('gone'); band.classList.add('cur');
-      sc.classList.remove('flash'); void sc.offsetWidth; sc.classList.add('flash'); SFX.play('go');
+      SFX.play('go');
       await banner(`<small>Secteur ${i + 1} / ${n}</small><b>${TERRAIN[S.lanes[st.c]].name}</b>`, '', 620);
       prev.classList.remove('gone');
     }
     sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band && !sc.classList.contains('focus'))); band.classList.add('act');
     if (f.blocked) { toEl.textContent = 'Coupé'; toEl.classList.add('cut', 'on'); SFX.play('deny'); band.insertAdjacentHTML('beforeend', '<span class="awb-train">🚂 Le train blindé coupe ce secteur</span>'); await T(800); band.classList.remove('act'); continue; }
     // les unités avancent puis tirent, une à une
-    band.classList.add('adv'); SFX.play('land'); if (!fast) { harass(band, 4, 170); shellFall(band, 2); footFx(band, 5, 70); } await T(200);
+    band.classList.add('adv'); SFX.play('land'); await T(200);
     const toks = [...band.querySelectorAll('.awu')], per = Math.max(100, Math.min(230, 900 / Math.max(1, toks.length)));
     let chips = 0;
     toks.forEach((t, j) => { t.style.setProperty('--j', j); const q = live.find(x => x.uid === +t.dataset.uid); if (q && q.stam <= 1) t.classList.add('tired'); });
-    if (!fast) { band.classList.add('enter'); setTimeout(() => band.classList.remove('enter'), 900); }
     for (const tk of toks) {
       const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) continue;
       const a = unitAtk(S, u); if (!a) continue;
@@ -5609,11 +5654,12 @@ function cardStep(rareOnly) {
 function jokerStep() {
   saveRun('joker');
   const left = JOKERS.filter(o => !C.officers.includes(o.id));
-  if (C.officers.length >= MAX_JOKERS || !left.length) { C.loot += 6; toast('Vos 5 emplacements de joker sont pleins : +$6 de butin à la place.'); return afterJoker(); }
+  if (!left.length) { C.loot += 6; toast('Tous les jokers sont à vous : +$6 de butin.'); return afterJoker(); }
+  const full = C.officers.length >= MAX_JOKERS;
   const opts = shuffle(left).slice(0, 3);
-  app.innerHTML = `<div class="stack"><div class="hd"><span class="ribbon">Choisissez un joker</span><span class="coin num">$${C.loot}</span></div><div class="panel">Un joker est une carte à effet permanent. Vous pouvez en garder 5 au maximum.</div>
+  app.innerHTML = `<div class="stack jokstep"><div class="hd"><span class="ribbon">Choisissez un joker</span><span class="coin num">$${C.loot}</span></div><div class="panel">Un joker est une carte à effet permanent. Vous pouvez en garder 5 au maximum.</div>
     <div class="officers">${opts.map(o => officerItem(o, 'button', `data-officer="${o.id}"`)).join('')}</div>
-    <p class="small muted" style="text-align:center">Touchez un joker pour lire son effet avant de le prendre.</p>${jokerBar()}</div>`;
+    <p class="small muted" style="text-align:center">${full ? 'Emplacements pleins : un joker choisi remplace l’un des vôtres (vendu à moitié prix), ou gardez les vôtres pour +$6.' : 'Touchez un joker pour lire son effet avant de le prendre.'}</p>${full ? '<button class="btn ghost" data-act="jokskip">Garder mes jokers (+$6)</button>' : ''}${jokerBar()}</div>`;
 }
 const afterJoker = () => (C.phase === 'reward' ? toShop() : finishNode());
 
@@ -5686,7 +5732,8 @@ function renderShop() {
 function shopBuy(kind, i) {
   const sh = C.shop, it = { c: sh.cards, j: sh.jokers, m: sh.manuals, k: sh.crates, u: sh.upgrades }[kind]?.[i];
   if (!it || it.sold) return 'Déjà acheté.';
-  if (kind === 'j' && C.officers.length >= MAX_JOKERS) return 'Vos 5 emplacements de joker sont pleins.';
+  if (C.loot < it.price) return `Pas assez de butin : il faut $${it.price}.`;
+  if (kind === 'j' && C.officers.length >= MAX_JOKERS) { replaceModal(it.id, 'shop', i, it.price); return ''; }
   if (C.loot < it.price) return `Pas assez de butin : il faut $${it.price}.`;
   if (kind === 'k') { openCrateModal(i); return ''; }
   C.loot -= it.price; it.sold = true;
@@ -5707,9 +5754,9 @@ function shopDetail(kind, i) {
   if (kind === 'u' && it.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[it.id] || 0); title = `Fortifications : ${TERRAIN[it.id].name}`; body = `<p>Les secteurs <b>${TERRAIN[it.id].name}</b> passent de <b>${cap} à ${Math.min(MAX_CAP, cap + 1)} places</b>, pour toute la campagne (${MAX_CAP} au plus). Plus de places = de plus grosses mains dans ce terrain (Bataillon dès 5 unités).</p>`; }
   if (kind === 'u' && it.kind === 'c') { const lv = ((C.catLv || {})[it.id] || 0) + 1; title = `Niveau : ${CATS[it.id].name}`; body = `<p>Toutes vos unités <b>${CATS[it.id].name.toLowerCase()}</b> passent du niveau ${lv} au niveau ${lv + 1} : <b>+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense</b> de plus, pour toute la campagne.</p>`; }
   if (kind === 'k') { const c = COMPOS[it.id]; title = c.name; body = `<p>À l'ouverture : 1 carte au choix parmi 3, tirées de cette composition (${c.tip}).</p><div class="mclist">${c.cards.map(t => miniCardHTML(mkCard(t, TYPES[t].order ? '' : 'J'))).join('')}</div>`; }
-  const can = !it.sold && C.loot >= it.price && !(kind === 'j' && C.officers.length >= MAX_JOKERS);
+  const can = !it.sold && C.loot >= it.price;
   openModal(`<div class="hd"><span class="ribbon">${title}</span><button class="pill" data-act="close">Fermer</button></div>${body}
-    <div class="row" style="justify-content:space-between;gap:10px"><span class="small muted">${it.sold ? 'Déjà acheté.' : 'Glissez l’article vers la zone d’achat pour l’acheter.'}</span><button class="btn go sm" data-shopbuy="${kind}${i}" ${can ? '' : 'disabled'}>${it.sold ? 'Acheté' : 'Acheter $' + it.price}</button></div>`);
+    <div class="row" style="justify-content:space-between;gap:10px"><span class="small muted">${it.sold ? 'Déjà acheté.' : 'Glissez l’article vers la zone d’achat pour l’acheter.'}</span><button class="btn go sm" data-shopbuy="${kind}${i}" ${can ? '' : 'disabled'}>${it.sold ? 'Acheté' : (kind === 'j' && C.officers.length >= MAX_JOKERS ? 'Remplacer $' : 'Acheter $') + it.price}</button></div>`);
 }
 // Glisser-déposer vers la zone d'achat
 let sdrag = null, sdragDone = 0;
@@ -5960,7 +6007,7 @@ document.addEventListener('click', e => {
   const dg = t.closest('[data-docgo]'); if (dg) { closeModal(); return chooseDoctrine(dg.dataset.docgo); }
   const dc = t.closest('[data-doctrine]'); if (dc) { SFX.play('select'); return doctrineModal(dc.dataset.doctrine); }
   const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
-  const bj = t.closest('[data-buyj]'); if (bj) { const j = C.shop.jokers[+bj.dataset.buyj]; if (j.sold || C.loot < j.price || C.officers.length >= MAX_JOKERS) return; C.loot -= j.price; C.officers.push(j.id); j.sold = true; if (j.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } SFX.play('jokerbuy'); toast('Joker acheté.'); return renderShop(); }
+  const bj = t.closest('[data-buyj]'); if (bj) { const err = shopBuy('j', +bj.dataset.buyj); if (err) toast(err); return; }
   const pkb = t.closest('[data-pack]'); if (pkb && !pkb.disabled) { SFX.play('tap'); return openPack(+pkb.dataset.pack); }
   const ppk = t.closest('[data-packpick]'); if (ppk) return pickPack(+ppk.dataset.packpick);
   const crb = t.closest('[data-crate]'); if (crb && !crb.disabled) return openCrateModal(+crb.dataset.crate);
@@ -5972,7 +6019,7 @@ document.addEventListener('click', e => {
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
   const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
   const jk = t.closest('[data-joker]'); if (jk) return S && document.getElementById('hand') ? jokerPop(C.officers[+jk.dataset.joker]) : jokerModal(+jk.dataset.joker);
-  const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); C.loot += Math.floor(j.cost / 2); C.officers.splice(i, 1); closeModal(); SFX.play('sell'); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
+  const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); dropJoker(i); closeModal(); SFX.play('sell'); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
   const rem = t.closest('[data-remove]');
   if (rem) {
     const shop = C.phase === 'shop';
@@ -5983,6 +6030,13 @@ document.addEventListener('click', e => {
     if (shop) { C.loot -= REFORM_COST; return renderShop(); }
     return finishNode();
   }
+  const rn = t.closest('[data-repnew]'); if (rn) { return replaceModal(rn.dataset.repnew, 'reward'); }
+  const rj = t.closest('[data-repj]'); if (rj && window.__repl) {
+    const R = window.__repl; window.__repl = null; const i = +rj.dataset.repj; closeModal();
+    if (R.src === 'shop') { const it = C.shop.jokers[R.si]; if (!it || it.sold || C.loot < R.price) return; C.loot -= R.price; it.sold = true; const o = dropJoker(i); gainJoker(R.id); SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === R.id).name} remplace ${o.name}.`); return renderShop(); }
+    const o = dropJoker(i); gainJoker(R.id); SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === R.id).name} remplace ${o.name}.`); return afterJoker();
+  }
+  if (t.closest('[data-act="jokskip"]')) { C.loot += 6; SFX.play('coins'); return afterJoker(); }
   const og = t.closest('[data-officergo]');
   if (!og) { const sel = t.closest('[data-officer]'); if (sel) { SFX.play('select'); return jokerPickModal(sel.dataset.officer); } }
   const off = og ? { dataset: { officer: og.dataset.officergo } } : null;

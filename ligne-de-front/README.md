@@ -286,3 +286,11 @@ Doctrines : Artillerie 32,8 %, Défense 32,3 %, Marine 31,8 %, Commandos 29,5 %,
 
 ## Stratégie : la Défense compte jusqu'au bout
 Diagnostic (`DIAG=1 node sim.js`) : toutes les défaites du bot venaient d'une Attaque trop faible, jamais d'une Défense insuffisante : avec un plancher de riposte de 25 %, toute Défense au-delà de 75 % de la riposte ne servait à rien. Le plancher passe à **15 %** (`MIN_THROUGH`), et la riposte ennemie monte à **×1,05** (`ENEMY_ATK`) pour garder la difficulté (bot : 17 %). Résultat : chaque point de Défense reste utile jusqu'à 85 % de la riposte, donc l'arbitrage Attaque / Défense est réel. Doctrines (300 campagnes) : Marine 20 %, Blitz 18, Commandos 18, Artillerie 17, Défense 17 : toutes viables. Le conseil du tour dit « Défense au maximum utile : misez tout sur l'Attaque » quand le seuil est atteint.
+
+## Lot de novembre : butins, jokers, 3 secteurs, usure
+- **Butins** relevés : victoire 7 / élite 10 / boss 15 (avant 4 / 6 / 9), victoire rapide jusqu'à +3, QG intact +2, intérêts jusqu'à +3 ; bonus de blinde passée `10 + 3 × manche`. Les PV ennemis montent en compensation (`HQ_MULT` 28) : bot ≈ 18 %.
+- **Jokers** : emplacements pleins → on peut remplacer un joker (le vendu rapporte la moitié de son prix) à la récompense et à la boutique, ou garder les siens (+$6). Les jokers sont affichés en haut de la carte de campagne et de la scène d'assaut. Vendre Brandt retire son +20 PV.
+- **3 secteurs terrestres** par partie (`GW = 4` : 3 terrains + la mer, plus le ciel).
+- **Infanterie** : plus d'endurance mais un effectif qui fond (`menNow`) : 10 → 7 → 4 hommes sur 3 tours, Attaque et Défense en proportion ; infirmiers, relève et retranchement rendent de l'effectif. **Engins** : leur nombre ne baisse pas, ils s'usent (`wearLv`) : traces de dégâts puis fumée.
+- **Assaut épuré** : plus de flash, de secousse d'écran, de zoom, d'entrée en marche, d'éclairs ni de poussière ; les secteurs se remplacent par un fondu bref et la vue d'ensemble ne rejoue plus l'entrée (c'était la cause des unités qui disparaissaient un instant). Seules les ressources qui attaquent s'animent.
+- **Flou des engins** : plus de tremblement continu (`iveh`, `igun`, `vroll`) ni de `will-change` : le rendu des sprites redevient net.
