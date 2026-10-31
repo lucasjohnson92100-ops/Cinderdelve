@@ -4156,6 +4156,92 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       speckle(g, rngF(sd + 41));
       return g.c;
     }
+    /* ---------- vue de dos (duel au tour par tour) : le dos est commun, l'arrière de la tête est calculé à partir de la tête de face ---------- */
+    var bcache = {};
+    function headBack(id, px) {
+      var d = DEF[id], L = 144, lo = Sheet({ w: L, h: L, k: L / 64 }), hi = Sheet({ w: px, h: px, k: px / 64 });
+      lo.R = hi.R = rngF(seedOf(id) + 11); d.head(lo); d.head(hi);
+      /* filtre « couleur dominante » : les petits détails (yeux, bouche, sourcils, cicatrices) disparaissent, les grandes masses restent */
+      var lx = lo.c.getContext("2d"), src = lx.getImageData(0, 0, L, L), sd = src.data, out = lx.createImageData(L, L), od = out.data, q = new Int32Array(L * L);
+      for (var i = 0; i < L * L; i++) { var a = sd[i * 4 + 3], R = sd[i * 4], G = sd[i * 4 + 1], B = sd[i * 4 + 2], lum = R * 0.3 + G * 0.59 + B * 0.11;
+        q[i] = a < 140 || lum < 46 ? -1 : ((R >> 4) << 8) | ((G >> 4) << 4) | (B >> 4); }
+      function modePass(inp, r, keepIn) {
+        var res = new Int32Array(L * L), cnt = new Int32Array(4096), touched = [];
+        for (var y = 0; y < L; y++) for (var x = 0; x < L; x++) {
+          var k0 = y * L + x; if (sd[k0 * 4 + 3] < 30) { res[k0] = -1; continue; }
+          touched.length = 0; var best = -1, bn = 0;
+          for (var yy = Math.max(0, y - r); yy <= Math.min(L - 1, y + r); yy++) for (var xx = Math.max(0, x - r); xx <= Math.min(L - 1, x + r); xx++) {
+            var v = inp[yy * L + xx]; if (v < 0) continue; if (!cnt[v]) touched.push(v); var c2 = ++cnt[v]; if (c2 > bn) { bn = c2; best = v; } }
+          for (var t = 0; t < touched.length; t++) cnt[touched[t]] = 0;
+          res[k0] = best < 0 ? (keepIn ? inp[k0] : (2 << 8) | (1 << 4) | 3) : best;
+        }
+        return res;
+      }
+      var m1 = modePass(q, Math.round(L * 0.105)), m2 = modePass(m1, Math.round(L * 0.035), true);
+      for (i = 0; i < L * L; i++) { var bv = m2[i]; if (bv < 0) bv = (2 << 8) | (1 << 4) | 3; od[i * 4] = ((bv >> 8) & 15) * 17; od[i * 4 + 1] = ((bv >> 4) & 15) * 17; od[i * 4 + 2] = (bv & 15) * 17; od[i * 4 + 3] = sd[i * 4 + 3] < 30 ? 0 : 255; }
+      var cm = mkCanvas(L, L); cm.getContext("2d").putImageData(out, 0, 0);
+      var c = mkCanvas(px, px), y2 = c.getContext("2d"), s = px / 64;
+      /* contour sombre (comme les autres dessins), puis les masses de couleur découpées à la forme exacte de la tête */
+      var sil = mkCanvas(px, px), sx = sil.getContext("2d"); sx.drawImage(hi.c, 0, 0); sx.globalCompositeOperation = "source-in"; sx.fillStyle = OUT; sx.fillRect(0, 0, px, px);
+      for (var a2 = 0; a2 < 10; a2++) y2.drawImage(sil, Math.cos(a2 / 10 * 6.283) * 1.1 * s, Math.sin(a2 / 10 * 6.283) * 1.1 * s);
+      var col = mkCanvas(px, px), cx = col.getContext("2d"); cx.imageSmoothingEnabled = true; cx.drawImage(cm, 0, 0, px, px);
+      cx.globalCompositeOperation = "destination-in"; cx.drawImage(hi.c, 0, 0);
+      cx.globalCompositeOperation = "source-atop";
+      var gr = cx.createLinearGradient(0, 0, 0, px * 0.6); gr.addColorStop(0, "rgba(255,244,214,0.22)"); gr.addColorStop(0.5, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(30,14,60,0.42)");
+      cx.fillStyle = gr; cx.fillRect(0, 0, px, px);
+      var gs = cx.createLinearGradient(0, 0, px, 0); gs.addColorStop(0.3, "rgba(30,14,60,0.28)"); gs.addColorStop(0.5, "rgba(0,0,0,0)"); gs.addColorStop(0.7, "rgba(30,14,60,0.28)");
+      cx.fillStyle = gs; cx.fillRect(0, 0, px, px);
+      y2.drawImage(col, 0, 0);
+      return c;
+    }
+    function rigBack(g, P, s) {
+      var a = P.la, b = P.lb, bk = s.bulk || 1;
+      function bulk() { g.x.translate(32, 0); g.x.scale(bk, 1); g.x.translate(-32, 0); }
+      g.x.save(); g.x.fillStyle = "rgba(10,6,24,0.30)"; g.x.beginPath(); g.x.ellipse(32, 60.2, 17 * bk, 3.1, 0, 0, 6.2832); g.x.fill(); g.x.restore();
+      /* l'arme est tenue devant le héros : on n'en voit que ce qui dépasse */
+      var hand = [50 + P.hx, 38 + P.hy], hw = [32 + (18 + P.hx) * bk, hand[1]], tl = (s.tilt == null ? 0.12 : s.tilt) + P.wr;
+      g.x.save(); upper(g, P); g.x.translate(hw[0], hw[1]); g.x.rotate(tl); g.x.translate(-hw[0], -hw[1]); if (s.weapon && W[s.weapon]) W[s.weapon](g, hw, s.wcol || {}); g.x.restore();
+      g.x.save(); bulk();
+      g.RR(22, 45 + a, 8.4, 11, 2, s.pant, { s: 1 }); g.RR(33.6, 45 + b, 8.4, 11, 2, s.pant, { s: 1 });
+      g.RR(19, 53 + a, 13.4, 7.4, 3, s.boot, { s: 1.2 }); g.RR(32, 53 + b, 13.4, 7.4, 3, s.boot, { s: 1.2 });
+      g.RR(20.6, 53.2 + a, 10.2, 1.6, 0.8, dark(s.boot, 0.3), { flat: 1, lw: 0 }); g.RR(33.6, 53.2 + b, 10.2, 1.6, 0.8, dark(s.boot, 0.3), { flat: 1, lw: 0 });
+      g.x.restore();
+      g.x.save(); upper(g, P); g.x.save(); bulk();
+      var skirt = function (p) { p.moveTo(17, 40); p.lineTo(47, 40); p.quadraticCurveTo(52, 50, 49, 55); p.quadraticCurveTo(32, 51, 15, 55); p.quadraticCurveTo(12, 50, 17, 40); };
+      g.Bz(skirt, s.coat, { s: 2 });
+      g.Bz(function (p) { p.moveTo(17, 28); p.quadraticCurveTo(32, 25, 47, 28); p.lineTo(45, 44); p.quadraticCurveTo(32, 47, 19, 44); }, s.coat, { s: 2.2 });
+      g.stroke(function (p) { p.moveTo(32, 27); p.lineTo(32, 42); }, 1, dark(s.coat, 0.55));                       // couture du dos
+      g.stroke(function (p) { p.moveTo(32, 46.5); p.lineTo(32, 53.4); }, 1.4, OUT);                                 // fente des basques
+      g.stroke(function (p) { p.moveTo(22, 30); p.quadraticCurveTo(26, 36, 24, 41); p.moveTo(42, 30); p.quadraticCurveTo(38, 36, 40, 41); }, 0.8, dark(s.coat, 0.45));
+      g.RR(18.6, 42, 26.8, 4.2, 1.6, "#1c1220", { s: 1 }); g.dot(27.4, 44.1, 1.1, s.trim); g.dot(36.6, 44.1, 1.1, s.trim);   // martingale
+      if (s.stripes) { [0, 1].forEach(function (k) { g.RR(19.6, 31 + k * 3.2, 4.6, 1.5, 0.6, s.trim, { flat: 1, lw: 0 }); g.RR(39.8, 31 + k * 3.2, 4.6, 1.5, 0.6, s.trim, { flat: 1, lw: 0 }); }); }
+      var GR = g.R || Math.random; grimeBody(g, s, GR);
+      g.L(17, 30, 12.4 - P.al * 0.3, 41 + P.al, 7.4, s.coat); g.E(12.4 - P.al * 0.3, 43 + P.al, 4.2, 4, s.hand, { s: 1.2 });
+      g.L(47, 30, hand[0] - 1, hand[1] - 3, 7.4, s.coat); g.E(hw[0] - 32 + 32, hw[1], 4.4, 4.2, s.hand, { s: 1.2 });
+      g.x.restore();
+      if (s.cape) {                                                                                                    // la cape couvre le dos
+        g.x.save(); g.x.translate(32, 0); g.x.scale(bk, 1); g.x.translate(-32, 0);
+        g.Bz(function (p) { p.moveTo(16, 27); p.quadraticCurveTo(32, 23, 48, 27); p.quadraticCurveTo(54, 42, 53, 57); p.quadraticCurveTo(42, 59, 32, 56); p.quadraticCurveTo(22, 59, 11, 57); p.quadraticCurveTo(10, 42, 16, 27); }, s.cape, { s: 2.6 });
+        g.stroke(function (p) { p.moveTo(24, 31); p.quadraticCurveTo(22, 45, 20, 56); p.moveTo(32, 30); p.lineTo(32, 55); p.moveTo(40, 31); p.quadraticCurveTo(42, 45, 44, 56); }, 1, dark(s.cape, 0.5));
+        g.x.restore();
+      }
+      g.x.save(); bulk();
+      g.E(17, 29.6, 6.2, 4.6, "#8f9db2", { s: 1.4 }); g.E(47, 29.6, 6.2, 4.6, "#8f9db2", { s: 1.4 }); rust(g, 17, 29.6, GR); rust(g, 47, 29.6, GR);
+      if (s.spikes) { g.spike(13.6, 26, -3, -6, 2.2); g.spike(18, 25, 0, -7, 2.2); g.spike(50.4, 26, 3, -6, 2.2); g.spike(46, 25, 0, -7, 2.2); }
+      g.x.restore(); g.x.restore();
+    }
+    function back(id, px) {
+      if (!DEF[id]) return null; px = px || 512; var key = id + "|" + px; if (bcache[key]) return bcache[key];
+      var d = DEF[id], g = Sheet({ w: px, h: px, k: px / 64 }), P = pose({}); g.R = rngF(seedOf(id) + 11);
+      rigBack(g, P, d.spec);
+      g.x.restore(); g.x.save(); g.x.setTransform(1, 0, 0, 1, 0, 0); g.x.drawImage(headBack(id, px), 0, P.hb * px / 64 * 0.86); g.x.restore();
+      g.x.save(); g.x.setTransform(px / 64, 0, 0, px / 64, 0, 0); g.x.translate(32, 0); g.x.scale(0.86, 0.86); g.x.translate(-32, 11.5);
+      if (d.spec.behind) { upper(g, P); d.spec.behind(g); }
+      g.x.restore();
+      return (bcache[key] = g.c);
+    }
+    function big(id, px) { px = px || 512; var d = DEF[id]; if (!d) return null; var g = Sheet({ w: px, h: px, k: px / 64 }), P = IDLE[0], sd = seedOf(id), R0 = rngF(sd); g.R = rngF(sd + 11); g.bando = /^(gun|pistol)$/.test(d.spec.weapon) || R0() < 0.5; g.wrap = R0() < 0.6;
+      if (d.spec.behind) { g.x.save(); upper(g, P); d.spec.behind(g); g.x.restore(); } rig(g, P, d.spec); g.x.save(); g.x.translate(0, P.hb); d.head(g); if (d.spec.cigar) cigar(g, d.spec.cigar); grimeFace(g, rngF(sd + 23), id); g.x.restore(); done(g); return g.c; }
     function anim(id) {
       if (!DEF[id]) return null;
       if (!acache[id]) acache[id] = { idle: IDLE.map(function (P) { return draw(id, P); }), blink: draw(id, BLINK), walk: WALK.map(function (P) { return draw(id, P); }), atk: (/^(gun|pistol)$/.test(DEF[id].spec.weapon) ? SHOT : ATK).map(function (P) { return draw(id, P); }) };
@@ -4195,7 +4281,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     function resetWeapons() { Object.keys(DEF).forEach(function (id) { setWeapon(id, null); }); }
     function custom(id, o) { return DEF[id] ? draw(id, pose(o), true) : null; }
     function accent(id) { return DEF[id] ? DEF[id].spec.coat : "#5a2a1c"; }
-    return { weaponOf: weaponOf, setWeapon: setWeapon, resetWeapons: resetWeapons, accent: accent, portrait: portrait, custom: custom, atk: atkOnly, frames: frames, anim: anim, raw: function (id, fr) { return frames(id)[fr || 0]; }, ids: IDS, Sheet: Sheet, mix: mix, dark: dark, lite: lite };
+    return { weaponOf: weaponOf, setWeapon: setWeapon, resetWeapons: resetWeapons, accent: accent, portrait: portrait, custom: custom, atk: atkOnly, frames: frames, anim: anim, back: back, big: big, raw: function (id, fr) { return frames(id)[fr || 0]; }, ids: IDS, Sheet: Sheet, mix: mix, dark: dark, lite: lite };
   })();
 
   FARM.ids.forEach(function (id) {
@@ -13142,23 +13228,24 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (!D) return;
       D.por = W / H < 0.9; D.hzo = D.por ? 0 : -0.07;
       D.F0 = D.por ? H * 1.05 : H * 1.18;
-      if (D.por) { D.hero.x = -0.62; D.hero.z = 1.2; D.ogre.x = 0.55; D.ogre.z = 7; }
-      else { D.hero.x = -1.7; D.hero.z = 1.4; D.ogre.x = 1.55; D.ogre.z = 6.4; }
+      if (D.por) { D.hero.x = -0.7; D.hero.z = 1.2; D.hero.h = 1.45; D.ogre.x = 0.5; D.ogre.z = 7; }
+      else { D.hero.x = -1.7; D.hero.z = 1.4; D.hero.h = 1.75; D.ogre.x = 1.55; D.ogre.z = 6.4; }
       if (D.shotN) { camT = shot(D.shotN); }
     }
-    function heroArt(v) { return ARTX.get("h_" + v) || ARTX.get("h_cocotte") || FARM.portrait(v); }
+    function heroArt(v) { return FARM.big(v, 512) || FARM.big("cocotte", 512); }
+    function heroBack(v) { return FARM.back(v, 512) || FARM.back("cocotte", 512); }
     function start(e) {
       if (D || !e) return;
       var v = (state && state.variant) || "cocotte";
       var snap = null;
       try { var r0 = canvas.getBoundingClientRect(), sc = mkCanvas(canvas.width, canvas.height); sc.getContext("2d").drawImage(canvas, 0, 0); snap = { c: sc, r: r0 }; } catch (err) { snap = null; }
       mode = "duel"; haltInput();
-      var him = heroArt(v), og = ogreArt();
+      var hfront = heroArt(v), him = heroBack(v), og = ogreArt();
       D = {
         e: e, v: v, time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
         hp: Math.max(1, Math.round(e.hp)), max: Math.max(1, Math.round(e.maxHp)), brk: 0, broken: false, rage: false, ap: 3, phase: "intro", over: false,
         tH: 0, tO: 0.42, spdH: 1, spdO: 0.8, ogreTurns: 0, heroTurns: 0, tapAt: -9999, tapUsed: -9999, jumpAt: -9999, lockUntil: 0, jumpLock: 0, combo: null, lastMove: "",
-        hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, a: 1, fl: 0, flc: 0, h: 2.35, foot: 0.985, im: him, w: silh(him, "#ffffff"), r: silh(him, "#ff3030"), rim: silh(him, "#ffc890"), trail: [] },
+        hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, sx: 1, a: 1, fl: 0, flc: 0, h: 2.2, foot: 0.975, im: him, front: hfront, w: silh(him, "#ffffff"), r: silh(him, "#ff3030"), rim: silh(him, "#ffc890"), trail: [] },
         ogre: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, a: 1, fl: 0, flc: 0, h: 3.05, foot: 0.965, trail: [] },
         name: (SURV_VARIANTS[v] && SURV_VARIANTS[v].name) || "Héros", col: duelCol(v),
         skill: (FARM_POWERS[v] && FARM_POWERS[v].name) || "Pouvoir", ult: (ULTS[v] && ULTS[v].name) || "Déchaînement",
@@ -13470,7 +13557,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         tw(o, "a", 0, 1700, lin); tw(o, "sq", 0.92, 1700, eo);
         for (var i = 0; i < 90; i++) D.pt.push({ k: i % 3 ? "ash" : "petal", x: o.x + o.ox + rr(-0.9, 0.9), y: rr(0.2, 3.4), z: o.z + o.oz + rr(-0.3, 0.3), vx: rr(0.2, 1.4), vy: rr(0.4, 1.6), vz: rr(-0.3, 0.3), t0: D.time + rr(0, 1400), d: rr(1400, 2600), c: i % 3 ? "40,30,40" : "220,60,60", s: rr(0.04, 0.09), r: rr(0, 6) });
       });
-      after(1300, function () { setShot("victory", 1); tw(D.hero, "oz", 0, 600, eio); tw(D.hero, "ox", 0, 600, eio); tw(D.hero, "sq", 1.05, 300, eo, 300); tw(D.hero, "sq", 1, 400, eo, 650); });
+      after(1300, function () { setShot("victory", 1); tw(D.hero, "oz", 0, 600, eio); tw(D.hero, "ox", 0, 600, eio); tw(D.hero, "sx", 0.02, 170, ei, 650); });
+      after(1990, function () { var h = D.hero; h.im = h.front; h.w = silh(h.front, "#ffffff"); h.r = silh(h.front, "#ff3030"); h.rim = silh(h.front, "#ffc890"); tw(h, "sx", 1, 220, eo); tw(h, "sq", 1.06, 200, eo, 200); tw(h, "sq", 1, 400, eo, 420); });
       D.fadeOut = { t0: D.time + 3000, d: 600 };
       after(3600, function () { close("win"); });
     }
@@ -13655,10 +13743,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       x.save(); x.translate(P.x, P.y); x.scale(1, 0.24); x.fillStyle = "rgba(0,0,0," + a.toFixed(3) + ")"; x.beginPath(); x.arc(0, 0, r, 0, 6.283); x.fill(); x.restore();
     }
     function billboard(a, im, rim, wht, red, trail) {
-      var px = a.x + a.ox, pz = a.z + a.oz, P = proj(px, a.oy, pz), hp = a.h * P.k / (a === D.ogre ? 0.74 : 0.96), wp = hp * im.width / im.height;
+      var px = a.x + a.ox, pz = a.z + a.oz, P = proj(px, a.oy, pz), hp = a.h * P.k / (a === D.ogre ? 0.74 : 0.86), wp = hp * im.width / im.height;
       shadow(px, pz, a === D.ogre ? 1.25 : 0.7, a.oy);
       function put(img, alpha, ox, oy, sc) {
-        x.save(); x.globalAlpha = alpha; x.translate(P.x + (ox || 0), P.y + (oy || 0)); x.rotate(a.rot); x.scale((2 - a.sq) * (sc || 1), a.sq * (sc || 1));
+        x.save(); x.globalAlpha = alpha; x.translate(P.x + (ox || 0), P.y + (oy || 0)); x.rotate(a.rot); x.scale((2 - a.sq) * (sc || 1) * (a.sx == null ? 1 : a.sx), a.sq * (sc || 1));
         x.drawImage(img, -wp / 2, -hp * a.foot, wp, hp); x.restore();
       }
       if (trail) trail.forEach(function (q, i) { var Q = proj(q.x, q.y, q.z); if (Math.abs(Q.x - P.x) > 4) put(im, 0.18 * (1 - i / trail.length) * a.a, Q.x - P.x, Q.y - P.y, 1); });
