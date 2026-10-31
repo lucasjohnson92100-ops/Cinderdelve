@@ -716,5 +716,12 @@
  "Une seule main : touche l'écran pour te déplacer. <b>Double tape</b> = pouvoir spécial, <b>triple tape</b> = ultime (jauge ⚡ pleine).": "One hand only: touch the screen to move. <b>Double tap</b> = special power, <b>triple tap</b> = ultimate (⚡ gauge full).",
  "Ultime pas encore chargé.": "Ultimate not charged yet.",
  "Mode Survie, à une main :": "Survival mode, one-handed:",
- " touche l'écran pour te déplacer. Double tape : pouvoir spécial. Triple tape : ultime (quand la jauge est pleine).": " touch the screen to move. Double tap: special power. Triple tap: ultimate (when the gauge is full)."
+ " touche l'écran pour te déplacer. Double tape : pouvoir spécial. Triple tape : ultime (quand la jauge est pleine).": " touch the screen to move. Double tap: special power. Triple tap: ultimate (when the gauge is full).",
+ "Qualité": "Quality",
+ "Auto : le jeu s'adapte à la fluidité. Baisse-la si ça ralentit.": "Auto: the game adapts to smoothness. Lower it if it slows down.",
+ "Haute": "High",
+ "Moyenne": "Medium",
+ "Basse": "Low",
+ "Afficher les images par seconde": "Show frames per second",
+ "Petit compteur en bas à gauche (utile pour mesurer la fluidité)": "Small counter at the bottom left (useful to measure smoothness)"
 }
