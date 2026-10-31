@@ -294,3 +294,5 @@ Diagnostic (`DIAG=1 node sim.js`) : toutes les défaites du bot venaient d'une A
 - **Infanterie** : plus d'endurance mais un effectif qui fond (`menNow`) : 10 → 7 → 4 hommes sur 3 tours, Attaque et Défense en proportion ; infirmiers, relève et retranchement rendent de l'effectif. **Engins** : leur nombre ne baisse pas, ils s'usent (`wearLv`) : traces de dégâts puis fumée.
 - **Assaut épuré** : plus de flash, de secousse d'écran, de zoom, d'entrée en marche, d'éclairs ni de poussière ; les secteurs se remplacent par un fondu bref et la vue d'ensemble ne rejoue plus l'entrée (c'était la cause des unités qui disparaissaient un instant). Seules les ressources qui attaquent s'animent.
 - **Flou des engins** : plus de tremblement continu (`iveh`, `igun`, `vroll`) ni de `will-change` : le rendu des sprites redevient net.
+
+Boutique : **3 packs au hasard** parmi Recrues (ou Méga), Ordres, Améliorations et État-major ; les **services** (Entraîner, Ravitaillement, soin du QG, Réformer, QG max) sont toujours affichés, grisés quand ils ne sont pas utilisables. Le pack État-major reste possible quand les 5 jokers sont pris (on remplace).

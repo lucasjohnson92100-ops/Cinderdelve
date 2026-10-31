@@ -111,7 +111,7 @@ const lcg=(x=7)=>()=>(x=(x*16807)%2147483647)/2147483647;
  const n0=Cp.deck.length;E.applyPackPick(Cp,{k:'card',card:E.mkCard('blinde','R')});check('carte ajoutée',Cp.deck.length,n0+1);E.applyPackPick(Cp,{k:'joker',id:'moreau'});check('joker ajouté',Cp.officers.join(),'moreau');
  E.applyPackPick(Cp,{k:'up',kind:'c',id:'foot'});check('niveau infanterie',Cp.catLv.foot,1);E.applyPackPick(Cp,{k:'manual',id:'trio'});check('manuel trio niv.2',Cp.comboLv.trio,2);
  check('pack staff sans doublon',E.packOptions(Cp,'staff').every(o=>o.id!=='moreau'),true);
- const gp=E.genPacks(Cp);check('4 packs',gp.length,4);Cp.officers=['moreau','dubois','ashby','kowalski','meyer'];check('joker plein : pas de pack état-major',E.genPacks(Cp).some(p=>p.kind==='staff'),false);}
+ const gp=E.genPacks(Cp);check('3 packs au plus',gp.length,3);let diff=true;for(let k=0;k<50;k++){const g=E.genPacks(Cp);if(new Set(g.map(p=>p.kind)).size!==3)diff=false;}check('3 packs différents',diff,true);Cp.officers=['moreau','dubois','ashby','kowalski','meyer'];check('joker plein : le pack état-major reste possible (remplacement)',[...Array(200)].some(()=>E.genPacks(Cp).some(p=>p.kind==='staff')),true);}
 // annuler, réserve, défausse
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')];const sn=E.snapshotState(S);E.placeCard(S,0,1);E.restoreState(S,sn);check('annulé',S.units.length+'/'+S.hand.length,'0/1');
 S=mk();S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','R')];S.supply=5;E.endTurn(S);check('fin de tour : toute la main est défaussée (plus de réserve)',S.hand.length>=0&&S.discard.length>=2,true);

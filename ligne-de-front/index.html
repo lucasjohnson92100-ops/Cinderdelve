@@ -3358,8 +3358,10 @@ function applyPackPick(C, o) {
   const lv = applyUpgrade(C, o.kind, o.id); return o.kind === 't' ? `Fortification : ${lv} places dans les secteurs ${TERRAIN[o.id].name}.` : `${CATS[o.id].name} passe au niveau ${lv}.`;
 }
 function genPacks(C, rng = Math.random, rare = false) {
-  const kinds = [rng() < (rare ? 0.45 : 0.2) ? 'mega' : 'recrues', 'ordres', 'amelio'];
-  if (C.officers.length < MAX_JOKERS && JOKERS.some(j => !C.officers.includes(j.id))) kinds.splice(2, 0, 'staff');
+  // 3 packs au hasard parmi : recrues (ou méga), ordres, améliorations, état-major ; les services (soin du QG, QG max…) restent toujours disponibles
+  const pool = [rng() < (rare ? 0.45 : 0.2) ? 'mega' : 'recrues', 'ordres', 'amelio'];
+  if (JOKERS.some(j => !C.officers.includes(j.id))) pool.push('staff');
+  const kinds = shuffle(pool, rng).slice(0, 3);
   return kinds.map(kind => ({ kind, price: PACKS[kind].price, left: PACKS[kind].pick, opts: null }));
 }
 const HEAL_COST = 4, HEAL_AMOUNT = 12, MANUAL_PRICE = 4;
