@@ -13330,7 +13330,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (e.skin && e.skin.indexOf("lt_") === 0) { Object.keys(LT.DEFS).forEach(function (m) { if ("lt_" + LT.DEFS[m].id === e.skin) mid = +m; }); }
       var hfront = heroArt(v), him = heroBack(v);
       D = {
-        e: e, v: v, cfg: cfg, sc: DUEL_SC[cfg.scene], mid: mid, key: mid != null ? "lt" + mid : e.type, bname: e.title || (NAMES[e.type] ? NAMES[e.type][1] : "Le boss"), bsub: e.superBoss ? "Lieutenant du Grand Boucher" : cfg.sub, dmgK: cfg.dmg * (e.superBoss ? 1.2 : 1), rk: 0, bm: [], time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
+        e: e, v: v, cfg: cfg, sc: DUEL_SC[cfg.scene], mid: mid, key: mid != null ? "lt" + mid : e.type, bname: e.title || (NAMES[e.type] ? NAMES[e.type][1] : "Le boss"), bsub: e.superBoss ? "Lieutenant du Grand Boucher" : cfg.sub, dmgK: cfg.dmg * (e.superBoss ? 1.2 * [0.92, 1, 1.1][e.tier == null ? 1 : e.tier] : 1), rk: 0, bm: [], time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
         hp: Math.max(1, Math.round(e.hp)), max: Math.max(1, Math.round(e.maxHp)), brk: 0, broken: false, rage: false, ap: 3, phase: "intro", over: false,
         tH: 0, tO: 0.42, spdH: 1, spdO: cfg.spd * (e.superBoss ? 1.1 : 1), ogreTurns: 0, heroTurns: 0, tapAt: -9999, tapUsed: -9999, jumpAt: -9999, lockUntil: 0, jumpLock: 0, combo: null, lastMove: "",
         hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, sx: 1, a: 1, fl: 0, flc: 0, h: 2.2, foot: 0.975, im: him, front: hfront, w: silh(him, "#ffffff"), r: silh(him, "#ff3030"), rim: silh(him, "#ffc890"), trail: [] },
@@ -14119,7 +14119,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (el > 650 && el < 2900) {
         var k2 = (el - 650) / 2250, a = k2 < 0.15 ? k2 / 0.15 : k2 > 0.75 ? (1 - k2) / 0.25 : 1, u = Math.min(W, H) / 100, fs = Math.round(Math.max(30, u * 11));
         x.save(); x.globalAlpha = a; x.textAlign = "center";
-        var cy0 = H * 0.3, ls = 0.06 + k2 * 0.05;
+        var cy0 = H * (D.e.superBoss ? 0.47 : 0.3), ls = 0.06 + k2 * 0.05;
         x.fillStyle = "#fff4e2"; x.font = "italic 500 " + fs + "px " + SERIF;
         try { x.letterSpacing = Math.round(fs * ls) + "px"; } catch (err) {}
         var tt2 = (window.__t ? window.__t(D.bname) : D.bname).toUpperCase(), tw2 = x.measureText(tt2).width; if (tw2 > W * 0.88) { x.font = "italic 500 " + Math.floor(fs * W * 0.88 / tw2) + "px " + SERIF; }
