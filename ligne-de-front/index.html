@@ -2385,6 +2385,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .aws.focus .awb, .aws.focus .awb.cur, .aws.focus .awb.gone { transform: none !important; transition: opacity .18s linear !important; }
 .aws.overview .awb { animation: none !important; transform: none !important; opacity: 1 !important; visibility: visible !important; }
 @media (max-height: 340px) { .jokstep > .panel, .jokstep > .small { display: none; } .jokstep .jbar { justify-content: center; } .jokstep .officers { gap: 4px; } .jokstep .off-item { padding: 4px 8px; } }
+.hc.needinf::after { content: "🔒 Infanterie"; position: absolute; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-6deg); padding: 2px 8px; border-radius: 6px; background: rgba(13, 18, 24, .88); color: #ffe08a; border: 1.5px solid #ffd24a; font-family: var(--font-display); font-size: 8.5cqw; white-space: nowrap; pointer-events: none; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2527,10 +2528,10 @@ const TYPES = {
   tireurs: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Tireurs', cost: 2, men: 10, dmg: 1, hpm: 1, def: 3, stam: 3, rar: 1, txt: '10 tireurs : Attaque 10, Défense 3. Perdent un tiers de leur effectif par tour (3 tours). Le plus économique.' },
   jeep: { cls: 'wheel', rng: [1, 2], fam: 'terre', land: true, name: 'Jeeps MG', cost: 3, men: 4, dmg: 4, hpm: 4, def: 5, stam: 2, kw: ['elan'], rar: 1, txt: '4 jeeps à mitrailleuse : Attaque 16, Défense 5. 2 tours. Élan : +1 dégât par tir par véhicule déjà posé ce tour.' },
   blinde: { cls: 'track', rng: [1, 2], fam: 'terre', land: true, name: 'Blindé', cost: 4, men: 1, dmg: 18, hpm: 16, def: 16, stam: 3, kw: ['elan'], rar: 2, txt: '1 char : Attaque 18, Défense 16. Robuste : 3 tours. Élan.' },
-  destroyer: { cls: 'ship', rng: [1, 3], fam: 'mer', name: 'Destroyer', cost: 3, men: 4, dmg: 4, def: 6, stam: 3, rar: 1, txt: 'Se pose en mer : Attaque 16, Défense 6. 3 tours.' },
-  croiseur: { cls: 'ship', rng: [2, 5], fam: 'mer', name: 'Croiseur', cost: 5, men: 1, dmg: 23, def: 6, stam: 3, pierce: 9, rar: 3, txt: 'Se pose en mer : gros obus, Attaque 24, Défense 6. 3 tours.' },
-  sousmarin: { cls: 'ship', rng: [1, 2], fam: 'mer', name: 'Sous-marin', cost: 4, men: 1, dmg: 17, def: 0, stam: 3, pierce: 2, rar: 2, txt: 'Se pose en mer : torpille, Attaque 18. 3 tours.' },
-  chasseur: { cls: 'air', rng: [1, 3], fam: 'air', name: 'Chasseur', cost: 3, men: 2, dmg: 6, def: 7, stam: 2, kw: ['cover'], rar: 1, txt: "Se pose dans le ciel : Attaque 12, Défense 7. Couverture aérienne (Défense ×1,25 à tous vos secteurs) ; intercepte l'obus visant son secteur. 2 tours." },
+  destroyer: { cls: 'ship', rng: [1, 3], fam: 'mer', name: 'Destroyer', cost: 3, men: 4, dmg: 4, def: 6, stam: 3, rar: 1, txt: 'Se pose en mer, avec une infanterie de sa couleur sur le plateau : Attaque 22, Défense 6. 3 tours.' },
+  croiseur: { cls: 'ship', rng: [2, 5], fam: 'mer', name: 'Croiseur', cost: 5, men: 1, dmg: 23, def: 6, stam: 3, pierce: 9, rar: 3, txt: 'Se pose en mer : gros obus, Attaque 33, Défense 6. 3 tours.' },
+  sousmarin: { cls: 'ship', rng: [1, 2], fam: 'mer', name: 'Sous-marin', cost: 4, men: 1, dmg: 17, def: 0, stam: 3, pierce: 2, rar: 2, txt: 'Se pose en mer : torpille, Attaque 25. 3 tours.' },
+  chasseur: { cls: 'air', rng: [1, 3], fam: 'air', name: 'Chasseur', cost: 3, men: 2, dmg: 6, def: 7, stam: 2, kw: ['cover'], rar: 1, txt: "Se pose dans le ciel : Attaque 17, Défense 7. Couverture aérienne (Défense ×1,25 à tous vos secteurs) ; intercepte l'obus visant son secteur. 2 tours." },
   bombardier: { cls: 'air', rng: [1, 1], fam: 'air', name: 'Bombardier', cost: 5, men: 1, dmg: 6, def: 0, stam: 1, kw: ['bomb'], rar: 3, txt: 'Frappe aérienne immédiate : 60 dégâts directement sur le QG ennemi.' },
   observateur: { cls: 'foot', rng: [1, 1], fam: 'terre', land: true, name: 'Observateurs', cost: 1, men: 2, dmg: 0, hpm: 3, def: 1, stam: 3, kw: ['spot'], rar: 1, txt: "2 guetteurs radio. Ne tirent pas : avec de l'artillerie ou un navire, combo Tir guidé (Attaque ×1,5). 3 tours." },
   infirmiers: { cls: 'foot', rng: [0, 0], fam: 'terre', land: true, name: 'Infirmiers', cost: 1, men: 2, dmg: 0, hpm: 3, def: 2, stam: 3, kw: ['heal'], rar: 1, txt: "À leur arrivée : +1 endurance aux autres unités du secteur. Combo Soutien sanitaire (Défense +0,5)." },
@@ -2775,6 +2776,7 @@ function statsFor(def, cols, S, side, lv) {
   if (me && def.land && def.cls === 'foot' && J('moreau')) stam += 1;
   if (me && def.land && J('meyer')) stam += 1;
   if (me && def.land && J('dubois')) dmg += 1;
+  if (me && !def.land && !def.order && !(def.kw || []).includes('bomb')) dmg = Math.round(dmg * SUPPORT_K * 2) / 2;
   return { men, dmg, hp, ttl: stam, stam, pierce, def: dfn };
 }
 // Carte fusionnée : effectifs et Défense s'additionnent, l'endurance est la meilleure ; les bonus de couleur valent pour le groupe entier
@@ -2882,9 +2884,16 @@ function landingCard(S) {
   return null;
 }
 // Peut-on jouer cette carte maintenant ? (ravitaillement et cible)
-function canDeployNow(S, card) {
+// Navires et avions (appuis) : il faut une infanterie de la MÊME COULEUR déjà sur le plateau (ou posée dans la même main)
+const needsInf = card => { const d = card && TYPES[card.t]; return !!d && !d.order && !d.land; };
+const shareColor = (a, b) => [...(a || '')].some(ch => (b || '').includes(ch));
+const infCover = (S, card, group) => S.units.some(u => isInf(u) && shareColor(u.cols, card.c)) || (group || []).some(k => k !== card && TYPES[k.t] && TYPES[k.t].land && TYPES[k.t].cls === 'foot' && shareColor(k.c, card.c));
+// Les appuis (navires, avions) frappent plus fort en contrepartie
+const SUPPORT_K = 1.4;
+function canDeployNow(S, card, group) {
   if (!card || S.over) return { ok: false, reason: 'card' };
   if (cardCost(S, card) > S.supply) return { ok: false, reason: 'supply' };
+  if (needsInf(card) && !infCover(S, card, group)) return { ok: false, reason: 'inf' };
   if (!deployTargets(S, card).length) return { ok: false, reason: TYPES[card.t].order ? 'target' : TYPES[card.t].fam === 'mer' ? 'sea' : 'cells' };
   return { ok: true };
 }
@@ -3010,6 +3019,7 @@ function canPlayGroup(S, cards) {
   if (cards.length > 1 && cards.some(isUnitTargetOrder)) return { ok: false, reason: 'solo' };
   if (groupCost(S, cards) > S.supply) return { ok: false, reason: 'supply' };
   if (cards.length === 1 && isUnitTargetOrder(cards[0])) return canDeployNow(S, cards[0]);
+  if (cards.some(k => needsInf(k) && !infCover(S, k, cards))) return { ok: false, reason: 'inf' };
   if (!groupSectors(S, cards).length) { const k = cards[0]; if (groupSectors(S, cards, true).length) return { ok: false, reason: 'full' }; return { ok: false, reason: cards.length > 1 ? 'nosector' : TYPES[k.t].order ? 'target' : TYPES[k.t].fam === 'mer' ? 'sea' : 'cells' }; }
   return { ok: true };
 }
@@ -3896,8 +3906,8 @@ const CARD_TIPS = {
   jeep: { use: "Posez-les en groupe, après un autre véhicule : chaque véhicule déjà posé ce tour leur ajoute +1 dégât par tir.", plus: 'Élan', fx: { nids: "Les véhicules ne subissent pas le −25 % d'Attaque des nids de mitrailleuses." } },
   blinde: { use: "Pilier d'un secteur : Défense 16 et 3 tours d'endurance. Interdit en forêt et en rivière.", plus: 'Robuste + Élan', fx: { nids: "Les véhicules ne subissent pas le −25 % d'Attaque des nids de mitrailleuses." } },
   destroyer: { use: "Se pose en mer : appuie vos secteurs et frappe le QG. Ajoutez-en d'autres pour le combo Flotte.", plus: 'Appui naval', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
-  croiseur: { use: "Gros obus (Attaque 24) qui appuie tout le front. Associez-le à des observateurs : Tir guidé ×1,5.", plus: 'Appui sur tout le front', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
-  sousmarin: { use: "Torpille à Attaque 18 mais Défense 0 : à poser en renfort d'attaque, pas pour encaisser.", plus: 'Appui côtier', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
+  croiseur: { use: "Gros obus (Attaque 33) qui appuie tout le front. Associez-le à des observateurs : Tir guidé ×1,5.", plus: 'Appui sur tout le front', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
+  sousmarin: { use: "Torpille à Attaque 25 mais Défense 0 : à poser en renfort d'attaque, pas pour encaisser.", plus: 'Appui côtier', fx: { batterie: 'Attention : la batterie côtière divise par deux vos navires.' } },
   chasseur: { use: "Couverture aérienne : Défense ×1,25 sur tous vos secteurs, et il intercepte l'obus visant son secteur.", plus: 'Couverture', fx: { artillerie: "Intercepte l'obus des obusiers ennemis." } },
   bombardier: { use: "Frappe immédiate : 60 dégâts directement sur le QG, sans passer par un secteur. À garder pour finir une bataille.", plus: 'Frappe le QG', fx: { bunker: 'Frappe directe : le Bunker ne la réduit pas.', mammouth: 'Frappe directe : le blindage du Mammouth ne la réduit pas.', train: 'Frappe directe : le train blindé ne peut pas la couper.' } },
   observateur: { use: "Ne tire pas. Associez-le à de l'artillerie, un navire ou un avion de reconnaissance dans le même secteur : Tir guidé, Attaque ×1,5.", plus: 'Tir guidé' },
@@ -3925,11 +3935,11 @@ const CARD_SPEC = {
   tireurs: { ic: '👥', nm: 'Nombre', what: "Aucune capacité spéciale : c'est le plus d'Attaque pour 2 de ravitaillement.", syn: "Se combine avec tout : Paire, Trio… et l'ordre Assaut.", lim: "Défense moyenne : ne tient pas seul face à une grosse riposte." },
   jeep: { ic: '💨', nm: 'Élan', what: "Chaque véhicule déjà posé ce tour lui ajoute +1 dégât par tir.", syn: "À poser en dernier, après un char, un half-track ou d'autres jeeps.", lim: "Seule et posée en premier, elle ne profite d'aucun bonus." },
   blinde: { ic: '🛡', nm: 'Robuste', what: "Défense 16 et 3 tours d'endurance : le pilier d'un secteur. Élan comme les jeeps.", syn: "Posé avant les jeeps, il leur donne leur bonus d'Élan.", lim: "Interdit en forêt et en rivière." },
-  destroyer: { ic: '⚓', nm: 'Appui naval', what: "Se pose en mer, appuie vos secteurs et frappe le QG.", syn: "Plusieurs navires déclenchent le combo Flotte ; avec des observateurs : Tir guidé ×1,5.", lim: "La batterie côtière ennemie divise par deux vos navires." },
-  croiseur: { ic: '⚓', nm: 'Tout le front', what: "Gros obus (Attaque 24) qui appuie tous vos secteurs.", syn: "Associé à des observateurs : Tir guidé, Attaque ×1,5.", lim: "La batterie côtière ennemie divise par deux vos navires." },
-  sousmarin: { ic: '🌊', nm: 'Torpille', what: "Attaque 18 à l'arrivée, mais Défense 0.", syn: "À poser en renfort d'attaque avec les autres navires (combo Flotte).", lim: "N'encaisse rien : ne le comptez pas pour votre Défense. Batterie côtière : ÷2." },
-  chasseur: { ic: '✈', nm: 'Couverture', what: "Défense ×1,25 sur tous vos secteurs, et il intercepte l'obus visant son secteur.", syn: "Neutralise les obusiers ennemis.", lim: "Ne frappe pas fort : il protège plus qu'il n'attaque." },
-  bombardier: { ic: '💥', nm: 'Frappe le QG', what: "60 dégâts directement sur le QG, sans passer par un secteur.", syn: "Ignore le Bunker, le blindage du Mammouth et le train blindé.", lim: "Une seule frappe : à garder pour finir la bataille." },
+  destroyer: { ic: '⚓', nm: 'Appui naval', what: "Se pose en mer, appuie vos secteurs et frappe le QG.", syn: "Plusieurs navires déclenchent le combo Flotte ; avec des observateurs : Tir guidé ×1,5.", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. La batterie côtière ennemie divise par deux vos navires." },
+  croiseur: { ic: '⚓', nm: 'Tout le front', what: "Gros obus (Attaque 33) qui appuie tous vos secteurs.", syn: "Associé à des observateurs : Tir guidé, Attaque ×1,5.", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. La batterie côtière ennemie divise par deux vos navires." },
+  sousmarin: { ic: '🌊', nm: 'Torpille', what: "Attaque 25 à l'arrivée, mais Défense 0.", syn: "À poser en renfort d'attaque avec les autres navires (combo Flotte).", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. N'encaisse rien : ne le comptez pas pour votre Défense. Batterie côtière : ÷2." },
+  chasseur: { ic: '✈', nm: 'Couverture', what: "Défense ×1,25 sur tous vos secteurs, et il intercepte l'obus visant son secteur.", syn: "Neutralise les obusiers ennemis.", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. Ne frappe pas fort : il protège plus qu'il n'attaque." },
+  bombardier: { ic: '💥', nm: 'Frappe le QG', what: "60 dégâts directement sur le QG, sans passer par un secteur.", syn: "Ignore le Bunker, le blindage du Mammouth et le train blindé.", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. Une seule frappe : à garder pour finir la bataille." },
   observateur: { ic: '🔭', nm: 'Tir guidé', what: "Ne tire pas, mais guide : Attaque ×1,5 pour l'artillerie, les navires et la reconnaissance du secteur.", syn: "Artillerie, croiseur, destroyer, avion de reconnaissance.", lim: "Inutile seul : il n'apporte aucune Attaque." },
   infirmiers: { ic: '➕', nm: '+1 tour', what: "À leur arrivée, toutes les autres unités du secteur gagnent +1 endurance.", syn: "À poser APRÈS vos autres unités. Précieux contre les obus et les tireurs d'élite.", lim: "N'attaquent presque pas." },
   genie: { ic: '🔧', nm: 'Anti-mines', what: "Déminent leur secteur en y entrant ; Attaque doublée et sans réduction contre un QG fortifié.", syn: "À envoyer contre un Bunker ou un secteur piégé.", lim: "Peu utiles contre un QG sans fortification." },
@@ -3937,7 +3947,7 @@ const CARD_SPEC = {
   artillerie: { ic: '🎯', nm: 'Longue portée', what: "Tire de loin (portée 2-3).", syn: "Avec des observateurs : Tir guidé, Attaque ×1,5.", lim: "Défense 2 : protégez-la avec d'autres unités." },
   halftrack: { ic: '🚛', nm: 'Armes combinées', what: "Défense 12 et Attaque 10 ; transporte l'infanterie.", syn: "Avec de l'infanterie dans le même secteur : combo Armes combinées.", lim: "Seul, il n'a pas de bonus." },
   antichar: { ic: '🎯', nm: 'Anti-blindés', what: "Attaque ×2 contre une Division blindée.", syn: "À poser quand l'ennemi en a une.", lim: "Attaque normale contre tout le reste." },
-  reco: { ic: '📷', nm: 'Tir guidé', what: "Pour 1 seul ravitaillement : guide l'artillerie et les navires du secteur (Attaque ×1,5).", syn: "Artillerie ou navire dans le même secteur.", lim: "Seul, il n'apporte presque rien." },
+  reco: { ic: '📷', nm: 'Tir guidé', what: "Pour 1 seul ravitaillement : guide l'artillerie et les navires du secteur (Attaque ×1,5).", syn: "Artillerie ou navire dans le même secteur.", lim: "Pose : une infanterie de la même couleur doit être sur le plateau. Seul, il n'apporte presque rien." },
   paras: { ic: '🪂', nm: 'Commando', what: "Leur secteur ignore les protections du QG (Bunker, blindage du Mammouth).", syn: "Seuls à pouvoir recevoir l'ordre Sabotage.", lim: "Moins d'Attaque que les tireurs : à poser là où passe le gros de la frappe." },
   barrage: { ic: '🔥', nm: '+20 de base', what: "+20 d'Attaque de base dans un secteur, AVANT ses combos.", syn: "À jouer sur le secteur au plus gros multiplicateur.", lim: "Valeur fixe : peu rentable sur un petit secteur." },
   fumigenes: { ic: '💨', nm: 'Riposte ÷2', what: "Divise par deux la riposte ennemie ce tour et annule l'obus annoncé.", syn: "À jouer quand votre Défense est trop faible.", lim: "Ne dure qu'un tour." },
@@ -4587,10 +4597,10 @@ function renderBattle() {
   const short = H < 500, cw = Math.round(Math.max(60, Math.min(104, H * 0.195, W * 0.2))), ch = Math.round(cw * 1.28);
   const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
   const hand = S.hand.map((k, i) => {
-    const on = picked.includes(k), off = !on && (cardCost(S, k) > S.supply - reserved || (picked.length > 0 && (isUnitTargetOrder(k) || picked.some(isUnitTargetOrder))) || !canDeployNow(S, k).ok);
+    const on = picked.includes(k), off = !on && (cardCost(S, k) > S.supply - reserved || (picked.length > 0 && (isUnitTargetOrder(k) || picked.some(isUnitTargetOrder))) || !canDeployNow(S, k, picked).ok);
     const mid = (n - 1) / 2, rot = on ? 0 : (i - mid) * (n > 5 ? 2.2 : 3), dy = on ? -18 : Math.abs(i - mid) * (n > 5 ? 2 : 3);
     const ds = discardSel && discardSel.includes(k);
-    return handCardHTML(k, (on ? 'sel ' : '') + (ds ? 'dsel ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
+    return handCardHTML(k, (on ? 'sel ' : '') + (ds ? 'dsel ' : '') + (needsInf(k) && !infCover(S, k, picked) ? 'needinf ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
   }).join('');
   const dealKey = S.lvl.name + S.turn, dealNow = window.__dealKey !== dealKey; window.__dealKey = dealKey;
   const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : '', one = picked.length === 1 ? picked[0] : null;
@@ -4677,7 +4687,7 @@ function showHits(hits) {
 }
 
 // ---- Actions ----
-const WHY = { target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour toute cette main : retirez une carte.', sea: 'La mer est pleine.', cells: 'Aucun secteur au terrain praticable pour cette carte.', solo: 'Retranchement, Repli et Sabotage se jouent seuls, sur une unité.', full: 'Pas assez de places : un secteur a 3 places au départ (+1 par Fortification de son terrain). Retirez une carte de la main.', nosector: 'Aucun secteur ne peut recevoir toute cette main (navires : près de la côte ; certains terrains sont impraticables). Retirez une carte.', };
+const WHY = { inf: 'Il faut d\'abord une infanterie de la même couleur sur le plateau (ou dans la même main).', target: 'Aucune cible pour cet ordre pour le moment.', supply: 'Pas assez de ravitaillement pour toute cette main : retirez une carte.', sea: 'La mer est pleine.', cells: 'Aucun secteur au terrain praticable pour cette carte.', solo: 'Retranchement, Repli et Sabotage se jouent seuls, sur une unité.', full: 'Pas assez de places : un secteur a 3 places au départ (+1 par Fortification de son terrain). Retirez une carte de la main.', nosector: 'Aucun secteur ne peut recevoir toute cette main (navires : près de la côte ; certains terrains sont impraticables). Retirez une carte.', };
 const WHY_DEP = r => WHY[r] || 'Impossible de jouer cette carte.';
 // Toucher une carte : l'ajouter à la main choisie (ou l'en retirer), comme dans Balatro
 function onCard(i) {
@@ -5921,6 +5931,7 @@ const HELP_PAGES = () => [
     '<b>Concentrez, ne dispersez pas.</b> Un secteur gagne un Mult à chaque unité de plus (Paire, Trio, Bataillon…) : deux secteurs chargés valent bien plus que trois secteurs à moitié vides.',
     '<b>Mais gardez 2 secteurs forts.</b> Tout poser dans un seul secteur est une impasse : une seule frappe, et une Défense trop faible face à la riposte.',
     '<b>Choisissez le terrain de vos couleurs</b> : ▲ fort, ▼ faible. Une même carte vaut nettement plus dans le bon secteur.',
+    '<b>Navires et avions</b> frappent fort (+40 %), mais se posent seulement avec une <b>infanterie de la même couleur</b> déjà sur le plateau (ou dans la même main) : préparez le sol d\'abord.',
     '<b>Un style de paquet, pas tous à la fois</b> : infanterie en masse, blindés, artillerie guidée, marine ou aviation sont tous viables. Faites-les progresser avec les niveaux et choisissez des jokers qui les soutiennent.',
     '<b>Chaque tour</b> : 1) regardez la riposte annoncée, 2) assurez la Défense, 3) lancez le Mult le plus fort sur votre meilleur secteur (★), 4) gardez des unités fraîches pour le tour suivant.'] },
   { t: 'Vos unités', l: [
