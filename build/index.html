@@ -4144,6 +4144,34 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     var SHOT = [pose({ hy: -1, wr: -0.1, lean: 0.02 }),
                 pose({ hx: -2.4, hy: -0.4, wr: -0.32, lean: -0.06, al: 1, cape: 1.4, fire: true }),
                 pose({ hx: -1, wr: -0.14, lean: -0.02, cape: 0.8 })];
+    /* poses vues de dos (duel) : repos, course, élan, coup, suite du geste, parade, recul, esquive, saut, incantation */
+    var BPOSE = {
+      idle: IDLE, walk: WALK,
+      wind: [pose({ hx: 3, hy: -12, wr: 0.75, lean: 0.1, bob: 0.7, sq: 0.97, al: -1.5, cape: 0.8, hr: 0.12 })],
+      strike: [pose({ hx: -12, hy: 2, wr: -1.9, lean: -0.12, la: -1.4, al: 2, cape: 3, hr: -0.16 })],
+      follow: [pose({ hx: -8, hy: 2, wr: -1.35, lean: -0.07, al: 1.4, cape: 2, hr: -0.08 })],
+      parry: [pose({ hx: -4, hy: -11, wr: -0.2, lean: 0.02, bob: -0.4, al: 3.5, cape: 1.6, hr: 0.04 })],
+      hurt: [pose({ lean: -0.2, hb: 1.2, bob: 1.1, sq: 0.95, hx: 4, hy: 3, wr: 0.4, al: -2, cape: 3, hr: 0.2, la: 1, lb: -1 })],
+      dodge: [pose({ lean: 0.22, bob: 0.6, lx: 2, cape: 3.4, hr: -0.15, hx: 2, wr: 0.2 })],
+      jump: [pose({ la: -4, lb: -3.2, bob: -1.5, sq: 1.04, hx: 2, hy: -6, wr: 0.4, al: -2.5, cape: 4 })],
+      cast: [pose({ hx: 0, hy: -15, wr: 0.2, lean: 0.04, bob: -1.2, sq: 1.03, al: -5, cape: 3.4, hr: -0.05 })]
+    };
+    var BPOSE_GUN = {
+      wind: [pose({ hx: -1, hy: -8, wr: -0.05, lean: 0.04, bob: 0.4, al: -1, cape: 0.8, hr: 0.08 })],
+      strike: [pose({ hx: -3, hy: -5, wr: -0.45, lean: -0.08, al: 1.5, cape: 2.6, hr: -0.12 })],
+      follow: [pose({ hx: -2, hy: -3, wr: -0.25, lean: -0.04, al: 1, cape: 1.6, hr: -0.05 })]
+    };
+    function backPoses(id, name) { var gun = DEF[id] && /^(gun|pistol)$/.test(DEF[id].spec.weapon); return (gun && BPOSE_GUN[name]) || BPOSE[name] || IDLE; }
+    var hcache = {};
+    function backFrame(id, P, px) {
+      var d = DEF[id]; if (!d) return null; px = px || 384;
+      var g = Sheet({ w: px, h: px, k: px / 64 }); g.R = rngF(seedOf(id) + 11);
+      rigBack(g, P, d.spec);
+      if (d.spec.behind) { g.x.save(); upper(g, P); d.spec.behind(g); g.x.restore(); }
+      var hk = id + "|" + px, hd = hcache[hk] || (hcache[hk] = headBack(id, px)), y = g.c.getContext("2d"), s = px / 64 * 0.86;
+      y.save(); y.setTransform(1, 0, 0, 1, 0, 0); y.translate(px / 2, px * 0.583 + (P.hb + P.bob * 0.6) * s); y.rotate(P.lean * 0.8 + (P.hr || 0)); y.translate(-px / 2, -px * 0.583); y.drawImage(hd, 0, 0); y.restore();
+      return g.c;
+    }
     var cache = {}, acache = {};
     function draw(id, P, nopad) {
       var d = DEF[id], g = Sheet({ pad: !nopad }); g.blink = P.blink;
@@ -4198,9 +4226,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       var a = P.la, b = P.lb, bk = s.bulk || 1;
       function bulk() { g.x.translate(32, 0); g.x.scale(bk, 1); g.x.translate(-32, 0); }
       g.x.save(); g.x.fillStyle = "rgba(10,6,24,0.30)"; g.x.beginPath(); g.x.ellipse(32, 60.2, 17 * bk, 3.1, 0, 0, 6.2832); g.x.fill(); g.x.restore();
-      /* l'arme est tenue devant le héros : on n'en voit que ce qui dépasse */
       var hand = [50 + P.hx, 38 + P.hy], hw = [32 + (18 + P.hx) * bk, hand[1]], tl = (s.tilt == null ? 0.12 : s.tilt) + P.wr;
-      g.x.save(); upper(g, P); g.x.translate(hw[0], hw[1]); g.x.rotate(tl); g.x.translate(-hw[0], -hw[1]); if (s.weapon && W[s.weapon]) W[s.weapon](g, hw, s.wcol || {}); g.x.restore();
       g.x.save(); bulk();
       g.RR(22, 45 + a, 8.4, 11, 2, s.pant, { s: 1 }); g.RR(33.6, 45 + b, 8.4, 11, 2, s.pant, { s: 1 });
       g.RR(19, 53 + a, 13.4, 7.4, 3, s.boot, { s: 1.2 }); g.RR(32, 53 + b, 13.4, 7.4, 3, s.boot, { s: 1.2 });
@@ -4221,7 +4247,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
       if (s.cape) {                                                                                                    // la cape couvre le dos
         g.x.save(); g.x.translate(32, 0); g.x.scale(bk, 1); g.x.translate(-32, 0);
-        g.Bz(function (p) { p.moveTo(16, 27); p.quadraticCurveTo(32, 23, 48, 27); p.quadraticCurveTo(54, 42, 53, 57); p.quadraticCurveTo(42, 59, 32, 56); p.quadraticCurveTo(22, 59, 11, 57); p.quadraticCurveTo(10, 42, 16, 27); }, s.cape, { s: 2.6 });
+        var cf = (P.cape || 0) * 0.9; g.Bz(function (p) { p.moveTo(16, 27); p.quadraticCurveTo(32, 23, 48, 27); p.quadraticCurveTo(54 + cf * 0.5, 42, 53 + cf, 57 + cf * 0.3); p.quadraticCurveTo(42, 59, 32, 56); p.quadraticCurveTo(22, 59, 11 - cf, 57 + cf * 0.3); p.quadraticCurveTo(10 - cf * 0.5, 42, 16, 27); }, s.cape, { s: 2.6 });
         g.stroke(function (p) { p.moveTo(24, 31); p.quadraticCurveTo(22, 45, 20, 56); p.moveTo(32, 30); p.lineTo(32, 55); p.moveTo(40, 31); p.quadraticCurveTo(42, 45, 44, 56); }, 1, dark(s.cape, 0.5));
         g.x.restore();
       }
@@ -4229,6 +4255,9 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.E(17, 29.6, 6.2, 4.6, "#8f9db2", { s: 1.4 }); g.E(47, 29.6, 6.2, 4.6, "#8f9db2", { s: 1.4 }); rust(g, 17, 29.6, GR); rust(g, 47, 29.6, GR);
       if (s.spikes) { g.spike(13.6, 26, -3, -6, 2.2); g.spike(18, 25, 0, -7, 2.2); g.spike(50.4, 26, 3, -6, 2.2); g.spike(46, 25, 0, -7, 2.2); }
       g.x.restore(); g.x.restore();
+      /* l'arme passe devant le corps pour que le geste se lise ; la main la tient */
+      g.x.save(); upper(g, P); g.x.save(); g.x.translate(hw[0], hw[1]); g.x.rotate(tl); g.x.translate(-hw[0], -hw[1]); if (s.weapon && W[s.weapon]) W[s.weapon](g, hw, s.wcol || {}); g.x.restore();
+      g.E(hw[0], hw[1], 4.4, 4.2, s.hand, { s: 1.2 }); g.x.restore();
     }
     function back(id, px) {
       if (!DEF[id]) return null; px = px || 512; var key = id + "|" + px; if (bcache[key]) return bcache[key];
@@ -4281,7 +4310,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     function resetWeapons() { Object.keys(DEF).forEach(function (id) { setWeapon(id, null); }); }
     function custom(id, o) { return DEF[id] ? draw(id, pose(o), true) : null; }
     function accent(id) { return DEF[id] ? DEF[id].spec.coat : "#5a2a1c"; }
-    return { weaponOf: weaponOf, setWeapon: setWeapon, resetWeapons: resetWeapons, accent: accent, portrait: portrait, custom: custom, atk: atkOnly, frames: frames, anim: anim, back: back, big: big, raw: function (id, fr) { return frames(id)[fr || 0]; }, ids: IDS, Sheet: Sheet, mix: mix, dark: dark, lite: lite };
+    return { weaponOf: weaponOf, setWeapon: setWeapon, resetWeapons: resetWeapons, accent: accent, portrait: portrait, custom: custom, atk: atkOnly, frames: frames, anim: anim, back: back, big: big, backPoses: backPoses, backFrame: backFrame, raw: function (id, fr) { return frames(id)[fr || 0]; }, ids: IDS, Sheet: Sheet, mix: mix, dark: dark, lite: lite };
   })();
 
   FARM.ids.forEach(function (id) {
@@ -6543,22 +6572,24 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* 4. Ogre */
-    def("ogre", function (g, fr) {
-      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1.2 : 0;
-      sh(g, 22);
-      g.RR(20, 47 + a, 10, 11, 3, "#4a6a2a", { s: 1.4 }); g.RR(34, 47 + b2, 10, 11, 3, "#4a6a2a", { s: 1.4 });
+    def("ogre", function (g, fr, part) {
+      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1.2 : 0; var BODY = part !== "armR", LIMB = !part || part === "armR";
+      if (BODY) { sh(g, 22); }
+      if (BODY) { g.RR(20, 47 + a, 10, 11, 3, "#4a6a2a", { s: 1.4 }); g.RR(34, 47 + b2, 10, 11, 3, "#4a6a2a", { s: 1.4 }); }
       g.x.save(); g.x.translate(0, bob);
-      g.L(14, 30, 8, 44, 9, "#6aa042"); g.E(8, 46, 5, 5, "#6aa042", { s: 1.4 });
-      g.E(32, 38, 17, 15, "#6aa042", { s: 2.6 }); g.E(32, 42, 11, 8, "#9ac864", { flat: 1, lw: 0 });
-      g.Bz(function (p) { p.moveTo(17, 46); p.lineTo(47, 46); p.lineTo(49, 56); p.lineTo(43, 53); p.lineTo(38, 57); p.lineTo(32, 53); p.lineTo(26, 57); p.lineTo(21, 53); p.lineTo(15, 56); }, "#8a5a30", { s: 1.4 });
-      g.L(50, 32, 54, 44, 9, "#6aa042");
-      g.L(54, 46, 54, 18, 4, "#6a4426"); g.E(54, 14, 7.6, 8, "#7a5230", { s: 1.4 }); [[48, 10], [60, 10], [54, 5], [48, 18], [60, 18]].forEach(function (s) { g.spike(s[0], s[1], (s[0] - 54) * 0.4, (s[1] - 14) * 0.4, 1.4); });
-      g.E(54, 46, 5, 5, "#6aa042", { s: 1.4 });
+      if (BODY) { g.L(14, 30, 8, 44, 9, "#6aa042"); g.E(8, 46, 5, 5, "#6aa042", { s: 1.4 }); }
+      if (BODY) { g.E(32, 38, 17, 15, "#6aa042", { s: 2.6 }); g.E(32, 42, 11, 8, "#9ac864", { flat: 1, lw: 0 }); }
+      if (BODY) { g.Bz(function (p) { p.moveTo(17, 46); p.lineTo(47, 46); p.lineTo(49, 56); p.lineTo(43, 53); p.lineTo(38, 57); p.lineTo(32, 53); p.lineTo(26, 57); p.lineTo(21, 53); p.lineTo(15, 56); }, "#8a5a30", { s: 1.4 }); }
+      if (LIMB) { g.L(50, 32, 54, 44, 9, "#6aa042"); }
+      if (LIMB) { g.L(54, 46, 54, 18, 4, "#6a4426"); g.E(54, 14, 7.6, 8, "#7a5230", { s: 1.4 }); [[48, 10], [60, 10], [54, 5], [48, 18], [60, 18]].forEach(function (s) { g.spike(s[0], s[1], (s[0] - 54) * 0.4, (s[1] - 14) * 0.4, 1.4); }); }
+      if (LIMB) { g.E(54, 46, 5, 5, "#6aa042", { s: 1.4 }); }
+      if (BODY) {
       g.E(32, 21, 11.4, 10, "#6aa042", { s: 2.2 }); g.E(32, 26, 8, 5, "#7fb84e", { flat: 1, lw: 0 });
       g.Pg([[22, 14], [18, 9], [25, 12]], "#6aa042", { s: 0.8 }); g.Pg([[42, 14], [46, 9], [39, 12]], "#6aa042", { s: 0.8 });
       glowEye(g, 27, 19, 2.6, "#ffd02a"); glowEye(g, 37, 19, 2.6, "#ffd02a"); brow(g, 27, 16.8, 4, 1); brow(g, 37, 16.8, 4, -1);
       g.RR(25, 25.6, 14, 4.6, 2, "#2a0a14", { flat: 1, lw: 1 }); g.Pg([[26, 26], [24, 20.6], [28.6, 26]], "#fff3d0", { s: 0.6, lw: 1 }); g.Pg([[38, 26], [40, 20.6], [35.4, 26]], "#fff3d0", { s: 0.6, lw: 1 });
       g.scar(35, 12, 38, 22);
+      }
       g.x.restore();
     });
     /* 5. Champignon */
@@ -6619,13 +6650,14 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* 9. Dragon */
-    def("dragon", function (g, fr) {
-      var w = fr === 1 ? -5 : fr === 2 ? 4 : 0, bob = fr ? -1.2 : 0;
-      sh(g, 24);
+    def("dragon", function (g, fr, part) {
+      var w = fr === 1 ? -5 : fr === 2 ? 4 : 0, bob = fr ? -1.2 : 0; var BODY = part !== "wL" && part !== "wR";
+      if (BODY) sh(g, 24);
       g.x.save(); g.x.translate(0, bob);
-      [[-1], [1]].forEach(function (s) { var d = s[0];
+      [[-1], [1]].forEach(function (s) { var d = s[0]; if (part === "body" || (part === "wL" && d !== -1) || (part === "wR" && d !== 1)) return;
         g.Bz(function (p) { p.moveTo(32 + d * 8, 34); p.quadraticCurveTo(32 + d * 18, 8 + w, 32 + d * 31, 12 + w); p.quadraticCurveTo(32 + d * 28, 22 + w, 32 + d * 30, 30 + w); p.quadraticCurveTo(32 + d * 22, 28, 32 + d * 22, 38 + w * 0.5); p.quadraticCurveTo(32 + d * 16, 34, 32 + d * 10, 46); }, "#8a1a2a", { s: 2.2 });
         g.stroke(function (p) { p.moveTo(32 + d * 9, 36); p.lineTo(32 + d * 30, 12 + w); p.moveTo(32 + d * 12, 38); p.lineTo(32 + d * 27, 30 + w * 0.8); }, 1.3, OUT); });
+      if (BODY) {
       g.RR(20, 50, 9, 10, 3, "#c42a34", { s: 1.4 }); g.RR(35, 50, 9, 10, 3, "#c42a34", { s: 1.4 }); [21, 25, 36, 40].forEach(function (x) { g.Pg([[x, 59], [x + 2.2, 59], [x + 1.1, 62.4]], "#fff3d0", { flat: 1, lw: 0.8 }); });
       g.E(32, 42, 15, 15, "#d8343c", { s: 2.6 }); g.Bz(function (p) { p.moveTo(24, 32); p.lineTo(40, 32); p.quadraticCurveTo(42, 46, 32, 56); p.quadraticCurveTo(22, 46, 24, 32); }, "#ffc86a", { s: 1.4 });
       [36, 40, 44, 48, 52].forEach(function (y) { g.stroke(function (p) { p.moveTo(25.4, y); p.quadraticCurveTo(32, y + 3, 38.6, y); }, 1, "#c8863a"); });
@@ -6634,6 +6666,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.E(32, 26, 8, 6, "#e85a50", { s: 1.2 }); g.E(28.6, 25, 1.2, 1.8, "#150f26", { flat: 1, lw: 0 }); g.E(35.4, 25, 1.2, 1.8, "#150f26", { flat: 1, lw: 0 });
       glowEye(g, 26.4, 16.4, 2.6, "#ffe03a"); glowEye(g, 37.6, 16.4, 2.6, "#ffe03a"); brow(g, 26.4, 13.6, 4, 1); brow(g, 37.6, 13.6, 4, -1);
       g.grin(32, 30.6, 5.6, 2, 4);
+      }
       g.x.restore();
     });
     /* 10. Mimique */
@@ -6880,35 +6913,38 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* 25. Cyclope */
-    def("cyclops", function (g, fr) {
-      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1.2 : 0; sh(g, 23);
-      g.RR(19, 48 + a, 11, 12, 3, "#4a5a8a", { s: 1.4 }); g.RR(34, 48 + b2, 11, 12, 3, "#4a5a8a", { s: 1.4 });
+    def("cyclops", function (g, fr, part) {
+      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1.2 : 0, BODY = part !== "armR", LIMB = !part || part === "armR"; if (BODY) sh(g, 23);
+      if (BODY) { g.RR(19, 48 + a, 11, 12, 3, "#4a5a8a", { s: 1.4 }); g.RR(34, 48 + b2, 11, 12, 3, "#4a5a8a", { s: 1.4 }); }
       g.x.save(); g.x.translate(0, bob);
-      g.L(14, 30, 8, 44, 9.4, "#6a7ab8"); g.E(8, 46, 5.2, 5.2, "#6a7ab8", { s: 1.4 });
-      g.E(32, 38, 18, 15, "#6a7ab8", { s: 2.6 }); g.E(32, 42, 11, 8, "#8a9ad0", { flat: 1, lw: 0 });
-      g.Bz(function (p) { p.moveTo(17, 46); p.lineTo(47, 46); p.lineTo(49, 56); p.lineTo(32, 52); p.lineTo(15, 56); }, "#8a5a30", { s: 1.4 }); g.RR(17, 45, 30, 2.6, 1, "#3a2210", { flat: 1 });
-      g.L(50, 32, 54, 44, 9.4, "#6a7ab8");
-      g.L(54, 48, 54, 12, 4.4, "#6a4426"); g.E(54, 10, 8, 9, "#7a5230", { s: 1.4 }); [[47, 6], [61, 6], [54, 0], [47, 14], [61, 14]].forEach(function (s) { g.spike(s[0], s[1], (s[0] - 54) * 0.4, (s[1] - 10) * 0.4, 1.4); });
-      g.E(54, 47, 5.2, 5.2, "#6a7ab8", { s: 1.4 });
+      if (BODY) { g.L(14, 30, 8, 44, 9.4, "#6a7ab8"); g.E(8, 46, 5.2, 5.2, "#6a7ab8", { s: 1.4 }); }
+      if (BODY) { g.E(32, 38, 18, 15, "#6a7ab8", { s: 2.6 }); g.E(32, 42, 11, 8, "#8a9ad0", { flat: 1, lw: 0 }); }
+      if (BODY) { g.Bz(function (p) { p.moveTo(17, 46); p.lineTo(47, 46); p.lineTo(49, 56); p.lineTo(32, 52); p.lineTo(15, 56); }, "#8a5a30", { s: 1.4 }); g.RR(17, 45, 30, 2.6, 1, "#3a2210", { flat: 1 }); }
+      if (LIMB) { g.L(50, 32, 54, 44, 9.4, "#6a7ab8"); }
+      if (LIMB) { g.L(54, 48, 54, 12, 4.4, "#6a4426"); g.E(54, 10, 8, 9, "#7a5230", { s: 1.4 }); [[47, 6], [61, 6], [54, 0], [47, 14], [61, 14]].forEach(function (s) { g.spike(s[0], s[1], (s[0] - 54) * 0.4, (s[1] - 10) * 0.4, 1.4); }); }
+      if (LIMB) { g.E(54, 47, 5.2, 5.2, "#6a7ab8", { s: 1.4 }); }
+      if (BODY) {
       g.Pg([[25, 12], [32, 0], [39, 12]], "#f4e8c6", { s: 0.8 });
       g.E(32, 21, 12.4, 11.4, "#6a7ab8", { s: 2.2 });
       g.E(32, 19.4, 7.6, 6.6, "#fffbe8", { flat: 1, lw: 1.3 }); glowEye(g, 32, 19.8, 4.4, "#ff3a2a"); g.E(32, 20, 1.6, 3.4, OUT, { flat: 1, lw: 0 }); g.dot(30.4, 18, 1.2, "#ffffff");
       brow(g, 32, 12.6, 7.4, 1);
       g.RR(25, 27, 14, 4.8, 2, "#2a0a14", { flat: 1, lw: 1 }); [27, 30, 33, 36].forEach(function (x) { g.fang(x, 27.2, 1.2, 3); });
+      }
       g.x.restore();
     });
 
 
     /* Plage : le crabe-roi */
-    def("crabking", function (g, fr) {
-      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1 : 0, R = "#d8452a", RD = "#a82a18";
-      sh(g, 26);
+    def("crabking", function (g, fr, part) {
+      var a = fr === 1 ? -2 : 0, b2 = fr === 2 ? -2 : 0, bob = fr ? -1 : 0, R = "#d8452a", RD = "#a82a18", CL = !part || part === "clL", CR = !part || part === "clR", BODY = part !== "clL" && part !== "clR";
+      if (BODY) { sh(g, 26); }
       g.x.save(); g.x.translate(0, bob);
-      g.L(17, 44, 8, 50 + a, 3.2, RD); g.L(8, 50 + a, 6, 58, 3, RD); g.L(21, 48, 13, 55 + b2, 3.2, RD); g.L(13, 55 + b2, 12, 60, 3, RD);
-      g.L(47, 44, 56, 50 + b2, 3.2, RD); g.L(56, 50 + b2, 58, 58, 3, RD); g.L(43, 48, 51, 55 + a, 3.2, RD); g.L(51, 55 + a, 52, 60, 3, RD);
-      g.L(16, 36, 8, 26, 5.4, R); g.L(48, 36, 56, 26, 5.4, R);
-      g.E(8, 18, 9, 8.4, R, { s: 1.8 }); g.Pg([[1, 14], [6, 3], [12, 13]], R, { s: 1.4 }); g.Pg([[4, 18], [3, 9], [8, 15]], "#7a1a10", { flat: 1, lw: 0.8 });
-      g.E(56, 18, 9, 8.4, R, { s: 1.8 }); g.Pg([[63, 14], [58, 3], [52, 13]], R, { s: 1.4 }); g.Pg([[60, 18], [61, 9], [56, 15]], "#7a1a10", { flat: 1, lw: 0.8 });
+      if (BODY) { g.L(17, 44, 8, 50 + a, 3.2, RD); g.L(8, 50 + a, 6, 58, 3, RD); g.L(21, 48, 13, 55 + b2, 3.2, RD); g.L(13, 55 + b2, 12, 60, 3, RD); }
+      if (BODY) { g.L(47, 44, 56, 50 + b2, 3.2, RD); g.L(56, 50 + b2, 58, 58, 3, RD); g.L(43, 48, 51, 55 + a, 3.2, RD); g.L(51, 55 + a, 52, 60, 3, RD); }
+      if (CL) g.L(16, 36, 8, 26, 5.4, R); if (CR) g.L(48, 36, 56, 26, 5.4, R);
+      if (CL) { g.E(8, 18, 9, 8.4, R, { s: 1.8 }); g.Pg([[1, 14], [6, 3], [12, 13]], R, { s: 1.4 }); g.Pg([[4, 18], [3, 9], [8, 15]], "#7a1a10", { flat: 1, lw: 0.8 }); }
+      if (CR) { g.E(56, 18, 9, 8.4, R, { s: 1.8 }); g.Pg([[63, 14], [58, 3], [52, 13]], R, { s: 1.4 }); g.Pg([[60, 18], [61, 9], [56, 15]], "#7a1a10", { flat: 1, lw: 0.8 }); }
+      if (BODY) {
       g.E(32, 42, 20, 13, R, { s: 2.6 }); g.E(32, 38, 13, 7, "#ee6a48", { flat: 1, lw: 0 });
       [[22, 44], [32, 47], [42, 44]].forEach(function (c) { g.dot(c[0], c[1], 1.4, "#ee6a48"); });
       g.L(26, 32, 24, 22, 2.6, RD); g.L(38, 32, 40, 22, 2.6, RD);
@@ -6916,6 +6952,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       brow(g, 24, 14, 4.4, 1); brow(g, 40, 14, 4.4, -1);
       g.Pg([[21, 33], [23, 26], [27, 31], [32, 23], [37, 31], [41, 26], [43, 33]], "#ffc83a", { s: 0.9 });
       g.RR(24, 47, 16, 4.6, 2, "#2a0a14", { flat: 1, lw: 1 }); [26, 30, 34, 38].forEach(function (x) { g.fang(x, 47.2, 1.2, 3); });
+      }
       g.x.restore();
     });
     /* Boucherie : le Grand Boucher en personne (même dessin que son portrait de chef) */
@@ -6950,7 +6987,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       if (!cache[id]) cache[id] = [0, 1, 2].map(function (fr) { var g = FARM.Sheet(); DEF[id](g, fr); if (APRON[id]) apron(g, APRON[id], fr); return polish(g.c, id); });
       return cache[id];
     }
-    function big(id, fr, px) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); DEF[id](g, fr || 0); return polish(g.c, id); }
+    function big(id, fr, px, part) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); DEF[id](g, fr || 0, part); return polish(g.c, id); }
     function bigLT(mid, fr, px) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); LT.draw(LT.DEFS[mid], g, fr || 0); return polish(g.c, "lt"); }
     return { frames: frames, ids: ORDER, FLY: FLY, big: big, bigLT: bigLT };
   })();
@@ -13181,7 +13218,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var DUEL_RR = function (a, b) { return a + Math.random() * (b - a); };
   function dHits(n, t0, jit, gapA, gapB) { var out = [], t = t0 + DUEL_RR(0, jit); for (var i = 0; i < n; i++) { out.push(t); t += DUEL_RR(gapA, gapB); } return out; }
   var BOSSDUEL = {
-    ogre: { art: "ogre", h: 3.5, sw: 1.25, f: 0, sub: "Le garde-manger personnel du Boucher", scene: "farm", dmg: 1, spd: 0.8, rspd: 0.95, first: "massue", jumpMove: "onde", pool: ["massue", "triple", "triple", "onde"], rpool: ["furie", "furie", "triple", "onde", "massue"],
+    ogre: { art: "ogre", parts: [{ name: "armR", pivot: [50, 32], k: 1 }], gest: { wind: 0.55, strike: -1.6, raise: -0.8 }, idle: { amp: 0.05, hz: 0.8 }, h: 3.5, sw: 1.25, f: 0, sub: "Le garde-manger personnel du Boucher", scene: "farm", dmg: 1, spd: 0.8, rspd: 0.95, first: "massue", jumpMove: "onde", pool: ["massue", "triple", "triple", "onde"], rpool: ["furie", "furie", "triple", "onde", "massue"],
       moves: {
         massue: { name: "Coup de massue", kind: "melee", pct: 0.13, hits: function () { return [1150 + DUEL_RR(-200, 650)]; } },
         triple: { name: "Triple frappe", kind: "melee", pct: 0.065, hits: function () { var a = 1000 + DUEL_RR(0, 300), b = a + DUEL_RR(380, 620); return [a, b, b + DUEL_RR(420, 900)]; } },
@@ -13201,7 +13238,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         bulles: { name: "Bulles toxiques", kind: "rain", pct: 0.06, col: "140,255,130", hits: function () { return dHits(4, 1000, 200, 380, 560); } },
         deluge: { name: "Déluge toxique", kind: "rain", pct: 0.05, col: "140,255,130", hits: function () { return dHits(6, 950, 150, 300, 440); } },
         cri: { name: "Cri du marais", kind: "wave", pct: 0.14, hits: function () { return [1700 + DUEL_RR(0, 250)]; } } } },
-    dragon: { art: "dragon", h: 3.9, sw: 1.7, f: 0, anim: 1, fly: 1, sub: "Il garde les cuisines du Boucher", scene: "volcano", dmg: 1.15, spd: 0.8, rspd: 0.95, first: "boules", jumpMove: "queue", pool: ["souffle", "boules", "boules", "queue"], rpool: ["double", "pluie", "souffle", "queue", "boules"],
+    dragon: { art: "dragon", parts: [{ name: "wL", pivot: [24, 34], k: 1, behind: 1 }, { name: "wR", pivot: [40, 34], k: -1, behind: 1 }], gest: { wind: 0.5, strike: -0.45, raise: 0.65 }, idle: { amp: 0.22, hz: 2.2 }, h: 3.9, sw: 1.7, f: 0, anim: 1, fly: 1, sub: "Il garde les cuisines du Boucher", scene: "volcano", dmg: 1.15, spd: 0.8, rspd: 0.95, first: "boules", jumpMove: "queue", pool: ["souffle", "boules", "boules", "queue"], rpool: ["double", "pluie", "souffle", "queue", "boules"],
       moves: {
         souffle: { name: "Souffle de flammes", kind: "beam", pct: 0.16, col: "255,150,50", charge: 1000, hits: function () { return [1700 + DUEL_RR(0, 200)]; } },
         boules: { name: "Boules de feu", kind: "shot", pct: 0.07, col: "255,130,40", sz: 0.18, hits: function () { return dHits(3, 1000, 250, 450, 700); } },
@@ -13223,13 +13260,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         momies: { name: "Marche des momies", kind: "swarm", pct: 0.06, col: "235,225,195", hits: function () { return dHits(3, 950, 200, 420, 560); } },
         scarabees: { name: "Nuée de scarabées", kind: "shot", pct: 0.055, col: "120,230,200", hits: function () { return dHits(4, 1000, 200, 380, 620); } },
         malediction: { name: "Double rayon", kind: "beam", pct: 0.09, col: "255,210,90", charge: 950, hits: function () { var a = 1600 + DUEL_RR(0, 150); return [a, a + 650 + DUEL_RR(0, 200)]; } } } },
-    cyclops: { art: "cyclops", h: 3.9, sw: 1.4, f: 0, sub: "Un seul œil, aucune pitié", scene: "mesa", dmg: 1.1, spd: 0.78, rspd: 0.93, first: "massue", jumpMove: "seisme", pool: ["massue", "seisme", "pierres", "pierres"], rpool: ["pietine", "seisme", "pierres", "massue"],
+    cyclops: { art: "cyclops", parts: [{ name: "armR", pivot: [50, 32], k: 1 }], gest: { wind: 0.55, strike: -1.6, raise: -0.8 }, idle: { amp: 0.05, hz: 0.8 }, h: 3.9, sw: 1.4, f: 0, sub: "Un seul œil, aucune pitié", scene: "mesa", dmg: 1.1, spd: 0.78, rspd: 0.93, first: "massue", jumpMove: "seisme", pool: ["massue", "seisme", "pierres", "pierres"], rpool: ["pietine", "seisme", "pierres", "massue"],
       moves: {
         massue: { name: "Massue du cyclope", kind: "melee", pct: 0.17, hits: function () { return [1350 + DUEL_RR(-200, 500)]; } },
         seisme: { name: "Séisme", kind: "wave", pct: 0.15, hits: function () { return [1750 + DUEL_RR(0, 250)]; } },
         pierres: { name: "Jets de pierres", kind: "shot", pct: 0.07, col: "200,180,160", sz: 0.17, hits: function () { return dHits(3, 1000, 250, 450, 700); } },
         pietine: { name: "Piétinement", kind: "melee", pct: 0.07, hits: function () { var t = 950 + DUEL_RR(0, 200), out = []; for (var i = 0; i < 4; i++) { out.push(t); t += DUEL_RR(420, 620); } return out; } } } },
-    crabking: { art: "crabking", h: 3.2, sw: 1.6, f: 0, sub: "Le roi de la marée basse", scene: "shore", dmg: 1.05, spd: 0.8, rspd: 0.95, first: "pinces", jumpMove: "maree", pool: ["pinces", "bulles", "eventail", "maree"], rpool: ["tenaille", "bulles", "maree", "eventail"],
+    crabking: { art: "crabking", parts: [{ name: "clL", pivot: [16, 36], k: 1, behind: 1 }, { name: "clR", pivot: [48, 36], k: -1, behind: 1 }], gest: { wind: -0.6, strike: 1.3, raise: -0.9 }, idle: { amp: 0.12, hz: 1.1 }, h: 3.2, sw: 1.6, f: 0, sub: "Le roi de la marée basse", scene: "shore", dmg: 1.05, spd: 0.8, rspd: 0.95, first: "pinces", jumpMove: "maree", pool: ["pinces", "bulles", "eventail", "maree"], rpool: ["tenaille", "bulles", "maree", "eventail"],
       moves: {
         pinces: { name: "Coup de pinces", kind: "melee", pct: 0.09, hits: function () { var a = 1000 + DUEL_RR(0, 250); return [a, a + DUEL_RR(450, 650)]; } },
         bulles: { name: "Bulles explosives", kind: "rain", pct: 0.06, col: "150,220,255", hits: function () { return dHits(4, 1000, 200, 380, 560); } },
@@ -13264,15 +13301,35 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var ARTC = {};
     function ogreArt() {
       var key = D.key; if (ARTC[key]) return ARTC[key];
-      var px = 512, raw = [0, 1, 2].map(function (fr) { return D.mid != null ? MON.bigLT(D.mid, fr, px) : MON.big(D.cfg.art, fr, px); });
+      var px = 512, PT = (D.mid == null && D.cfg.parts) || null, big = function (fr, part) { return D.mid != null ? MON.bigLT(D.mid, fr, px) : MON.big(D.cfg.art, fr, px, part); };
+      var raw = [0, 1, 2].map(function (fr) { return big(fr); });
       var q = raw[0].getContext("2d").getImageData(0, 0, px, px).data, x0 = px, y0 = px, x1 = 0, y1 = 0, xx, yy;
       for (yy = 0; yy < px; yy += 2) for (xx = 0; xx < px; xx += 2) if (q[(yy * px + xx) * 4 + 3] > 120) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
       x0 = Math.max(0, x0 - 12); x1 = Math.min(px, x1 + 12); y0 = Math.max(0, y0 - 12); y1 = Math.min(px, y1 + Math.round((y1 - y0) * 0.07) + 6);
       var cw = Math.max(8, x1 - x0), ch = Math.max(8, y1 - y0);
-      var f = raw.map(function (c) { var t = mkCanvas(cw, ch); t.getContext("2d").drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch); return t; });
+      function crop(c) { var t = mkCanvas(cw, ch); t.getContext("2d").drawImage(c, x0, y0, cw, ch, 0, 0, cw, ch); return t; }
+      var f = raw.map(crop);
       function tint(c, col) { var t = mkCanvas(c.width, c.height), y = t.getContext("2d"); y.drawImage(c, 0, 0); y.globalCompositeOperation = "source-atop"; y.fillStyle = col; y.fillRect(0, 0, t.width, t.height); return t; }
-      return (ARTC[key] = { f: f, red: f.map(function (c) { return tint(c, "rgba(255,40,24,0.2)"); }), w: silh(f[0], "#ffffff"), rim: silh(f[0], "#ffb36a") });
+      var A = { f: f, red: f.map(function (c) { return tint(c, "rgba(255,40,24,0.2)"); }), w: silh(f[0], "#ffffff"), rim: silh(f[0], "#ffb36a") };
+      if (PT) {
+        A.bf = [0, 1, 2].map(function (fr) { return crop(big(fr, "body")); }); A.pf = {};
+        A.parts = PT.map(function (p) { A.pf[p.name] = [0, 1, 2].map(function (fr) { return crop(big(fr, p.name)); }); return { name: p.name, behind: p.behind, k: p.k, px: (32 + 0.86 * (p.pivot[0] - 32)) * px / 64 - x0, py: (11.5 + 0.86 * p.pivot[1]) * px / 64 - y0 }; });
+        A.comp = mkCanvas(cw, ch); A.rimc = mkCanvas(cw, ch); A.whc = mkCanvas(cw, ch);
+      }
+      return (ARTC[key] = A);
     }
+    /* assemble le boss image par image : le corps, puis ses membres (bras, ailes, pinces) tournés autour de leur articulation */
+    function compose(A, fr) {
+      var c = A.comp, y = c.getContext("2d"), o = D.ogre, I = D.cfg.idle || { amp: 0, hz: 1 }, pa = o.pa + I.amp * Math.sin(D.time * I.hz * 0.00628);
+      y.clearRect(0, 0, c.width, c.height);
+      function part(p) { y.save(); y.translate(p.px, p.py); y.rotate(pa * p.k); y.translate(-p.px, -p.py); y.drawImage(A.pf[p.name][fr], 0, 0); y.restore(); }
+      A.parts.forEach(function (p) { if (p.behind) part(p); });
+      y.drawImage(A.bf[fr], 0, 0);
+      A.parts.forEach(function (p) { if (!p.behind) part(p); });
+      if (D.rage) { y.globalCompositeOperation = "source-atop"; y.fillStyle = "rgba(255,40,24,0.2)"; y.fillRect(0, 0, c.width, c.height); y.globalCompositeOperation = "source-over"; }
+      return c;
+    }
+    function tintOf(src, dst, col) { var y = dst.getContext("2d"); y.clearRect(0, 0, dst.width, dst.height); y.drawImage(src, 0, 0); y.globalCompositeOperation = "source-in"; y.fillStyle = col; y.fillRect(0, 0, dst.width, dst.height); y.globalCompositeOperation = "source-over"; return dst; }
     function cl(v, a, b) { return v < a ? a : v > b ? b : v; }
     function eo(t) { return 1 - Math.pow(1 - t, 3); }
     function ei(t) { return t * t * t; }
@@ -13319,7 +13376,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (D.shotN) { camT = shot(D.shotN); }
     }
     function heroArt(v) { return FARM.big(v, 512) || FARM.big("cocotte", 512); }
-    function heroBack(v) { return FARM.back(v, 512) || FARM.back("cocotte", 512); }
+    var HFC = {};
+    function hf(name, i) {
+      var key = name + i; if (HFC[key]) return HFC[key];
+      var P = FARM.backPoses(D.v, name); P = P[i % P.length], c = FARM.backFrame(D.v, P, 384);
+      return (HFC[key] = { c: c, rim: silh(c, "#ffc890") });
+    }
+    function hfW(f) { return f.w || (f.w = silh(f.c, "#ffffff")); }
+    function hfR(f) { return f.r || (f.r = silh(f.c, "#ff3030")); }
+    function setPose(n, ms) { var h = D.hero; h.pose = n; h.poseT = D.time; h.poseUntil = D.time + ms; }
     function start(e) {
       if (D || !e) return;
       var v = (state && state.variant) || "cocotte";
@@ -13328,13 +13393,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       mode = "duel"; haltInput();
       var cfg = BOSSDUEL[e.type], mid = null;
       if (e.skin && e.skin.indexOf("lt_") === 0) { Object.keys(LT.DEFS).forEach(function (m) { if ("lt_" + LT.DEFS[m].id === e.skin) mid = +m; }); }
-      var hfront = heroArt(v), him = heroBack(v);
+      var hfront = heroArt(v); HFC = {};
       D = {
         e: e, v: v, cfg: cfg, sc: DUEL_SC[cfg.scene], mid: mid, key: mid != null ? "lt" + mid : e.type, bname: e.title || (NAMES[e.type] ? NAMES[e.type][1] : "Le boss"), bsub: e.superBoss ? "Lieutenant du Grand Boucher" : cfg.sub, dmgK: cfg.dmg * (e.superBoss ? 1.2 * [0.92, 1, 1.1][e.tier == null ? 1 : e.tier] : 1), rk: 0, bm: [], time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
         hp: Math.max(1, Math.round(e.hp)), max: Math.max(1, Math.round(e.maxHp)), brk: 0, broken: false, rage: false, ap: 3, phase: "intro", over: false,
         tH: 0, tO: 0.42, spdH: 1, spdO: cfg.spd * (e.superBoss ? 1.1 : 1), ogreTurns: 0, heroTurns: 0, tapAt: -9999, tapUsed: -9999, jumpAt: -9999, lockUntil: 0, jumpLock: 0, combo: null, lastMove: "",
-        hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, sx: 1, a: 1, fl: 0, flc: 0, h: 2.2, foot: 0.975, im: him, front: hfront, w: silh(him, "#ffffff"), r: silh(him, "#ff3030"), rim: silh(him, "#ffc890"), trail: [] },
-        ogre: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, fy: 0, rot: 0, sq: 1, a: 1, fl: 0, flc: 0, h: cfg.h * (e.superBoss ? 1.1 : 1), foot: 0.945, trail: [] },
+        hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, sx: 1, a: 1, fl: 0, flc: 0, h: 2.2, foot: 0.975, im: null, front: hfront, pose: "idle", poseUntil: 0, poseT: 0, dash: 0, w: null, r: null, rim: null, trail: [] },
+        ogre: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, fy: 0, pa: 0, sh: 0, rot: 0, sq: 1, a: 1, fl: 0, flc: 0, h: cfg.h * (e.superBoss ? 1.1 : 1), foot: 0.945, trail: [] },
         name: (SURV_VARIANTS[v] && SURV_VARIANTS[v].name) || "Héros", col: duelCol(v),
         skill: (FARM_POWERS[v] && FARM_POWERS[v].name) || "Pouvoir", ult: (ULTS[v] && ULTS[v].name) || "Déchaînement",
         snap: snap, shards: null, t0: performance.now(), petals: [], tufts: [], bars: 1, port: null
@@ -13342,7 +13407,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       cv = document.createElement("canvas"); cv.id = "duelcv"; document.body.appendChild(cv); x = cv.getContext("2d");
       layout();
       cam = shot("intro"); camT = shot("intro"); D.shotN = "intro"; ogreArt();
-      seedScene(); buildUI(); buildShards();
+      seedScene(); buildUI(); buildShards(); hf("idle", 0); D.fq = []; ["idle1", "idle2", "idle3", "wind0", "strike0", "follow0", "parry0", "hurt0", "dodge0", "jump0", "cast0", "walk0", "walk1", "walk2", "walk3", "walk4", "walk5"].forEach(function (k) { D.fq.push([k.replace(/\d$/, ""), +k.slice(-1)]); });
       cv.addEventListener("pointerdown", onDown); cv.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
       window.addEventListener("keydown", onKey, true); window.addEventListener("resize", layout);
       try { setTrack("boss"); } catch (err) {}
@@ -13431,6 +13496,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     function dashBack(ms, delay) { var h = D.hero; tw(h, "ox", 0, ms, eio, delay); tw(h, "oz", 0, ms, eio, delay); tw(h, "rot", 0, ms, eo, delay); D.hero.dash = D.time + (delay || 0) + ms; }
     function strikeFx(big) {
+      setPose("strike", 130); after(130, function () { if (D && !D.over) setPose("follow", 230); });
       var o = D.ogre, px = o.x + o.ox - 0.15, pz = o.z + o.oz - 0.2, py = 1.6 + rr(-0.4, 0.4);
       D.pt.push({ k: "slash", x: px, y: py, z: pz, t0: D.time, d: 260, a: rr(-0.9, -0.3) + (Math.random() < 0.5 ? 0 : 3.1), s: big ? 1.6 : 1.1, c: D.col });
       sparks(px, py, pz, big ? 22 : 12, "255,240,200"); sparks(px, py, pz, big ? 10 : 5, D.col);
@@ -13462,6 +13528,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function actAttack() {
       D.ap = Math.min(9, D.ap + 1); label("Attaque", "+1 PA", 900);
       setShot("clash", 2.2); dashIn(430);
+      after(310, function () { setPose("wind", 160); }); after(560, function () { setPose("wind", 140); });
       after(470, function () { tw(D.hero, "rot", -0.22, 90, eo); strikeFx(false); hitOgre(0.5, 9); });
       after(700, function () { tw(D.hero, "rot", 0.18, 90, eo); strikeFx(false); hitOgre(0.55, 9); });
       after(980, function () { if (!D.over) { setShot("wide", 2); dashBack(480); } });
@@ -13474,7 +13541,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var t1 = 1150 + rr(0, 200), t2 = t1 + 520 + rr(0, 260);
       D.qte = [{ t: D.time + t1, r: null }, { t: D.time + t2, r: null }];
       after(380, function () { D.phase = "qte"; });
-      D.qte.forEach(function (b, i) { after(b.t - D.time + 190, function () { if (b.r === null) gradeBeat(b, 9999); }); });
+      D.qte.forEach(function (b, i) { after(b.t - D.time - 180, function () { if (b.r === null) setPose("wind", 180); }); after(b.t - D.time + 190, function () { if (b.r === null) gradeBeat(b, 9999); }); });
       after(t2 + 650, function () { D.phase = "act"; D.qte = []; if (!D.over) { setShot("wide", 2); dashBack(480); } });
       endHeroAct(t2 + 1350);
     }
@@ -13493,7 +13560,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       D.ap -= 3;
       var ks = Object.keys(state.survW || {}).filter(function (k) { return state.survW[k]; }), n = Math.max(1, ks.length);
       label("Arsenal", n + (n > 1 ? " armes déchaînées" : " arme déchaînée"), 1300);
-      setShot("brace", 2.4);
+      setShot("brace", 2.4); setPose("cast", 260 + n * 150 + 450);
       tw(D.hero, "sq", 1.06, 220, eo); tw(D.hero, "sq", 1, 300, eo, 260); tw(D.hero, "oy", 0.35, 240, eo); tw(D.hero, "oy", 0, 300, ei, 700);
       var COL = ["255,120,60", "120,220,255", "255,230,120", "190,140,255", "120,255,170", "255,120,200"], tot = 1.55 + 0.22 * n;
       for (var i = 0; i < n; i++) (function (i) {
@@ -13509,7 +13576,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.survUlt = 0;
       try { ultPanel(D.v, D.ult); } catch (err) {}
       try { animalCry(D.v); } catch (err) {}
-      label(D.ult, "Ultime", 1800);
+      label(D.ult, "Ultime", 1800); setPose("cast", 1550);
       setShot("hero", 1.5);
       after(1500, function () { setShot("ogre", 2.2); flash("255,236,200", 260); });
       for (var i = 0; i < 5; i++) (function (i) {
@@ -13525,7 +13592,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     function counter() {
       D.phase = "act"; label("Contre-attaque !", "Toutes les attaques parées", 1300);
-      setShot("clash", 3.5); slow(0.45, 380); dashIn(300);
+      setShot("clash", 3.5); slow(0.45, 380); dashIn(300); after(130, function () { setPose("wind", 170); });
       after(330, function () { tw(D.hero, "rot", -0.3, 80, eo); strikeFx(true); flash("255,255,255", 150); hitOgre(1.35, 22, true, "Contre"); });
       after(800, function () { if (!D.over) { setShot("wide", 2); dashBack(450); } });
       endHeroAct(1450);
@@ -13561,22 +13628,25 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       label(M.name, D.ogreTurns <= 2 || (jump && !D.jumpTold) ? (jump ? "Glisse vers le haut au moment de l'impact pour SAUTER" : "Tape au moment de l'impact pour PARER") : "", jump ? 2200 : 1700);
       if (jump) D.jumpTold = true;
       setShot("ogre", 2.4); sfx("warn");
-      var col = M.col || "255,255,255", mouthY = function () { return 1.6 + o.fy * 0.7 + o.oy; };
+      var G = D.cfg.gest || { wind: 0, strike: 0, raise: 0 }, col = M.col || "255,255,255", mouthY = function () { return 1.6 + o.fy * 0.7 + o.oy; };
       if (melee) {
         var tx = h.x + (D.por ? 0.9 : 1.5), tz = h.z + 2;
         tw(o, "ox", tx - o.x, 520, eio, 300); tw(o, "oz", tz - o.z, 520, eio, 300);
         after(first - 520, function () { setShot("brace", 4); });
       } else if (kd === "wave") {
+        tw(o, "pa", G.raise, 380, eo, first - 1050); tw(o, "pa", G.strike * 0.8, 110, ei, first - 170); tw(o, "pa", 0, 350, eo, first + 60); tw(o, "sh", -0.1, 380, eo, first - 1050); tw(o, "sh", 0.18, 110, ei, first - 170); tw(o, "sh", 0, 350, eo, first + 60);
         tw(o, "oy", 2.4, 380, eo, first - 1050); tw(o, "sq", 1.08, 380, eo, first - 1050);
         tw(o, "oy", 0, 170, ei, first - 670); tw(o, "sq", 0.88, 90, eo, first - 500); tw(o, "sq", 1, 300, eo, first - 410);
         after(first - 500, function () { shake(8); sfx("boom"); D.wv.push({ fx: o.x, fz: o.z, tx: h.x, tz: h.z, t0: D.time, d: 500 }); setShot("brace", 3); });
       } else if (kd === "leap") {
         var lx = h.x + (D.por ? 0.9 : 1.4), lz = h.z + 1.6;
+        tw(o, "pa", G.raise, 380, eo, first - 1300); tw(o, "pa", G.strike, 200, ei, first - 230); tw(o, "pa", 0, 350, eo, first + 60); tw(o, "sh", -0.1, 380, eo, first - 1300); tw(o, "sh", 0.2, 200, ei, first - 230); tw(o, "sh", 0, 350, eo, first + 60);
         tw(o, "oy", 3.4, 380, eo, first - 1300); tw(o, "ox", lx - o.x, 650, eio, first - 1300); tw(o, "oz", lz - o.z, 650, eio, first - 1300);
         tw(o, "oy", 0, 230, ei, first - 230); tw(o, "sq", 0.86, 90, eo, first - 90); tw(o, "sq", 1, 300, eo, first + 20);
         after(first - 600, function () { setShot("range", 3); });
         after(first - 20, function () { shake(9); sfx("boom"); D.pt.push({ k: "ring", x: o.x + o.ox, y: 0.05, z: o.z + o.oz, t0: D.time, d: 520, c: "255,230,190", s: 2.2 }); sparks(o.x + o.ox, 0.2, o.z + o.oz, 18, "200,180,150"); });
       } else {
+        tw(o, "pa", G.raise * 0.7, 450, eo, Math.max(0, first - 1000)); tw(o, "sh", -0.06, 450, eo, Math.max(0, first - 1000));
         tw(o, "sq", kd === "beam" ? 1.1 : 1.07, kd === "beam" ? (M.charge || 900) : 450, eo, Math.max(0, first - (kd === "beam" ? (M.charge || 900) + 100 : 1150)));
         after(Math.max(0, first - 620), function () { setShot("range", 3); });
       }
@@ -13586,6 +13656,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           tw(o, "rot", 0.2 * side, 260, eo, t - 520); tw(o, "sq", 1.06, 260, eo, t - 520);
           tw(o, "rot", -0.34 * side, 80, ei, t - 80); tw(o, "sq", 0.94, 80, ei, t - 80);
           tw(o, "rot", 0, 300, eo, t + 60); tw(o, "sq", 1, 300, eo, t + 60);
+          tw(o, "pa", G.wind, 260, eo, t - 520); tw(o, "pa", G.strike, 85, ei, t - 85); tw(o, "pa", 0, 320, eo, t + 60); tw(o, "sh", -0.1, 260, eo, t - 520); tw(o, "sh", 0.22, 85, ei, t - 85); tw(o, "sh", 0, 320, eo, t + 60);
         } else if (kd === "shot") {
           after(t - 560, function () { if (D.over) return; D.pj.push({ fx: o.x + o.ox, fy: mouthY(), fz: o.z + o.oz - 0.3, tx: h.x + h.ox, ty: 1.3, tz: h.z + h.oz, h: 0.3, t0: D.time, d: 560, c: col, sz: M.sz || 0.13, hit: function (p2) { sparks(p2.tx, p2.ty, p2.tz, 5, col); } }); tw(o, "sq", 0.93, 70, ei); tw(o, "sq", 1, 240, eo, 90); sfx("shoot"); });
         } else if (kd === "rain") {
@@ -13596,11 +13667,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           D.bm.push({ t0: D.time + (i === 0 ? t - (M.charge || 900) : t - 300), t: D.time + t, c: col });
           if (i === 0) after(t - (M.charge || 900), function () { sfx("charge"); });
         }
+        if (!melee && !jump) { var tk = kd === "beam" ? t - 60 : t - (kd === "shot" ? 560 : kd === "rain" ? 520 : 600); tw(o, "pa", G.strike * 0.5, 70, ei, Math.max(0, tk)); tw(o, "pa", G.raise * 0.6, 240, eo, Math.max(0, tk) + 80); tw(o, "sh", 0.1, 70, ei, Math.max(0, tk)); tw(o, "sh", -0.03, 240, eo, Math.max(0, tk) + 80); }
         var w = { t: D.time + t, j: jump, pct: M.pct, r: null };
         D.wins.push(w);
         after(t + 50, function () { resolve(w); });
       });
-      after(lastH + 650, function () { if (melee || kd === "leap") { tw(o, "ox", 0, 520, eio); tw(o, "oz", 0, 520, eio); } D.wins = []; });
+      after(lastH + 650, function () { tw(o, "pa", 0, 350, eo); tw(o, "sh", 0, 350, eo); if (melee || kd === "leap") { tw(o, "ox", 0, 520, eio); tw(o, "oz", 0, 520, eio); } D.wins = []; });
       after(lastH + 1200, function () {
         if (D.over) return;
         if (!D.combo.jump && D.combo.ok === D.combo.n) counter(); else { D.phase = "act"; nextTurn(); }
@@ -13617,12 +13689,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         sparks(hx + 0.4, 1.5, hz + 0.1, 26, "255,250,220"); sparks(hx + 0.4, 1.5, hz + 0.1, 10, "120,200,255");
         D.pt.push({ k: "ring", x: hx + 0.4, y: 1.5, z: hz + 0.1, t0: D.time, d: 300, c: "255,255,255", s: 1.2 });
         D.fl.push({ x: hx, y: 2.9, z: hz, t: "Parade", c: "#ffffff", s: 1.25, t0: D.time, d: 900, serif: 1 });
-        flash("255,255,255", 110); slow(0.3, 170); shake(4); sfx("parry");
+        flash("255,255,255", 110); slow(0.3, 170); shake(4); sfx("parry"); setPose("parry", 300);
         tw(h, "rot", -0.12, 60, eo); tw(h, "rot", 0, 260, eo, 80); tw(o, "rot", 0.16, 70, eo);
         return;
       } else if (fresh && dt >= -330 && dt < -150) {
         D.tapUsed = D.tapAt; w.r = "dodge";
-        tw(h, "ox", h.ox - 0.55, 110, eo); tw(h, "ox", h.ox, 300, eio, 160);
+        setPose("dodge", 340); tw(h, "ox", h.ox - 0.55, 110, eo); tw(h, "ox", h.ox, 300, eio, 160);
         D.fl.push({ x: hx, y: 2.9, z: hz, t: "Esquive", c: "#c9d1e8", s: 1, t0: D.time, d: 800, serif: 1 }); sfx("dodge"); return;
       }
       w.r = "hit"; hurtHero(w.pct);
@@ -13633,7 +13705,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.hp = Math.max(0, state.hp - dmg);
       var h = D.hero;
       h.flc = 1; tw(h, "flc", 0, 320, lin); tw(h, "ox", h.ox - 0.3, 90, eo); tw(h, "ox", 0, 380, eio, 120); tw(h, "rot", 0.14, 90, eo); tw(h, "rot", 0, 380, eo, 120);
-      D.hurtT = D.time; shake(9); sfx("thump");
+      D.hurtT = D.time; shake(9); sfx("thump"); setPose("hurt", 430);
       sparks(h.x + h.ox, 1.4, h.z + h.oz, 14, "255,70,60");
       D.fl.push({ x: h.x + h.ox + 0.3, y: 2.6, z: h.z + h.oz, t: "-" + dmg, c: "#ff5a4f", s: 1.15, t0: D.time, d: 1000 });
       if (state.hp <= 0) heroDown();
@@ -13644,7 +13716,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         mode = "duel"; label("Second souffle", "Tu te relèves", 1400); flash("110,214,255", 400); return;
       }
       D.over = true; D.q = []; D.wins = []; D.phase = "end"; showUI(false);
-      label("Tu tombes…", "", 1600); setShot("parry", 1.2); slow(0.4, 900);
+      label("Tu tombes…", "", 1600); setPose("hurt", 99999); setShot("parry", 1.2); slow(0.4, 900);
       tw(D.hero, "rot", -1.2, 900, eo); tw(D.hero, "oy", -0.2, 900, eo); tw(D.hero, "a", 0.35, 1200, lin);
       D.fadeOut = { t0: D.time + 900, d: 700 };
       after(1700, function () { close("lose"); });
@@ -13661,7 +13733,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         for (var i = 0; i < 90; i++) D.pt.push({ k: i % 3 ? "ash" : "petal", x: o.x + o.ox + rr(-0.9, 0.9), y: rr(0.2, 3.4), z: o.z + o.oz + rr(-0.3, 0.3), vx: rr(0.2, 1.4), vy: rr(0.4, 1.6), vz: rr(-0.3, 0.3), t0: D.time + rr(0, 1400), d: rr(1400, 2600), c: i % 3 ? "40,30,40" : "220,60,60", s: rr(0.04, 0.09), r: rr(0, 6) });
       });
       after(1300, function () { setShot("victory", 1); tw(D.hero, "oz", 0, 600, eio); tw(D.hero, "ox", 0, 600, eio); tw(D.hero, "sx", 0.02, 170, ei, 650); });
-      after(1990, function () { var h = D.hero; h.im = h.front; h.w = silh(h.front, "#ffffff"); h.r = silh(h.front, "#ff3030"); h.rim = silh(h.front, "#ffc890"); tw(h, "sx", 1, 220, eo); tw(h, "sq", 1.06, 200, eo, 200); tw(h, "sq", 1, 400, eo, 420); });
+      after(1990, function () { var h = D.hero; h.turned = true; h.im = h.front; h.w = silh(h.front, "#ffffff"); h.r = silh(h.front, "#ff3030"); h.rim = silh(h.front, "#ffc890"); tw(h, "sx", 1, 220, eo); tw(h, "sq", 1.06, 200, eo, 200); tw(h, "sq", 1, 400, eo, 420); });
       D.fadeOut = { t0: D.time + 3000, d: 600 };
       after(3600, function () { close("win"); });
     }
@@ -13673,7 +13745,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       window.removeEventListener("keydown", onKey, true); window.removeEventListener("resize", layout);
       if (cv.parentNode) cv.parentNode.removeChild(cv); if (ui && ui.parentNode) ui.parentNode.removeChild(ui);
       var ub = document.getElementById("ultban"); if (ub) ub.remove();
-      D = null; cv = null; x = null; ui = null;
+      D = null; cv = null; x = null; ui = null; HFC = {};
       mode = "play"; haltInput();
       if (res === "win") {
         dmgSrc = "Duel";
@@ -13699,7 +13771,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     function jump() {
       if (!D || D.phase !== "enemy" || D.time < D.jumpLock) return;
-      D.jumpAt = D.time; D.jumpLock = D.time + 650;
+      D.jumpAt = D.time; D.jumpLock = D.time + 650; setPose("jump", 520);
       tw(D.hero, "oy", 1.1, 230, eo); tw(D.hero, "oy", 0, 260, ei, 250);
     }
     function onDown(ev) { ev.preventDefault(); down = { x: ev.clientX, y: ev.clientY, t: performance.now(), j: false }; tap(); }
@@ -13740,6 +13812,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var f = 1 - Math.exp(-rdt / 1000 * camSp);
       ["x", "y", "z", "yaw", "hz", "roll", "F"].forEach(function (kk) { cam[kk] += (camT[kk] - cam[kk]) * f; });
       D.shk *= Math.pow(0.0025, rdt / 1000);
+      if (D.fq.length) { var fqq = D.fq.shift(); hf(fqq[0], fqq[1]); }
       D.ogre.fy = D.cfg.fly ? 0.9 + Math.sin(D.time / 480) * 0.14 : 0; D.rk += ((D.rage ? 1 : 0) - D.rk) * 0.05; D.bm = D.bm.filter(function (q) { return D.time - q.t < 400; });
       /* pétales */
       var dts = dt / 1000;
@@ -13927,25 +14000,32 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var isB = a === D.ogre, px = a.x + a.ox, pz = a.z + a.oz, fy = isB ? a.fy : 0, P = proj(px, a.oy + fy, pz), hp = isB ? a.h * P.k : a.h * P.k / 0.86, wp = hp * im.width / im.height, ft = isB ? a.foot : a.foot;
       shadow(px, pz, isB ? D.cfg.sw : 0.7, a.oy + fy);
       function put(img, alpha, ox, oy, sc) {
-        x.save(); x.globalAlpha = alpha; x.translate(P.x + (ox || 0), P.y + (oy || 0)); x.rotate(a.rot); x.scale((2 - a.sq) * (sc || 1) * (a.sx == null ? 1 : a.sx), a.sq * (sc || 1));
+        x.save(); x.globalAlpha = alpha; x.translate(P.x + (ox || 0), P.y + (oy || 0)); x.rotate(a.rot); x.scale((2 - a.sq) * (sc || 1) * (a.sx == null ? 1 : a.sx), a.sq * (sc || 1)); x.transform(1, 0, a.sh || 0, 1, 0, 0);
         x.drawImage(img, -wp / 2, -hp * ft, wp, hp); x.restore();
       }
       if (trail) trail.forEach(function (q, i) { var Q = proj(q.x, q.y + fy, q.z); if (Math.abs(Q.x - P.x) > 4) put(im, 0.18 * (1 - i / trail.length) * a.a, Q.x - P.x, Q.y - P.y, 1); });
       if (rim) { if (a === D.hero && !a.turned) { put(rim, 0.85 * a.a, P.k * 0.04, -P.k * 0.045, 1.016); put(rim, 0.45 * a.a, -P.k * 0.035, -P.k * 0.02, 1.01); } else put(rim, 0.5 * a.a, P.k * 0.05, -P.k * 0.03, 1.012); }
       put(im, a.a);
-      if (a.fl > 0.01 && wht) put(wht, a.fl * 0.6 * a.a);
-      if (a.flc > 0.01 && red) put(red, a.flc * 0.75 * a.a);
+      if (a.fl > 0.01 && wht) put(typeof wht === "function" ? wht() : wht, a.fl * 0.6 * a.a);
+      if (a.flc > 0.01 && red) put(typeof red === "function" ? red() : red, a.flc * 0.75 * a.a);
     }
     function drawOgre() {
       var o = D.ogre, A = ogreArt(), fr = D.cfg.anim ? Math.floor(D.time / (D.cfg.fly ? 200 : 300)) % 3 : (o.ox || o.oy ? Math.floor(D.time / 260) % 3 : 0), idle = Math.sin(D.time / 420) * 0.012;
       if (D.over && D.won && o.a < 0.02) return;
-      var sq0 = o.sq; o.sq = sq0 + idle;
-      billboard(o, (D.rage ? A.red : A.f)[D.broken ? 0 : fr], A.rim, A.w, null, null);
+      var sq0 = o.sq, fi = D.broken ? 0 : fr, im, rim, wht; o.sq = sq0 + idle;
+      if (A.parts) { im = compose(A, fi); rim = tintOf(im, A.rimc, "#ffb36a"); wht = o.fl > 0.01 ? tintOf(im, A.whc, "#ffffff") : null; }
+      else { im = (D.rage ? A.red : A.f)[fi]; rim = A.rim; wht = A.w; }
+      billboard(o, im, rim, wht, null, null);
       o.sq = sq0;
     }
     function drawHero() {
       var h = D.hero, sq0 = h.sq; h.sq = sq0 + Math.sin(D.time / 520) * 0.01;
-      billboard(h, h.im, h.rim, h.w, h.r, h.trail);
+      if (h.turned) billboard(h, h.im, h.rim, h.w, h.r, h.trail);
+      else {
+        var nm = "idle", i;
+        if (D.time < h.poseUntil) { nm = h.pose; i = 0; } else if (D.time < h.dash) { nm = "walk"; i = Math.floor(D.time / 85); } else i = Math.floor(D.time / 230);
+        var f = hf(nm, i); billboard(h, f.c, f.rim, function () { return hfW(f); }, function () { return hfR(f); }, h.trail);
+      }
       h.sq = sq0;
     }
     function drawFx() {
