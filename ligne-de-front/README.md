@@ -299,3 +299,5 @@ Boutique : **3 packs au hasard** parmi Recrues (ou Méga), Ordres, Amélioration
 
 ## Navires et avions : plus forts, mais sous condition
 Appuis (navires, avions, reconnaissance, bombardier) : **+40 % d'Attaque** (`SUPPORT_K`, bombardier inchangé : 60 fixes) et **il faut une infanterie de la même couleur** sur le plateau, ou dans la même main, pour les poser (`needsInf`, `infCover`). La carte porte un cadenas « 🔒 Infanterie » tant que la condition manque ; un appui déjà posé reste en jeu si l'infanterie disparaît. Packs d'État-major : on ne dépasse jamais 5 jokers (remplacement au choix). Mesures du bot (300 campagnes, `HQ_MULT` 22) : mixte 15 %, infanterie 17, aviation 16, marine 10 (le bot aligne mal les couleurs : à confirmer à la main).
+
+Cartes de boutique : plus aucun titre ni texte qui dépasse (nom sur une ligne avec points de suspension et police réduite au-delà de 11 lettres ; bandeau « Ordre · secteur / unité / front / paras » raccourci). Contrôle automatique sur toutes les cartes aux deux tailles d'écran.

@@ -2386,6 +2386,12 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .aws.overview .awb { animation: none !important; transform: none !important; opacity: 1 !important; visibility: visible !important; }
 @media (max-height: 340px) { .jokstep > .panel, .jokstep > .small { display: none; } .jokstep .jbar { justify-content: center; } .jokstep .officers { gap: 4px; } .jokstep .off-item { padding: 4px 8px; } }
 .hc.needinf::after { content: "🔒 Infanterie"; position: absolute; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-6deg); padding: 2px 8px; border-radius: 6px; background: rgba(13, 18, 24, .88); color: #ffe08a; border: 1.5px solid #ffd24a; font-family: var(--font-display); font-size: 8.5cqw; white-space: nowrap; pointer-events: none; }
+
+/* titres et textes de cartes : jamais plus larges que la carte */
+.card .cn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; box-sizing: border-box; } .card .cn.long { font-size: .74rem; }
+.card .cband { overflow: hidden; white-space: nowrap; } .card .cband b, .card .cband small { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.card .ctag { display: block; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .cbig i { max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -3977,6 +3983,7 @@ const SHORT_EFF = { J: '+1 dégât par tir', R: "+50 % d'hommes", V: '+25 % Déf
 const FAM_SHORT = { terre: 'Terre', mer: 'Mer', air: 'Air', ordre: 'Ordre' };
 const ORDER_SHORT = { debarquement: 'Infanterie gratuite', sabotage: '−8 % au QG ennemi', barrage: '+20 Attaque', fumigenes: 'Riposte ÷2', ravitaillement: '+2 ravit. · pioche 1', retranchement: 'Défense +50 %, +1 tour', repli: 'La carte revient en main', assaut: 'Attaque ×1,5', contreattaque: 'Défense ×1,5', embuscade: '+1 tour au secteur' };
 const ORDER_ICON = { debarquement: 'landing', sabotage: 'sabotage', barrage: 'artillery', fumigenes: 'smoke', ravitaillement: 'supplies', retranchement: 'fortify', repli: 'retreat', assaut: 'offensive', contreattaque: 'counter', embuscade: 'ambush' };
+const TGT_SHORT = { landing: 'secteur', raider: 'paras', enemyCol: 'secteur', myCol: 'secteur', myUnit: 'unité', any: 'front' };
 const TGT_TXT = { landing: 'un de vos secteurs avec de la place', raider: 'vos parachutistes', enemyCol: 'un secteur', myCol: 'un de vos secteurs', myUnit: 'une de vos unités', any: 'le front' };
 const FAM_ORDER = { terre: 0, mer: 1, air: 2, ordre: 3 };
 const chipBg = c => (!c ? '#8a7a5a' : c.length === 1 ? COLORS[c].hex : `linear-gradient(90deg, ${[...c].map((ch, k) => `${COLORS[ch].hex} ${(k * 100) / c.length}% ${((k + 1) * 100) / c.length}%`).join(', ')})`);
@@ -4534,8 +4541,8 @@ function cardHTML(card, extra = '', attrs = '') {
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
   const ord = inB ? picked.indexOf(card) : -1;
   return `<button class="card ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
-    <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? TGT_TXT[d.tgt].replace(/^(un|une|le) /, '') : FAM_SHORT[d.fam]}</small></span>
-    <span class="cn">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
+    <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? (TGT_SHORT[d.tgt] || '') : FAM_SHORT[d.fam]}</small></span>
+    <span class="cn ${d.name.length > 11 ? 'long' : ''}" title="${d.name}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 46).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
     <span class="cbig"><i class="a">${cs.a}</i><i class="h">${cs.h}</i></span>${(ad => (ad ? `<span class="adl">${SWORD}${fmtN(ad.a)} ${SHIELD}${fmtN(ad.d)}</span>` : ''))(cardAD(card))}<span class="ctag">${tags}</span><span class="effs">${eff}</span></button>`;
 }
