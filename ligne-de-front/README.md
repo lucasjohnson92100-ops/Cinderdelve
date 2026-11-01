@@ -306,3 +306,5 @@ Cartes de boutique : plus aucun titre ni texte qui dépasse (nom sur une ligne a
 Chaque service affiche son effet en une ligne (« Soigne 12 PV », « +10 PV max »…) et, quand il n'est pas utilisable, la raison (« QG au maximum », « Maximum atteint »). Prix en rouge quand il manque du butin ; le soin du QG est entouré en vert et marqué « Conseillé » quand le QG est sous 60 % et qu'on peut le payer. Jokers : portraits touchables (fiche, vente) avec emplacements libres en pointillé ; bouton « Autres packs » plus explicite.
 
 Fond de rivière (jour) régénéré (`art/scene/riviere_jour.webp`, 1100 px, rivière claire avec forêt). Planches d'effets de terrain reçues (cratères sur fond vert, flaques et herbe écrasée sur fond brun) : pas encore branchées.
+
+Décor de sol peint : cratères d'obus (de plus en plus nombreux avec la campagne, 1 de plus en village) et flaques sous la pluie, posés derrière les unités dans les secteurs terrestres hors rivière (`GROUND`, `.gdec`). Planches détourées du fond vert ; l'herbe écrasée n'est pas utilisée (les sprites se touchent).
