@@ -233,7 +233,7 @@ Trois panoramas IA ajoutés (`art/scene/route_pluie|route_nuit|champ_nuit.webp`,
 `CARD_TIPS` : pour chaque carte (17 unités, 11 ordres), un « Quand la jouer » dans sa fiche (bouton ⓘ), et pour les cartes à effet particulier la liste des effets ennemis (`fx`) contre lesquels elles sont précieuses. Dans une bataille, si l'ennemi a l'effet concerné (Bunker, Mammouth, Division blindée, mines, tireurs d'élite, obusiers, nids…), la fiche affiche « ★ Utile dans cette bataille » et la carte en main porte une étoile dorée ; un avertissement ⚠ apparaît quand la carte est pénalisée (navires contre la batterie côtière). Libellés courts des cartes précisés (« Ignore bunker/blindage », « Att. ×2 vs blindés », « 60 dégâts sur le QG »…).
 
 ### Portraits de jokers ajoutés : Amiral Vague, Intendant Fort, Sergent Intendant
-Générés en 16:9 puis recadrés en carré autour du sujet (`art/jokers/<id>.webp`, `JOKER_ART`). Restent sans portrait (icône par défaut) : quartier, blitz, radio, sapeur, lebrun, faucon, fer, clairon, tenaille, fanfare, triade, mousse, ombre.
+Générés en 16:9 puis recadrés en carré autour du sujet (`art/jokers/<id>.webp`, `JOKER_ART`). Les 13 derniers portraits (quartier, blitz, radio, sapeur, lebrun, faucon, fer, clairon, tenaille, fanfare, triade, mousse, ombre) sont maintenant en place : tous les jokers ont leur portrait.
 
 ### Correctif : fantassins dans la rivière
 Les parachutistes, observateurs, infirmiers et le génie dans un secteur Rivière affichaient toute leur planche d'animation en rangée (le masque CSS appliqué pour les couper à la taille faisait perdre le découpage de la fenêtre). La fenêtre est maintenant simplement raccourcie à 78 % de la hauteur de l'image, sans masque.
@@ -304,3 +304,5 @@ Cartes de boutique : plus aucun titre ni texte qui dépasse (nom sur une ligne a
 
 ## Boutique : lisibilité
 Chaque service affiche son effet en une ligne (« Soigne 12 PV », « +10 PV max »…) et, quand il n'est pas utilisable, la raison (« QG au maximum », « Maximum atteint »). Prix en rouge quand il manque du butin ; le soin du QG est entouré en vert et marqué « Conseillé » quand le QG est sous 60 % et qu'on peut le payer. Jokers : portraits touchables (fiche, vente) avec emplacements libres en pointillé ; bouton « Autres packs » plus explicite.
+
+Fond de rivière (jour) régénéré (`art/scene/riviere_jour.webp`, 1100 px, rivière claire avec forêt). Planches d'effets de terrain reçues (cratères sur fond vert, flaques et herbe écrasée sur fond brun) : pas encore branchées.
