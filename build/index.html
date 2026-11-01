@@ -8211,6 +8211,111 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   var SFX_THR = { hit: 30, kill: 38, orb: 30, energy: 50, slash: 50, swing: 55, boom: 70, coin: 45, chain: 60, acorn: 60, egg: 60 };
   var SFX_WET = { crit: 0.22, kill: 0.1, boom: 0.35, ice: 0.35, fire: 0.18, heal: 0.45, levelup: 0.4, level2: 0.45, cast: 0.4, coin: 0.25, chain: 0.2, rune: 0.55, trans: 0.7, pick: 0.15, meteor: 0.3, energy: 0.2, bossdeath: 0.4, revive: 0.4, acorn: 0.1, egg: 0.15, shock: 0.2 };
   var SFX_JIT = { hit: 0.2, kill: 0.22, slash: 0.14, swing: 0.14, energy: 0.1, orb: 0.06, boom: 0.1, coin: 0.04, chain: 0.12, acorn: 0.14, egg: 0.16, hurt: 0.06 };
+  /* ---- voix et bruits propres à chaque boss (duel) : tout est synthétisé ---- */
+  function aMod(f, dur, type, vol, t, f2, lf, depth, am, cut) {
+    var c = AU.ctx, o = c.createOscillator(), g = c.createGain(), l = c.createOscillator(), lg = c.createGain(), fl = c.createBiquadFilter();
+    o.type = type || "sawtooth"; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
+    l.frequency.value = lf || 8; aEnv(g, t, 0.02, dur, vol);
+    if (am) { var ag = c.createGain(); ag.gain.value = 0.5; lg.gain.value = 0.5 * (depth || 1); l.connect(lg); lg.connect(ag.gain); o.connect(ag); ag.connect(g); }
+    else { lg.gain.value = depth || 10; l.connect(lg); lg.connect(o.frequency); o.connect(g); }
+    fl.type = "lowpass"; fl.frequency.value = cut || 2400; g.connect(fl); fl.connect(AU.sfxG);
+    if (AU.wet && AU.rev) { var wg = c.createGain(); wg.gain.value = AU.wet; fl.connect(wg); wg.connect(AU.rev); }
+    o.start(t); l.start(t); o.stop(t + dur + 0.08); l.stop(t + dur + 0.08);
+  }
+  function clicks(n, t, f, gap, vol) { for (var i = 0; i < n; i++) { aTone(f * (0.85 + Math.random() * 0.3), 0.025, "square", vol || 0.07, t + i * gap); aNoise(0.02, (vol || 0.07) * 1.6, t + i * gap, "highpass", 3500); } }
+  function bloop(t, f, vol) { aTone(f, 0.12, "sine", vol || 0.14, t, f * 2.2); }
+  function shing(t, vol) { aTone(1900, 0.32, "triangle", (vol || 0.12), t, 2600); aTone(3100, 0.25, "sine", (vol || 0.12) * 0.5, t + 0.01); aNoise(0.18, (vol || 0.12) * 1.8, t, "highpass", 4200, 2500); }
+  var BVOX = {
+    ogre: {
+      voice: function (t) { aMod(105, 0.75, "sawtooth", 0.3, t, 68, 17, 14, false, 900); aNoise(0.6, 0.18, t, "lowpass", 700, 180); },
+      melee: function (t) { aNoise(0.28, 0.32, t, "bandpass", 260, 1100, 0.9); aTone(90, 0.22, "sine", 0.3, t + 0.08, 45); },
+      jump: function (t) { aMod(140, 0.35, "sawtooth", 0.22, t, 95, 14, 10, false, 900); },
+      slam: function (t) { aTone(60, 0.5, "sine", 0.5, t, 30); aNoise(0.5, 0.4, t, "lowpass", 600, 60); },
+      hurt: function (t) { aMod(150, 0.25, "sawtooth", 0.18, t, 100, 20, 12, false, 900); }
+    },
+    cyclops: {
+      voice: function (t) { aMod(78, 0.95, "sawtooth", 0.34, t, 52, 11, 9, false, 700); aTone(52, 0.9, "sine", 0.3, t, 40); aNoise(0.8, 0.2, t, "lowpass", 500, 120); },
+      melee: function (t) { aNoise(0.34, 0.36, t, "bandpass", 200, 900, 0.8); aTone(70, 0.3, "sine", 0.36, t + 0.1, 35); },
+      shot: function (t) { aTone(220, 0.12, "triangle", 0.18, t, 90); aNoise(0.15, 0.2, t, "bandpass", 600, 200); },
+      slam: function (t) { aTone(45, 0.9, "sine", 0.55, t, 28); aNoise(0.9, 0.42, t, "lowpass", 400, 40); },
+      hurt: function (t) { aMod(110, 0.3, "sawtooth", 0.2, t, 75, 12, 10, false, 700); }
+    },
+    spiderqueen: {
+      voice: function (t) { aNoise(0.7, 0.26, t, "highpass", 5200, 3000, 0.8); clicks(9, t + 0.05, 2600, 0.055, 0.07); },
+      melee: function (t) { aNoise(0.12, 0.3, t, "highpass", 3000, 6000); clicks(3, t + 0.05, 3200, 0.03, 0.09); },
+      shot: function (t) { aNoise(0.14, 0.24, t, "bandpass", 1600, 500, 1.4); aTone(820, 0.12, "sine", 0.1, t, 300); },
+      swarm: function (t) { clicks(6, t, 2900, 0.03, 0.1); },
+      jump: function (t) { aNoise(0.3, 0.2, t, "highpass", 4500, 2500); },
+      slam: function (t) { aTone(90, 0.3, "sine", 0.32, t, 45); clicks(5, t, 2400, 0.04, 0.08); },
+      hurt: function (t) { aNoise(0.18, 0.2, t, "highpass", 5000, 3200); clicks(3, t, 3000, 0.04, 0.07); }
+    },
+    toadking: {
+      voice: function (t) { aMod(118, 0.32, "square", 0.42, t, 105, 26, 1, true, 1200); aMod(105, 0.4, "square", 0.45, t + 0.38, 92, 24, 1, true, 1100); },
+      beam: function (t) { aTone(260, 0.16, "sine", 0.22, t, 1300); aNoise(0.14, 0.18, t, "bandpass", 900, 2600, 1.2); },
+      charge: function (t) { aMod(95, 0.5, "square", 0.16, t, 120, 30, 1, true, 900); },
+      rain: function (t) { bloop(t, 380 + Math.random() * 260, 0.16); bloop(t + 0.07, 520 + Math.random() * 300, 0.1); },
+      jump: function (t) { aTone(170, 0.32, "sine", 0.24, t, 460); },
+      slam: function (t) { aTone(70, 0.45, "sine", 0.48, t, 32); aNoise(0.3, 0.3, t, "lowpass", 900, 120); bloop(t + 0.05, 300, 0.12); },
+      hurt: function (t) { aMod(150, 0.2, "square", 0.32, t, 120, 30, 1, true, 1200); }
+    },
+    dragon: {
+      voice: function (t) { AU.wet = 0.35; aMod(170, 1.25, "sawtooth", 0.32, t, 62, 9, 26, false, 1400); aNoise(1.2, 0.3, t, "lowpass", 1400, 160); aTone(55, 1.1, "sine", 0.28, t + 0.1, 38); },
+      shot: function (t) { aNoise(0.4, 0.32, t, "bandpass", 380, 1900, 0.9); aTone(120, 0.3, "sine", 0.18, t, 60); },
+      charge: function (t) { aNoise(0.9, 0.2, t, "bandpass", 300, 900, 1.2); aMod(90, 0.9, "sawtooth", 0.12, t, 140, 6, 8, false, 600); },
+      beam: function (t) { aNoise(0.75, 0.42, t, "bandpass", 1300, 500, 0.7); aNoise(0.75, 0.2, t, "highpass", 3000, 1600); aTone(80, 0.6, "sine", 0.24, t, 50); },
+      rain: function (t) { aNoise(0.3, 0.4, t, "bandpass", 700, 250); aTone(500, 0.25, "sawtooth", 0.1, t, 120); },
+      jump: function (t) { aNoise(0.4, 0.45, t, "lowpass", 600, 200); },
+      slam: function (t) { aTone(50, 0.7, "sine", 0.5, t, 30); aNoise(0.6, 0.38, t, "bandpass", 500, 1500); },
+      hurt: function (t) { aMod(200, 0.32, "sawtooth", 0.2, t, 110, 10, 20, false, 1400); }
+    },
+    lich: {
+      voice: function (t) { AU.wet = 0.6; [520, 470, 420].forEach(function (f, i) { aMod(f, 0.24, "triangle", 0.14, t + i * 0.22, f * 0.92, 7, 14, false, 3000); }); aNoise(0.8, 0.12, t, "highpass", 3800, 2200); },
+      shot: function (t) { AU.wet = 0.45; aMod(900, 0.3, "sine", 0.12, t, 560, 9, 30, false, 3000); },
+      rain: function (t) { AU.wet = 0.3; aNoise(0.14, 0.34, t, "highpass", 3200, 1200); aTone(1500, 0.22, "sawtooth", 0.08, t, 110); aTone(70, 0.3, "sine", 0.22, t + 0.03, 40); },
+      charge: function (t) { AU.wet = 0.5; aMod(220, 1.0, "sine", 0.14, t, 330, 6, 6, false, 3000); aMod(330, 1.0, "sine", 0.1, t, 495, 6.5, 8, false, 3000); },
+      beam: function (t) { AU.wet = 0.5; aMod(180, 0.6, "sawtooth", 0.18, t, 140, 22, 20, false, 1800); aNoise(0.5, 0.16, t, "bandpass", 1200, 600, 2); },
+      swarm: function (t) { AU.wet = 0.6; aMod(700, 0.45, "sine", 0.09, t, 950, 5, 60, false, 3000); },
+      hurt: function (t) { AU.wet = 0.4; aMod(600, 0.3, "triangle", 0.12, t, 380, 9, 20, false, 3000); }
+    },
+    pharaoh: {
+      voice: function (t) { AU.wet = 0.55; aMod(98, 1.1, "sawtooth", 0.18, t, 92, 4, 3, false, 900); aMod(147, 1.1, "triangle", 0.14, t, 140, 4.5, 3, false, 1500); aNoise(1.0, 0.1, t, "bandpass", 2400, 1600, 0.8); },
+      charge: function (t) { AU.wet = 0.5; aTone(440, 0.9, "triangle", 0.1, t, 660); aTone(660, 0.9, "sine", 0.07, t, 990); },
+      beam: function (t) { AU.wet = 0.4; aTone(880, 0.5, "triangle", 0.16, t, 700); aNoise(0.45, 0.24, t, "bandpass", 2400, 900, 1.5); },
+      rain: function (t) { aNoise(0.35, 0.32, t, "bandpass", 2200, 1100, 0.7); },
+      swarm: function (t) { aMod(140, 0.5, "sawtooth", 0.12, t, 120, 5, 6, false, 700); },
+      shot: function (t) { clicks(4, t, 2100, 0.035, 0.07); },
+      hurt: function (t) { AU.wet = 0.4; aMod(160, 0.3, "sawtooth", 0.14, t, 120, 6, 8, false, 900); }
+    },
+    crabking: {
+      voice: function (t) { clicks(2, t, 1700, 0.13, 0.16); aNoise(0.06, 0.3, t + 0.3, "bandpass", 1800, 900, 2); bloop(t + 0.45, 300, 0.14); bloop(t + 0.55, 420, 0.12); bloop(t + 0.62, 360, 0.1); },
+      melee: function (t) { aTone(1700, 0.04, "square", 0.16, t); aNoise(0.07, 0.3, t, "bandpass", 2400, 1200, 2); aTone(140, 0.12, "sine", 0.22, t + 0.02, 70); },
+      shot: function (t) { bloop(t, 420 + Math.random() * 200, 0.16); },
+      rain: function (t) { bloop(t, 300 + Math.random() * 300, 0.17); aNoise(0.08, 0.14, t + 0.08, "highpass", 3000); },
+      jump: function (t) { aNoise(0.5, 0.45, t, "lowpass", 400, 1400); },
+      slam: function (t) { aNoise(0.9, 0.36, t, "lowpass", 1500, 200); aTone(60, 0.5, "sine", 0.32, t, 32); },
+      hurt: function (t) { clicks(2, t, 1500, 0.08, 0.12); }
+    },
+    grandboucher: {
+      voice: function (t) { [230, 250, 215, 240].forEach(function (f, i) { aMod(f, 0.13, "sawtooth", 0.3, t + i * 0.16, f * 0.85, 30, 1, true, 1600); }); shing(t + 0.7, 0.12); },
+      melee: function (t) { shing(t, 0.13); aNoise(0.16, 0.24, t, "bandpass", 700, 2500); },
+      shot: function (t) { aMod(600, 0.5, "triangle", 0.12, t, 400, 16, 1, true, 3000); shing(t, 0.08); },
+      rain: function (t) { shing(t, 0.1); },
+      swarm: function (t) { aMod(130, 0.45, "sawtooth", 0.12, t, 110, 4, 4, false, 700); },
+      hurt: function (t) { aMod(200, 0.2, "sawtooth", 0.32, t, 150, 30, 1, true, 1600); }
+    }
+  };
+  function bossSfx(type, kind) {
+    if (!AU.ctx || !AU.sfxOn || !AU.noise) return;
+    var B = BVOX[type] || BVOX.ogre, fn = B[kind];
+    if (kind === "hurt") { var tn = performance.now(); if (tn - (AU.bvHurt || 0) < 260) return; AU.bvHurt = tn; }
+    if (!fn) { if (kind === "rage" || kind === "death") fn = B.voice; else if (kind === "step") { sfx("step"); return; } else return; }
+    var t = AU.ctx.currentTime + 0.002; AU.wet = kind === "voice" || kind === "rage" ? 0.3 : 0.12; AU.jit = 0.05;
+    try {
+      if (kind === "death") { AU.wet = 0.45; B.voice(t); aTone(120, 1.2, "sawtooth", 0.2, t + 0.2, 35); }
+      else if (kind === "rage") { fn(t); fn(t + 0.05); aNoise(0.5, 0.2, t, "lowpass", 900, 120); }
+      else fn(t);
+    } catch (err) {}
+  }
   function sfx(name, a) {
     if (!AU.ctx || !AU.sfxOn || !AU.noise) return;
     var th = SFX_THR[name]; if (th) { var tn0 = performance.now(); AU.lastT = AU.lastT || {}; if (tn0 - (AU.lastT[name] || -1e9) < th) return; AU.lastT[name] = tn0; }
@@ -13358,6 +13463,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function tw(o, k, to, dur, ease, delay) { D.tw.push({ o: o, k: k, from: null, to: to, t0: D.time + (delay || 0), dur: Math.max(1, dur), e: ease || eio }); }
     function slow(k, ms) { D.slowK = k; D.slowUntil = performance.now() + ms; }
     function shake(a) { D.shk = Math.max(D.shk, a); }
+    function bvx(kind) { try { bossSfx(D.vt, kind); } catch (err) {} }
     function hitstop(ms) { D.freeUntil = Math.max(D.freeUntil, performance.now() + ms); }
     function punch(a) { D.punch = Math.max(D.punch, a); }
     /* ---------- caméra : projection perspective + plans de cinéma ---------- */
@@ -13424,7 +13530,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         skill: (FARM_POWERS[v] && FARM_POWERS[v].name) || "Pouvoir", ult: (ULTS[v] && ULTS[v].name) || "Déchaînement",
         snap: snap, shards: null, t0: performance.now(), petals: [], tufts: [], bars: 1, port: null
       };
-      cv = document.createElement("canvas"); cv.id = "duelcv"; document.body.appendChild(cv); x = cv.getContext("2d");
+      cv = document.createElement("canvas"); cv.id = "duelcv"; D.vt = mid != null ? "grandboucher" : e.type; document.body.appendChild(cv); x = cv.getContext("2d");
       layout();
       cam = shot("intro"); camT = shot("intro"); D.shotN = "intro"; ogreArt();
       seedScene(); buildUI(); buildShards(); hf("idle", 0); D.fq = []; ["idle1", "idle2", "idle3", "wind0", "strike0", "follow0", "parry0", "hurt0", "dodge0", "jump0", "cast0", "walk0", "walk1", "walk2", "walk3", "walk4", "walk5"].forEach(function (k) { D.fq.push([k.replace(/\d$/, ""), +k.slice(-1)]); });
@@ -13434,6 +13540,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       sfx("boom"); sfx("warn");
       /* ouverture : l'écran se brise, plan d'ensemble sur l'Ogre, carton-titre, puis la caméra vient derrière le héros */
       after(250, function () { setShot("intro", 0.6); });
+      after(700, function () { bvx("voice"); });
       after(1700, function () { setShot("wide", 1.3); });
       after(2900, function () { nextTurn(); });
       lastT = performance.now(); rafId = requestAnimationFrame(frame);
@@ -13532,7 +13639,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function hitOgre(mult, brk, big, txt) {
       if (D.over) return;
       var n = Math.max(1, Math.round(base() * mult * (D.broken ? 1.5 : 1) * rr(0.93, 1.07)));
-      D.hp = Math.max(0, D.hp - n);
+      D.hp = Math.max(0, D.hp - n); bvx("hurt");
       var o = D.ogre;
       D.fl.push({ x: o.x + o.ox + rr(-0.5, 0.5), y: 1.7 + rr(0, 0.8), z: o.z + o.oz - 0.3, t: String(n), c: D.broken || big ? "#ffd23c" : "#ffffff", s: big ? 1.35 : 1, t0: D.time, d: 1100 });
       if (txt) D.fl.push({ x: o.x + o.ox, y: 2.55, z: o.z + o.oz - 0.3, t: txt, c: "#ffe9a8", s: 0.8, t0: D.time, d: 1000, serif: 1 });
@@ -13640,7 +13747,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       }
       if (!D.rage && D.hp < D.max * 0.5) {
         D.rage = true; D.spdO = D.cfg.rspd * (D.e.superBoss ? 1.1 : 1);
-        setShot("ogre", 1.4); label("Deuxième acte", D.cfg.f ? "Elle entre en fureur" : "Il entre en fureur", 2000); sfx("rage");
+        setShot("ogre", 1.4); label("Deuxième acte", D.cfg.f ? "Elle entre en fureur" : "Il entre en fureur", 2000); bvx("rage");
         tw(D.ogre, "sq", 1.12, 500, eo, 300); tw(D.ogre, "sq", 1, 400, eo, 1100); after(500, function () { for (var rg = 0; rg < 4; rg++) (function (rg) { after(rg * 130, function () { if (!D) return; var p = bossTop(0, 0.62); D.pt.push({ k: "ring", x: p.x, y: p.y, z: p.z, t0: D.time, d: 560, c: "255,120,90", s: 1.6 + rg * 0.7 }); }); })(rg); shake(10); flash("255,40,30", 400); sparks(D.ogre.x, 2.6 + D.ogre.fy, D.ogre.z, 30, "255,80,40"); });
         after(2200, function () { ogreAttack(pickMove()); }); return;
       }
@@ -13652,9 +13759,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function attackFx(M, hits, first, lastH) {
       var o = D.ogre, h = D.hero, kd = M.kind, col = M.col || "255,240,200", ok = function () { return D && !D.over; };
       if (kd === "melee") {
-        for (var s2 = 0; s2 < 3; s2++) (function (s2) { var t = 300 + s2 * 175; tw(o, "oy", 0.28, 80, eo, t); tw(o, "oy", 0, 90, ei, t + 80); after(t + 170, function () { if (!ok()) return; shake(2.5); sparks(o.x + o.ox + rr(-0.4, 0.4), 0.1, o.z + o.oz, 8, "200,180,150"); sfx("step"); }); })(s2);
+        for (var s2 = 0; s2 < 3; s2++) (function (s2) { var t = 300 + s2 * 175; tw(o, "oy", 0.28, 80, eo, t); tw(o, "oy", 0, 90, ei, t + 80); after(t + 170, function () { if (!ok()) return; shake(2.5); sparks(o.x + o.ox + rr(-0.4, 0.4), 0.1, o.z + o.oz, 8, "200,180,150"); bvx("step"); }); })(s2);
         hits.forEach(function (t) {
           glint(0.6, 0.95, t - 320);
+          after(t - 110, function () { if (ok()) bvx("melee"); });
           after(t - 70, function () { if (!ok()) return; var mx = (o.x + o.ox + h.x + h.ox) / 2 + 0.3, mz = (o.z + o.oz + h.z + h.oz) / 2; D.pt.push({ k: "smear", x: mx, y: 1.7, z: mz, t0: D.time, d: 240, c: "255,245,225", s: 2.3, a: rr(-0.4, 0.2) }); });
           after(t + 10, function () { if (!ok()) return; D.pt.push({ k: "ring", x: h.x + h.ox, y: 0.05, z: h.z + h.oz, t0: D.time, d: 380, c: "220,200,170", s: 1.4 }); sparks(h.x + h.ox, 0.15, h.z + h.oz, 10, "200,180,150"); });
         });
@@ -13695,7 +13803,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       D.combo = { n: hits.length, sc: [], jump: jump };
       label(M.name, D.ogreTurns <= 2 || (jump && !D.jumpTold) ? (jump ? "Glisse vers le haut au moment de l'impact pour SAUTER" : "Tape au moment de l'impact pour PARER") : "", jump ? 2200 : 1700);
       if (jump) D.jumpTold = true;
-      setShot("menace", 2.4); sfx("warn");
+      setShot("menace", 2.4); bvx("voice");
       var G = D.gest || { wind: 0, strike: 0, raise: 0 }, col = M.col || "255,255,255", mouthY = function () { return 1.6 + o.fy * 0.7 + o.oy; };
       if (melee) {
         var tx = h.x + (D.por ? 0.9 : 1.5), tz = h.z + 2;
@@ -13705,14 +13813,16 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         tw(o, "pa", G.raise, 380, eo, first - 1050); tw(o, "pa", G.strike * 0.8, 110, ei, first - 170); tw(o, "pa", 0, 350, eo, first + 60); tw(o, "sh", -0.1, 380, eo, first - 1050); tw(o, "sh", 0.18, 110, ei, first - 170); tw(o, "sh", 0, 350, eo, first + 60);
         tw(o, "oy", 2.4, 380, eo, first - 1050); tw(o, "sq", 1.08, 380, eo, first - 1050);
         tw(o, "oy", 0, 170, ei, first - 670); tw(o, "sq", 0.88, 90, eo, first - 500); tw(o, "sq", 1, 300, eo, first - 410);
-        after(first - 500, function () { shake(8); sfx("boom"); D.wv.push({ fx: o.x, fz: o.z, tx: h.x, tz: h.z, t0: D.time, d: 500 }); setShot("brace", 3); });
+        after(first - 1050, function () { bvx("jump"); });
+        after(first - 500, function () { shake(8); bvx("slam"); D.wv.push({ fx: o.x, fz: o.z, tx: h.x, tz: h.z, t0: D.time, d: 500 }); setShot("brace", 3); });
       } else if (kd === "leap") {
         var lx = h.x + (D.por ? 0.9 : 1.4), lz = h.z + 1.6;
         tw(o, "pa", G.raise, 380, eo, first - 1300); tw(o, "pa", G.strike, 200, ei, first - 230); tw(o, "pa", 0, 350, eo, first + 60); tw(o, "sh", -0.1, 380, eo, first - 1300); tw(o, "sh", 0.2, 200, ei, first - 230); tw(o, "sh", 0, 350, eo, first + 60);
         tw(o, "oy", 3.4, 380, eo, first - 1300); tw(o, "ox", lx - o.x, 650, eio, first - 1300); tw(o, "oz", lz - o.z, 650, eio, first - 1300);
         tw(o, "oy", 0, 230, ei, first - 230); tw(o, "sq", 0.86, 90, eo, first - 90); tw(o, "sq", 1, 300, eo, first + 20);
         after(first - 600, function () { setShot("range", 3); });
-        after(first - 20, function () { shake(9); sfx("boom"); D.pt.push({ k: "ring", x: o.x + o.ox, y: 0.05, z: o.z + o.oz, t0: D.time, d: 520, c: "255,230,190", s: 2.2 }); sparks(o.x + o.ox, 0.2, o.z + o.oz, 18, "200,180,150"); });
+        after(first - 1300, function () { bvx("jump"); });
+        after(first - 20, function () { shake(9); bvx("slam"); D.pt.push({ k: "ring", x: o.x + o.ox, y: 0.05, z: o.z + o.oz, t0: D.time, d: 520, c: "255,230,190", s: 2.2 }); sparks(o.x + o.ox, 0.2, o.z + o.oz, 18, "200,180,150"); });
       } else {
         tw(o, "pa", G.raise * 0.7, 450, eo, Math.max(0, first - 1000)); tw(o, "sh", -0.06, 450, eo, Math.max(0, first - 1000));
         tw(o, "sq", kd === "beam" ? 1.1 : 1.07, kd === "beam" ? (M.charge || 900) : 450, eo, Math.max(0, first - (kd === "beam" ? (M.charge || 900) + 100 : 1150)));
@@ -13726,14 +13836,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           tw(o, "rot", 0, 300, eo, t + 60); tw(o, "sq", 1, 300, eo, t + 60);
           tw(o, "pa", G.wind, 260, eo, t - 520); tw(o, "pa", G.strike, 85, ei, t - 85); tw(o, "pa", 0, 320, eo, t + 60); tw(o, "sh", -0.1, 260, eo, t - 520); tw(o, "sh", 0.22, 85, ei, t - 85); tw(o, "sh", 0, 320, eo, t + 60);
         } else if (kd === "shot") {
-          after(t - 560, function () { if (D.over) return; D.pj.push({ fx: o.x + o.ox, fy: mouthY(), fz: o.z + o.oz - 0.3, tx: h.x + h.ox, ty: 1.3, tz: h.z + h.oz, h: 0.3, t0: D.time, d: 560, c: col, sz: M.sz || 0.13, hit: function (p2) { sparks(p2.tx, p2.ty, p2.tz, 5, col); } }); tw(o, "sq", 0.93, 70, ei); tw(o, "sq", 1, 240, eo, 90); sfx("shoot"); });
+          after(t - 560, function () { if (D.over) return; D.pj.push({ fx: o.x + o.ox, fy: mouthY(), fz: o.z + o.oz - 0.3, tx: h.x + h.ox, ty: 1.3, tz: h.z + h.oz, h: 0.3, t0: D.time, d: 560, c: col, sz: M.sz || 0.13, hit: function (p2) { sparks(p2.tx, p2.ty, p2.tz, 5, col); } }); tw(o, "sq", 0.93, 70, ei); tw(o, "sq", 1, 240, eo, 90); bvx("shot"); });
         } else if (kd === "rain") {
-          after(t - 520, function () { if (D.over) return; var hx2 = h.x + h.ox, hz2 = h.z + h.oz; D.pt.push({ k: "ring", x: hx2, y: 0.05, z: hz2, t0: D.time, d: 520, c: col, s: 1.2, shr: 1 }); D.pj.push({ fx: hx2 + rr(-0.6, 0.6), fy: 7, fz: hz2 + 0.2, tx: hx2, ty: 1.2, tz: hz2, h: 0, t0: D.time, d: 520, c: col, sz: M.sz || 0.16, hit: function (p2) { sparks(p2.tx, 0.6, p2.tz, 8, col); } }); tw(o, "sq", 1.05, 120, eo); tw(o, "sq", 1, 260, eo, 140); });
+          after(t - 520, function () { if (D.over) return; bvx("rain"); var hx2 = h.x + h.ox, hz2 = h.z + h.oz; D.pt.push({ k: "ring", x: hx2, y: 0.05, z: hz2, t0: D.time, d: 520, c: col, s: 1.2, shr: 1 }); D.pj.push({ fx: hx2 + rr(-0.6, 0.6), fy: 7, fz: hz2 + 0.2, tx: hx2, ty: 1.2, tz: hz2, h: 0, t0: D.time, d: 520, c: col, sz: M.sz || 0.16, hit: function (p2) { sparks(p2.tx, 0.6, p2.tz, 8, col); } }); tw(o, "sq", 1.05, 120, eo); tw(o, "sq", 1, 260, eo, 140); });
         } else if (kd === "swarm") {
-          after(t - 600, function () { if (D.over) return; for (var n = 0; n < 3; n++) D.pj.push({ fx: o.x + o.ox + rr(-0.6, 0.6), fy: 0.25, fz: o.z + o.oz + rr(-0.2, 0.3), tx: h.x + h.ox + rr(-0.35, 0.35), ty: 0.5, tz: h.z + h.oz + rr(-0.15, 0.2), h: 0.3, t0: D.time + n * 30, d: 600 - n * 30, c: col, sz: M.sz || 0.085, hit: function () {} }); sfx("step"); });
+          after(t - 600, function () { if (D.over) return; for (var n = 0; n < 3; n++) D.pj.push({ fx: o.x + o.ox + rr(-0.6, 0.6), fy: 0.25, fz: o.z + o.oz + rr(-0.2, 0.3), tx: h.x + h.ox + rr(-0.35, 0.35), ty: 0.5, tz: h.z + h.oz + rr(-0.15, 0.2), h: 0.3, t0: D.time + n * 30, d: 600 - n * 30, c: col, sz: M.sz || 0.085, hit: function () {} }); bvx("swarm"); });
         } else if (kd === "beam") {
           D.bm.push({ t0: D.time + (i === 0 ? t - (M.charge || 900) : t - 300), t: D.time + t, c: col });
-          if (i === 0) after(t - (M.charge || 900), function () { sfx("charge"); });
+          if (i === 0) after(t - (M.charge || 900), function () { bvx("charge"); });
+          after(t - 20, function () { if (!D.over) bvx("beam"); });
         }
         if (!melee && !jump) { var tk = kd === "beam" ? t - 60 : t - (kd === "shot" ? 560 : kd === "rain" ? 520 : 600); tw(o, "pa", G.strike * 0.5, 70, ei, Math.max(0, tk)); tw(o, "pa", G.raise * 0.6, 240, eo, Math.max(0, tk) + 80); tw(o, "sh", 0.1, 70, ei, Math.max(0, tk)); tw(o, "sh", -0.03, 240, eo, Math.max(0, tk) + 80); }
         var w = { t: D.time + t, j: jump, pct: M.pct, r: null };
@@ -13814,7 +13925,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function victory() {
       if (D.over && D.won) return;
       D.over = true; D.won = true; D.q = []; D.wins = []; D.qte = []; D.phase = "end"; showUI(false);
-      slow(0.25, 1100); flash("255,240,200", 500); shake(10); sfx("bossdeath"); hitstop(170); punch(0.1);
+      slow(0.25, 1100); flash("255,240,200", 500); shake(10); sfx("bossdeath"); bvx("death"); hitstop(170); punch(0.1);
       setShot("clash", 1.2);
       var o = D.ogre;
       label("Victoire", D.bname + (D.cfg.f ? " est terrassée" : " est terrassé"), 2600);
