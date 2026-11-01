@@ -3363,7 +3363,7 @@ function packOptions(C, kind, rng = Math.random, rare = false) {
 // Applique le choix ; renvoie le message à afficher
 function applyPackPick(C, o) {
   if (o.k === 'card') { C.deck.push({ ...o.card }); return `${TYPES[o.card.t].name} rejoint votre paquet.`; }
-  if (o.k === 'joker') { C.officers.push(o.id); if (o.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return `${JOKERS.find(j => j.id === o.id).name} rejoint l'état-major.`; }
+  if (o.k === 'joker') { if (C.officers.length >= MAX_JOKERS) return 'Emplacements de joker pleins.'; C.officers.push(o.id); if (o.id === 'brandt') { C.hqMax += 20; C.hq = Math.min(C.hqMax, C.hq + 20); } return `${JOKERS.find(j => j.id === o.id).name} rejoint l'état-major.`; }
   if (o.k === 'manual') { const lv = buyManual(C, o.id); return `${COMBOS.find(x => x.id === o.id).name} passe au niveau ${lv}.`; }
   const lv = applyUpgrade(C, o.kind, o.id); return o.kind === 't' ? `Fortification : ${lv} places dans les secteurs ${TERRAIN[o.id].name}.` : `${CATS[o.id].name} passe au niveau ${lv}.`;
 }
@@ -5841,6 +5841,7 @@ function openPack(i) {
 }
 function pickPack(k) {
   const i = window.__pack, pk = C.shop && C.shop.packs[i]; if (!pk || !pk.opts || !pk.opts[k]) return;
+  if (pk.opts[k].k === 'joker' && C.officers.length >= MAX_JOKERS) { replaceModal(pk.opts[k].id, 'pack', k, 0); return; }
   const msg = applyPackPick(C, pk.opts[k]); pk.opts[k] = null; pk.left--; SFX.play('buy'); toast(msg);
   if (pk.left <= 0 || !pk.opts.some(Boolean)) { pk.left = 0; closeModal(); return renderShop(); }
   renderShop(); showPack(i);
@@ -6047,6 +6048,7 @@ document.addEventListener('click', e => {
   const rj = t.closest('[data-repj]'); if (rj && window.__repl) {
     const R = window.__repl; window.__repl = null; const i = +rj.dataset.repj; closeModal();
     if (R.src === 'shop') { const it = C.shop.jokers[R.si]; if (!it || it.sold || C.loot < R.price) return; C.loot -= R.price; it.sold = true; const o = dropJoker(i); gainJoker(R.id); SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === R.id).name} remplace ${o.name}.`); return renderShop(); }
+    if (R.src === 'pack') { const pi = window.__pack, pk = C.shop && C.shop.packs[pi]; if (!pk || !pk.opts || !pk.opts[R.si]) return; const o = dropJoker(i); gainJoker(R.id); pk.opts[R.si] = null; pk.left--; SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === R.id).name} remplace ${o.name}.`); if (pk.left <= 0 || !pk.opts.some(Boolean)) { pk.left = 0; return renderShop(); } renderShop(); return showPack(pi); }
     const o = dropJoker(i); gainJoker(R.id); SFX.play('jokerbuy'); toast(`${JOKERS.find(x => x.id === R.id).name} remplace ${o.name}.`); return afterJoker();
   }
   if (t.closest('[data-act="jokskip"]')) { C.loot += 6; SFX.play('coins'); return afterJoker(); }
