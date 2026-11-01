@@ -2392,6 +2392,14 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card .cband { overflow: hidden; white-space: nowrap; } .card .cband b, .card .cband small { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .card .ctag { display: block; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card .cbig i { max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* boutique : services lisibles, jokers compacts */
+.ssvc small { font-size: .5rem; font-weight: 700; line-height: 1.1; text-align: center; color: #6b5a44; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ssvc.na { filter: grayscale(.9) brightness(.8); } .ssvc.poor { filter: none; opacity: .8; } .ssvc.poor .st-price { background: #ffb3a6; color: #7a1d10; }
+.ssvc.rec { box-shadow: 0 0 0 3px #52b34f, 0 0 14px rgba(82, 179, 79, .7); animation: recpulse 1.4s ease-in-out infinite; } .ssvc.rec small { color: #1f6a2f; font-weight: 800; }
+@keyframes recpulse { 50% { box-shadow: 0 0 0 3px #52b34f, 0 0 4px rgba(82, 179, 79, .2); } }
+.s2-jok { flex-wrap: wrap; } .s2-jok .jbar { gap: 4px; flex-wrap: nowrap; } .s2-jok .jk { width: 30px; height: 30px; border-width: 2px; } .s2-jok .jk.empty { opacity: .4; border-style: dashed; } .s2-jok .jk svg { width: 100%; height: 100%; }
+@media (prefers-reduced-motion: reduce) { .ssvc.rec { animation: none; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -5711,11 +5719,11 @@ function miniCardHTML(card) {
   return `<span class="mc ${d.fam} col-${(card.c || "o")[0]}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
 }
 const SVC = [
-  { act: 'train', ic: '★', name: 'Entraîner', price: () => Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), ok: () => C.deck.some(canUpgrade) },
-  { act: 'supply', ic: '⛽', name: 'Ravit. +1', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
-  { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
-  { act: 'reform', ic: '✂', name: 'Réformer', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
-  { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
+  { act: 'train', ic: '★', name: 'Entraîner', fx: 'Une carte monte d\'un niveau', why: 'Plus rien à entraîner', price: () => Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), ok: () => C.deck.some(canUpgrade) },
+  { act: 'supply', ic: '⛽', name: 'Ravit. +1', fx: '+1 ravitaillement par tour', why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
+  { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
+  { act: 'reform', ic: '✂', name: 'Réformer', fx: 'Retire une carte du paquet', why: 'Paquet trop petit', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
+  { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, fx: `+${FORT_AMOUNT} PV max`, why: 'Maximum atteint', price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
 ];
 function shopTile(kind, i, it, inner) {
   const full = kind === 'j' && C.officers.length >= MAX_JOKERS && !it.sold;
@@ -5736,12 +5744,14 @@ function renderShop() {
       <b class="pk-nm">${d.name}</b><span class="pk-tx">${d.txt}${d.pick > 1 ? '' : ' · gardez-en 1'}</span>
       <span class="st-price">${done ? 'Ouvert' : opened ? 'Choisir' : '$' + pk.price}</span></button>`;
   }).join('');
-  const svcs = SVC.map(v => { const pr = v.price(), ok = v.ok() && C.loot >= pr; return `<button class="ssvc" data-act="${v.act}" ${ok ? '' : 'disabled'}><span class="sv-ic">${v.ic}</span><b>${v.name}</b><span class="st-price">${v.ok() ? '$' + pr : '—'}</span></button>`; }).join('');
+  const recHeal = C.hq < C.hqMax * 0.6 && C.loot >= HEAL_COST;
+  const svcs = SVC.map(v => { const pr = v.price(), can = v.ok(), poor = can && C.loot < pr, ok = can && !poor; return `<button class="ssvc ${poor ? 'poor' : ''} ${!can ? 'na' : ''} ${v.act === 'shopheal' && recHeal ? 'rec' : ''}" data-act="${v.act}" ${ok ? '' : 'disabled'} title="${can ? v.fx : v.why}"><span class="sv-ic">${v.ic}</span><b>${v.name}</b><small>${can ? (v.act === 'shopheal' && recHeal ? 'Conseillé' : v.fx) : v.why}</small><span class="st-price">${can ? '$' + pr : '—'}</span></button>`; }).join('');
+  const jok = `<div class="s2-jok"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span><div class="jbar">${C.officers.map((id, i) => `<button class="jk" data-joker="${i}" aria-label="${JOKERS.find(j => j.id === id).name}">${officerSVG(id, 38)}</button>`).join('')}${Array.from({ length: Math.max(0, MAX_JOKERS - C.officers.length) }, () => '<span class="jk empty"></span>').join('')}</div></div>`;
   app.innerHTML = `<div class="shop2 land packs" lang="fr"><aside class="s2-side">
     <header class="s2-top"><span class="ribbon sm">Intendance</span><span class="sb-hq">${hqPic('me')}${C.hq}/${C.hqMax}</span><span class="coin big num" title="Butin de guerre">$${C.loot}</span></header>
-    <div class="s2-jok"><span class="small">Jokers ${C.officers.length}/${MAX_JOKERS}</span>${jokerBar()}</div>
+    ${jok}
     <div class="s2-tip"><b>L'intendant :</b> ${quartermasterTip()}</div>
-    <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Nouveaux packs">⟳ $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
+    <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Remplacer les packs par d'autres">⟳ Autres packs $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
     <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row five">${svcs}</div></section></div>
