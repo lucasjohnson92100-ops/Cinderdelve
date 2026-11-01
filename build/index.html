@@ -6132,8 +6132,9 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
         g.Bz(function (p) { p.moveTo(32, cy + 4); p.quadraticCurveTo(26, cy + 3, 22, cy + 7); p.quadraticCurveTo(27, cy + 6.4, 32, cy + 6); p.quadraticCurveTo(37, cy + 6.4, 42, cy + 7); p.quadraticCurveTo(38, cy + 3, 32, cy + 4); }, "#3a2214", { lw: 0.8, s: 0.4 });
       }
     }
-    function draw(d, g, fr) {
-      var bob = fr ? -1 : 0, a = fr === 1 ? -2 : 0, b = fr === 2 ? -2 : 0, k = d.big ? 1.1 : 1;
+    function draw(d, g, fr, part) {
+      var bob = fr ? -1 : 0, a = fr === 1 ? -2 : 0, b = fr === 2 ? -2 : 0, k = d.big ? 1.1 : 1; var BODY = part !== "weapon" && part !== "weaponL", WR = !part || part === "weapon", WL = !part || part === "weaponL";
+      if (BODY) {
       g.x.save(); g.x.fillStyle = "rgba(10,6,24,0.3)"; g.x.beginPath(); g.x.ellipse(32, 60, 20 * k, 3.2, 0, 0, 6.2832); g.x.fill(); g.x.restore();
       g.RR(22, 48 + a, 8, 11, 2.4, "#2a1a14", { s: 1 }); g.RR(34, 48 + b, 8, 11, 2.4, "#2a1a14", { s: 1 });
       g.E(26, 59 + a, 5.4, 2.4, "#1a1010", { s: 0.6 }); g.E(38, 59 + b, 5.4, 2.4, "#1a1010", { s: 0.6 });
@@ -6147,8 +6148,9 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.L(45, 30, 51, 40, 6.4, d.shirt); g.E(52, 41, 4, 4, d.skin, { s: 1 });
       head(g, d, fr);
       g.x.restore();
-      weapon(g, d.w, 52, 41 + bob);
-      if (d.w === "cleaver2") weapon(g, "cleaver", 11.4, 43.6 + bob);
+      }
+      if (WR) { weapon(g, d.w, 52, 41 + bob); }
+      if (WL) { if (d.w === "cleaver2") weapon(g, "cleaver", 11.4, 43.6 + bob); }
     }
     var cache = {};
     function frames(mapId) { var d = DEFS[mapId]; if (!d) return null; if (!cache[mapId]) cache[mapId] = [0, 1, 2].map(function (fr) { var g = FARM.Sheet(); draw(d, g, fr); return g.c; }); return cache[mapId]; }
@@ -6633,20 +6635,24 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* 8. Liche */
-    def("lich", function (g, fr) {
-      var b = fr ? -1.6 : 0, o = fr === 1 ? 1.4 : fr === 2 ? -1.4 : 0;
-      sh(g, 18, 61);
+    def("lich", function (g, fr, part) {
+      var b = fr ? -1.6 : 0, o = fr === 1 ? 1.4 : fr === 2 ? -1.4 : 0, BODY = part !== "staff", STAFF = !part || part === "staff";
+      if (BODY) sh(g, 18, 61);
       g.x.save(); g.x.translate(0, b);
+      if (BODY) {
       g.Bz(function (p) { p.moveTo(14, 60); p.quadraticCurveTo(12, 34, 22, 26); p.lineTo(42, 26); p.quadraticCurveTo(52, 34, 50, 60); p.quadraticCurveTo(44, 56, 38, 61); p.quadraticCurveTo(32, 56, 26, 61); p.quadraticCurveTo(20, 56, 14, 60); }, "#5a2a8a", { s: 2.6 });
       g.Bz(function (p) { p.moveTo(26, 28); p.lineTo(38, 28); p.lineTo(35, 60); p.lineTo(29, 60); }, "#2a124a", { flat: 1, lw: 0 });
       g.stroke(function (p) { p.moveTo(24, 30); p.lineTo(32, 50); p.lineTo(40, 30); }, 1.4, GOLD);
-      g.L(12, 62, 12, 14, 2.8, "#6a4426"); g.E(12, 12, 6.4, 6.4, "#a8ff8a", { s: 1.2 }); g.dot(10, 10, 1.6, "#ffffff"); g.E(12, 12, 9.4, 9.4, "#a8ff8a33", { flat: 1, lw: 0 });
-      g.L(23, 32, 14, 36, 6, "#5a2a8a"); g.E(13, 37, 3, 3, BONE, { s: 0.8 }); g.L(41, 32, 48, 38, 6, "#5a2a8a"); g.E(49, 39, 3, 3, BONE, { s: 0.8 });
+      }
+      if (STAFF) { g.L(12, 62, 12, 14, 2.8, "#6a4426"); g.E(12, 12, 6.4, 6.4, "#a8ff8a", { s: 1.2 }); g.dot(10, 10, 1.6, "#ffffff"); g.E(12, 12, 9.4, 9.4, "#a8ff8a33", { flat: 1, lw: 0 }); if (part === "staff") g.E(13, 37, 3, 3, BONE, { s: 0.8 }); }
+      if (BODY) {
+      g.L(23, 32, 14, 36, 6, "#5a2a8a"); if (!part) g.E(13, 37, 3, 3, BONE, { s: 0.8 }); g.L(41, 32, 48, 38, 6, "#5a2a8a"); g.E(49, 39, 3, 3, BONE, { s: 0.8 });
       g.E(50, 22 + o, 3.2, 3.2, "#7affc0", { s: 0.8 }); g.E(54, 30 - o, 2.4, 2.4, "#7affc0", { s: 0.8 });
       g.Bz(function (p) { p.moveTo(21, 20); p.quadraticCurveTo(21, 6, 32, 6); p.quadraticCurveTo(43, 6, 43, 20); p.quadraticCurveTo(43, 27, 38, 28); p.lineTo(26, 28); p.quadraticCurveTo(21, 27, 21, 20); }, BONE, { s: 2 });
       g.E(27, 18, 3.8, 4.2, "#150f26", { flat: 1, lw: 0 }); g.E(37, 18, 3.8, 4.2, "#150f26", { flat: 1, lw: 0 }); glowEye(g, 27, 18.6, 2, "#8aff6a"); glowEye(g, 37, 18.6, 2, "#8aff6a");
       g.Pg([[30.6, 21.4], [33.4, 21.4], [32, 24]], "#150f26", { flat: 1, lw: 0 }); g.RR(26.4, 25, 11.2, 3.2, 1, BONE, { s: 0.6 }); [28.6, 31, 33.4, 35.8].forEach(function (x) { g.L(x, 25.4, x, 28, 0.5, OUT); });
       g.Pg([[20, 9], [21, 0], [26, 6], [32, -2], [38, 6], [43, 0], [44, 9]], GOLD, { s: 1.2 }); g.dot(32, 3, 1.4, "#ff3a5a"); g.dot(23, 5, 1, "#7affff"); g.dot(41, 5, 1, "#7affff");
+      }
       g.x.restore();
     });
     /* 9. Dragon */
@@ -6686,10 +6692,10 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore(); g.x.restore();
     });
     /* 11. Araignée */
-    function legsSp(g, fr, col, cx, cy, len, thick) {
+    function legsSp(g, fr, col, cx, cy, len, thick, side) {
       var w = fr === 1 ? 2 : fr === 2 ? -2 : 0;
       for (var i = 0; i < 4; i++) { var ky = -10 + i * 6 - w * (i % 2 ? 1 : -1) * 0.5;
-        [[-1], [1]].forEach(function (s) { var d = s[0];
+        [[-1], [1]].forEach(function (s) { var d = s[0]; if (side && d !== side) return;
           g.stroke(function (p) { p.moveTo(cx + d * 6, cy + ky * 0.3); p.quadraticCurveTo(cx + d * len * 0.9, cy + ky - 10, cx + d * len, cy + ky + 13); }, thick + 2.4, OUT);
           g.stroke(function (p) { p.moveTo(cx + d * 6, cy + ky * 0.3); p.quadraticCurveTo(cx + d * len * 0.9, cy + ky - 10, cx + d * len, cy + ky + 13); }, thick, col); }); }
     }
@@ -6777,9 +6783,10 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* 16. Reine araignée */
-    def("spiderqueen", function (g, fr) {
-      var b = fr ? -1 : 0; sh(g, 26);
-      legsSp(g, fr, "#2a1e46", 32, 37, 30, 3.2);
+    def("spiderqueen", function (g, fr, part) {
+      var b = fr ? -1 : 0, BODY = part !== "lgL" && part !== "lgR"; if (BODY) sh(g, 26);
+      if (part !== "body") legsSp(g, fr, "#2a1e46", 32, 37, 30, 3.2, part === "lgL" ? -1 : part === "lgR" ? 1 : 0);
+      if (BODY) {
       g.x.save(); g.x.translate(0, b);
       g.E(32, 43, 15, 12.6, "#5a3a8a", { s: 2.8 }); g.Pg([[32, 33], [38.4, 42], [32, 52], [25.6, 42]], "#e0483e", { s: 0.8, lw: 1 }); g.dot(32, 42, 1.6, "#150f26");
       [[19, 40], [45, 39], [20, 48], [44, 48]].forEach(function (d) { g.dot(d[0], d[1], 2, "#8a68c0"); });
@@ -6788,31 +6795,37 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.Pg([[26, 30], [29.6, 30], [27.6, 36]], BONE, { s: 0.6, lw: 1 }); g.Pg([[34.4, 30], [38, 30], [36, 36]], BONE, { s: 0.6, lw: 1 });
       g.Pg([[24, 14], [25, 5], [28.6, 11], [32, 3], [35.4, 11], [39, 5], [40, 14]], GOLD, { s: 1.2 }); g.dot(32, 8, 1.4, "#ff3a5a"); g.dot(26, 10, 1, "#7affff"); g.dot(38, 10, 1, "#7affff");
       g.x.restore();
+      }
     });
     /* 17. Roi crapaud */
-    def("toadking", function (g, fr) {
-      var sq = fr === 1 ? 1.05 : fr === 2 ? 0.96 : 1; sh(g, 26);
+    def("toadking", function (g, fr, part) {
+      var sq = fr === 1 ? 1.05 : fr === 2 ? 0.96 : 1, BODY = part !== "belly" && part !== "front", MID = !part || part === "belly", FRONT = !part || part === "front"; if (BODY) sh(g, 26);
       g.x.save(); g.x.translate(32, 60); g.x.scale(2 - sq, sq); g.x.translate(-32, -60);
-      g.E(12, 56, 8, 4.4, "#4a8a3a", { s: 1 }); g.E(52, 56, 8, 4.4, "#4a8a3a", { s: 1 });
-      g.Bz(function (p) { p.moveTo(6, 56); p.quadraticCurveTo(0, 36, 14, 28); p.quadraticCurveTo(32, 18, 50, 28); p.quadraticCurveTo(64, 36, 58, 56); p.quadraticCurveTo(32, 64, 6, 56); }, "#5aa43a", { s: 3 });
-      g.E(32, 48, 17, 10, "#e8e0a8", { s: 1.6 }); [[18, 34], [46, 32], [12, 46], [52, 44], [26, 28]].forEach(function (w) { g.dot(w[0], w[1], 1.8, "#3a7a2a"); });
+      if (BODY) { g.E(12, 56, 8, 4.4, "#4a8a3a", { s: 1 }); g.E(52, 56, 8, 4.4, "#4a8a3a", { s: 1 }); }
+      if (BODY) { g.Bz(function (p) { p.moveTo(6, 56); p.quadraticCurveTo(0, 36, 14, 28); p.quadraticCurveTo(32, 18, 50, 28); p.quadraticCurveTo(64, 36, 58, 56); p.quadraticCurveTo(32, 64, 6, 56); }, "#5aa43a", { s: 3 }); }
+      if (MID) g.E(32, 48, 17, 10, "#e8e0a8", { s: 1.6 }); if (BODY) [[18, 34], [46, 32], [12, 46], [52, 44], [26, 28]].forEach(function (w) { g.dot(w[0], w[1], 1.8, "#3a7a2a"); });
+      if (FRONT) {
       g.E(18, 24, 8, 8, "#5aa43a", { s: 1.6 }); g.E(46, 24, 8, 8, "#5aa43a", { s: 1.6 });
       glowEye(g, 18, 23, 4.4, "#ffe03a"); glowEye(g, 46, 23, 4.4, "#ffe03a"); g.E(18, 23.4, 1.4, 3.2, OUT, { flat: 1, lw: 0 }); g.E(46, 23.4, 1.4, 3.2, OUT, { flat: 1, lw: 0 });
       brow(g, 18, 17.6, 5.6, 1); brow(g, 46, 17.6, 5.6, -1);
       g.Bz(function (p) { p.moveTo(10, 40); p.quadraticCurveTo(32, 54, 54, 40); p.quadraticCurveTo(32, 44, 10, 40); }, "#3a0a1c", { flat: 1, lw: 1.2 });
       g.E(32, 45, 6, 2.6, "#e8486a", { flat: 1, lw: 0.8 }); [14, 22, 42, 50].forEach(function (x) { g.fang(x, 41, 1.4, 3.6); });
       g.Pg([[20, 14], [21, 4], [26, 10], [32, 2], [38, 10], [43, 4], [44, 14]], GOLD, { s: 1.2 }); g.dot(32, 8, 1.6, "#ff3a5a"); g.dot(24, 10, 1.1, "#7affff"); g.dot(40, 10, 1.1, "#7affff");
+      }
       g.x.restore();
     });
     /* 18. Pharaon */
-    def("pharaoh", function (g, fr) {
-      var b = fr ? -1.2 : 0, sw = fr === 1 ? 1 : fr === 2 ? -1 : 0; sh(g, 17, 61);
+    def("pharaoh", function (g, fr, part) {
+      var b = fr ? -1.2 : 0, sw = fr === 1 ? 1 : fr === 2 ? -1 : 0, BODY = part !== "staff", STAFF = !part || part === "staff"; if (BODY) sh(g, 17, 61);
       g.x.save(); g.x.translate(0, b);
+      if (BODY) {
       g.Bz(function (p) { p.moveTo(12 + sw, 61); p.quadraticCurveTo(10, 36, 20, 30); p.lineTo(44, 30); p.quadraticCurveTo(54, 36, 52 - sw, 61); p.quadraticCurveTo(32, 58, 12 + sw, 61); }, "#e8dcb8", { s: 2.4 });
       [38, 44, 50, 56].forEach(function (y) { g.stroke(function (p) { p.moveTo(15, y); p.quadraticCurveTo(32, y + 3, 49, y); }, 1, "#b8a878"); });
       g.Pg([[22, 30], [42, 30], [38, 40], [26, 40]], "#2a4aa8", { s: 1.4 }); g.stroke(function (p) { p.moveTo(24, 33); p.lineTo(40, 33); p.moveTo(25, 36); p.lineTo(39, 36); }, 1.2, GOLD);
       g.L(14, 30, 8, 46, 5.4, "#e8dcb8"); g.E(7.6, 47.4, 3.2, 3.2, "#a8845a", { s: 0.8 }); g.L(50, 30, 56, 40, 5.4, "#e8dcb8"); g.E(56.6, 41.4, 3.2, 3.2, "#a8845a", { s: 0.8 });
-      g.L(57, 62, 57, 18, 2.4, "#c8a030"); g.stroke(function (p) { p.ellipse(57, 12, 3.6, 5, 0, 0, 6.2832); }, 3.4, OUT); g.stroke(function (p) { p.ellipse(57, 12, 3.6, 5, 0, 0, 6.2832); }, 1.8, GOLD); g.L(52, 20, 62, 20, 2.2, GOLD);
+      }
+      if (STAFF) { g.L(57, 62, 57, 18, 2.4, "#c8a030"); g.stroke(function (p) { p.ellipse(57, 12, 3.6, 5, 0, 0, 6.2832); }, 3.4, OUT); g.stroke(function (p) { p.ellipse(57, 12, 3.6, 5, 0, 0, 6.2832); }, 1.8, GOLD); g.L(52, 20, 62, 20, 2.2, GOLD); }
+      if (BODY) {
       g.Pg([[14, 36], [16, 8], [26, 2], [38, 2], [48, 8], [50, 36], [42, 28], [22, 28]], "#2a4aa8", { s: 2 });
       [[18, 14, 20, 30], [22, 8, 24, 28], [42, 8, 40, 28], [46, 14, 44, 30]].forEach(function (s) { g.stroke(function (p) { p.moveTo(s[0], s[1]); p.lineTo(s[2], s[3]); }, 1.8, GOLD); });
       g.Bz(function (p) { p.moveTo(22, 20); p.quadraticCurveTo(22, 8, 32, 8); p.quadraticCurveTo(42, 8, 42, 20); p.quadraticCurveTo(42, 30, 32, 32); p.quadraticCurveTo(22, 30, 22, 20); }, "#c8a030", { s: 1.8 });
@@ -6820,6 +6833,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       glowEye(g, 28, 18.6, 2.3, "#5affff"); glowEye(g, 36, 18.6, 2.3, "#5affff"); brow(g, 28, 16, 3.4, 1); brow(g, 36, 16, 3.4, -1);
       g.grin(32, 25.4, 3.6, 1.4, 2); g.RR(30, 31, 4, 6, 1.4, "#2a4aa8", { s: 0.6 }); g.RR(30, 31, 4, 1.6, 0.6, GOLD, { flat: 1, lw: 0 });
       g.Pg([[30, 10], [32, 2], [34, 10]], "#d84a3a", { s: 0.6, lw: 1 });
+      }
       g.x.restore();
     });
     /* 19. Centaure */
@@ -6956,7 +6970,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       g.x.restore();
     });
     /* Boucherie : le Grand Boucher en personne (même dessin que son portrait de chef) */
-    def("grandboucher", function (g, fr) { LT.draw(LT.DEFS[12], g, fr); });
+    def("grandboucher", function (g, fr, part) { LT.draw(LT.DEFS[12], g, fr, part); });
 
     /* l'armée du Grand Boucher porte son tablier taché */
     var APRON = { skeleton: [32, 36, 50, 7], goblin: [32, 38, 51, 6.4], archer: [32, 37, 53, 6.4], cultist: [32, 35, 55, 7], ogre: [32, 33, 51, 9], minotaur: [32, 31, 50, 8.6], cyclops: [32, 33, 51, 9.4], werewolf: [32, 32, 50, 8], lycan: [32, 32, 50, 7], centaur: [32, 27, 47, 6.4] };
@@ -6988,7 +7002,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       return cache[id];
     }
     function big(id, fr, px, part) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); DEF[id](g, fr || 0, part); return polish(g.c, id); }
-    function bigLT(mid, fr, px) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); LT.draw(LT.DEFS[mid], g, fr || 0); return polish(g.c, "lt"); }
+    function bigLT(mid, fr, px, part) { px = px || 512; var g = FARM.Sheet({ w: px, h: px, k: px / 64 }); LT.draw(LT.DEFS[mid], g, fr || 0, part); return polish(g.c, "lt"); }
     return { frames: frames, ids: ORDER, FLY: FLY, big: big, bigLT: bigLT };
   })();
 
@@ -13224,14 +13238,14 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         triple: { name: "Triple frappe", kind: "melee", pct: 0.065, hits: function () { var a = 1000 + DUEL_RR(0, 300), b = a + DUEL_RR(380, 620); return [a, b, b + DUEL_RR(420, 900)]; } },
         onde: { name: "Onde de choc", kind: "wave", pct: 0.14, hits: function () { return [1700 + DUEL_RR(0, 250)]; } },
         furie: { name: "Furie de l'Ogre", kind: "melee", pct: 0.055, hits: function () { var t = 900 + DUEL_RR(0, 200), out = []; for (var i = 0; i < 5; i++) { out.push(t); t += i === 2 ? DUEL_RR(650, 950) : DUEL_RR(310, 420); } return out; } } } },
-    spiderqueen: { art: "spiderqueen", h: 3.3, sw: 1.4, f: 1, anim: 1, sub: "Elle tisse la toile du Grand Boucher", scene: "web", dmg: 1, spd: 0.85, rspd: 1, first: "morsure", jumpMove: "bond", pool: ["morsure", "toile", "toile", "nuee", "bond"], rpool: ["tempete", "nuee", "bond", "morsure", "tempete"],
+    spiderqueen: { art: "spiderqueen", parts: [{ name: "lgL", pivot: [26, 37], k: 1, behind: 1 }, { name: "lgR", pivot: [38, 37], k: -1, behind: 1 }], gest: { wind: 0.5, strike: -0.4, raise: 0.6 }, idle: { amp: 0.1, hz: 1.4 }, h: 3.3, sw: 1.4, f: 1, anim: 1, sub: "Elle tisse la toile du Grand Boucher", scene: "web", dmg: 1, spd: 0.85, rspd: 1, first: "morsure", jumpMove: "bond", pool: ["morsure", "toile", "toile", "nuee", "bond"], rpool: ["tempete", "nuee", "bond", "morsure", "tempete"],
       moves: {
         morsure: { name: "Morsure venimeuse", kind: "melee", pct: 0.13, hits: function () { return [1100 + DUEL_RR(-150, 500)]; } },
         toile: { name: "Salve de toile", kind: "shot", pct: 0.06, col: "235,240,250", hits: function () { return dHits(3, 1000, 250, 420, 700); } },
         nuee: { name: "Nuée d'araignées", kind: "swarm", pct: 0.045, col: "70,50,90", hits: function () { return dHits(4, 900, 200, 300, 390); } },
         bond: { name: "Bond de la reine", kind: "leap", pct: 0.14, hits: function () { return [1800 + DUEL_RR(0, 250)]; } },
         tempete: { name: "Tempête de toiles", kind: "shot", pct: 0.045, col: "235,240,250", hits: function () { return dHits(6, 950, 150, 300, 430); } } } },
-    toadking: { art: "toadking", h: 3.1, sw: 1.5, f: 0, anim: 1, sub: "Le marais est à lui", scene: "swamp", dmg: 1.05, spd: 0.8, rspd: 0.95, first: "langue", jumpMove: "ecrasement", pool: ["langue", "ecrasement", "bulles", "bulles"], rpool: ["deluge", "ecrasement", "langue", "cri"],
+    toadking: { art: "toadking", parts: [{ name: "belly", pivot: [32, 48], k: 0.3, mode: "scale" }], front: 1, gest: { wind: 0.6, strike: -0.4, raise: 0.8 }, idle: { amp: 0.15, hz: 0.7 }, h: 3.1, sw: 1.5, f: 0, anim: 1, sub: "Le marais est à lui", scene: "swamp", dmg: 1.05, spd: 0.8, rspd: 0.95, first: "langue", jumpMove: "ecrasement", pool: ["langue", "ecrasement", "bulles", "bulles"], rpool: ["deluge", "ecrasement", "langue", "cri"],
       moves: {
         langue: { name: "Coup de langue", kind: "beam", pct: 0.12, col: "255,120,150", charge: 650, hits: function () { return [900 + DUEL_RR(-100, 350)]; } },
         ecrasement: { name: "Écrasement", kind: "leap", pct: 0.15, hits: function () { return [1800 + DUEL_RR(0, 250)]; } },
@@ -13245,7 +13259,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         queue: { name: "Onde incandescente", kind: "wave", pct: 0.14, hits: function () { return [1700 + DUEL_RR(0, 250)]; } },
         pluie: { name: "Pluie de feu", kind: "rain", pct: 0.055, col: "255,130,40", hits: function () { return dHits(6, 1000, 150, 300, 440); } },
         double: { name: "Double souffle", kind: "beam", pct: 0.09, col: "255,150,50", charge: 1000, hits: function () { var a = 1700 + DUEL_RR(0, 150); return [a, a + 650 + DUEL_RR(0, 200)]; } } } },
-    lich: { art: "lich", h: 3.4, sw: 1.0, f: 1, anim: 1, fly: 1, sub: "Il commande les morts du Boucher", scene: "crypt", dmg: 1.1, spd: 0.8, rspd: 0.95, first: "traits", jumpMove: null, pool: ["eclair", "traits", "traits", "rayon", "esprits"], rpool: ["tempete", "rayon", "esprits", "eclair", "traits"],
+    lich: { art: "lich", parts: [{ name: "staff", pivot: [13, 37], k: 1 }], gest: { wind: 0.3, strike: -0.8, raise: -0.4 }, idle: { amp: 0.05, hz: 0.9 }, h: 3.4, sw: 1.0, f: 1, anim: 1, fly: 1, sub: "Il commande les morts du Boucher", scene: "crypt", dmg: 1.1, spd: 0.8, rspd: 0.95, first: "traits", jumpMove: null, pool: ["eclair", "traits", "traits", "rayon", "esprits"], rpool: ["tempete", "rayon", "esprits", "eclair", "traits"],
       moves: {
         eclair: { name: "Foudre", kind: "rain", pct: 0.08, col: "190,210,255",
           hits: function () { return dHits(3, 1000, 250, 430, 640); } },
@@ -13253,7 +13267,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         rayon: { name: "Rayon de nécromancie", kind: "beam", pct: 0.15, col: "190,120,255", charge: 1000, hits: function () { return [1700 + DUEL_RR(0, 200)]; } },
         esprits: { name: "Esprits hurlants", kind: "swarm", pct: 0.045, col: "150,255,200", hits: function () { return dHits(4, 900, 200, 300, 400); } },
         tempete: { name: "Tempête de foudre", kind: "rain", pct: 0.05, col: "190,210,255", hits: function () { return dHits(7, 950, 150, 280, 420); } } } },
-    pharaoh: { art: "pharaoh", h: 3.4, sw: 1.1, f: 0, anim: 1, sub: "Le roi des sables maudits", scene: "desert", dmg: 1.1, spd: 0.8, rspd: 0.95, first: "rayon", jumpMove: null, pool: ["rayon", "sable", "momies", "scarabees"], rpool: ["malediction", "sable", "momies", "scarabees", "rayon"],
+    pharaoh: { art: "pharaoh", parts: [{ name: "staff", pivot: [57, 41], k: 1 }], gest: { wind: 0.4, strike: -1.2, raise: -0.5 }, idle: { amp: 0.04, hz: 0.7 }, h: 3.4, sw: 1.1, f: 0, anim: 1, sub: "Le roi des sables maudits", scene: "desert", dmg: 1.1, spd: 0.8, rspd: 0.95, first: "rayon", jumpMove: null, pool: ["rayon", "sable", "momies", "scarabees"], rpool: ["malediction", "sable", "momies", "scarabees", "rayon"],
       moves: {
         rayon: { name: "Rayon maudit", kind: "beam", pct: 0.14, col: "255,210,90", charge: 950, hits: function () { return [1600 + DUEL_RR(0, 200)]; } },
         sable: { name: "Tempête de sable", kind: "rain", pct: 0.06, col: "235,195,110", hits: function () { return dHits(5, 1000, 200, 340, 520); } },
@@ -13281,6 +13295,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         cultistes: { name: "Les cultistes chargent", kind: "swarm", pct: 0.05, col: "170,70,110", hits: function () { return dHits(4, 900, 200, 320, 420); } },
         boucherie: { name: "Boucherie", kind: "melee", pct: 0.05, hits: function () { var t = 900 + DUEL_RR(0, 200), out = []; for (var i = 0; i < 6; i++) { out.push(t); t += i === 2 || i === 4 ? DUEL_RR(600, 850) : DUEL_RR(300, 400); } return out; } } } }
   };
+  var LT_PARTS = [{ name: "weapon", pivot: [52, 41], k: 1 }, { name: "weaponL", pivot: [11.4, 43.6], k: -1 }], LT_GEST = { wind: 0.55, strike: -1.6, raise: -0.8 };
   var DUEL_SC = {
     farm: { sky: ["#07060f", "#1d1430", "#5a2a34", "#d0703c", "#ffc07a"], sun: ["255,236,190", "255,214,150", "255,150,80"], gnd: ["#4a3036", "#2a1c22", "#0a070c"], glow: "255,200,140", fog: "255,180,120", cloud: "#2a1a30", far: "farm", petal: "rose", grass: ["#3b3a24", "#4a3a26"], tk: 0.22, stone: "rgba(40,28,36,0.95)", trees: 1 },
     web: { sky: ["#04050b", "#0c1322", "#16283a", "#35606c", "#8cc0c8"], sun: ["215,238,255", "170,210,240", "80,140,200"], gnd: ["#182126", "#10161c", "#05070a"], glow: "150,210,235", fog: "120,175,195", cloud: "#0c1622", far: "web", petal: "mote", grass: ["#1f2e2c", "#243436"], tk: 0.3, stone: "rgba(20,28,34,0.95)" },
@@ -13301,7 +13316,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var ARTC = {};
     function ogreArt() {
       var key = D.key; if (ARTC[key]) return ARTC[key];
-      var px = 512, PT = (D.mid == null && D.cfg.parts) || null, big = function (fr, part) { return D.mid != null ? MON.bigLT(D.mid, fr, px) : MON.big(D.cfg.art, fr, px, part); };
+      var px = 512, PT = D.mid != null ? LT_PARTS : (D.cfg.parts || null), big = function (fr, part) { return D.mid != null ? MON.bigLT(D.mid, fr, px, part) : MON.big(D.cfg.art, fr, px, part); };
       var raw = [0, 1, 2].map(function (fr) { return big(fr); });
       var q = raw[0].getContext("2d").getImageData(0, 0, px, px).data, x0 = px, y0 = px, x1 = 0, y1 = 0, xx, yy;
       for (yy = 0; yy < px; yy += 2) for (xx = 0; xx < px; xx += 2) if (q[(yy * px + xx) * 4 + 3] > 120) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
@@ -13313,19 +13328,21 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var A = { f: f, red: f.map(function (c) { return tint(c, "rgba(255,40,24,0.2)"); }), w: silh(f[0], "#ffffff"), rim: silh(f[0], "#ffb36a") };
       if (PT) {
         A.bf = [0, 1, 2].map(function (fr) { return crop(big(fr, "body")); }); A.pf = {};
-        A.parts = PT.map(function (p) { A.pf[p.name] = [0, 1, 2].map(function (fr) { return crop(big(fr, p.name)); }); return { name: p.name, behind: p.behind, k: p.k, px: (32 + 0.86 * (p.pivot[0] - 32)) * px / 64 - x0, py: (11.5 + 0.86 * p.pivot[1]) * px / 64 - y0 }; });
+        A.parts = PT.map(function (p) { A.pf[p.name] = [0, 1, 2].map(function (fr) { return crop(big(fr, p.name)); }); return { name: p.name, behind: p.behind, k: p.k, mode: p.mode, px: (32 + 0.86 * (p.pivot[0] - 32)) * px / 64 - x0, py: (11.5 + 0.86 * p.pivot[1]) * px / 64 - y0 }; });
+        if (D.cfg.front && D.mid == null) A.fr = [0, 1, 2].map(function (fr) { return crop(big(fr, "front")); });
         A.comp = mkCanvas(cw, ch); A.rimc = mkCanvas(cw, ch); A.whc = mkCanvas(cw, ch);
       }
       return (ARTC[key] = A);
     }
     /* assemble le boss image par image : le corps, puis ses membres (bras, ailes, pinces) tournés autour de leur articulation */
     function compose(A, fr) {
-      var c = A.comp, y = c.getContext("2d"), o = D.ogre, I = D.cfg.idle || { amp: 0, hz: 1 }, pa = o.pa + I.amp * Math.sin(D.time * I.hz * 0.00628);
+      var c = A.comp, y = c.getContext("2d"), o = D.ogre, I = D.idleP || { amp: 0, hz: 1 }, pa = o.pa + I.amp * Math.sin(D.time * I.hz * 0.00628);
       y.clearRect(0, 0, c.width, c.height);
-      function part(p) { y.save(); y.translate(p.px, p.py); y.rotate(pa * p.k); y.translate(-p.px, -p.py); y.drawImage(A.pf[p.name][fr], 0, 0); y.restore(); }
+      function part(p) { y.save(); y.translate(p.px, p.py); if (p.mode === "scale") y.scale(1 + pa * p.k, 1 + pa * p.k); else y.rotate(pa * p.k); y.translate(-p.px, -p.py); y.drawImage(A.pf[p.name][fr], 0, 0); y.restore(); }
       A.parts.forEach(function (p) { if (p.behind) part(p); });
       y.drawImage(A.bf[fr], 0, 0);
       A.parts.forEach(function (p) { if (!p.behind) part(p); });
+      if (A.fr) y.drawImage(A.fr[fr], 0, 0);
       if (D.rage) { y.globalCompositeOperation = "source-atop"; y.fillStyle = "rgba(255,40,24,0.2)"; y.fillRect(0, 0, c.width, c.height); y.globalCompositeOperation = "source-over"; }
       return c;
     }
@@ -13341,11 +13358,13 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function tw(o, k, to, dur, ease, delay) { D.tw.push({ o: o, k: k, from: null, to: to, t0: D.time + (delay || 0), dur: Math.max(1, dur), e: ease || eio }); }
     function slow(k, ms) { D.slowK = k; D.slowUntil = performance.now() + ms; }
     function shake(a) { D.shk = Math.max(D.shk, a); }
+    function hitstop(ms) { D.freeUntil = Math.max(D.freeUntil, performance.now() + ms); }
+    function punch(a) { D.punch = Math.max(D.punch, a); }
     /* ---------- caméra : projection perspective + plans de cinéma ---------- */
     function proj(px, py, pz) {
       var dx = px - cam.x, dz = pz - cam.z, c = Math.cos(cam.yaw), s = Math.sin(cam.yaw);
       var rx = dx * c - dz * s, rz = dx * s + dz * c; if (rz < 0.35) rz = 0.35;
-      var k = cam.F / rz; return { x: W / 2 + rx * k, y: H * (cam.hz + D.hzo) - (py - cam.y) * k, k: k, z: rz };
+      var k = cam.F * (1 + D.punch) / rz; return { x: W / 2 + rx * k, y: H * (cam.hz + D.hzo) - (py - cam.y) * k, k: k, z: rz };
     }
     function shot(n) {
       var h = D.hero, o = D.ogre, P = D.por, F = D.F0;
@@ -13395,7 +13414,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (e.skin && e.skin.indexOf("lt_") === 0) { Object.keys(LT.DEFS).forEach(function (m) { if ("lt_" + LT.DEFS[m].id === e.skin) mid = +m; }); }
       var hfront = heroArt(v); HFC = {};
       D = {
-        e: e, v: v, cfg: cfg, sc: DUEL_SC[cfg.scene], mid: mid, key: mid != null ? "lt" + mid : e.type, bname: e.title || (NAMES[e.type] ? NAMES[e.type][1] : "Le boss"), bsub: e.superBoss ? "Lieutenant du Grand Boucher" : cfg.sub, dmgK: cfg.dmg * (e.superBoss ? 1.2 * [0.92, 1, 1.1][e.tier == null ? 1 : e.tier] : 1), rk: 0, bm: [], time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
+        e: e, v: v, cfg: cfg, sc: DUEL_SC[cfg.scene], mid: mid, key: mid != null ? "lt" + mid : e.type, bname: e.title || (NAMES[e.type] ? NAMES[e.type][1] : "Le boss"), gest: mid != null ? LT_GEST : cfg.gest, idleP: mid != null ? { amp: 0.05, hz: 0.8 } : cfg.idle, bsub: e.superBoss ? "Lieutenant du Grand Boucher" : cfg.sub, dmgK: cfg.dmg * (e.superBoss ? 1.2 * [0.92, 1, 1.1][e.tier == null ? 1 : e.tier] : 1), rk: 0, bm: [], punch: 0, freeUntil: 0, sl: 0, slD: 1, time: 0, q: [], tw: [], pt: [], fl: [], pj: [], wv: [], wins: [], qte: [], lab: null, slowK: 1, slowUntil: 0, shk: 0, hurtT: -9999, flashT: -9999, flashC: "255,255,255",
         hp: Math.max(1, Math.round(e.hp)), max: Math.max(1, Math.round(e.maxHp)), brk: 0, broken: false, rage: false, ap: 3, phase: "intro", over: false,
         tH: 0, tO: 0.42, spdH: 1, spdO: cfg.spd * (e.superBoss ? 1.1 : 1), ogreTurns: 0, heroTurns: 0, tapAt: -9999, tapUsed: -9999, jumpAt: -9999, lockUntil: 0, jumpLock: 0, combo: null, lastMove: "",
         hero: { x: 0, z: 0, ox: 0, oy: 0, oz: 0, rot: 0, sq: 1, sx: 1, a: 1, fl: 0, flc: 0, h: 2.2, foot: 0.975, im: null, front: hfront, pose: "idle", poseUntil: 0, poseT: 0, dash: 0, w: null, r: null, rim: null, trail: [] },
@@ -13492,7 +13511,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function dashIn(ms) {
       var h = D.hero, o = D.ogre, tx = o.x - (D.por ? 0.55 : 1.05), tz = o.z - 0.9;
       tw(h, "ox", tx - h.x, ms, eio); tw(h, "oz", tz - h.z, ms, eio); tw(h, "oy", 0.5, ms * 0.5, eo); tw(h, "oy", 0, ms * 0.5, ei, ms * 0.5);
-      D.hero.dash = D.time + ms;
+      D.hero.dash = D.time + ms; D.sl = D.time + ms; D.slD = ms;
+      tw(h, "sq", 0.92, 90, eo); tw(h, "sq", 1.03, 160, eo, 90); tw(h, "sq", 1, 160, eo, ms - 60);
+      after(ms - 40, function () { if (D && !D.over) sparks(h.x + h.ox, 0.12, h.z + h.oz, 12, "215,195,165"); });
     }
     function dashBack(ms, delay) { var h = D.hero; tw(h, "ox", 0, ms, eio, delay); tw(h, "oz", 0, ms, eio, delay); tw(h, "rot", 0, ms, eo, delay); D.hero.dash = D.time + (delay || 0) + ms; }
     function strikeFx(big) {
@@ -13501,7 +13522,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       D.pt.push({ k: "slash", x: px, y: py, z: pz, t0: D.time, d: 260, a: rr(-0.9, -0.3) + (Math.random() < 0.5 ? 0 : 3.1), s: big ? 1.6 : 1.1, c: D.col });
       sparks(px, py, pz, big ? 22 : 12, "255,240,200"); sparks(px, py, pz, big ? 10 : 5, D.col);
       o.fl = 1; tw(o, "fl", 0, 220, lin); tw(o, "rot", 0.07, 70, eo); tw(o, "rot", 0, 300, eo, 80);
-      shake(big ? 7 : 3.5); sfx(big ? "crit" : "slash");
+      shake(big ? 7 : 3.5); sfx(big ? "crit" : "slash"); hitstop(big ? 70 : 38); punch(big ? 0.07 : 0.035);
+      D.pt.push({ k: "burst", x: px, y: py, z: pz, t0: D.time, d: 220, c: big ? "255,236,190" : "255,255,255", s: big ? 1.9 : 1.2 });
     }
     function sparks(px, py, pz, n, col) {
       for (var i = 0; i < n; i++) { var a = Math.random() * 6.283, sp = rr(1.2, 4.2); D.pt.push({ k: "spark", x: px, y: py, z: pz, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp + 1, vz: rr(-1, 1), t0: D.time, d: rr(260, 620), c: col, s: rr(0.02, 0.05) }); }
@@ -13518,7 +13540,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (D.hp <= 0) victory();
     }
     function breakOgre() {
-      D.broken = true; D.brk = 100; sfx("guardbreak"); shake(9); flash("255,230,160", 260); slow(0.3, 420);
+      D.broken = true; D.brk = 100; sfx("guardbreak"); shake(9); hitstop(130); punch(0.09); flash("255,230,160", 260); slow(0.3, 420);
       var o = D.ogre; tw(o, "sq", 0.82, 260, eo); tw(o, "rot", -0.16, 260, eo);
       D.fl.push({ x: o.x + o.ox, y: 2.9, z: o.z + o.oz - 0.4, t: "BRISÉ !", c: "#ffd23c", s: 1.5, t0: D.time, d: 1500, serif: 1 });
       sparks(o.x + o.ox, 1.8, o.z + o.oz, 30, "255,210,90");
@@ -13593,7 +13615,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function counter() {
       D.phase = "act"; label("Contre-attaque !", "Toutes les attaques parées", 1300);
       setShot("clash", 3.5); slow(0.45, 380); dashIn(300); after(130, function () { setPose("wind", 170); });
-      after(330, function () { tw(D.hero, "rot", -0.3, 80, eo); strikeFx(true); flash("255,255,255", 150); hitOgre(1.35, 22, true, "Contre"); });
+      after(330, function () { tw(D.hero, "rot", -0.3, 80, eo); strikeFx(true); flash("255,255,255", 150); hitstop(60); punch(0.05); hitOgre(1.35, 22, true, "Contre"); });
       after(800, function () { if (!D.over) { setShot("wide", 2); dashBack(450); } });
       endHeroAct(1450);
     }
@@ -13628,7 +13650,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       label(M.name, D.ogreTurns <= 2 || (jump && !D.jumpTold) ? (jump ? "Glisse vers le haut au moment de l'impact pour SAUTER" : "Tape au moment de l'impact pour PARER") : "", jump ? 2200 : 1700);
       if (jump) D.jumpTold = true;
       setShot("ogre", 2.4); sfx("warn");
-      var G = D.cfg.gest || { wind: 0, strike: 0, raise: 0 }, col = M.col || "255,255,255", mouthY = function () { return 1.6 + o.fy * 0.7 + o.oy; };
+      var G = D.gest || { wind: 0, strike: 0, raise: 0 }, col = M.col || "255,255,255", mouthY = function () { return 1.6 + o.fy * 0.7 + o.oy; };
       if (melee) {
         var tx = h.x + (D.por ? 0.9 : 1.5), tz = h.z + 2;
         tw(o, "ox", tx - o.x, 520, eio, 300); tw(o, "oz", tz - o.z, 520, eio, 300);
@@ -13689,7 +13711,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         sparks(hx + 0.4, 1.5, hz + 0.1, 26, "255,250,220"); sparks(hx + 0.4, 1.5, hz + 0.1, 10, "120,200,255");
         D.pt.push({ k: "ring", x: hx + 0.4, y: 1.5, z: hz + 0.1, t0: D.time, d: 300, c: "255,255,255", s: 1.2 });
         D.fl.push({ x: hx, y: 2.9, z: hz, t: "Parade", c: "#ffffff", s: 1.25, t0: D.time, d: 900, serif: 1 });
-        flash("255,255,255", 110); slow(0.3, 170); shake(4); sfx("parry"); setPose("parry", 300);
+        flash("255,255,255", 110); slow(0.3, 170); shake(4); sfx("parry"); setPose("parry", 300); hitstop(85); punch(0.05); D.pt.push({ k: "burst", x: hx + 0.4, y: 1.5, z: hz + 0.1, t0: D.time, d: 260, c: "255,255,255", s: 1.6 });
         tw(h, "rot", -0.12, 60, eo); tw(h, "rot", 0, 260, eo, 80); tw(o, "rot", 0.16, 70, eo);
         return;
       } else if (fresh && dt >= -330 && dt < -150) {
@@ -13705,7 +13727,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.hp = Math.max(0, state.hp - dmg);
       var h = D.hero;
       h.flc = 1; tw(h, "flc", 0, 320, lin); tw(h, "ox", h.ox - 0.3, 90, eo); tw(h, "ox", 0, 380, eio, 120); tw(h, "rot", 0.14, 90, eo); tw(h, "rot", 0, 380, eo, 120);
-      D.hurtT = D.time; shake(9); sfx("thump"); setPose("hurt", 430);
+      D.hurtT = D.time; shake(9); sfx("thump"); setPose("hurt", 430); hitstop(75); punch(0.06);
       sparks(h.x + h.ox, 1.4, h.z + h.oz, 14, "255,70,60");
       D.fl.push({ x: h.x + h.ox + 0.3, y: 2.6, z: h.z + h.oz, t: "-" + dmg, c: "#ff5a4f", s: 1.15, t0: D.time, d: 1000 });
       if (state.hp <= 0) heroDown();
@@ -13724,7 +13746,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function victory() {
       if (D.over && D.won) return;
       D.over = true; D.won = true; D.q = []; D.wins = []; D.qte = []; D.phase = "end"; showUI(false);
-      slow(0.25, 1100); flash("255,240,200", 500); shake(10); sfx("bossdeath");
+      slow(0.25, 1100); flash("255,240,200", 500); shake(10); sfx("bossdeath"); hitstop(170); punch(0.1);
       setShot("clash", 1.2);
       var o = D.ogre;
       label("Victoire", D.bname + (D.cfg.f ? " est terrassée" : " est terrassé"), 2600);
@@ -13791,7 +13813,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       rafId = requestAnimationFrame(frame);
       var rdt = Math.max(0, Math.min(50, t - lastT)); lastT = t;
       if (FPSCAP && rdt < 1000 / FPSCAP - 3) { lastT = t - rdt; return; }
-      var k = t < D.slowUntil ? D.slowK : 1, dt = rdt * k;
+      var k = t < D.slowUntil ? D.slowK : 1; if (t < D.freeUntil) k = 0; var dt = rdt * k;
       D.time += dt;
       step(dt, rdt); if (!D) return;
       draw(t);
@@ -13811,7 +13833,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       /* caméra : ressort amorti vers le plan visé + souffle à l'épaule */
       var f = 1 - Math.exp(-rdt / 1000 * camSp);
       ["x", "y", "z", "yaw", "hz", "roll", "F"].forEach(function (kk) { cam[kk] += (camT[kk] - cam[kk]) * f; });
-      D.shk *= Math.pow(0.0025, rdt / 1000);
+      D.shk *= Math.pow(0.0025, rdt / 1000); D.punch *= Math.pow(0.0008, rdt / 1000);
       if (D.fq.length) { var fqq = D.fq.shift(); hf(fqq[0], fqq[1]); }
       D.ogre.fy = D.cfg.fly ? 0.9 + Math.sin(D.time / 480) * 0.14 : 0; D.rk += ((D.rage ? 1 : 0) - D.rk) * 0.05; D.bm = D.bm.filter(function (q) { return D.time - q.t < 400; });
       /* pétales */
@@ -14053,6 +14075,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           x.beginPath(); x.arc(0, 0, R, -1.2, -1.2 + 2.4 * e2); x.stroke();
           x.strokeStyle = "rgba(" + q.c + "," + (0.7 * (1 - k)).toFixed(3) + ")"; x.lineWidth = Math.max(3, P.k * 0.22 * (1 - k)); x.beginPath(); x.arc(0, 0, R * 0.94, -1.1, -1.1 + 2.2 * e2); x.stroke();
           x.restore();
+        } else if (q.k === "burst") {
+          P = proj(q.x, q.y, q.z); var br = P.k * q.s * (0.25 + 0.75 * eo(k)); x.strokeStyle = "rgba(" + q.c + "," + (1 - k).toFixed(3) + ")"; x.lineWidth = Math.max(1.5, P.k * 0.05 * (1 - k)); x.lineCap = "round";
+          for (var bi = 0; bi < 12; bi++) { var ba = bi / 12 * 6.283 + q.t0 * 0.001, r0 = br * 0.45, r1 = br * (0.8 + (bi % 3) * 0.2); x.beginPath(); x.moveTo(P.x + Math.cos(ba) * r0, P.y + Math.sin(ba) * r0 * 0.8); x.lineTo(P.x + Math.cos(ba) * r1, P.y + Math.sin(ba) * r1 * 0.8); x.stroke(); }
         } else if (q.k === "ring") {
           P = proj(q.x, q.y, q.z); var rk2 = q.shr ? 1 - k * 0.85 : eo(k); x.strokeStyle = "rgba(" + q.c + "," + (q.shr ? 0.25 + 0.75 * k : 1 - k).toFixed(3) + ")"; x.lineWidth = Math.max(1.5, P.k * 0.08 * (q.shr ? 1 : 1 - k));
           x.beginPath(); x.ellipse(P.x, P.y, P.k * q.s * rk2, P.k * q.s * rk2 * 0.6, 0, 0, 6.283); x.stroke();
@@ -14117,6 +14142,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function drawGrade() {
       var tt = D.time, M = Math.max(W, H), h = D.hero, o = D.ogre;
       var c = proj((h.x + h.ox + o.x + o.ox) / 2, 1.6, (h.z + h.oz + o.z + o.oz) / 2);
+      if (D.sl > tt) { var si = (D.sl - tt) / D.slD, cx2 = W * 0.5, cy2 = H * 0.5; x.save(); x.strokeStyle = "rgba(255,255,255," + (0.28 * Math.min(1, si * 1.6)).toFixed(3) + ")"; x.lineWidth = Math.max(1, M * 0.003); for (var li = 0; li < 16; li++) { var la = Math.random() * 6.283, l0 = M * (0.32 + Math.random() * 0.2), l1 = l0 + M * (0.12 + Math.random() * 0.2); x.beginPath(); x.moveTo(cx2 + Math.cos(la) * l0, cy2 + Math.sin(la) * l0 * 1.2); x.lineTo(cx2 + Math.cos(la) * l1, cy2 + Math.sin(la) * l1 * 1.2); x.stroke(); } x.restore(); }
       var g = x.createRadialGradient(c.x, c.y, M * 0.18, c.x, c.y, M * 0.78); g.addColorStop(0, "rgba(6,4,12,0)"); g.addColorStop(0.6, "rgba(6,4,12,0.45)"); g.addColorStop(1, "rgba(4,2,8,0.92)");
       x.fillStyle = g; x.fillRect(0, 0, W, H);
       var ht = tt - D.hurtT; if (ht < 500) { var a = (1 - ht / 500) * 0.5, gr = x.createRadialGradient(W / 2, H / 2, M * 0.3, W / 2, H / 2, M * 0.75); gr.addColorStop(0, "rgba(255,30,30,0)"); gr.addColorStop(1, "rgba(255,30,30," + a.toFixed(3) + ")"); x.fillStyle = gr; x.fillRect(0, 0, W, H); }
