@@ -2439,6 +2439,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .btl.land .bt-tools .jbar { order: 2; flex: 1 0 100%; min-width: 100%; justify-content: center; gap: 4px; }
 .btl.land .bt-tools .jbar .jk { flex: none; min-width: 24px; min-height: 24px; width: 26px; height: 26px; }
 .btl.land .bt-tools .jbar .jk svg { width: 100%; height: 100%; }
+@media (max-height: 340px) { .btl.land .bt-tools .jbar .jk { min-width: 20px; min-height: 20px; width: 21px; height: 21px; border-width: 1.5px; } .btl.land .bt-tools { gap: 2px 4px; } .btl.land .bt-tools .pill { min-height: 22px; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2889,9 +2890,9 @@ function startTurn(S) {
   S.supply = BASE_SUPPLY + (S.supplyBonus || 0) + villageIncome(S) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0) + (S.carry || 0);
   S.carried = S.carry || 0; S.carry = 0;
   S.flags = { used: false, deployed: [], assault: [], barrage: {} }; S.smoke = false; S.counterCols = [];
-  // la main se complète jusqu'à sa taille (6, +1 avec Ashby) ; au moins 2 nouvelles cartes par tour
-  const size = 6 + (has(S, 'ashby') ? 1 : 0);
-  drawCards(S, Math.max(2, size - S.hand.length));
+  // les cartes non jouées restent en main ; elle se complète jusqu'à 7 cartes (8 avec Ashby), avec au moins 3 nouvelles cartes par tour
+  const size = 7 + (has(S, 'ashby') ? 1 : 0);
+  drawCards(S, Math.max(3, size - S.hand.length));
 }
 function drawCards(S, n) {
   for (let i = 0; i < n; i++) {

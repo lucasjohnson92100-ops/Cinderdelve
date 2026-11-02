@@ -12,7 +12,7 @@ for(let k=0;k<200;k++){const t=E.genTerrain(Math.random),L=t.lanes;check('5 sect
 const mk=(o={},cfg)=>E.newBattle({level:0,deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],...o},()=>0.5,cfg);
 const blank=(lanes,o)=>{const S=mk(o);S.units=[];S.lanes=lanes;S.lanes=[...lanes,'air'];S.grid=[lanes.slice()];S.seaCol=lanes.indexOf('mer');S.supply=40;S.hand=[];S.fx=[];S.plan={};delete S.mineCol;return S;};
 let S=mk();
-check('ravitaillement de base',S.supply,E.BASE_SUPPLY);check('main de 6',S.hand.length,6);check('pas d\'unités ennemies',S.units.length,0);
+check('ravitaillement de base',S.supply,E.BASE_SUPPLY);check('main de 7',S.hand.length,7);check('pas d\'unités ennemies',S.units.length,0);
 check('QG ennemi = blinde du niveau',S.hq.en,E.LEVELS[0].hq);
 // pose : terrain praticable, 3 unités terrestres et 1 appui par secteur
 S=blank(['mer','route','foret','riviere']);
