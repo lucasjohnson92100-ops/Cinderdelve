@@ -318,3 +318,5 @@ Cartes plus belles : cadre double avec reflet intérieur, bandeau de nom, fenêt
 Retour au menu : bouton « 🏠 Menu principal » dans le menu « ⋯ » de la bataille et bouton 🏠 sur la carte de campagne ; la partie est sauvegardée et se reprend avec « Reprendre » sur l'accueil.
 
 Illustrations des cartes sur décor peint : chaque unité terrestre apparaît sur le terrain où sa couleur est forte (jaune : route, rouge : champ, vert : forêt, noir : village), les navires sur la mer, les avions dans le ciel (`artBg`) ; sprite en relief et agrandi aussi sur les cartes de boutique et de récompense.
+
+Cartes joker des packs : cadre doré, grand portrait cerclé d'or, nom, pastille de spécificité et effet complet (4 lignes au plus). Textes corrigés : Amiral Triade (Défense ×1,75 au lieu de ×1,25, conforme au moteur), Docteur Meyer (« infirmiers deux fois plus efficaces, unités terrestres un tour de plus »).

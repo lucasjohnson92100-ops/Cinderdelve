@@ -2447,6 +2447,16 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card:not(.hc) .art { height: 78px; }
 .card:not(.hc) .art svg { height: 86%; width: auto; max-width: 100%; transform: scale(var(--as, 1.2)); transform-origin: 50% 85%; }
 .card:not(.hc).air .art svg { transform-origin: 50% 50%; } .card:not(.hc).mer .art svg { transform-origin: 50% 70%; }
+
+/* cartes joker des packs : cadre doré, grand portrait, nom, spécificité, effet en 3 lignes au plus */
+.packopen .popt.jk { height: min(50vh, 210px) !important; aspect-ratio: .8 !important; justify-content: center !important; }
+.popt.jk { justify-content: flex-start !important; gap: 4px !important; padding: 8px 8px 9px !important; background: radial-gradient(120% 70% at 50% 0%, #fff8dc, #f3dc9a 55%, #d9b45c) !important; border-color: #6b4a00 !important; box-shadow: inset 0 0 0 2px rgba(255, 245, 200, .9), inset 0 0 0 4px rgba(200, 150, 40, .6), 0 3px 0 #2b2116, 0 8px 14px rgba(0, 0, 0, .3) !important; overflow: hidden; }
+.popt.jk .po-ic { flex: none; border-radius: 50%; padding: 3px; background: linear-gradient(180deg, #ffe7a0, #b8860b); box-shadow: 0 2px 6px rgba(0, 0, 0, .35); line-height: 0; }
+.popt.jk .po-ic svg { width: min(16vh, 86px) !important; height: min(16vh, 86px) !important; border-radius: 50%; }
+.popt.jk > b { font-size: min(3.3vh, .86rem) !important; color: #2b1a00; text-align: center; line-height: 1.05; }
+.popt.jk > span:last-child { display: grid; justify-items: center; gap: 3px; min-height: 0; }
+.popt.jk .po-tag { font-style: normal; font-family: var(--font-display); font-size: min(2.5vh, .64rem); padding: 1px 8px; border-radius: 99px; background: #1b2540; color: #ffd24a; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.popt.jk .po-tx { font-size: min(2.4vh, .64rem); font-weight: 700; line-height: 1.18; color: #3b2a10; text-align: center; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2706,7 +2716,7 @@ const JOKERS = [
   { id: 'dubois', name: 'Lieutenant Dubois', cost: 12, desc: 'Vos unités terrestres font +1 dégât par tir.' },
   { id: 'ashby', name: 'Colonel Ashby', cost: 9, desc: 'Vous piochez 1 carte de plus par tour.' },
   { id: 'kowalski', name: 'Major Kowalski', cost: 11, desc: '+1 ravitaillement par tour.' },
-  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Vos infirmiers donnent +2 endurance au lieu de +1, et toutes vos unités terrestres ont +1 endurance.' },
+  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Infirmiers deux fois plus efficaces, et vos unités terrestres tiennent un tour de plus.' },
   { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'Les ordres coûtent 1 de moins, et votre premier ordre de chaque tour pioche 1 carte.' },
   { id: 'silva', name: 'Commandant Silva', cost: 8, desc: 'Vos navires coûtent 1 de moins.' },
   { id: 'brandt', name: 'Général Brandt', cost: 9, desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
@@ -2728,7 +2738,7 @@ const JOKERS = [
   { id: 'clairon', name: 'Sergent Clairon', cost: 7, desc: "Chaque secteur occupé : +0,5 Mult d'Attaque." },
   { id: 'tenaille', name: 'Colonel Tenaille', cost: 8, desc: "Appui aérien et naval : ×1,6 Mult d'Attaque au lieu de +0,5." },
   { id: 'fanfare', name: 'Major Fanfare', cost: 8, desc: "Secteur d'au moins 3 unités terrestres : Attaque ×1,5." },
-  { id: 'triade', name: 'Amiral Triade', cost: 8, desc: 'Couverture aérienne : Défense ×2 au lieu de ×1,5.' },
+  { id: 'triade', name: 'Amiral Triade', cost: 8, desc: 'Couverture aérienne : Défense ×1,75 au lieu de ×1,25.' },
 ];
 const OFFICERS = JOKERS;
 const MAX_JOKERS = 5;
@@ -4100,7 +4110,7 @@ const JOKER_SPEC = {
   dubois: { nm: 'Terre +1 dégât', syn: "Très fort avec beaucoup de tirs par carte : tireurs, jeeps, mitrailleuses.", lim: "Ne concerne que les unités terrestres." },
   ashby: { nm: 'Main élargie', syn: "Plus de choix pour former de gros combos chaque tour.", lim: "Vous avez besoin de ravitaillement pour jouer ces cartes en plus." },
   kowalski: { nm: 'Ravitaillement +1', syn: "Utile dès que votre paquet contient des unités chères (blindés, navires).", lim: "Un seul point par tour : ne remplace pas une bonne économie de cartes." },
-  meyer: { nm: 'Endurance terrestre', syn: "Excellent avec des infirmiers : +2 au lieu de +1 pour tout le secteur.", lim: "Ne profite pas aux navires ni aux avions." },
+  meyer: { nm: 'Troupes tenaces', syn: "Excellent avec des infirmiers : +2 au lieu de +1 pour tout le secteur.", lim: "Ne profite pas aux navires ni aux avions." },
   ito: { nm: 'Ordres moins chers', syn: "Avec un paquet riche en ordres (Assaut, Barrage, Fumigènes) : ils enchaînent presque gratuitement.", lim: "Inutile si vous avez peu d'ordres." },
   silva: { nm: 'Flotte économique', syn: "Idéal avec la doctrine Marine ou plusieurs destroyers.", lim: "Aucun effet sur l'armée de terre." },
   brandt: { nm: 'QG +20 PV', syn: "Une assurance sur toute la campagne, très utile si vous encaissez des ripostes.", lim: "N'augmente pas votre Attaque." },
@@ -4122,7 +4132,7 @@ const JOKER_SPEC = {
   clairon: { nm: 'Mult par secteur', syn: "Occupez beaucoup de secteurs : chacun ajoute +0,5 au Mult d'Attaque.", lim: "Peu rentable si vous concentrez tout dans un seul secteur." },
   tenaille: { nm: 'Appui ×1,6', syn: "Quand navires et avions soutiennent vos secteurs terrestres.", lim: "Il faut un appui aérien ou naval actif." },
   fanfare: { nm: 'Gros secteurs', syn: "Un secteur d'au moins 3 unités terrestres gagne Attaque ×1,5 : concentrez vos troupes.", lim: "Ne s'applique pas aux petits secteurs." },
-  triade: { nm: 'Couverture ×2', syn: "Avec un chasseur en jeu : Défense ×2 au lieu de ×1,5 sur vos secteurs.", lim: "Il faut un chasseur en couverture." },
+  triade: { nm: 'Couverture ×1,75', syn: "Avec un chasseur en jeu : Défense ×1,75 au lieu de ×1,25 sur vos secteurs.", lim: "Il faut un chasseur en couverture." },
 };
 const DOCTRINE_SPEC = {
   blitz: { nm: 'Offensive rapide', what: "Des véhicules à Élan : chaque véhicule déjà posé ce tour ajoute des dégâts aux suivants.", syn: "Posez le half-track d'abord, puis les jeeps, et finissez par l'ordre Assaut sur ce secteur.", lim: "Le blindé est interdit en forêt et en rivière : misez sur les routes, champs et villages.", cards: ["Half-track : Défense solide, lance l'Élan.", "Jeeps : profitent de chaque véhicule déjà posé.", "Assaut : Attaque ×1,5 sur votre plus gros secteur."] },
@@ -5890,7 +5900,7 @@ function packOptHTML(o, k) {
   const at = `data-packpick="${k}" style="--k:${k}"`;
   if (o.k === 'card') return cardHTML(o.card, 'pick', at);
   let ic, nm, tx, cls = '';
-  if (o.k === 'joker') { const j = JOKERS.find(x => x.id === o.id); ic = officerSVG(o.id, 92); nm = j.name; tx = j.desc; cls = 'jk'; }
+  if (o.k === 'joker') { const j = JOKERS.find(x => x.id === o.id); ic = officerSVG(o.id, 92); nm = j.name; tx = (JOKER_SPEC[o.id] ? `<i class="po-tag">${JOKER_SPEC[o.id].nm}</i>` : '') + `<span class="po-tx">${j.desc}</span>`; cls = 'jk'; }
   else if (o.k === 'manual') { const c = COMBOS.find(x => x.id === o.id), lv = ((C.comboLv || {})[o.id] || 1); ic = '📘'; nm = `Manuel : ${c.name}`; tx = `${c.txt} : niveau ${lv} → ${lv + 1}`; cls = 'mn'; }
   else if (o.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[o.id] || 0); ic = '🏗'; nm = `Fortification ${TERRAIN[o.id].name}`; tx = `Secteurs ${TERRAIN[o.id].name} : ${cap} → ${cap + 1} places`; cls = 'up'; }
   else { const lv = ((C.catLv || {})[o.id] || 0); ic = CATS[o.id].ic; nm = `${CATS[o.id].name} niv. ${lv + 2}`; tx = `+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense`; cls = 'up'; }
