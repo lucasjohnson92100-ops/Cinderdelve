@@ -314,3 +314,5 @@ Cartes en main : plus d'inclinaison, illustration agrandie par type (`ART_SCALE`
 Cartes plus belles : cadre double avec reflet intérieur, bandeau de nom, fenêtre d'illustration vitrée (reflet et ombre intérieure), pastilles d'Attaque / Défense sombres et lisibles, pièce de coût dorée, et cadre selon la rareté (argenté pour les rares, doré lumineux pour les très rares : classes `rar1` à `rar3`).
 
 **Main conservée** : les cartes non jouées restent en main d'un tour à l'autre ; la main se complète jusqu'à 7 cartes (8 avec Ashby), avec au moins 3 nouvelles cartes par tour (`startTurn`). Mesure du bot : 14 % de campagnes terminées (contre 6 % avec 6 cartes et 2 nouvelles : les cartes injouables encombraient la main). Une bataille sauvegardée avec un autre nombre de secteurs n'est plus reprise (les avions apparaissaient sur une forêt après le passage à 3 secteurs). Jokers : barre sur une ligne à part sous « Combos ».
+
+Retour au menu : bouton « 🏠 Menu principal » dans le menu « ⋯ » de la bataille et bouton 🏠 sur la carte de campagne ; la partie est sauvegardée et se reprend avec « Reprendre » sur l'accueil.

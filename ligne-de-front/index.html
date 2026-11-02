@@ -4241,7 +4241,7 @@ function toMap() {
       ${C.officers.length ? `<div class="ms-jok">${jokerBar()}</div>` : ''}
       <div class="ms-prog"><div class="ms-pips">${pips}</div><div class="ms-lab"><b>${endless ? `Blinde ${nxt + 1} · ∞` : `Blinde ${nxt + 1} sur ${BLINDS_TO_WIN}`}</b><span>${endless ? 'Mode infini : toujours plus dur' : `${BLINDS_TO_WIN} blindes vaincues = victoire`}</span></div></div>
       <div class="hq me hqbar compact">${hqPic('me')}<span class="hl">Votre QG</span><div class="bar"><i style="width:${hqPct}%"></i></div><span class="num">${C.hq}/${C.hqMax}</span></div>
-      <div class="ms-foot"><div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
+      <div class="ms-foot"><div class="mrow"><button class="pill sm" data-act="deck">Paquet ${C.deck.length}</button><button class="pill sm" data-act="help" aria-label="Aide">?</button><button class="pill sm" data-act="tomenu" aria-label="Menu principal">🏠</button><button class="pill sm" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div></div>
     </aside>
     <div class="mapwrap bw"><div class="bw-head"><span class="bw-ante">Manche ${ante}</span><span class="bw-sub">Affrontez la blinde ou passez-la pour un bonus. Le boss est obligatoire.</span></div>
       <div class="blrow">${cards}</div></div>
@@ -6146,6 +6146,7 @@ document.addEventListener('click', e => {
   else if (a === 'continue') resumeRun();
   else if (a === 'endless') { C.won = true; toReward(); }
   else if (a === 'quit') { clearRun(); showTitle(); }
+  else if (a === 'tomenu') { closeModal(); if (S && !S.over && document.getElementById('hand')) saveRun('battle'); toast('Partie sauvegardée : « Reprendre » sur le menu.'); showTitle(); }
   else if (a === 'coachok') { const st = currentCoach(); if (st) tutoMark(st.id); showCoach(); }
   else if (a === 'coachoff') { const r = load(); r.tuto = { ...(r.tuto || {}), off: 1 }; save(r); showCoach(); toast('Tutoriel désactivé. Le bouton « ? » reste disponible.'); }
   else if (a === 'help') helpModal(false);
@@ -6200,7 +6201,7 @@ document.addEventListener('pointerout', e => { const c = e.target.closest && e.t
 window.addEventListener('resize', () => { if (S && document.querySelector('.btl') && !busy) renderBattle(); });
 function menuModal() {
   openModal(`<div class="hd"><span class="ribbon">Menu</span><button class="pill" data-act="close">Fermer</button></div>
-    <div class="menugrid"><button class="btn" data-act="guide">📖 Lire le plateau</button><button class="btn" data-act="help">? Comment jouer</button><button class="btn" data-act="deck">🂠 Voir le paquet</button><button class="btn" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button></div>`);
+    <div class="menugrid"><button class="btn" data-act="guide">📖 Lire le plateau</button><button class="btn" data-act="help">? Comment jouer</button><button class="btn" data-act="deck">🂠 Voir le paquet</button><button class="btn" id="snd2" data-act="snd">${SFX.isMuted() ? 'Son : non' : 'Son : oui'}</button><button class="btn ghost" data-act="tomenu">🏠 Menu principal</button></div>`);
 }
 function renderSoundButton() {
   let b = document.getElementById('snd');
