@@ -308,3 +308,5 @@ Chaque service affiche son effet en une ligne (« Soigne 12 PV », « +10 PV max
 Fond de rivière (jour) régénéré (`art/scene/riviere_jour.webp`, 1100 px, rivière claire avec forêt). Planches d'effets de terrain reçues (cratères sur fond vert, flaques et herbe écrasée sur fond brun) : pas encore branchées.
 
 Décor de sol peint : cratères d'obus (de plus en plus nombreux avec la campagne, 1 de plus en village) et flaques sous la pluie, posés derrière les unités dans les secteurs terrestres hors rivière (`GROUND`, `.gdec`). Planches détourées du fond vert ; l'herbe écrasée n'est pas utilisée (les sprites se touchent).
+
+Cartes en main : plus d'inclinaison, illustration agrandie par type (`ART_SCALE`) et entière, étiquette de spécificité ou « 🔒 Infanterie » placée sous l'image, noms longs réduits, bouton « i » lisible sur les cartes sombres. « Prendre cette carte » ferme la fenêtre. Portraits de jokers des packs agrandis.
