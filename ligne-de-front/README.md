@@ -322,3 +322,6 @@ Illustrations des cartes sur décor peint : chaque unité terrestre apparaît su
 Cartes joker des packs : cadre doré, grand portrait cerclé d'or, nom, pastille de spécificité et effet complet (4 lignes au plus). Textes corrigés : Amiral Triade (Défense ×1,75 au lieu de ×1,25, conforme au moteur), Docteur Meyer (« infirmiers deux fois plus efficaces, unités terrestres un tour de plus »).
 
 Cartes joker des packs : portrait en pleine carte (le haut de la carte est l'illustration), nom, spécificité et effet sur un bandeau sombre en bas, cadre doré.
+
+
+Écran des doctrines refait : une seule doctrine au départ (Défense) ; Blitz, Artillerie, Marine puis Commandos se débloquent une par campagne gagnée. Les 5 doctrines sont affichées en tuiles sur décor peint, avec leurs 3 cartes ; les verrouillées sont grisées avec le nombre de victoires restant.

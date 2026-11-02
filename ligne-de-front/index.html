@@ -2467,6 +2467,27 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .popt.jk > span:last-child { padding: 2px 5px 6px; background: #22180a; border-radius: 0 0 8px 8px; display: grid; justify-items: center; gap: 3px; }
 .popt.jk .po-tx { color: #f6ecd0 !important; -webkit-line-clamp: 3 !important; }
 .popt.jk .po-tag { background: #ffd24a; color: #2b1a00; }
+
+/* ---- Écran des doctrines : tuiles sur décor peint, doctrines verrouillées visibles ---- */
+.briefing.docs { gap: 8px; } .briefing.docs > .hd { padding-right: 150px; }
+.dintro { margin: 0; padding: 6px 12px; border-radius: 10px; background: rgba(20, 28, 40, .78); color: #f2e6c6; font-size: .82rem; line-height: 1.3; text-align: center; } .dintro b { color: #ffd24a; }
+.drow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; min-height: 0; }
+.dtile { position: relative; display: grid; grid-template-rows: auto auto 1fr auto; gap: 5px; padding: 8px 7px 7px; border-radius: 12px; border: 3px solid #2b2116; text-align: center; font: inherit; color: #fff; cursor: pointer; overflow: hidden; background: linear-gradient(180deg, rgba(10, 14, 22, .25), rgba(10, 14, 22, .82) 62%), var(--dbg) center 60% / cover no-repeat; box-shadow: inset 0 0 0 2px rgba(255, 230, 160, .5), 0 3px 0 #2b2116, 0 8px 16px rgba(0, 0, 0, .35); transition: transform .15s; }
+.dtile.open:hover, .dtile.open:active { transform: translateY(-3px); }
+.dtile.open { border-color: #8a5a00; box-shadow: inset 0 0 0 2px rgba(255, 220, 120, .9), 0 0 14px rgba(255, 196, 50, .55), 0 3px 0 #2b2116, 0 8px 16px rgba(0, 0, 0, .35); }
+.dtile.locked { cursor: default; filter: grayscale(.85) brightness(.75); }
+.dt-head { display: grid; justify-items: center; gap: 2px; } .dt-ic { font-style: normal; font-size: 1.5rem; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .6)); }
+.dt-head b { font-family: var(--font-display); font-size: 1rem; color: #ffe7a0; text-shadow: 0 2px 2px #000; }
+.dt-tip { font-size: .66rem; font-weight: 700; line-height: 1.2; color: #f6ecd0; text-shadow: 0 1px 2px #000; }
+.dt-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; align-self: end; }
+.dc-card { display: grid; justify-items: center; gap: 1px; padding: 2px 1px 3px; border-radius: 7px; background: rgba(255, 248, 226, .92); color: #1b2540; min-width: 0; }
+.dc-art { width: 100%; height: 30px; display: grid; place-items: center; border-radius: 5px; background: #eef0f2 center 70% / cover no-repeat; overflow: hidden; }
+.dc-art[style*="--abg"] { background-image: var(--abg); background-position: var(--abp); }
+.dc-art svg { height: 28px; width: auto; max-width: 100%; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .5)); }
+.dc-card b { font-size: .52rem; line-height: 1.05; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-card i { font-style: normal; font-size: .48rem; font-weight: 800; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .4); border-radius: 5px; padding: 0 4px; }
+.dt-go { font-family: var(--font-display); font-size: .78rem; padding: 3px 0; border-radius: 8px; background: linear-gradient(180deg, #ffe27a, #e8a91e); color: #3b2a00; box-shadow: 0 2px 0 #6b4a00; }
+@media (max-height: 340px) { .dintro { font-size: .66rem; padding: 3px 8px; } .dtile { padding: 5px 5px 5px; gap: 3px; } .dt-ic { font-size: 1.1rem; } .dt-head b { font-size: .8rem; } .dt-tip { font-size: .56rem; } .dc-art { height: 24px; } .dc-art svg { height: 22px; } .dt-go { font-size: .64rem; padding: 2px 0; } }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2667,7 +2688,9 @@ const DOCTRINES = {
 const doctrineCards = id => DOCTRINES[id].cards.map(([t, c]) => mkCard(t, c));
 function pickDoctrines(rng = Math.random, pool = Object.keys(DOCTRINES)) { return shuffle(pool, rng).slice(0, 3); }
 // Déblocage : deux doctrines au départ, une de plus à chaque campagne gagnée jusqu'au bout
-const DOC_ORDER = ['defense', 'blitz', 'artillerie', 'marine', 'commandos'], DOC_START = 2;
+const DOC_ORDER = ['defense', 'blitz', 'artillerie', 'marine', 'commandos'], DOC_START = 1;
+// décor peint de chaque doctrine sur l'écran de choix
+const DOC_ART = { defense: 'village', blitz: 'route', artillerie: 'champ', marine: 'mer', commandos: 'foret' }, DOC_IC = { defense: '🛡', blitz: '⚡', artillerie: '🎯', marine: '⚓', commandos: '🪂' };
 const unlockedDocs = (wins = (typeof load === 'function' ? load().wins || 0 : 0)) => DOC_ORDER.slice(0, Math.min(DOC_ORDER.length, DOC_START + wins));
 const isOrder = card => !!(card && TYPES[card.t] && TYPES[card.t].order);
 const cardKey = c => c.t + ':' + c.c + ':' + (c.lv || 1);
@@ -4110,7 +4133,7 @@ function resumeRun() {
   toMap();
 }
 function newCampaign() {
-  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), next: 0, trail: {}, won: false, pos: null, node: null, decor: null, docOpts: pickDoctrines(Math.random, unlockedDocs()) };
+  C = { deck: START_DECK.map(c => ({ ...c })), hq: HQ_START, hqMax: HQ_START, officers: [], loot: 2, shop: null, phase: '', map: genMap(), next: 0, trail: {}, won: false, pos: null, node: null, decor: null, docOpts: unlockedDocs().slice() };
   doctrineStep();
 }
 // Choix d'une doctrine : 3 cartes qui orientent le paquet de départ
@@ -4156,11 +4179,18 @@ const specBlock = (ic, t, what, extra = '') => `<div class="cspec"><div class="c
 const jokerSpecHTML = (j, ic = 56) => { const t = JOKER_SPEC[j.id]; return t ? specBlock(officerSVG(j.id, ic), t, j.desc) : ''; };
 function doctrineStep() {
   saveRun('doctrine');
-  app.innerHTML = `<div class="stack briefing"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${C.deck.length} cartes</span></div>
-    <div class="panel">Votre paquet de départ est court : tireurs, jeeps, un blindé, deux destroyers, un chasseur et trois ordres. Une doctrine y ajoute 3 cartes et oriente votre campagne. Les autres unités se gagnent après chaque victoire.</div>
-    ${C.docOpts.map(id => { const d = DOCTRINES[id]; return `<button class="panel doctrine" data-doctrine="${id}"><b>${d.name}</b><span class="small muted">${d.tip}</span><span class="dchips">${doctrineCards(id).map(c => `<span class="dchip"><span class="dart">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 30) : spriteSVG(SPR_OF[c.t], 'me', 34, c.c)}</span><span class="dtx"><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span></span>`).join('')}</span></button>`; }).join('')}
-    <p class="small muted" style="text-align:center">Touchez une doctrine pour lire son fonctionnement avant de la choisir.</p>
-    ${(() => { const w = load().wins || 0, un = unlockedDocs(), lk = DOC_ORDER.filter(id => !un.includes(id)); return lk.length ? `<div class="panel dlock"><b>🔒 Doctrines à débloquer</b><span class="small muted">Gagnez une campagne jusqu'au bout pour en débloquer une nouvelle (${un.length} / ${DOC_ORDER.length} disponibles).</span><span class="dlk">${lk.map((id, i) => `<span class="dlkc"><b>${DOCTRINES[id].name.replace('Doctrine ', '')}</b><small>${i === 0 ? 'prochaine victoire' : 'dans ' + (i + 1) + ' victoires'}</small></span>`).join('')}</span></div>` : `<p class="small muted" style="text-align:center">✔ Toutes les doctrines sont débloquées (${w} victoire${w > 1 ? 's' : ''}).</p>`; })()}</div>`;
+  const un = C.docOpts, w = load().wins || 0;
+  const tile = id => {
+    const d = DOCTRINES[id], open = un.includes(id), need = DOC_ORDER.indexOf(id) - DOC_START + 1 - w;
+    const cards = doctrineCards(id).map(c => `<span class="dc-card ${isOrder(c) ? 'ord' : ''}"><span class="dc-art" style="${artBg(c)}">${isOrder(c) ? iconSVG(ORDER_ICON[c.t], 26) : spriteSVG(SPR_OF[c.t], 'me', 30, c.c)}</span><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span>`).join('');
+    return `<button class="dtile ${open ? 'open' : 'locked'}" ${open ? `data-doctrine="${id}"` : 'disabled'} style="--dbg:var(--sc-${DOC_ART[id]}-jour)">
+      <span class="dt-head"><i class="dt-ic">${open ? DOC_IC[id] : '🔒'}</i><b>${d.name.replace('Doctrine ', '')}</b></span>
+      <span class="dt-tip">${open ? d.tip : `Se débloque ${need <= 1 ? 'à la prochaine victoire de campagne' : `après ${need} victoires de campagne`}.`}</span>
+      <span class="dt-cards">${cards}</span>${open ? '<span class="dt-go">Choisir ›</span>' : ''}</button>`;
+  };
+  app.innerHTML = `<div class="stack briefing docs"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${un.length} / ${DOC_ORDER.length} débloquées</span></div>
+    <p class="dintro">Une doctrine ajoute 3 cartes à votre paquet de départ et oriente votre campagne. <b>Gagnez une campagne jusqu'au bout</b> pour débloquer la suivante.</p>
+    <div class="drow">${DOC_ORDER.map(tile).join('')}</div></div>`;
 }
 function doctrineModal(id) {
   const d = DOCTRINES[id], t = DOCTRINE_SPEC[id]; if (!t) return chooseDoctrine(id);
