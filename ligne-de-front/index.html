@@ -2440,6 +2440,13 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .btl.land .bt-tools .jbar .jk { flex: none; min-width: 24px; min-height: 24px; width: 26px; height: 26px; }
 .btl.land .bt-tools .jbar .jk svg { width: 100%; height: 100%; }
 @media (max-height: 340px) { .btl.land .bt-tools .jbar .jk { min-width: 20px; min-height: 20px; width: 21px; height: 21px; border-width: 1.5px; } .btl.land .bt-tools { gap: 2px 4px; } .btl.land .bt-tools .pill { min-height: 22px; } }
+
+/* illustration sur décor peint (terrain fort de la couleur, mer ou ciel), sprite en relief */
+.card .art[style*="--abg"] { background: var(--abg) var(--abp, 50% 70%) / cover no-repeat !important; }
+.card .art[style*="--abg"] svg { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .55)) drop-shadow(0 0 1px rgba(255, 255, 255, .5)); }
+.card:not(.hc) .art { height: 78px; }
+.card:not(.hc) .art svg { height: 86%; width: auto; max-width: 100%; transform: scale(var(--as, 1.2)); transform-origin: 50% 85%; }
+.card:not(.hc).air .art svg { transform-origin: 50% 50%; } .card:not(.hc).mer .art svg { transform-origin: 50% 70%; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -4595,17 +4602,19 @@ function cardHTML(card, extra = '', attrs = '') {
   return `<button class="card ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
     <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? (TGT_SHORT[d.tgt] || '') : FAM_SHORT[d.fam]}</small></span>
     <span class="cn ${d.name.length > 11 ? 'long' : ''}" title="${d.name}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
-    <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 46).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
+    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 46).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
     <span class="cbig"><i class="a">${cs.a}</i><i class="h">${cs.h}</i></span>${(ad => (ad ? `<span class="adl">${SWORD}${fmtN(ad.a)} ${SHIELD}${fmtN(ad.d)}</span>` : ''))(cardAD(card))}<span class="ctag">${tags}</span><span class="effs">${eff}</span></button>`;
 }
 const ART_SCALE = { inf: 1.45, para: 1.4, obs: 1.35, medic: 1.35, sapper: 1.4, mgnest: 1.2, jeep: 1.2, tank: 1.35, td: 1.3, halftrack: 1.05, arty: 1.0, recon: 1.35, destroyer: 1.35, croiseur: 1.35, sousmarin: 1.35, chasseur: 1.15, bombardier: 1.15 };
+// décor peint derrière l'illustration : le terrain où la couleur de la carte est forte (unités terrestres), la mer, le ciel
+const artBg = card => { const d = TYPES[card.t]; if (!d || d.order) return ''; const ter = d.cls === 'ship' ? 'mer' : !d.land ? 'air' : (COLOR_TERRAIN[(card.c || 'J')[0]] || {}).fort || 'champ'; return `--abg:var(--sc-${ter}-jour);--abp:${{ mer: '50% 72%', air: '50% 40%', route: '50% 66%', champ: '50% 70%', foret: '50% 74%', village: '50% 84%' }[ter] || '50% 70%'}`; };
 const artScale = card => (isOrder(card) ? 1 : ART_SCALE[SPR_OF[card.t]] || 1.2);
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
   return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>${specBadge(card)}
     <span class="cn ${d.name.length > 12 ? 'xl' : d.name.length > 10 ? 'long' : ''}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
-    <span class="art" style="--as:${artScale(card)}">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
+    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
     ${isOrder(card) ? '' : `<span class="cmen">${cs.st.men}</span>`}<span class="chp">${(ad => (ad ? `<i class="ca">${SWORD}${fmtN(ad.a)}</i><i class="cd">${SHIELD}${fmtN(ad.d)}</i><i class="cs">${'●'.repeat(Math.min(5, ad.s))}</i>` : cs.h))(cardAD(card))}</span></button>`;
 }
 const RANGE_TXT = r => (r[0] === r[1] ? (r[0] === 1 ? 'au contact' : `portée ${r[0]}`) : `portée ${r[0]}–${r[1]}`);

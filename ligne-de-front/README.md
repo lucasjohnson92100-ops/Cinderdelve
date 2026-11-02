@@ -316,3 +316,5 @@ Cartes plus belles : cadre double avec reflet intérieur, bandeau de nom, fenêt
 **Main conservée** : les cartes non jouées restent en main d'un tour à l'autre ; la main se complète jusqu'à 7 cartes (8 avec Ashby), avec au moins 3 nouvelles cartes par tour (`startTurn`). Mesure du bot : 14 % de campagnes terminées (contre 6 % avec 6 cartes et 2 nouvelles : les cartes injouables encombraient la main). Une bataille sauvegardée avec un autre nombre de secteurs n'est plus reprise (les avions apparaissaient sur une forêt après le passage à 3 secteurs). Jokers : barre sur une ligne à part sous « Combos ».
 
 Retour au menu : bouton « 🏠 Menu principal » dans le menu « ⋯ » de la bataille et bouton 🏠 sur la carte de campagne ; la partie est sauvegardée et se reprend avec « Reprendre » sur l'accueil.
+
+Illustrations des cartes sur décor peint : chaque unité terrestre apparaît sur le terrain où sa couleur est forte (jaune : route, rouge : champ, vert : forêt, noir : village), les navires sur la mer, les avions dans le ciel (`artBg`) ; sprite en relief et agrandi aussi sur les cartes de boutique et de récompense.
