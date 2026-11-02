@@ -325,3 +325,5 @@ Cartes joker des packs : portrait en pleine carte (le haut de la carte est l'ill
 
 
 Écran des doctrines refait : une seule doctrine au départ (Défense) ; Blitz, Artillerie, Marine puis Commandos se débloquent une par campagne gagnée. Les 5 doctrines sont affichées en tuiles sur décor peint, avec leurs 3 cartes ; les verrouillées sont grisées avec le nombre de victoires restant.
+
+Usure des engins, navires et avions : leur nombre ne baisse jamais ; une barre de durée de vie (verte, jaune puis rouge, avec les tours restants) remplace les points, et le sprite s'abîme (teinte plus sombre, brûlures, éraflures, puis fumée et braises quand il reste 1 tour). `wearLv`, `lifeFrac`, `.lifebar`.

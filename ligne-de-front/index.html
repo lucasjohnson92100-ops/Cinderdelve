@@ -2488,6 +2488,22 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .dc-card i { font-style: normal; font-size: .48rem; font-weight: 800; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .4); border-radius: 5px; padding: 0 4px; }
 .dt-go { font-family: var(--font-display); font-size: .78rem; padding: 3px 0; border-radius: 8px; background: linear-gradient(180deg, #ffe27a, #e8a91e); color: #3b2a00; box-shadow: 0 2px 0 #6b4a00; }
 @media (max-height: 340px) { .dintro { font-size: .66rem; padding: 3px 8px; } .dtile { padding: 5px 5px 5px; gap: 3px; } .dt-ic { font-size: 1.1rem; } .dt-head b { font-size: .8rem; } .dt-tip { font-size: .56rem; } .dc-art { height: 24px; } .dc-art svg { height: 22px; } .dt-go { font-size: .64rem; padding: 2px 0; } }
+
+/* ---- Usure des engins, navires et avions : durée de vie en barre, traces de dégâts, fumée et braises quand ils sont très abîmés ---- */
+.lifebar { position: relative; display: block; width: 100%; height: 7px; border-radius: 4px; background: rgba(0, 0, 0, .45); overflow: hidden; margin-top: 1px; }
+.lifebar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #52b34f, #8ed05a); transition: width .4s; }
+.lifebar.l1 i { background: linear-gradient(90deg, #e8a91e, #ffd24a); } .lifebar.l2 i { background: linear-gradient(90deg, #d9453b, #ff7a5c); }
+.lifebar b { position: absolute; right: 2px; top: -3px; font-size: 7px; line-height: 13px; color: #fff; text-shadow: 0 1px 1px #000; font-style: normal; }
+.awu.wear1 svg, .gu.wear1 .gart svg { filter: brightness(.88) contrast(1.1) saturate(.85) sepia(.12) drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.awu.wear2 svg, .gu.wear2 .gart svg { filter: brightness(.68) contrast(1.2) saturate(.65) sepia(.25) drop-shadow(0 3px 2px rgba(0, 0, 0, .55)); }
+/* traces de dégâts : brûlures sombres et quelques éraflures claires isolées (pas de quadrillage) */
+.awu.wear1::before, .awu.wear2::before, .gu.wear1 .gart::before, .gu.wear2 .gart::before { content: ""; position: absolute; z-index: 5; left: 8%; bottom: 20%; width: 84%; height: 64%; pointer-events: none;
+  background: radial-gradient(ellipse 13% 11% at 26% 62%, rgba(12, 8, 5, .8), transparent 72%), radial-gradient(ellipse 10% 9% at 70% 40%, rgba(12, 8, 5, .7), transparent 72%),
+  linear-gradient(112deg, transparent 38%, rgba(255, 246, 226, .8) 38.6%, transparent 39.4%) 0 0 / 34% 46% no-repeat, linear-gradient(64deg, transparent 52%, rgba(255, 246, 226, .7) 52.6%, transparent 53.4%) 66% 54% / 28% 40% no-repeat; }
+.awu.wear2::before, .gu.wear2 .gart::before { background: radial-gradient(ellipse 18% 15% at 26% 62%, rgba(8, 5, 3, .92), transparent 74%), radial-gradient(ellipse 14% 12% at 70% 40%, rgba(8, 5, 3, .88), transparent 74%), radial-gradient(ellipse 16% 12% at 48% 78%, rgba(8, 5, 3, .85), transparent 74%), radial-gradient(ellipse 9% 8% at 84% 70%, rgba(8, 5, 3, .8), transparent 74%),
+  linear-gradient(112deg, transparent 38%, rgba(255, 246, 226, .9) 38.6%, transparent 39.5%) 0 0 / 34% 50% no-repeat, linear-gradient(64deg, transparent 52%, rgba(255, 246, 226, .85) 52.6%, transparent 53.5%) 66% 54% / 30% 44% no-repeat, linear-gradient(140deg, transparent 46%, rgba(255, 246, 226, .8) 46.6%, transparent 47.4%) 34% 6% / 28% 40% no-repeat; }
+.awu.wear2::after { content: ""; position: absolute; z-index: 7; left: 32%; top: 6%; width: 30%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(60, 54, 50, .8), rgba(60, 54, 50, 0) 68%), radial-gradient(circle at 50% 90%, rgba(255, 140, 40, .6), transparent 45%); filter: blur(2.5px); animation: wsmoke 2.2s ease-out infinite; }
+.awu.k-foot.wear1::before, .awu.k-foot.wear2::before { display: none; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2906,7 +2922,9 @@ const menFrac = u => (isInf(u) ? Math.max(0, Math.min(1, u.stam / Math.max(1, u.
 const menNow = u => (isInf(u) ? Math.max(1, Math.ceil(u.menMax * menFrac(u) - 1e-9)) : u.menMax);
 const shotsOf = u => menNow(u);
 // usure d'un engin : 0 neuf, 1 éraflé, 2 très abîmé
-const wearLv = u => (!u || isInf(u) || !u.land || u.cls === 'foot' || u.stamMax < 2 ? 0 : u.stam >= u.stamMax ? 0 : u.stam <= 1 ? 2 : 1);
+// usure : engins, navires et avions gardent leur nombre mais s'abîment (0 neuf, 1 éraflé, 2 très abîmé) selon leur durée de vie restante
+const wearLv = u => (!u || isInf(u) || (u.land && u.cls === 'foot') || u.stamMax < 2 ? 0 : u.stam >= u.stamMax ? 0 : u.stam <= 1 ? 2 : 1);
+const lifeFrac = u => Math.max(0, Math.min(1, u.stam / Math.max(1, u.stamMax)));
 
 function newBattle(C, rng = Math.random, cfg = null) {
   const lvl = cfg || LEVELS[C.level], T = genTerrain(rng);
@@ -4508,7 +4526,7 @@ function decoSVG(g, r, c, owner, hqPct) {
 const SHIELD = '<svg class="ico" viewBox="0 0 12 14" aria-hidden="true"><path d="M6 1 L11 3 V7 Q11 11 6 13 Q1 11 1 7 V3 Z" fill="currentColor"/></svg>';
 const SWORD = '<svg class="ico" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 12 L9 5 M8 3 L11 3 L11 6 M3 9 L5 11 M1.5 12.5 L3.5 10.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 const fmtN = n => (n >= 10000 ? (Math.round(n / 100) / 10 + 'k').replace('.', ',') : String(Math.round(n)));
-const pipsHTML = u => isInf(u) ? `<span class="menbar" title="Effectif : ${menNow(u)} sur ${u.menMax}"><i style="width:${Math.round(menFrac(u) * 100)}%"></i></span>` : u.land && u.cls !== 'foot' ? `<span class="pips wearp" title="${wearLv(u) ? 'Usure : traces de dégâts' : 'Neuf'} · encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>` : `<span class="pips" title="Endurance : encore ${u.stam} tour${u.stam > 1 ? 's' : ''}">${Array.from({ length: Math.max(u.stamMax, u.stam) }, (_, i) => `<i class="${i < u.stam ? 'on' : ''} ${i === 0 && u.stam === 1 ? 'last' : ''}"></i>`).join('')}</span>`;
+const pipsHTML = u => isInf(u) ? `<span class="menbar" title="Effectif : ${menNow(u)} sur ${u.menMax}"><i style="width:${Math.round(menFrac(u) * 100)}%"></i></span>` : `<span class="lifebar l${wearLv(u)}" title="Durée de vie : encore ${u.stam} tour${u.stam > 1 ? 's' : ''} sur ${Math.max(u.stamMax, u.stam)} (le nombre d'unités ne baisse pas)"><i style="width:${Math.round(lifeFrac(u) * 100)}%"></i><b>${u.stam}</b></span>`;
 function slotUnitHTML(u, sel, tgt) {
   const key = SPR_OF[u.key], um = u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1;
   return `<button class="gu me tok k-${kindOf(key)} ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''} wear${wearLv(u)}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
