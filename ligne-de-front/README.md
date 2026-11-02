@@ -320,3 +320,5 @@ Retour au menu : bouton « 🏠 Menu principal » dans le menu « ⋯ » de la b
 Illustrations des cartes sur décor peint : chaque unité terrestre apparaît sur le terrain où sa couleur est forte (jaune : route, rouge : champ, vert : forêt, noir : village), les navires sur la mer, les avions dans le ciel (`artBg`) ; sprite en relief et agrandi aussi sur les cartes de boutique et de récompense.
 
 Cartes joker des packs : cadre doré, grand portrait cerclé d'or, nom, pastille de spécificité et effet complet (4 lignes au plus). Textes corrigés : Amiral Triade (Défense ×1,75 au lieu de ×1,25, conforme au moteur), Docteur Meyer (« infirmiers deux fois plus efficaces, unités terrestres un tour de plus »).
+
+Cartes joker des packs : portrait en pleine carte (le haut de la carte est l'illustration), nom, spécificité et effet sur un bandeau sombre en bas, cadre doré.

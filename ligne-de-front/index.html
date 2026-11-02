@@ -2457,6 +2457,16 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .popt.jk > span:last-child { display: grid; justify-items: center; gap: 3px; min-height: 0; }
 .popt.jk .po-tag { font-style: normal; font-family: var(--font-display); font-size: min(2.5vh, .64rem); padding: 1px 8px; border-radius: 99px; background: #1b2540; color: #ffd24a; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .popt.jk .po-tx { font-size: min(2.4vh, .64rem); font-weight: 700; line-height: 1.18; color: #3b2a10; text-align: center; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* portrait en pleine carte : l'illustration remplit le haut de la carte, le texte se lit sur un bandeau sombre en bas */
+.packopen .popt.jk, .popt.jk { display: grid !important; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: stretch !important; align-items: stretch !important; padding: 4px !important; gap: 0 !important; }
+.popt.jk .po-ic { position: relative; padding: 0 !important; margin: 0; border-radius: 8px 8px 0 0; background: #1b2540 !important; box-shadow: none !important; overflow: hidden; min-height: 0; }
+.popt.jk .po-art { display: block; width: 100%; height: 100%; background: center 22% / cover no-repeat; }
+.popt.jk .po-ic::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 30%, transparent 70%, rgba(20, 14, 6, .5)); }
+.popt.jk > b { padding: 4px 4px 2px; background: #22180a; color: #ffe7a0 !important; text-shadow: 0 1px 0 #000; text-align: center; }
+.popt.jk > span:last-child { padding: 2px 5px 6px; background: #22180a; border-radius: 0 0 8px 8px; display: grid; justify-items: center; gap: 3px; }
+.popt.jk .po-tx { color: #f6ecd0 !important; -webkit-line-clamp: 3 !important; }
+.popt.jk .po-tag { background: #ffd24a; color: #2b1a00; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2716,7 +2726,7 @@ const JOKERS = [
   { id: 'dubois', name: 'Lieutenant Dubois', cost: 12, desc: 'Vos unités terrestres font +1 dégât par tir.' },
   { id: 'ashby', name: 'Colonel Ashby', cost: 9, desc: 'Vous piochez 1 carte de plus par tour.' },
   { id: 'kowalski', name: 'Major Kowalski', cost: 11, desc: '+1 ravitaillement par tour.' },
-  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Infirmiers deux fois plus efficaces, et vos unités terrestres tiennent un tour de plus.' },
+  { id: 'meyer', name: 'Docteur Meyer', cost: 8, desc: 'Infirmiers ×2, et vos unités au sol tiennent un tour de plus.' },
   { id: 'ito', name: 'Sergent Ito', cost: 8, desc: 'Les ordres coûtent 1 de moins, et votre premier ordre de chaque tour pioche 1 carte.' },
   { id: 'silva', name: 'Commandant Silva', cost: 8, desc: 'Vos navires coûtent 1 de moins.' },
   { id: 'brandt', name: 'Général Brandt', cost: 9, desc: 'Votre QG gagne +20 PV max (et se soigne de 20).' },
@@ -5900,7 +5910,7 @@ function packOptHTML(o, k) {
   const at = `data-packpick="${k}" style="--k:${k}"`;
   if (o.k === 'card') return cardHTML(o.card, 'pick', at);
   let ic, nm, tx, cls = '';
-  if (o.k === 'joker') { const j = JOKERS.find(x => x.id === o.id); ic = officerSVG(o.id, 92); nm = j.name; tx = (JOKER_SPEC[o.id] ? `<i class="po-tag">${JOKER_SPEC[o.id].nm}</i>` : '') + `<span class="po-tx">${j.desc}</span>`; cls = 'jk'; }
+  if (o.k === 'joker') { const j = JOKERS.find(x => x.id === o.id); ic = (typeof JOKER_ART !== 'undefined' && JOKER_ART[o.id]) ? `<span class="po-art" style="background-image:url(${JOKER_ART[o.id]})"></span>` : officerSVG(o.id, 92); nm = j.name; tx = (JOKER_SPEC[o.id] ? `<i class="po-tag">${JOKER_SPEC[o.id].nm}</i>` : '') + `<span class="po-tx">${j.desc}</span>`; cls = 'jk'; }
   else if (o.k === 'manual') { const c = COMBOS.find(x => x.id === o.id), lv = ((C.comboLv || {})[o.id] || 1); ic = '📘'; nm = `Manuel : ${c.name}`; tx = `${c.txt} : niveau ${lv} → ${lv + 1}`; cls = 'mn'; }
   else if (o.kind === 't') { const cap = BASE_CAP + ((C.capLv || {})[o.id] || 0); ic = '🏗'; nm = `Fortification ${TERRAIN[o.id].name}`; tx = `Secteurs ${TERRAIN[o.id].name} : ${cap} → ${cap + 1} places`; cls = 'up'; }
   else { const lv = ((C.catLv || {})[o.id] || 0); ic = CATS[o.id].ic; nm = `${CATS[o.id].name} niv. ${lv + 2}`; tx = `+${Math.round(CAT_STEP * 100)} % d'Attaque et de Défense`; cls = 'up'; }
