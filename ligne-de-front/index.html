@@ -6044,10 +6044,10 @@ document.addEventListener('click', e => {
   const go = t.closest('[data-go]'); if (go) { SFX.play('go'); const [l, i] = go.dataset.go.split('-').map(Number); return enterNode(C.map[l][i]); }
   const dki = t.closest('[data-dkinfo]'); if (dki) { SFX.play('tap'); return cardModal(+dki.dataset.dkinfo, 'deck'); }
   const pv = t.closest('.card[data-spoil], .card[data-add]'); if (pv && !t.closest('.modal')) { const ci = pv.querySelector('[data-cinfo]'); if (ci) { SFX.play('tap'); return cardModal(+ci.dataset.cinfo, pv.hasAttribute('data-spoil') ? `data-spoil="${pv.dataset.spoil}"` : `data-add="${pv.dataset.add}"`); } }
-  const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
+  const sp = t.closest('[data-spoil]'); if (sp && C.spoils) { closeModal(); SFX.play('buy'); C.deck.push({ ...C.spoils[+sp.dataset.spoil] }); return afterSpoils(); }
   const dg = t.closest('[data-docgo]'); if (dg) { closeModal(); return chooseDoctrine(dg.dataset.docgo); }
   const dc = t.closest('[data-doctrine]'); if (dc) { SFX.play('select'); return doctrineModal(dc.dataset.doctrine); }
-  const add = t.closest('[data-add]'); if (add) { SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
+  const add = t.closest('[data-add]'); if (add) { closeModal(); SFX.play('buy'); C.deck.push({ ...window.__opts[+add.dataset.add] }); return finishNode(); }
   const bj = t.closest('[data-buyj]'); if (bj) { const err = shopBuy('j', +bj.dataset.buyj); if (err) toast(err); return; }
   const pkb = t.closest('[data-pack]'); if (pkb && !pkb.disabled) { SFX.play('tap'); return openPack(+pkb.dataset.pack); }
   const ppk = t.closest('[data-packpick]'); if (ppk) return pickPack(+ppk.dataset.packpick);
