@@ -310,3 +310,5 @@ Fond de rivière (jour) régénéré (`art/scene/riviere_jour.webp`, 1100 px, ri
 Décor de sol peint : cratères d'obus (de plus en plus nombreux avec la campagne, 1 de plus en village) et flaques sous la pluie, posés derrière les unités dans les secteurs terrestres hors rivière (`GROUND`, `.gdec`). Planches détourées du fond vert ; l'herbe écrasée n'est pas utilisée (les sprites se touchent).
 
 Cartes en main : plus d'inclinaison, illustration agrandie par type (`ART_SCALE`) et entière, étiquette de spécificité ou « 🔒 Infanterie » placée sous l'image, noms longs réduits, bouton « i » lisible sur les cartes sombres. « Prendre cette carte » ferme la fenêtre. Portraits de jokers des packs agrandis.
+
+Cartes plus belles : cadre double avec reflet intérieur, bandeau de nom, fenêtre d'illustration vitrée (reflet et ombre intérieure), pastilles d'Attaque / Défense sombres et lisibles, pièce de coût dorée, et cadre selon la rareté (argenté pour les rares, doré lumineux pour les très rares : classes `rar1` à `rar3`).

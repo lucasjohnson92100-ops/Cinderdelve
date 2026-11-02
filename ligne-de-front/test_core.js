@@ -114,7 +114,7 @@ const lcg=(x=7)=>()=>(x=(x*16807)%2147483647)/2147483647;
  const gp=E.genPacks(Cp);check('3 packs au plus',gp.length,3);let diff=true;for(let k=0;k<50;k++){const g=E.genPacks(Cp);if(new Set(g.map(p=>p.kind)).size!==3)diff=false;}check('3 packs différents',diff,true);Cp.officers=['moreau','dubois','ashby','kowalski','meyer'];check('joker plein : le pack état-major reste possible (remplacement)',[...Array(200)].some(()=>E.genPacks(Cp).some(p=>p.kind==='staff')),true);}
 // annuler, réserve, défausse
 S=blank(['mer','champ','champ','champ','champ']);S.hand=[E.mkCard('tireurs','J')];const sn=E.snapshotState(S);E.placeCard(S,0,1);E.restoreState(S,sn);check('annulé',S.units.length+'/'+S.hand.length,'0/1');
-S=mk();S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','R')];S.supply=5;E.endTurn(S);check('fin de tour : toute la main est défaussée (plus de réserve)',S.hand.length>=0&&S.discard.length>=2,true);
+S=mk();S.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','R')];S.supply=5;E.endTurn(S);check('fin de tour : les cartes non jouées restent en main',S.hand.length>=2,true);{const Sa=mk();Sa.hand=[E.mkCard('tireurs','J'),E.mkCard('jeep','R'),E.mkCard('assaut','')];const n0=Sa.hand.length;E.endTurn(Sa);check('la main garde ses cartes puis se complète',Sa.hand.length>=n0+2||Sa.hand.length>=6,true);}
 S=mk();const s0=S.supply;E.discardHand(S,[0]);check('défausse : +1 ravitaillement',S.supply-s0,E.DISCARD_SUPPLY);
 // objectifs
 S=mk({},E.battleCfg({type:'battle',levelIdx:2,layer:3,obj:{type:'kills',n:4}}));check('éliminer → frappe décisive',S.obj.type,'burst');

@@ -2417,6 +2417,28 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card .cinfo { color: #1b2540 !important; } .card .cinfo::before, .card .cinfo * { color: #1b2540 !important; }
 .popt.jk .po-ic svg, .popt .po-ic svg { width: min(15vh, 92px); height: min(15vh, 92px); display: block; }
 .popt.jk { justify-content: flex-start; padding-top: 10px; }
+
+/* ---- Cartes plus belles : cadre double, bandeau de nom, fenêtre d'illustration vitrée, pastilles de stats, reflet doré selon la rareté ---- */
+.card { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55), inset 0 -22px 26px -16px rgba(0, 0, 0, .22), 0 3px 0 #2b2116, 0 9px 16px rgba(0, 0, 0, .32) !important; border-width: 3px; }
+.card.rar2 { border-color: #5c6f86; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .7), inset 0 0 0 4px rgba(150, 175, 205, .55), inset 0 -22px 26px -16px rgba(0, 0, 0, .22), 0 3px 0 #2b2116, 0 9px 16px rgba(0, 0, 0, .32) !important; }
+.card.rar3 { border-color: #8a5a00; box-shadow: inset 0 0 0 2px rgba(255, 236, 160, .95), inset 0 0 0 4px rgba(255, 196, 50, .8), inset 0 -22px 26px -16px rgba(0, 0, 0, .2), 0 0 12px rgba(255, 196, 50, .55), 0 3px 0 #2b2116, 0 9px 16px rgba(0, 0, 0, .32) !important; }
+.card .cn { background: rgba(255, 255, 255, .6); border: 1.5px solid rgba(43, 33, 22, .45); border-radius: 7px; padding: 1px 5px !important; box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset; }
+.hc .cn { left: 3.5cqw; right: 3.5cqw; box-sizing: border-box; text-align: center; padding: 0 1.5cqw !important; }
+.card.col-N .cn { background: rgba(0, 0, 0, .38); border-color: rgba(255, 255, 255, .35); }
+.card.ordre .cn { background: rgba(255, 252, 240, .7); }
+.card:not(.hc) .art { position: relative; }
+.card .art { box-shadow: inset 0 3px 8px rgba(0, 0, 0, .3), inset 0 0 0 1.5px rgba(255, 255, 255, .6), 0 1px 0 rgba(255, 255, 255, .5); }
+.card .art::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(165deg, rgba(255, 255, 255, .34) 0%, rgba(255, 255, 255, 0) 34%), radial-gradient(120% 90% at 50% 120%, rgba(0, 0, 0, .22), transparent 60%); }
+.hc .chp { display: flex; align-items: center; gap: 2.5cqw; top: 98cqw; left: 4cqw; right: 4cqw; justify-content: center; }
+.hc .chp .ca, .hc .chp .cd { display: inline-flex; align-items: center; gap: 1cqw; padding: .6cqw 3cqw; border-radius: 99px; background: rgba(20, 28, 40, .88); border: 1.5px solid rgba(255, 255, 255, .22); font-style: normal; font-size: 11.5cqw; line-height: 1.2; box-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
+.hc .chp .ca { color: #a9d0ff; } .hc .chp .cd { color: #98ec9f; } .hc .chp .cs { color: #ffd24a; letter-spacing: -1px; font-size: 9cqw; text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.hc .cband { background-image: linear-gradient(180deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, 0) 55%); }
+.card .cost { box-shadow: 0 0 0 2px var(--ink), 0 3px 0 2px var(--ink), inset 0 2px 3px rgba(255, 255, 255, .55) !important; background: radial-gradient(circle at 35% 30%, #fff1a8, #f0b81e 70%) !important; color: #3b2a00 !important; border-color: #3b2a00 !important; }
+.card .shine { z-index: 6; }
+.btl.land .bt-tools { flex-wrap: wrap; gap: 3px 4px; justify-content: flex-end; align-content: flex-start; }
+.btl.land .bt-tools .jbar { order: 2; flex: 1 0 100%; min-width: 100%; justify-content: center; gap: 4px; }
+.btl.land .bt-tools .jbar .jk { flex: none; min-width: 24px; min-height: 24px; width: 26px; height: 26px; }
+.btl.land .bt-tools .jbar .jk svg { width: 100%; height: 100%; }
 /* ---- Plateau : mêmes fonds peints et mêmes ambiances que la scène d'assaut ---- */
 .btl.land .ln.t-route { background-image: var(--sc-route-jour) !important; background-position: 50% 64% !important; }
 .btl.land .ln.t-champ { background-image: var(--sc-champ-jour) !important; background-position: 50% 70% !important; }
@@ -2867,7 +2889,9 @@ function startTurn(S) {
   S.supply = BASE_SUPPLY + (S.supplyBonus || 0) + villageIncome(S) + (has(S, 'kowalski') ? 1 : 0) + (has(S, 'fort') && S.turn === 1 ? 2 : 0) + (S.carry || 0);
   S.carried = S.carry || 0; S.carry = 0;
   S.flags = { used: false, deployed: [], assault: [], barrage: {} }; S.smoke = false; S.counterCols = [];
-  drawCards(S, 6 + (has(S, 'ashby') ? 1 : 0));
+  // la main se complète jusqu'à sa taille (6, +1 avec Ashby) ; au moins 2 nouvelles cartes par tour
+  const size = 6 + (has(S, 'ashby') ? 1 : 0);
+  drawCards(S, Math.max(2, size - S.hand.length));
 }
 function drawCards(S, n) {
   for (let i = 0; i < n; i++) {
@@ -3182,8 +3206,7 @@ const snap = S => ({ units: clone(S.units), hq: { ...S.hq } });
 function endTurn(S) {
   const steps = [];
   S.carry = Math.min(MAX_CARRY, Math.max(0, S.supply));
-  S.hand.splice(0).forEach(c => discardCard(S, c));
-  const F = frontForecast(S);
+  const F = frontForecast(S);   // les cartes non jouées restent en main pour le tour suivant
   // 1. vos secteurs frappent, un par un ; le total part sur le QG ennemi
   let run = 0;
   for (const f of F.sectors) { if (!f.atk && !f.def && !f.blocked) continue; run += f.strike; steps.push({ ph: 'sec', c: f.c, f, run }); }
@@ -4043,6 +4066,8 @@ function resumeRun() {
   C = r.C;
   if (C.node) C.node = (C.map[C.node.layer] || [])[C.node.i] || C.node;
   picked = []; placing = null; busy = false; selU = null; undo = []; discardSel = null;
+  // une bataille sauvegardée avec un autre nombre de secteurs (ancienne version) n'est pas reprise : on la relance proprement
+  if (r.S && r.S.lanes && r.S.lanes.length !== GW) r.S = null;
   if (r.screen === 'battle' && r.S) { S = r.S; S.rng = Math.random; S.finished = false; renderBattle(); return turnBanner(`Tour ${S.turn}`, 'me'); }
   if (r.screen === 'battle') return startBattle(C.node);
   if (r.screen === 'reward' && C.spoils) return spoilsStep();
@@ -4566,7 +4591,7 @@ function cardHTML(card, extra = '', attrs = '') {
   const tags = [isOrder(card) ? ORDER_SHORT[card.t] : SHORT_TAG[card.t]].filter(Boolean).join(' · ');
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
   const ord = inB ? picked.indexOf(card) : -1;
-  return `<button class="card ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
+  return `<button class="card ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
     <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? (TGT_SHORT[d.tgt] || '') : FAM_SHORT[d.fam]}</small></span>
     <span class="cn ${d.name.length > 11 ? 'long' : ''}" title="${d.name}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 46).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
@@ -4576,7 +4601,7 @@ const ART_SCALE = { inf: 1.45, para: 1.4, obs: 1.35, medic: 1.35, sapper: 1.4, m
 const artScale = card => (isOrder(card) ? 1 : ART_SCALE[SPR_OF[card.t]] || 1.2);
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>${specBadge(card)}
     <span class="cn ${d.name.length > 12 ? 'xl' : d.name.length > 10 ? 'long' : ''}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art" style="--as:${artScale(card)}">${isOrder(card) ? iconSVG(ORDER_ICON[card.t], 38).replace('class="spr"', 'class="oicon"') : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
