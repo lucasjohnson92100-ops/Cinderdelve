@@ -2761,7 +2761,7 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 /* ===== Écran des doctrines : plein écran, grandes cartes illustrées ===== */
 .briefing.docs { height: 100%; min-height: 0; display: flex; flex-direction: column; }
 .briefing.docs .drow { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
-.dtile { grid-template-rows: auto auto minmax(0, 1fr) auto; padding: 12px 9px 9px; gap: 7px; }
+.dtile { grid-template-rows: auto auto auto minmax(0, 1fr) auto; padding: 12px 9px 9px; gap: 7px; }
 .dt-ic { font-size: 2.1rem; } .dt-head b { font-size: 1.35rem; } .dt-tip { font-size: .8rem; }
 .dt-cards { gap: 6px; align-self: stretch; min-height: 0; }
 .dc-card { position: relative; display: block; padding: 0; overflow: hidden; border-radius: 9px; border: 2px solid #e8c75a; background: #1b2540; min-height: 0; }
@@ -2783,6 +2783,16 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .dc-art .oimg { background-position: 50% 40%; }
 .briefing.docs > .hd, .briefing.docs > .dintro { flex: none; }
 .dtile { height: 100%; min-height: 0; }
+
+/* Doctrines : explication complète sur chaque tuile */
+.dt-info { display: grid; gap: 3px; text-align: left; background: rgba(10, 14, 22, .55); border-radius: 8px; padding: 6px 8px; align-content: start; }
+.di-nm { font-family: var(--font-display); color: #ffd24a; font-size: .86rem; text-shadow: 0 1px 2px #000; }
+.di-tx { font-size: .74rem; line-height: 1.22; color: #fff; font-weight: 700; text-shadow: 0 1px 2px #000; }
+.di-ln { font-size: .66rem; line-height: 1.2; color: #f0e6c8; text-shadow: 0 1px 2px #000; } .di-ln b { color: #8fd68f; margin-right: 3px; } .di-ln.lim b { color: #ff9d8a; }
+.dtile.locked .di-nm { color: #ddd; }
+.dt-cards { min-height: 60px; }
+@media (max-height: 440px) { .di-nm { font-size: .76rem; } .di-tx { font-size: .64rem; } .di-ln { font-size: .58rem; } .dt-info { padding: 4px 6px; gap: 2px; } }
+@media (max-height: 340px) { .di-nm { font-size: .64rem; } .di-tx { font-size: .52rem; line-height: 1.12; } .di-ln { font-size: .48rem; } .di-ln.lim { display: none; } .dt-cards { min-height: 0; } .dt-tip { display: none; } .dtile { gap: 3px; grid-template-rows: auto auto minmax(0, 1fr) auto; } .dt-ic { display: none; } .dt-go { font-size: .7rem; padding: 2px 0; } .dc-card b { bottom: 10px; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4402,6 +4412,7 @@ function doctrineStep() {
     return `<button class="dtile ${open ? 'open' : 'locked'}" ${open ? `data-doctrine="${id}"` : 'disabled'} style="--dbg:var(--sc-${DOC_ART[id]}-jour)">
       <span class="dt-head"><i class="dt-ic">${open ? DOC_IC[id] : '🔒'}</i><b>${d.name.replace('Doctrine ', '')}</b></span>
       <span class="dt-tip">${open ? d.tip : `Se débloque ${need <= 1 ? 'à la prochaine victoire de campagne' : `après ${need} victoires de campagne`}.`}</span>
+      <span class="dt-info"><span class="di-nm">${DOCTRINE_SPEC[id].nm}</span><span class="di-tx">${DOCTRINE_SPEC[id].what}</span><span class="di-ln"><b>Conseil</b> ${short1(DOCTRINE_SPEC[id].syn)}</span><span class="di-ln lim"><b>Limite</b> ${short1(DOCTRINE_SPEC[id].lim)}</span></span>
       <span class="dt-cards">${cards}</span>${open ? '<span class="dt-go">Choisir ›</span>' : ''}</button>`;
   };
   app.innerHTML = `<div class="stack briefing docs"><div class="hd"><span class="ribbon">Choisissez votre doctrine</span><span class="num">${un.length} / ${DOC_ORDER.length} débloquées</span></div>

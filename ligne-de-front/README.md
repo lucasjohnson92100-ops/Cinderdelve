@@ -362,3 +362,5 @@ Toutes les cartes (16 unités + 10 ordres) ont maintenant leur illustration pein
 
 ## Écran des doctrines plein écran
 Les tuiles occupent toute la hauteur de l'écran ; les 3 cartes de chaque doctrine sont des cartes illustrées (mêmes images que les cartes de combat, teintées à leur couleur) avec nom et couleur en bas.
+
+Chaque tuile de doctrine détaille maintenant : nom du style, effet, conseil et limite (la limite est masquée sur les très petits écrans).
