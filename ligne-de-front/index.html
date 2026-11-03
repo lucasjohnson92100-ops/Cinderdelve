@@ -2757,6 +2757,32 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card.unitc .art { isolation: isolate; }
 .card.unitc .art::before { content: ''; position: absolute; inset: 0; z-index: 1; background: var(--tint, transparent); mix-blend-mode: color; opacity: .62; pointer-events: none; border-radius: inherit; }
 .card.unitc .art .oimg { filter: saturate(1.15) contrast(1.05); }
+
+/* ===== Écran des doctrines : plein écran, grandes cartes illustrées ===== */
+.briefing.docs { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.briefing.docs .drow { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+.dtile { grid-template-rows: auto auto minmax(0, 1fr) auto; padding: 12px 9px 9px; gap: 7px; }
+.dt-ic { font-size: 2.1rem; } .dt-head b { font-size: 1.35rem; } .dt-tip { font-size: .8rem; }
+.dt-cards { gap: 6px; align-self: stretch; min-height: 0; }
+.dc-card { position: relative; display: block; padding: 0; overflow: hidden; border-radius: 9px; border: 2px solid #e8c75a; background: #1b2540; min-height: 0; }
+.dc-card.ord { border-color: #e8c75a; }
+.dc-art { position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background: #1b2540; isolation: isolate; }
+.dc-art::before { content: ''; position: absolute; inset: 0; z-index: 1; background: var(--tint, transparent); mix-blend-mode: color; opacity: .6; pointer-events: none; }
+.dc-art::after { content: ''; position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, rgba(10, 14, 28, 0) 45%, rgba(10, 14, 28, .9) 100%); pointer-events: none; }
+.dc-art svg { height: 70%; }
+.dc-card b { position: absolute; left: 0; right: 0; bottom: 15px; z-index: 3; color: #fff; font-size: .7rem; text-align: center; text-shadow: 0 1px 3px #000; white-space: normal; line-height: 1.05; padding: 0 2px; }
+.dc-card i { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); z-index: 3; font-size: .56rem; padding: 0 6px; white-space: nowrap; border: 1px solid #fff8; }
+.dtile.locked .dt-cards { opacity: .9; }
+.dt-go { font-size: 1.05rem; padding: 6px 0; }
+@media (max-height: 440px) { .dt-ic { font-size: 1.5rem; } .dt-head b { font-size: 1.05rem; } .dt-tip { font-size: .66rem; } .dc-card b { font-size: .58rem; bottom: 13px; } .dc-card i { font-size: .5rem; } .dt-go { font-size: .85rem; padding: 4px 0; } .dtile { padding: 8px 6px 7px; gap: 4px; } }
+@media (max-height: 340px) { .dt-ic { font-size: 1.15rem; } .dt-head b { font-size: .88rem; } .dt-tip { font-size: .56rem; } .dc-card b { font-size: .5rem; bottom: 11px; } .dc-card i { font-size: .44rem; padding: 0 4px; } }
+#app:has(.briefing.docs) { max-width: none; height: calc(100dvh - 14px); padding-bottom: 0; box-sizing: border-box; overflow: hidden; }
+.briefing.docs { height: calc(100dvh - 30px); }
+.dc-card { align-self: stretch; }
+.dt-cards { align-items: stretch; }
+.dc-art .oimg { background-position: 50% 40%; }
+.briefing.docs > .hd, .briefing.docs > .dintro { flex: none; }
+.dtile { height: 100%; min-height: 0; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4372,7 +4398,7 @@ function doctrineStep() {
   const un = C.docOpts, w = load().wins || 0;
   const tile = id => {
     const d = DOCTRINES[id], open = un.includes(id), need = DOC_ORDER.indexOf(id) - DOC_START + 1 - w;
-    const cards = doctrineCards(id).map(c => `<span class="dc-card ${isOrder(c) ? 'ord' : ''}"><span class="dc-art" style="${artBg(c)}">${isOrder(c) ? ordArt(c.t, 26) : spriteSVG(SPR_OF[c.t], 'me', 30, c.c)}</span><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span>`).join('');
+    const cards = doctrineCards(id).map(c => `<span class="dc-card ${isOrder(c) ? 'ord' : ''}"><span class="dc-art" style="--tint:${c.c ? colorHex(c.c) : 'transparent'}">${isOrder(c) ? ordArt(c.t, 26) : UNIT_ART[c.t] ? unitImg(c.t) : spriteSVG(SPR_OF[c.t], 'me', 30, c.c)}</span><b>${TYPES[c.t].name}</b><i style="background:${chipBg(c.c)}">${colorName(c.c)}</i></span>`).join('');
     return `<button class="dtile ${open ? 'open' : 'locked'}" ${open ? `data-doctrine="${id}"` : 'disabled'} style="--dbg:var(--sc-${DOC_ART[id]}-jour)">
       <span class="dt-head"><i class="dt-ic">${open ? DOC_IC[id] : '🔒'}</i><b>${d.name.replace('Doctrine ', '')}</b></span>
       <span class="dt-tip">${open ? d.tip : `Se débloque ${need <= 1 ? 'à la prochaine victoire de campagne' : `après ${need} victoires de campagne`}.`}</span>

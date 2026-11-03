@@ -359,3 +359,6 @@ L'illustration occupe toute la carte (main, packs, renforts, boutique) : nom en 
 15 unités ont leur illustration peinte pleine carte (`art/units/*.webp`, `UNIT_ART`) : nom en haut, nombre de ressources, pastilles Attaque/Défense et capacité en bas. L'image est teintée à la couleur de la carte (jaune, rouge, vert, noir ; mélange pour les cartes bicolores) et une bande de couleur borde le haut. Le half-track garde son dessin en attendant son image.
 
 Toutes les cartes (16 unités + 10 ordres) ont maintenant leur illustration peinte ; plus aucun sprite de secours.
+
+## Écran des doctrines plein écran
+Les tuiles occupent toute la hauteur de l'écran ; les 3 cartes de chaque doctrine sont des cartes illustrées (mêmes images que les cartes de combat, teintées à leur couleur) avec nom et couleur en bas.
