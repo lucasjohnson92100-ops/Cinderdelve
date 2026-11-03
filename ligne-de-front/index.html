@@ -2805,6 +2805,8 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .hc.ordc:not(.unitc) .cn { padding-right: 24cqw !important; text-align: left; padding-left: 21cqw !important; }
 .dc-card.ord { border: 2px double #f3d27a; }
 .dc-card.ord::after { content: 'ORDRE'; position: absolute; top: 2px; right: 2px; z-index: 4; font-size: .4rem; font-weight: 800; color: #3b2a00; background: #ffd24a; border-radius: 4px; padding: 0 3px; }
+/* Écrans de choix : toucher la carte la prend (ou l'ouvre), le « i » ne sert à rien */
+.card.pick .cinfo, .cardrow .card[data-spoil] .cinfo, .cardrow .card[data-add] .cinfo, .cardrow .card[data-cratepick] .cinfo, .cardrow .card[data-packpick] .cinfo { display: none !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
