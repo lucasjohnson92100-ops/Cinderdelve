@@ -337,3 +337,6 @@ Assaut : plus d'affichage des jokers ni de rayures sur les véhicules (l'usure r
 
 ## Multiplicateurs de l'assaut en grand
 Plaque « Puissance × Mult » géante à gauche de chaque secteur : tuile Puissance bleue, tuile Mult flamboyante (dégradé animé, halo pulsé), légendes, anneau de choc et agrandissement à chaque hausse ; pastilles de combos plus grosses, celles qui multiplient en orange feu.
+
+## Illustrations des ordres
+8 ordres ont maintenant une illustration peinte (`art/orders/*.webp`, intégrée en base64 dans `ORDER_ART`) : Barrage, Fumigènes, Ravitaillement, Repli, Assaut, Relève, Débarquement, Sabotage. Retranchement et Contre-attaque gardent leur icône en attendant leur image (`ordArt()` choisit tout seul).
