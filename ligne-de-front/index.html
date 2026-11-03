@@ -2850,6 +2850,9 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .bt-hint.spec .pill.sm { top: -12px; }
 .bt-hint.spec .pill.sm { top: auto !important; bottom: 3px; right: 4px; font-size: .54rem; padding: 1px 6px; opacity: .92; }
 @media (max-height: 340px) { .btl.land:has(.bt-hint.spec) { grid-template-rows: auto minmax(0, .6fr) auto auto minmax(0, 1.8fr) auto !important; } .bt-hint.spec .ht { font-size: .54rem !important; line-height: 1.1 !important; } .bt-hint.spec { padding: 3px 5px !important; } }
+
+/* Teinte plus discrète : seulement sur le sujet central (habits, engins), décor presque intact */
+.card.unitc .art::before, .dc-art::before, .po-pic::after { opacity: .34; -webkit-mask-image: radial-gradient(ellipse 52% 62% at 50% 56%, #000 55%, rgba(0, 0, 0, .12) 100%); mask-image: radial-gradient(ellipse 52% 62% at 50% 56%, #000 55%, rgba(0, 0, 0, .12) 100%); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
