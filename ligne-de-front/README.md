@@ -369,3 +369,6 @@ Chaque tuile de doctrine détaille maintenant : nom du style, effet, conseil et 
 - Le service « Entraîner » est retiré de la boutique (les packs le remplacent) : 4 services restent.
 - Pack Entraînement : grille 3×2 régulière, illustrations teintées, niveau, effet et nombre de cartes concernées.
 - En bataille, quand une carte est sélectionnée, ses explications (effet, conseil, ★ ici, avertissement) s'affichent dans l'encadré en bas à droite, à la place de l'ancien texte « coût… touchez un secteur » ; la bulle du haut ne sert plus que pour une sélection multiple.
+
+## Couleur sur les habits et les engins seulement
+Chaque illustration d'unité existe en 4 variantes (jaune, rouge, vert, noir, `UNIT_ART_C`) générées en recolorant uniquement les uniformes, carrosseries et coques (zones kaki/grises du sujet central ; peau, ciel, sol et feu inchangés). La carte affiche la variante de sa couleur ; les cartes bicolores utilisent leur première couleur.
