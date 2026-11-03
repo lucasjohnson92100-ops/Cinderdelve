@@ -2660,6 +2660,18 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card .art:has(.oimg) { position: relative; }
 .nodeart:has(.oimg) { overflow: hidden; }
 .mc-art:has(.oimg), .dk-art:has(.oimg), .dc-art:has(.oimg) { overflow: hidden; }
+
+/* Cartes d'ordre : grande illustration, légende courte dans l'image, cadre doré */
+.ocap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 14px 4px 3px; text-align: center; font-family: var(--font-display); font-weight: 800; line-height: 1.08; color: #fff; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0, 0, 0, .8); background: linear-gradient(180deg, rgba(10, 14, 28, 0), rgba(10, 14, 28, .86) 55%); letter-spacing: .01em; }
+.card.ordc { border-color: #8a6a1c; background-image: linear-gradient(180deg, #fff8e0, #f1dba0 70%, #dcc27a) !important; box-shadow: 0 0 0 2px #e8c75a, 0 2px 0 2px var(--ink), 0 0 14px rgba(232, 199, 90, .45); }
+.card.ordc .art { border-color: #6b4a0c; box-shadow: inset 0 0 0 2px rgba(255, 226, 122, .8), inset 0 -14px 18px rgba(0, 0, 0, .25); }
+.card.ordc .art::after { background: linear-gradient(165deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0) 30%) !important; }
+.card.ordc .ctag, .card.ordc .effs, .card.ordc .cbig { display: none !important; }
+.card.ordc:not(.hc) .art { height: 112px; } .card.ordc:not(.hc) .ocap { font-size: .62rem; }
+.hc.ordc .art { top: 31cqw; height: 66cqw; } .hc.ordc .ocap { font-size: 10.5cqw; padding-top: 10cqw; }
+.hc.ordc .chp, .hc.ordc .hspec { display: none !important; }
+.packopen .card.ordc .art { height: 118px; }
+@media (max-height: 420px) { .card.ordc:not(.hc) .art { height: 78px; } .card.ordc:not(.hc) .ocap { font-size: .52rem; } .packopen .card.ordc .art { height: 98px; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4738,10 +4750,10 @@ function cardHTML(card, extra = '', attrs = '') {
   const tags = [isOrder(card) ? ORDER_SHORT[card.t] : SHORT_TAG[card.t]].filter(Boolean).join(' · ');
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
   const ord = inB ? picked.indexOf(card) : -1;
-  return `<button class="card ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
+  return `<button class="card ${d.fam} ${d.order ? 'ordc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}><span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
     <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? (TGT_SHORT[d.tgt] || '') : FAM_SHORT[d.fam]}</small></span>
     <span class="cn ${d.name.length > 11 ? 'long' : ''}" title="${d.name}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
-    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? ordArt(card.t, 46, 1) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}</span>
+    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? ordArt(card.t, 46, 1) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c)}${isOrder(card) ? `<span class="ocap">${ORDER_SHORT[card.t] || ''}</span>` : ''}</span>
     <span class="cbig"><i class="a">${cs.a}</i><i class="h">${cs.h}</i></span>${(ad => (ad ? `<span class="adl">${SWORD}${fmtN(ad.a)} ${SHIELD}${fmtN(ad.d)}</span>` : ''))(cardAD(card))}<span class="ctag">${tags}</span><span class="effs">${eff}</span></button>`;
 }
 const ART_SCALE = { inf: 1.45, para: 1.4, obs: 1.35, medic: 1.35, sapper: 1.4, mgnest: 1.2, jeep: 1.2, tank: 1.35, td: 1.3, halftrack: 1.05, arty: 1.0, recon: 1.35, destroyer: 1.35, croiseur: 1.35, sousmarin: 1.35, chasseur: 1.15, bombardier: 1.15 };
@@ -4750,10 +4762,10 @@ const artBg = card => { const d = TYPES[card.t]; if (!d || d.order) return ''; c
 const artScale = card => (isOrder(card) ? 1 : ART_SCALE[SPR_OF[card.t]] || 1.2);
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} ${d.order ? 'ordc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>${specBadge(card)}
     <span class="cn ${d.name.length > 12 ? 'xl' : d.name.length > 10 ? 'long' : ''}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
-    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? ordArt(card.t, 38, 1) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}</span>
+    <span class="art" style="--as:${artScale(card)};${artBg(card)}">${isOrder(card) ? ordArt(card.t, 38, 1) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c)}${isOrder(card) ? `<span class="ocap">${ORDER_SHORT[card.t] || ''}</span>` : ''}</span>
     ${isOrder(card) ? '' : `<span class="cmen">${cs.st.men}</span>`}<span class="chp">${(ad => (ad ? `<i class="ca">${SWORD}${fmtN(ad.a)}</i><i class="cd">${SHIELD}${fmtN(ad.d)}</i><i class="cs">${'●'.repeat(Math.min(5, ad.s))}</i>` : cs.h))(cardAD(card))}</span></button>`;
 }
 const RANGE_TXT = r => (r[0] === r[1] ? (r[0] === 1 ? 'au contact' : `portée ${r[0]}`) : `portée ${r[0]}–${r[1]}`);
