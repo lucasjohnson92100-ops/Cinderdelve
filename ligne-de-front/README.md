@@ -376,3 +376,5 @@ Chaque illustration d'unité existe en 4 variantes (jaune, rouge, vert, noir, `U
 ## Images de niveau
 - Insigne bronze / argent / or (`LEVEL_ART.rank`) sur toute carte dont le type + la couleur ont été entraînés (niv. 2 / 3 / 4+).
 - Le pack Entraînement affiche des scènes d'entraînement par type (infanterie, véhicules, aviation, marine) recolorées aux 4 couleurs, plus les images de fortification et de manuel (`art/levels/`).
+
+Écran Renforts : chaque unité proposée indique, par couleur (jaune, rouge, vert, noir), combien d'exemplaires de cette unité sont déjà au paquet ; le liseré blanc en haut des cartes illustrées est retiré.

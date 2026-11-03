@@ -2883,7 +2883,18 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card.unitc .cost { background: var(--cc) !important; color: var(--cct) !important; border-color: #fff !important; text-shadow: none !important; box-shadow: 0 0 0 2px #1b2540, 0 2px 0 2px #1b2540 !important; }
 .hc.unitc .cost { box-shadow: 0 0 0 1.5px #1b2540, 0 2px 0 1.5px #1b2540 !important; }
 .card.unitc .cband { background: var(--cc) !important; }
-</style>
+
+/* Plus de liseré blanc en haut des cartes illustrées */
+.card.unitc .cband, .card.ordc .cband { background-image: none !important; box-shadow: none !important; border: 0 !important; }
+.card.ordc .cn, .hc.ordc .cn, .card.unitc .cn { box-shadow: none !important; border: 0 !important; background-image: none !important; }
+.card.ordc::before { box-shadow: none !important; }
+/* Exemplaires déjà possédés, par couleur (écran Renforts) */
+.card .own { position: absolute; z-index: 6; left: 50%; transform: translateX(-50%); top: 34px; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 99px; background: rgba(10, 14, 28, .82); border: 1px solid rgba(255, 255, 255, .3); white-space: nowrap; }
+.card .own em { font-style: normal; font-size: .58rem; color: #e8dcc0; margin-right: 2px; }
+.card .own b { min-width: 18px; text-align: center; font-family: var(--font-display); font-size: .74rem; line-height: 1.25; padding: 0 5px; border-radius: 99px; background: var(--c); color: var(--t); border: 1.5px solid #fff; }
+.card .own b.z { opacity: .4; border-color: transparent; }
+@media (max-height: 420px) { .card .own { top: 26px; padding: 1px 5px; } .card .own em { font-size: .5rem; } .card .own b { font-size: .64rem; min-width: 15px; padding: 0 3px; } }
+</style></style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="rotate" aria-live="polite"><div class="ph"></div><b>Tournez votre téléphone</b><span>Ligne de Front se joue en mode paysage : votre plateau à gauche, la blinde à battre à droite.</span></div>
@@ -6097,13 +6108,20 @@ function toReward() {
   countUpAll(app);
 }
 // Renfort : une carte parmi 3 (les types absents du paquet sont signalés « Nouveau »)
+// Combien d'exemplaires de cette unité sont déjà au paquet, par couleur (une carte bicolore compte dans chacune de ses couleurs)
+function ownedStrip(html, card) {
+  if (isOrder(card)) return html;
+  const n = {}; for (const ch of 'JRVN') n[ch] = C.deck.filter(c => c.t === card.t && (c.c || '').includes(ch)).length;
+  const strip = `<span class="own" title="Exemplaires déjà au paquet, par couleur"><em>Au paquet</em>${[...'JRVN'].map(ch => `<b class="${n[ch] ? '' : 'z'}" style="--c:${COLORS[ch].hex};--t:${ch === 'J' ? '#2b1a00' : '#fff'}">${n[ch]}</b>`).join('')}</span>`;
+  return html.replace(/<\/button>\s*$/, strip + '</button>');
+}
 function spoilsStep() {
   if (!C.spoils) return afterSpoils();
   saveRun('spoils');
   const own = new Set(C.deck.map(c => c.t));
   app.innerHTML = `<div class="stack briefing"><div class="hd"><span class="ribbon">Renforts</span><span class="num">${C.deck.length} cartes</span></div>
     <div class="panel">Ajoutez une carte à votre paquet, ou passez pour le garder court : un petit paquet ressort plus souvent vos meilleures cartes.</div>
-    <div class="cardrow">${C.spoils.map((c, i) => cardHTML(c, 'pick' + (own.has(c.t) ? '' : ' isnew'), `data-spoil="${i}"`)).join('')}</div>
+    <div class="cardrow">${C.spoils.map((c, i) => ownedStrip(cardHTML(c, 'pick' + (own.has(c.t) ? '' : ' isnew'), `data-spoil="${i}"`), c)).join('')}</div>
     <button class="btn ghost" data-act="skipspoil">Passer</button></div>`;
 }
 function afterSpoils() { delete C.spoils; return C.node && C.node.type === 'boss' ? jokerStep() : toShop(); }
