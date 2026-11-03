@@ -2672,6 +2672,18 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .hc.ordc .chp, .hc.ordc .hspec { display: none !important; }
 .packopen .card.ordc .art { height: 118px; }
 @media (max-height: 420px) { .card.ordc:not(.hc) .art { height: 78px; } .card.ordc:not(.hc) .ocap { font-size: .52rem; } .packopen .card.ordc .art { height: 98px; } }
+
+/* Écrans de choix et boutique : la carte d'ordre remplit toute sa hauteur avec l'illustration */
+.card.ordc:not(.hc) { grid-template-rows: auto auto minmax(0, 1fr) !important; align-content: stretch !important; }
+.card.ordc:not(.hc) .art { height: auto !important; min-height: 84px; }
+.packopen .card.ordc { grid-template-rows: auto auto auto !important; }
+.packopen .card.ordc .art { height: 118px !important; }
+@media (max-height: 420px) { .packopen .card.ordc .art { height: 98px !important; } }
+
+/* Renforts : illustrations plus grandes pour toutes les cartes proposées */
+.briefing .cardrow .card:not(.ordc) .art { height: 100px; }
+.briefing .cardrow .card:not(.ordc) .art svg { height: 100%; width: auto; }
+@media (max-height: 340px) { .briefing .cardrow .card:not(.ordc) .art { height: 84px; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
