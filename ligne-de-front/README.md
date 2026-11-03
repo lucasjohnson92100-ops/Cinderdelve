@@ -340,3 +340,7 @@ Plaque « Puissance × Mult » géante à gauche de chaque secteur : tuile Puiss
 
 ## Illustrations des ordres
 8 ordres ont maintenant une illustration peinte (`art/orders/*.webp`, intégrée en base64 dans `ORDER_ART`) : Barrage, Fumigènes, Ravitaillement, Repli, Assaut, Relève, Débarquement, Sabotage. Retranchement et Contre-attaque gardent leur icône en attendant leur image (`ordArt()` choisit tout seul).
+
+## Nombre exact sur les cartes, endurance implicite
+- Chaque carte d'unité dessine **exactement** son nombre de ressources (2 avions = 2 avions, 6 jeeps = 6 jeeps, 10 soldats = 10 soldats ; `squadSVG(..., exact)`).
+- Plus aucune mention d'« endurance » ou de « N tours » dans les cartes, fiches, jokers, ordres, effets ennemis et tutoriel : l'unité s'use, sa barre de solidité le montre (l'infanterie fond). La mécanique reste la même.
