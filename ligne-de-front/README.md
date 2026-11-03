@@ -378,3 +378,7 @@ Chaque illustration d'unité existe en 4 variantes (jaune, rouge, vert, noir, `U
 - Le pack Entraînement affiche des scènes d'entraînement par type (infanterie, véhicules, aviation, marine) recolorées aux 4 couleurs, plus les images de fortification et de manuel (`art/levels/`).
 
 Écran Renforts : chaque unité proposée indique, par couleur (jaune, rouge, vert, noir), combien d'exemplaires de cette unité sont déjà au paquet ; le liseré blanc en haut des cartes illustrées est retiré.
+
+## Riposte ciblée et retraites
+- **Riposte ciblée :** chaque tour, l'ennemi annonce (un tour à l'avance) un secteur terrestre visé 🎯 ; 40 % de son Attaque s'y concentre (`TARGET_SHARE`), le reste s'étale sur le front. Les Défenses ne se mélangent plus : la Défense du secteur visé ne protège que contre la part ciblée, celle des autres secteurs contre le reste. Le secteur visé est surligné en doré, les totaux et l'encadré d'aide détaillent les deux parts. `ENEMY_ATK` a été abaissé à 0,92 pour garder la même difficulté (simulation).
+- **Retraites :** 3 par bataille (+1 par amélioration achetée en boutique, 5 au plus, service « Retraites +1 » de $4 à $12). Toucher une unité puis « Retraite » la retire du front, libère sa place et laisse sa carte à la défausse (≠ ordre Repli, qui la remet en main). Annulable avec ↶.

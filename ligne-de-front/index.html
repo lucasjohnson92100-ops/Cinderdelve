@@ -2895,6 +2895,13 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card .own b.z { opacity: .4; border-color: transparent; }
 @media (max-height: 420px) { .card .own { top: 26px; padding: 1px 5px; } .card .own em { font-size: .5rem; } .card .own b { font-size: .64rem; min-width: 15px; padding: 0 3px; } }
 .s2-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mk.tgt { background: #ffd24a !important; color: #3b2a00 !important; animation: tgtpulse 1.2s ease-in-out infinite; } @keyframes tgtpulse { 50% { transform: scale(1.18); } }
+.btl .t-def { white-space: normal; line-height: 1.15; }
+.btl .t-def:has(.td-r) { display: flex !important; flex-wrap: wrap; gap: 0 10px; align-items: baseline; }
+.btl .td-r { display: block; font-size: .86em; white-space: normal; } .btl .td-r.bad { color: #b3351f; font-weight: 800; }
+.ln.target { box-shadow: inset 4px 0 0 #ffd24a, inset 0 0 0 2px rgba(255, 210, 74, .55), 0 0 12px rgba(255, 210, 74, .5) !important; }
+.ln.target .lc.head .tname::after { content: ' 🎯'; }
+.mk.tgt { display: none !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -3092,9 +3099,10 @@ const has = (S, id) => S.officers.includes(id);
 // Seul le joueur a une tactique par secteur : autant d'unités et d'appuis (avions, navires) qu'il veut dans chacun.
 // L'ennemi n'est qu'un QG, comme une « blinde » de Balatro : vos secteurs additionnent leur frappe sur lui, et il frappe
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
+const BASE_RETREATS = 3, MAX_RETREAT_UP = 5, TARGET_SHARE = 0.4, retreatCost = C => 4 + 2 * (C.retreatUp || 0);
 const GW = 4, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
-  ENEMY_GROWTH = 0.08, HQ_MULT = 22, HQ_GROW = 1.10, ENEMY_ATK = 1.05, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
+  ENEMY_GROWTH = 0.08, HQ_MULT = 22, HQ_GROW = 1.10, ENEMY_ATK = 0.92, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
   MIN_THROUGH = 0.15, BARRAGE_ATK = 20;
 const TERRAIN = {
@@ -3230,7 +3238,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
     officers: C.officers.slice(), hq: { me: C.hq, en: lvl.obj && lvl.obj.type === 'hold' ? 9999 : lvl.hq }, hqMax: C.hqMax, supplyBonus: C.supplyBonus || 0,
     grid: T.grid, lanes: [...T.lanes, 'air'], seaCol: T.seaCol, units: [], best: 0,
     draw: shuffle(C.deck.slice(), rng), hand: [], discard: [], supply: 0, flags: {}, plan: {}, smoke: false, counterCols: [],
-    comboLv: { ...(C.comboLv || {}) }, capLv: { ...(C.capLv || {}) }, catLv: { ...(C.catLv || {}) }, discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 2 : 0),
+    comboLv: { ...(C.comboLv || {}) }, capLv: { ...(C.capLv || {}) }, catLv: { ...(C.catLv || {}) }, retreats: BASE_RETREATS + (C.retreatUp || 0), discards: BASE_DISCARDS + (has({ officers: C.officers }, 'intendant') ? 2 : 0),
   };
   S.fx = lvl.fx || pickFx(lvl, rng);
   if (lvl.tutorial) ['tireurs:R:1', 'tireurs:J:1'].forEach(k => { const i = S.draw.findIndex(c => cardKey(c) === k); if (i >= 0) S.draw.push(S.draw.splice(i, 1)[0]); });
@@ -3398,6 +3406,13 @@ function playOrder(S, hi, t) {
   checkOver(S);
   return res;
 }
+// Retraite : une unité quitte le front, sa place est libérée et sa carte reste à la défausse (quelques retraites par bataille)
+function retreatUnit(S, uid) {
+  const u = findUnit(S, uid);
+  if (!u || S.over || (S.retreats || 0) <= 0 || u.side !== 'me') return null;
+  S.units = S.units.filter(x => x !== u); S.retreats--;
+  return { uid, c: u.c, name: u.name };
+}
 // Défausse : jusqu'à 5 cartes de la main vont à la défausse et sont remplacées (quelques défausses par bataille)
 const MAX_DISCARD = 5;
 function discardHand(S, idxs) {
@@ -3467,7 +3482,7 @@ function previewGroup(S, cards, c) {
   return f;
 }
 // Annuler : on garde une copie de l'état modifiable pendant le tour
-function snapshotState(S) { return JSON.stringify({ units: S.units, hand: S.hand, draw: S.draw, discard: S.discard, supply: S.supply, flags: S.flags, uid: S.uid, seq: S.seq, smoke: S.smoke, counterCols: S.counterCols, mineCol: S.mineCol, discards: S.discards, hq: S.hq, over: S.over }); }
+function snapshotState(S) { return JSON.stringify({ units: S.units, hand: S.hand, draw: S.draw, discard: S.discard, supply: S.supply, flags: S.flags, uid: S.uid, seq: S.seq, smoke: S.smoke, counterCols: S.counterCols, mineCol: S.mineCol, discards: S.discards, retreats: S.retreats, hq: S.hq, over: S.over }); }
 function restoreState(S, snap) { const o = JSON.parse(snap); if (!('mineCol' in o)) delete S.mineCol; Object.assign(S, o); if (o.mineCol === undefined) delete S.mineCol; }
 function checkOver(S) {
   if (S.hq.me <= 0) S.over = 'lose';
@@ -3557,13 +3572,22 @@ function frontForecast(S) {
   const sectors = [AIRC, ...landCols(S), S.seaCol].map(c => sectorForecast(S, c));
   const strike = sectors.reduce((t, f) => t + f.strike, 0), def = sectors.reduce((t, f) => t + f.def, 0);
   const enAtk = S.smoke ? Math.round(enemyAtk(S) / 2) : enemyAtk(S);
-  const toMe = enAtk > 0 ? Math.max(Math.ceil(enAtk * MIN_THROUGH), enAtk - def) : 0;
-  return { sectors, strike, toEn: hqTake(S, 'en', strike), def, enAtk, enAtkRaw: enemyAtk(S), toMe, smoke: !!S.smoke };
+  // l'ennemi concentre une part de son Attaque sur le secteur annoncé (cible) ; le reste est réparti sur le front. Les Défenses ne se mélangent pas.
+  const pass = (a, d) => (a > 0 ? Math.max(Math.ceil(a * MIN_THROUGH), a - d) : 0);
+  const tgt = S.plan && S.plan.target !== undefined ? S.plan.target : undefined;
+  let toMe, share = 0, rest = enAtk, defT = 0, defO = def, toT = 0;
+  if (tgt !== undefined) {
+    share = Math.round(enAtk * TARGET_SHARE); rest = enAtk - share;
+    const ft = sectors.find(f => f.c === tgt); defT = ft ? ft.def : 0; defO = def - defT;
+    toT = pass(share, defT); toMe = toT + pass(rest, defO);
+  } else toMe = pass(enAtk, def);
+  return { sectors, strike, toEn: hqTake(S, 'en', strike), def, enAtk, enAtkRaw: enemyAtk(S), toMe, smoke: !!S.smoke, tgt, share, rest, defT, defO, toT };
 }
 // Plan ennemi, annoncé un tour à l'avance : Attaque, obus, secteur coupé par le train
 function genPlan(S) {
   const L = landCols(S), rng = S.rng, plan = {};
   if (hasFx(S, 'artillerie')) { const occ = L.filter(c => queue(S, 'me', c).length); const pool = occ.length ? occ : L; plan.shell = pool[Math.floor(rng() * pool.length)]; }
+  plan.target = L[Math.floor(rng() * L.length)];
   if (hasFx(S, 'train')) { const cur = S.plan && S.plan.train; const pool = L.filter(c => c !== cur); plan.train = pool[Math.floor(rng() * pool.length)]; }
   return plan;
 }
@@ -3583,7 +3607,7 @@ function endTurn(S) {
   if (S.over) return steps;
   // 2. l'ennemi frappe d'un seul front : son Attaque contre votre Défense totale
   S.hq.me -= F.toMe; checkOver(S);
-  steps.push({ ph: 'enemy', atk: F.enAtk, raw: F.enAtkRaw, def: F.def, dmg: F.toMe, smoke: F.smoke, hqAfter: { ...S.hq } });
+  steps.push({ ph: 'enemy', atk: F.enAtk, raw: F.enAtkRaw, def: F.def, dmg: F.toMe, smoke: F.smoke, tgt: F.tgt, share: F.share, rest: F.rest, defT: F.defT, defO: F.defO, hqAfter: { ...S.hq } });
   if (S.over) return steps;
   // 3. usure : chaque unité perd 1 endurance ; obus et tireurs d'élite en retirent une de plus
   const worn = [];
@@ -4923,17 +4947,17 @@ function boardHTML(view, live) {
     const blocked = !zone && S.plan && S.plan.train === c, shell = !zone && S.plan && S.plan.shell === c, mined = !zone && S.mineCol === c;
     const pv = P && (P.map[c] || (P.zone && P.zone[c])), open = !!pv, best = P && P.best === c && !zone;
     const load = q.length, cap = sectorCap(S, c), occ = load > 0;
-    const head = `<b class="tname">${TERRAIN[ter].name}</b>${zone ? '' : laneTag(ter)}<span class="capp ${load >= cap ? 'full' : ''}" title="Places occupées / places du secteur">${Array.from({ length: cap }, (_, k) => `<i class="${k < load ? 'on' : ''}"></i>`).join('')}</span><span class="marks">${shell ? '<i class="mk shell" title="Obus annoncé : les unités de ce secteur s’useront plus vite">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici s’usera">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`;
+    const head = `<b class="tname">${TERRAIN[ter].name}</b>${zone ? '' : laneTag(ter)}<span class="capp ${load >= cap ? 'full' : ''}" title="Places occupées / places du secteur">${Array.from({ length: cap }, (_, k) => `<i class="${k < load ? 'on' : ''}"></i>`).join('')}</span><span class="marks">${!zone && S.plan && S.plan.target === c ? `<i class="mk tgt" title="Cible de la riposte ennemie ce tour : ${Math.round(TARGET_SHARE * 100)} % de son Attaque se concentre ici">🎯</i>` : ''}${shell ? '<i class="mk shell" title="Obus annoncé : les unités de ce secteur s’useront plus vite">◎</i>' : ''}${mined ? '<i class="mk mine" title="Miné : la prochaine unité posée ici s’usera">☠</i>' : ''}${blocked ? '<i class="mk train" title="Coupé par le train blindé ce tour">🚂</i>' : ''}</span>`;
     const toks = q.map(u => slotUnitHTML(u, u.uid === selU, depU && depU.has(u.uid))).join('');
     const f = fc[c], cf = pv || f, nc = pv && pv.nc ? new Set(pv.nc.map(k => k.id)) : null;
     const cbs = cf ? cf.combos.atk.map(k => cbTag(k, 'a', nc && nc.has(k.id))).join('') + cf.combos.def.map(k => cbTag(k, 'd', nc && nc.has(k.id))).join('') : '';
     const ph = q.length ? '' : `<span class="lph">${open ? (zone ? 'Posez ici' : 'Posez ici') : blocked ? 'Coupé par le train' : ''}</span>`;
-    lanes += `<div class="ln gc t-${ter} ${zone ? 'zone z-' + ter : ''} ${zone && (occ || open) ? 'occ' : ''} ${open ? 'dep' : ''} ${P && P.ok && !open ? 'nodep' : ''} ${blocked ? 'blocked' : ''} ${best ? 'adv-best' : ''}" data-c="${c}" data-ambok="${ambHas(ter, sceneMood(S.lvl)) ? 1 : 0}" ${zone ? `data-hint="${ter === 'air' ? 'Avions' : 'Navires'}"` : ''}>
+    lanes += `<div class="ln gc t-${ter} ${zone ? 'zone z-' + ter : ''} ${zone && (occ || open) ? 'occ' : ''} ${open ? 'dep' : ''} ${P && P.ok && !open ? 'nodep' : ''} ${blocked ? 'blocked' : ''} ${best ? 'adv-best' : ''} ${!zone && S.plan && S.plan.target === c ? 'target' : ''}" data-c="${c}" data-ambok="${ambHas(ter, sceneMood(S.lvl)) ? 1 : 0}" ${zone ? `data-hint="${ter === 'air' ? 'Avions' : 'Navires'}"` : ''}>
       <div class="lc head" data-c="${c}" data-row="0">${head}</div>
       <div class="lc units" data-c="${c}" data-row="2">${zone ? '' : decoSVG(S.grid, 2, c, '', 1)}<div class="toks" style="--n:${q.length}">${toks}</div>${ph}${cbs ? `<span class="cbs">${cbs}</span>` : ''}</div>
       <div class="lc foot ${pv ? 'pv' : ''}" data-c="${c}" data-row="5">${f ? laneScoreHTML(f, pv && pv.baseAtk !== undefined ? pv : null, best) : ''}</div></div>`;
   }
-  const tot = F ? `<div class="totals ${F.toMe > 0 ? 'hurt' : ''}" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def">Défense ${SHIELD}<b>${fmtN(F.def)}</b> contre ${SWORD}${fmtN(F.enAtk)} → <b class="dn">−${fmtN(F.toMe)}</b></span></div>`
+  const tot = F ? `<div class="totals ${F.toMe > 0 ? 'hurt' : ''}" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def">${F.tgt !== undefined ? `<span class="td-r ${F.toT > Math.ceil(F.share * MIN_THROUGH) ? 'bad' : ''}">🎯 ${secName(F.tgt)} : ${SHIELD}<b>${fmtN(F.defT)}</b> contre ${SWORD}${fmtN(F.share)}</span><span class="td-r">Ailleurs : ${SHIELD}<b>${fmtN(F.defO)}</b> contre ${SWORD}${fmtN(F.rest)}</span><span class="td-r">QG <b class="dn">−${fmtN(F.toMe)}</b></span>` : `Défense ${SHIELD}<b>${fmtN(F.def)}</b> contre ${SWORD}${fmtN(F.enAtk)} → <b class="dn">−${fmtN(F.toMe)}</b>`}</span></div>`
     : `<div class="totals" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">0</b></span><span class="t-def" id="tot-def"></span></div>`;
   return `${enemyHQHTML(view, live, F)}<div class="bgrid front" id="bgrid">${lanes}</div>${tot}${hqBar('me', 'Votre QG', view.hq.me, C.hqMax, '', false, F && F.toMe > 0)}`;
 }
@@ -5042,6 +5066,7 @@ function hintText() {
   const F = frontForecast(S), tired = units(S, 'me').filter(u => u.stam <= 1).length;
   const fore = `<span class="fore">Fin du tour maintenant : QG ennemi <b class="up">−${fmtN(F.toEn)}</b> · votre QG <b class="dn">−${fmtN(F.toMe)}</b>${tired ? ` · ${tired} unité${tired > 1 ? 's' : ''} usée${tired > 1 ? 's' : ''} après ce tour` : ''}</span>`;
   if (S.turn === 1 && !units(S, 'me').length) return `<b class="advl">Touchez une ou plusieurs cartes, puis un secteur.</b> Dans chaque secteur, Attaque × Mult (combos) = sa frappe ; tous les secteurs frappent ensemble le QG ennemi en fin de tour.${fore}`;
+  if (F.tgt !== undefined && F.toT > Math.ceil(F.share * MIN_THROUGH)) return `<b class="advl dn">⚠ L'ennemi concentre sa riposte sur 🎯 ${secName(F.tgt)} (${SWORD}${fmtN(F.share)}) : Défense ${SHIELD}${fmtN(F.defT)} seulement. Renforcez ce secteur (mitrailleuse, blindé, Contre-attaque) : votre QG perdrait ${F.toMe}.</b>${fore}`;
   if (F.toMe > Math.ceil(F.enAtk * MIN_THROUGH)) return `<b class="advl dn">⚠ La riposte ennemie (${SWORD}${fmtN(F.enAtk)}) dépasse votre Défense (${SHIELD}${fmtN(F.def)}) : votre QG perdra ${F.toMe}.</b> Ajoutez de la Défense (mitrailleuse, blindé, chasseur, Contre-attaque) ou jouez Fumigènes.${fore}`;
   return `<b class="advl">✔ Votre Défense ${F.def >= F.enAtk * (1 - MIN_THROUGH) ? 'est au maximum utile : misez tout sur l’Attaque.' : 'tient.'}</b> Choisissez plusieurs cartes pour un gros combo : le ★ montre le meilleur secteur.${fore}`;
 }
@@ -5340,7 +5365,8 @@ function unitSheet(uid) {
       <span>Secteur <b>${TERRAIN[S.lanes[u.c]].name}</b>${u.land ? '' : ' (appui)'}</span>
       ${unitMult(S, u) !== 1 ? `<span>${unitMult(S, u) > 1 ? '▲ terrain fort' : '▼ terrain faible'} : ${tmodTxt(unitMult(S, u))} d'Attaque</span>` : ''}${u.elan ? `<span><b>Élan</b> : +${u.elan} dégât${u.elan > 1 ? 's' : ''} par tir</span>` : ''}${u.dig ? `<span><b>Retranché</b> : +${Math.round(u.dig * 100)} % de Défense</span>` : ''}${u.lv > 1 ? `<span class="star">Niveau ${u.lv}</span>` : ''}</div></div>
     ${kws.length ? `<p>${kws.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(' · ')}.</p>` : ''}${eff ? `<ul class="effl">${eff}</ul>` : ''}
-    <p class="small muted">Chaque fin de tour, l'unité ajoute son Attaque à la frappe de son secteur et sa Défense à votre défense totale, puis s'use. Épuisée, elle quitte le front. L'ordre « Repli » renvoie sa carte en main.</p>`);
+    <p class="small muted">Chaque fin de tour, l'unité ajoute son Attaque à la frappe de son secteur et sa Défense à votre défense totale, puis s'use. Épuisée, elle quitte le front.</p>
+    <button class="btn ${S.retreats > 0 ? '' : 'ghost'}" data-retreat="${u.uid}" ${S.retreats > 0 ? '' : 'disabled'}>↩ Retraite (${S.retreats} restante${S.retreats > 1 ? 's' : ''}) : libère la place, la carte va à la défausse</button>`);
 }
 // Fiche d'un effet du QG ennemi
 function fxModal(k) {
@@ -6023,7 +6049,7 @@ async function doEnd() {
     if (st.ph === 'enemy') {
       info.dMe = st.dmg;
       const tb = document.createElement('div'); tb.className = 'enstrike';
-      tb.innerHTML = `<b>Riposte ennemie</b><span>${SWORD}${fmtN(st.atk)}${st.smoke ? ' <small>(fumée)</small>' : ''} − votre Défense ${SHIELD}${fmtN(st.def)}</span><b class="dn">= −${fmtN(st.dmg)} à votre QG</b>`;
+      tb.innerHTML = `<b>Riposte ennemie</b><span>${SWORD}${fmtN(st.atk)}${st.smoke ? ' <small>(fumée)</small>' : ''}${st.tgt !== undefined ? ` dont ${SWORD}${fmtN(st.share)} sur 🎯 ${secName(st.tgt)} (Déf. ${fmtN(st.defT)}) · ${SWORD}${fmtN(st.rest)} ailleurs (Déf. ${fmtN(st.defO)})` : ` − votre Défense ${SHIELD}${fmtN(st.def)}`}</span><b class="dn">= −${fmtN(st.dmg)} à votre QG</b>`;
       board.appendChild(tb); SFX.play('enemyturn');
       await sleep(fast ? 100 : 600 * slow);
       // les obus ennemis partent du QG ; la Défense de chaque secteur en arrête une partie
@@ -6178,6 +6204,7 @@ function miniCardHTML(card) {
   return `<span class="mc ${d.fam} col-${(card.c || "o")[0]}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
 }
 const SVC = [
+  { act: 'retreat', ic: '↩', name: 'Retraites +1', fx: '+1 retraite par bataille', why: 'Maximum atteint', price: () => retreatCost(C), ok: () => (C.retreatUp || 0) < MAX_RETREAT_UP },
   { act: 'supply', ic: '⛽', name: 'Ravit. +1', fx: '+1 ravitaillement par tour', why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
   { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
   { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, fx: `+${FORT_AMOUNT} PV max`, why: 'Maximum atteint', price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
@@ -6211,7 +6238,7 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Remplacer les packs par d'autres">⟳ Autres packs $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
-    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row three">${svcs}</div></section></div>
+    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row four">${svcs}</div></section></div>
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
@@ -6391,7 +6418,7 @@ function guideModal() {
       <li><b>Vos secteurs</b> (couloirs) : posez-y autant de cartes que vous voulez, ensemble ou au fil du tour. À droite, leur score : Attaque (bleu) × Mult des combos (rouge).</li>
       <li><b>La barre</b> sous une unité = sa solidité : elle s'use au fil des combats, puis l'unité rentre (sa carte est déjà dans la défausse).</li>
     </ol></div>
-    <div class="gm-calc"><b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
+    <div class="gm-calc"><b>Riposte ciblée :</b> chaque tour, l'ennemi concentre une grande part de son Attaque sur un secteur annoncé 🎯 (un tour à l'avance) : renforcez sa Défense ; le reste s'étale sur le front. <b>Retraite :</b> touchez une unité puis « Retraite » pour libérer sa place (carte à la défausse), 3 par bataille. <b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
     <div class="gm-steps"><span><b>1</b> Touchez une carte : ★ indique le meilleur secteur</span><span><b>2</b> Glissez-la : score et frappe totale avant/après s'affichent</span><span><b>3</b> « Fin du tour » : décompte, frappe, riposte, usure</span></div>`;
   document.querySelectorAll('.coach').forEach(x => x.remove());
   openModal(`<div class="hd"><span class="ribbon">Lire le plateau</span><button class="pill" data-act="close">Compris</button></div>${mock}`);
@@ -6511,6 +6538,11 @@ document.addEventListener('click', e => {
   const sbuy = t.closest('[data-shopbuy]'); if (sbuy) { const k = sbuy.dataset.shopbuy[0], n = +sbuy.dataset.shopbuy.slice(1); closeModal(); const err = shopBuy(k, n); if (err) { SFX.play('deny'); toast(err); } return; }
   const bm = t.closest('[data-buym]'); if (bm) { const m = C.shop.manuals[+bm.dataset.buym]; if (!m || m.sold || C.loot < m.price) return; C.loot -= m.price; m.sold = true; const lv = buyManual(C, m.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === m.id).name} passe au niveau ${lv}.`); return renderShop(); }
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
+  const rt = t.closest('[data-retreat]'); if (rt && S) {
+    const uid = +rt.dataset.retreat; undo.push(snapshotState(S)); const r = retreatUnit(S, uid);
+    if (!r) { undo.pop(); SFX.play('deny'); return toast('Plus de retraite pour cette bataille.'); }
+    closeModal(); picked = []; selU = null; SFX.play('land'); toast(`${r.name} se replie : sa carte va à la défausse. Retraites restantes : ${S.retreats}.`); return renderBattle();
+  }
   const tr = t.closest('[data-train]'); if (tr) { const card = C.deck.find(c => cardKey(c) === tr.dataset.train); if (!card || C.loot < upgradeCost(card)) { closeModal(); return toast('Pas assez de butin.'); } C.loot -= upgradeCost(card); card.lv = (card.lv || 1) + 1; closeModal(); SFX.play('levelup'); toast(`${TYPES[card.t].name} passe au niveau ${card.lv}.`); return renderShop(); }
   const jk = t.closest('[data-joker]'); if (jk) return S && document.getElementById('hand') ? jokerPop(C.officers[+jk.dataset.joker]) : jokerModal(+jk.dataset.joker);
   const sl = t.closest('[data-sell]'); if (sl) { const i = +sl.dataset.sell, j = JOKERS.find(x => x.id === C.officers[i]); dropJoker(i); closeModal(); SFX.play('sell'); toast(`${j.name} vendu.`); return C.phase === 'shop' ? renderShop() : document.querySelector('[data-officer]') ? jokerStep() : toMap(); }
@@ -6587,6 +6619,7 @@ document.addEventListener('click', e => {
   else if (a === 'skipspoil') afterSpoils();
   else if (a === 'bossjoker') jokerStep();
   else if (a === 'train') deckModal('upgrade');
+  else if (a === 'retreat') { const c = retreatCost(C); if (C.loot < c || (C.retreatUp || 0) >= MAX_RETREAT_UP) return; C.loot -= c; C.retreatUp = (C.retreatUp || 0) + 1; SFX.play('jokerbuy'); renderShop(); }
   else if (a === 'supply') { const c = supplyBonusCost(C); if (C.loot < c || !addSupplyBonus(C)) return; C.loot -= c; SFX.play('jokerbuy'); renderShop(); }
   else if (a === 'reform') deckModal('remove');
   else if (a === 'leave') finishNode();

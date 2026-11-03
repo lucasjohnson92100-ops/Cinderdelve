@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='retreatUnit,BASE_RETREATS,TARGET_SHARE,retreatCost,AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -46,6 +46,13 @@ S=blank(['mer','champ','champ','champ','champ']);S.hq.en=500;
 E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),1);E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),3);
 let F=E.frontForecast(S);check('frappe = somme des secteurs',F.strike,40);check('Défense totale',F.def,6);
 check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('au moins un quart passe',F.toMe,Math.max(Math.ceil(F.enAtk*E.MIN_THROUGH),F.enAtk-6));
+// riposte ciblée : une part de l'Attaque sur le secteur annoncé, défenses non mélangées
+{const Sg=blank(['mer','champ','champ','champ','champ']);Sg.hq.en=500;Sg.plan={target:1};E.placeUnit(Sg,E.mkUnit(Sg,'me','mitrailleuse','V'),3);
+ const Fg=E.frontForecast(Sg);check('cible annoncée',Fg.tgt,1);check('part concentrée',Fg.share,Math.round(Fg.enAtk*E.TARGET_SHARE));check('défense hors cible inutile sur la cible',Fg.defT,0);
+ check('la défense du mauvais secteur ne protège pas la cible',Fg.toMe>=Fg.share,true);
+ Sg.plan={target:3};const Fh=E.frontForecast(Sg);check('défense sur la cible',Fh.defT>0,true);check('renforcer la cible réduit les dégâts sur la cible',Fh.toT<Fg.toT,true);
+ check('retraites au départ',Sg.retreats,E.BASE_RETREATS);const uu=Sg.units.find(u=>u.side==='me');check('retraite : unité retirée',!!E.retreatUnit(Sg,uu.uid)&&Sg.units.length===0,true);check('… et compteur décrémenté',Sg.retreats,E.BASE_RETREATS-1);
+ Sg.retreats=0;check('plus de retraite',E.retreatUnit(Sg,999),null);check('prix retraite croissant',E.retreatCost({retreatUp:2}),8);}
 let st=E.endTurn(S);check('QG ennemi frappé',500-S.hq.en,40);check('votre QG prend la riposte',60-S.hq.me,F.toMe);
 check('étapes : secteurs, frappe, riposte, usure',['sec','strike','enemy','wear'].every(p=>st.some(x=>x.ph===p)),true);
 check('usure : −1 endurance',E.units(S,'me').every(u=>u.stam===2),true);check('effectif : 10 → 7 hommes',E.menNow(E.units(S,'me')[0]),7);
