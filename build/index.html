@@ -7652,7 +7652,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     }
   }
   function burst(tx, ty, color, n, speed) {
-    var t = now(); if (smallScr()) { n = Math.ceil(n * 0.45); if (parts.length > 70) return; } else if (parts.length > 240) return; if (perf.low) { n = Math.ceil(n * 0.5); if (parts.length > 60) return; }
+    var t = now(); if (smallScr()) { n = Math.ceil(n * 0.45); if (parts.length > 70) return; } else if (parts.length > (perf.shed ? 90 : 240)) return; if (perf.low) { n = Math.ceil(n * 0.5); if (parts.length > 60) return; }
     for (var i = 0; i < n; i++) {
       var a = Math.random() * 6.283, s = (0.4 + Math.random()) * speed;
       parts.push({ x: tx * TILE + 8, y: ty * TILE + 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 8, t0: t, life: 350 + rnd(250), c: color });
@@ -7673,9 +7673,9 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     floats.push({ x: tx * TILE + 8, y: ty * TILE + 2, text: text, color: color, t0: now(), s: size || 1 });
   }
   var WCOL = { sword: "200,228,255", dagger: "170,255,205", axe: "255,176,96", staff: "140,232,255" };
-  function sparkFx(tx, ty, col, big) { if (sparks.length > (perf.low ? 8 : 20)) return; sparks.push({ x: tx * TILE + 8, y: ty * TILE + 8, t0: now(), col: col, big: big, rot: Math.random() * 6.28 }); }
+  function sparkFx(tx, ty, col, big) { if (sparks.length > (perf.low || perf.shed ? 8 : 20)) return; sparks.push({ x: tx * TILE + 8, y: ty * TILE + 8, t0: now(), col: col, big: big, rot: Math.random() * 6.28 }); }
   function puffFx(px, py, big) { puffs.push({ x: px, y: py, t0: now(), big: big, dx: (Math.random() - 0.5) * 4 }); }
-  function starFx(tx, ty, big) { if (stars.length > (perf.low ? 8 : 20)) return; stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
+  function starFx(tx, ty, big) { if (stars.length > (perf.low || perf.shed ? 8 : 20)) return; stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
   function banner(text, col, ms, size) { if (smallScr()) { size = Math.min(size || 34, 22); ms = Math.min(ms || 1400, 1000); if (banners.length >= 1) banners.shift(); } banners.push({ text: text, col: col, t0: now(), dur: ms || 1400, size: size || 34 }); }
   function screenFlash(col, ms) { flashCol = col; flashT0 = now(); flashDur = ms || 300; }
   /* en Survie, plus aucun « arrêt sur image » sauf les très gros moments (mort d'un boss) : chaque figement de 30 à 90 ms était ressenti comme de la latence */
@@ -9201,7 +9201,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
 
   var choiceSeen = false;
   function update(dt) {
-    fxBudget = entLod >= 2 ? 3 : smallScr() ? 4 : 8;
+    fxBudget = perf.shed >= 2 ? 1 : (entLod >= 2 || perf.shed) ? 3 : smallScr() ? 4 : 8;
     if (mode !== "play") { if (mode === "levelup" || mode === "shop" || mode === "altar" || mode === "gear") choiceSeen = true; return; }
     if (choiceSeen) { choiceSeen = false; if (state && !state.dead) { p.invuln = Math.max(p.invuln || 0, gtime + 2000); addFloat(p.vx, p.vy, "Protégé 2 s", "#6fd6ff"); } }
     var t = now();
@@ -9980,7 +9980,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   var ultBtn = null;
   function useUlt() {
     if (!state || !state.survival || mode !== "play" || (state.survUlt || 0) < 100) return;
-    state.survUlt = 0; dmgSrc = "Ultime";
+    state.survUlt = 0; dmgSrc = "Ultime"; shedFx(1, 2400);
     var ue = state.variant && ULTS[state.variant];
     edgeFlash("255,200,90", 0.6, 900);
     if (ue) { var hadPanel = ultPanel(state.variant, ue.name); castFx(true, hadPanel ? "" : ue.name); dmgSrc = ue.name; var afxS = AFX.snap(state.variant); ue.run(); AFX.ult(state.variant, afxS); if (!hadPanel) banner(ue.name + " !", "#ff9a3c", 1900, 36); animalCry(state.variant); if (!hadPanel) LORE.shoutFor(state.variant, true); return; }
@@ -12685,7 +12685,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!state || !state.survival || mode !== "play" || !state.variant) return;
     var pw = FARM_POWERS[state.variant]; if (!pw) return;
     if (state.farmCd > 0) { sfx("nomana"); return false; }
-    dmgSrc = pw.name;
+    shedFx(1, 1600); dmgSrc = pw.name;
     var afxS = AFX.snap(state.variant);
     if (pw.run() === false) return false;
     AFX.power(state.variant, afxS);
@@ -17105,7 +17105,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     for (i = 0; i < secrets.length; i++) if (seen[secrets[i].y][secrets[i].x]) isoTile(CRACKH, secrets[i].x, secrets[i].y, 0);
     for (i = 0; i < traps.length; i++) if (traps[i].revealed && seen[traps[i].y][traps[i].x]) isoTile(TRAPH[traps[i].kind], traps[i].x, traps[i].y, 0);
     ctx.save(); isoGround();
-    if (GFX === "dark") drawDecals(t);
+    if (GFX === "dark" && !perf.shed) drawDecals(t);
     for (i = 0; i < zones.length; i++) {
       var zn = zones[i], zage = gtime - zn.t0;
       if (!zn.done && zage < 0) continue;
@@ -17643,7 +17643,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (x + 1 < W && g[y][x + 1] === 1) ctx.drawImage(AOR, ux * TILE + TILE - 6, uy * TILE);
       }
     }
-    if (GFX === "dark") drawDecals(t);
+    if (GFX === "dark" && !perf.shed) drawDecals(t);
     if (state.survival) {
       for (var uy2 = ty0; uy2 <= ty1; uy2++) for (var ux2 = tx0; ux2 <= tx1; ux2++) {
         x = ((ux2 % W) + W) % W; y = ((uy2 % H) + H) % H;
@@ -17717,7 +17717,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     list.sort(function (a, b) { return a.vy - b.vy; });
     hordeN = list.length;
     /* la fluidité passe avant tout : plus il y a de monstres, ou plus le jeu ralentit, plus les monstres ordinaires sont dessinés simplement (les boss et les élites gardent tous leurs détails) */
-    entLod = perf.lvl >= 5 ? 3 : (perf.lvl >= 3 || hordeN > 140) ? 2 : (perf.lvl >= 1 || hordeN > 90) ? 1 : 0;
+    entLod = perf.lvl >= 5 || perf.shed >= 2 ? 3 : (perf.lvl >= 3 || hordeN > 140 || perf.shed) ? 2 : (perf.lvl >= 1 || hordeN > 90) ? 1 : 0;
     for (i = 0; i < list.length; i++) drawEnt(list[i].skin && SP[list[i].skin] ? list[i].skin : list[i].type, list[i], t, false);
     drawEnt(CLASSES[state.cls || "warrior"].spr, p, t, true);
     if (state.famT > 0) {
@@ -17887,7 +17887,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     if (!state.survival) { if (GFX === "dark") drawLightDark(sight, flick, t, vw, vh); else drawLight(sight, flick); }
 
-    if (SV) { if (!perf.flat) GX.light(ctx, t, th, vw, vh, camX, camY); } /* éclairage de survie : lumière du héros, braseros, sorts, lave, vignette et brume */
+    if (SV) { if (!perf.flat && !perf.shed) GX.light(ctx, t, th, vw, vh, camX, camY); } /* éclairage de survie : lumière du héros, braseros, sorts, lave, vignette et brume */
     else {
       var gx = p.vx * TILE + 8, gy = p.vy * TILE + 8;
       var rad = sight * TILE * (0.92 + 0.05 * Math.sin(t / 140) + 0.03 * Math.sin(t / 61));
@@ -18019,7 +18019,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
 
   var last = 0;
-  var perf = { ema: 16, n: 0, low: false, flat: false, lvl: 0, prev: 0, locked: false, win: [], wk: [] }, kCap = 4;
+  var perf = { ema: 16, n: 0, low: false, flat: false, lvl: 0, prev: 0, locked: false, win: [], wk: [], iv: [], shed: 0, shedLv: 0, shedUntil: 0 }, kCap = 4;
+  /* délestage d'effets : quand le jeu ralentit (ou dès qu'un ultime est lancé), on coupe 2 s les effets décoratifs les plus chers (éclairage, traces au sol, particules en trop) sans toucher à la résolution choisie */
+  function shedFx(lv, ms) { perf.shedLv = Math.max(perf.shedLv, lv); perf.shedUntil = Math.max(perf.shedUntil, performance.now() + ms); }
   /* qualité : Auto (s'adapte à la fluidité mesurée), Haute, Moyenne, Basse.
      6 niveaux (netteté de l'image / éclairage / effets) : 0 = 4 / oui / complets ; 1 = 3,5 / oui ; 2 = 3 / oui ; 3 = 3 / non ; 4 = 2,5 / non ; 5 = 2 / non / effets réduits */
   var QMODE = "auto"; try { var qm0 = localStorage.getItem("donjon-q"); if (qm0 === "high" || qm0 === "mid" || qm0 === "low") QMODE = qm0; } catch (err) {}
@@ -18050,6 +18052,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (last && mode === "play") {
       perf.ema += (Math.min(120, t - last) - perf.ema) * 0.05; perf.n++;
       perf.win[perf.n % 30] = Math.min(200, t - last);
+      perf.iv[perf.n % 8] = Math.min(200, t - last);
+      if (perf.n >= 8 && perf.n % 2 === 0) { var ivs = perf.iv.slice().sort(function (a, b) { return a - b; }), mv = ivs[4], pkc = FPSCAP === 30 ? 1.75 : 1; if (mv > 66 * pkc) shedFx(2, 2200); else if (mv > 40 * pkc) shedFx(1, 2200); }
       /* qualité adaptative : on part bas (image légère) et on ne monte que si c'est largement fluide.
          Décision toutes les 10 images sur les 30 dernières (une demi-seconde) : ça réagit vite à un ralentissement sans se tromper sur un à-coup isolé. */
       if (QMODE === "auto" && !perf.locked && perf.n >= 30 && perf.n % 10 === 0) {
@@ -18068,6 +18072,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       }
     }
     last = t; fpsTick(t);
+    perf.shed = performance.now() < perf.shedUntil ? perf.shedLv : 0; if (!perf.shed) perf.shedLv = 0;
     if (!g) return;
     if (mode === "duel") return; /* le duel a sa propre boucle et son propre écran */
     if (mode !== "play") haltInput();
