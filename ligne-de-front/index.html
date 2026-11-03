@@ -2631,6 +2631,28 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .sc-half.r.t-village { transform: scaleX(-1); }
 .end { background: linear-gradient(180deg, rgba(12, 16, 22, .2), rgba(12, 16, 22, .82) 70%), var(--art-land) center top / cover no-repeat; border-radius: 16px; padding: 24px 14px; border: 3px solid #0d1218; box-shadow: 0 0 0 4px #7a5230, 0 18px 40px rgba(0, 0, 0, .55); color: #f2e6c6; }
 .end h2, .end p { color: #f2e6c6; text-shadow: 0 2px 4px rgba(0, 0, 0, .8); }
+
+/* ---- Multiplicateurs « Balatro » : plaque géante Puissance × Mult, flammes, rayons, étincelles ---- */
+.aws .awb-lab { width: 176px; gap: 6px; background: linear-gradient(90deg, rgba(8, 12, 26, .88), rgba(8, 12, 26, .55) 78%, transparent); }
+.aws .awb-units { left: 184px; }
+.aws .awb-eq { gap: 6px; font-size: 1.4rem; position: relative; padding-top: 12px; }
+.aws .awb-eq::before { content: ''; position: absolute; left: -14px; right: -14px; top: -8px; bottom: -10px; z-index: -1; border-radius: 18px; background: radial-gradient(closest-side, rgba(255, 120, 60, .5), rgba(255, 120, 60, 0) 100%); animation: eqhalo 1.6s ease-in-out infinite; }
+@keyframes eqhalo { 50% { transform: scale(1.12); opacity: .7; } }
+.aws .awb-eq .ch, .aws .awb-eq .mu { position: relative; min-width: 46px; padding: 3px 11px; border-radius: 12px; font-size: 1.9rem; line-height: 1.05; border-width: 3px; letter-spacing: .01em; }
+.aws .awb-eq .mu { font-size: 2.5rem; min-width: 58px; background: linear-gradient(180deg, #ffe27a 0%, #ff8a2b 38%, #e0261a 100%); background-size: 100% 160%; border-color: #fff3c4; --glow: rgba(255, 140, 40, 1); animation: mupulse 1.1s ease-in-out infinite, muflame 1.6s linear infinite; text-shadow: 0 3px 0 rgba(90, 10, 0, .85), 0 0 12px rgba(255, 230, 140, .9); }
+@keyframes muflame { 0% { background-position: 0 0; } 50% { background-position: 0 100%; } 100% { background-position: 0 0; } }
+.aws .awb-eq .ch { background: linear-gradient(180deg, #7dbcff, #1f63d6 70%, #123f94); border-color: #dcebff; text-shadow: 0 3px 0 rgba(0, 20, 70, .85); }
+.aws .awb-eq .ch::before, .aws .awb-eq .mu::before { position: absolute; left: 50%; top: -15px; transform: translateX(-50%); font-family: var(--font-display); font-size: .52rem; letter-spacing: .14em; text-transform: uppercase; color: #fff; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.aws .awb-eq .ch::before { content: 'Puissance'; } .aws .awb-eq .mu::before { content: 'Mult'; color: #ffd27a; }
+.aws .awb-eq i { font-size: 1.9rem; color: #fff3c4; text-shadow: 0 3px 0 #000, 0 0 12px rgba(255, 200, 80, .9); margin-top: 6px; }
+.aws .awb-eq .mu::after { content: ''; position: absolute; inset: -6px; border-radius: 16px; border: 3px solid rgba(255, 240, 180, .95); opacity: 0; pointer-events: none; }
+.aws .awb-eq .mu.bump::after { animation: muring .6s ease-out; } @keyframes muring { 0% { transform: scale(.9); opacity: 1; } 100% { transform: scale(2.1); opacity: 0; } }
+.aws .awb-eq .bump { animation: mubump .6s cubic-bezier(.2, 1.9, .4, 1) !important; } @keyframes mubump { 0% { transform: scale(1); } 30% { transform: scale(1.9) rotate(-6deg); filter: brightness(1.9) saturate(1.4); } 65% { transform: scale(.94) rotate(2deg); } 100% { transform: scale(1); } }
+.aws .awb-def { font-size: 1.05rem; }
+.aws .awb-cbs { right: 29%; top: 8px; }
+.aws .awb-cbs .cb { font-size: 1.1rem; padding: 5px 14px; border-radius: 11px; border-width: 3px; }
+.aws .awb-cbs .cb.m { font-size: 1.3rem; background: linear-gradient(180deg, #ffb347, #e0261a) !important; box-shadow: 0 3px 0 rgba(0, 0, 0, .5), 0 0 22px rgba(255, 140, 40, 1); }
+@media (max-height: 340px) { .aws .awb-lab { width: 138px; } .aws .awb-units { left: 144px; } .aws .awb-eq { font-size: 1.1rem; gap: 4px; padding-top: 10px; } .aws .awb-eq .ch, .aws .awb-eq .mu { font-size: 1.35rem; min-width: 34px; padding: 2px 7px; } .aws .awb-eq .mu { font-size: 1.8rem; min-width: 42px; } .aws .awb-eq i { font-size: 1.3rem; } .aws .awb-eq .ch::before, .aws .awb-eq .mu::before { font-size: .44rem; top: -12px; } .aws .awb-cbs .cb { font-size: .82rem; padding: 3px 9px; } .aws .awb-cbs .cb.m { font-size: .95rem; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>

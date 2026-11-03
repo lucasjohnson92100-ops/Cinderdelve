@@ -334,3 +334,6 @@ Assaut : plus d'affichage des jokers ni de rayures sur les véhicules (l'usure r
 - Le « Pack Améliorations » devient le **Pack Entraînement** : 6 choix au plus, on en garde 1 (4 niveaux « type + couleur » tirés de votre paquet, 1 fortification, 1 manuel).
 - Un niveau d'entraînement s'applique à **un type d'unité et une couleur** (ex. Infanterie rouge, Véhicules verts) : +20 % d'Attaque et de Défense par niveau pour les cartes de ce type portant cette couleur (une carte bicolore profite du meilleur de ses couleurs). Les ids sont de la forme `foot:J`, `veh:V`, `air:R`, `mer:N`.
 - Les niveaux obtenus par les événements de carte et les articles de boutique suivent la même règle.
+
+## Multiplicateurs de l'assaut en grand
+Plaque « Puissance × Mult » géante à gauche de chaque secteur : tuile Puissance bleue, tuile Mult flamboyante (dégradé animé, halo pulsé), légendes, anneau de choc et agrandissement à chaque hausse ; pastilles de combos plus grosses, celles qui multiplient en orange feu.
