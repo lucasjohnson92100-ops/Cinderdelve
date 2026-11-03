@@ -329,3 +329,8 @@ Cartes joker des packs : portrait en pleine carte (le haut de la carte est l'ill
 Usure des engins, navires et avions : leur nombre ne baisse jamais ; une barre de durée de vie (verte, jaune puis rouge, avec les tours restants) remplace les points, et le sprite s'abîme (teinte plus sombre, brûlures, éraflures, puis fumée et braises quand il reste 1 tour). `wearLv`, `lifeFrac`, `.lifebar`.
 
 Assaut : plus d'affichage des jokers ni de rayures sur les véhicules (l'usure reste visible par la teinte, la fumée et la barre de vie). Multiplicateurs mis en avant : Attaque × Mult en grosses pastilles lumineuses (le Mult pulse et grossit à chaque combo), combos en grandes pastilles qui claquent à l'écran.
+
+## Pack d'entraînement (niveaux par type et couleur)
+- Le « Pack Améliorations » devient le **Pack Entraînement** : 6 choix au plus, on en garde 1 (4 niveaux « type + couleur » tirés de votre paquet, 1 fortification, 1 manuel).
+- Un niveau d'entraînement s'applique à **un type d'unité et une couleur** (ex. Infanterie rouge, Véhicules verts) : +20 % d'Attaque et de Défense par niveau pour les cartes de ce type portant cette couleur (une carte bicolore profite du meilleur de ses couleurs). Les ids sont de la forme `foot:J`, `veh:V`, `air:R`, `mer:N`.
+- Les niveaux obtenus par les événements de carte et les articles de boutique suivent la même règle.
