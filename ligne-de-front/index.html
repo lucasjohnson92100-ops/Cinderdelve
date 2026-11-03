@@ -3982,11 +3982,11 @@ function squadSVG(key, side, n, nMax, size, cols, exact) {
     return `<svg viewBox="0 0 ${W} 66" width="${Math.round(size * W / 66)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
   }
   if (k === 1) return desync(spriteSVG(key, side, size, cols));
-  const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : 0.58, fig = 64 * sc;
+  const rows = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], sc = k === 2 ? 0.74 : k <= 4 ? 0.58 : 0.5, fig = 64 * sc; const air = kindOf(key.replace(/_(fire|rkt)$/, '')) === 'air';
   let g = '';
   rows.forEach((m, r) => {
-    const y = rows.length === 1 ? (64 - fig) / 2 : r === 0 ? 0 : 64 - fig, gap = Math.min(fig * 0.9, 96 / m);
-    const x0 = (100 - ((m - 1) * gap + fig)) / 2;
+    const y = air ? (rows.length === 1 ? (64 - fig) / 2 : r === 0 ? 0 : 64 - fig) : r === rows.length - 1 ? 64 - fig : 64 - fig * 1.4, gap = Math.min(fig * 0.95, 80 / m);
+    const x0 = (100 - ((m - 1) * gap + fig)) / 2 + (!air && rows.length === 2 ? (r === 0 ? gap / 4 : -gap / 4) : 0);
     for (let i = 0; i < m; i++) g += `<g transform="translate(${x0 + i * gap} ${y}) scale(${sc})">${desync(r === rows.length - 1 ? one : oneDry)}</g>`;
   });
   return `<svg viewBox="0 0 100 66" width="${Math.round(size * 1.5)}" height="${size}" class="${sprCls(key, side, cols)}" aria-hidden="true">${g}</svg>`;
