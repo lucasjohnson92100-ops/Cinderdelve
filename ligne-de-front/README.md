@@ -347,3 +347,7 @@ Plaque « Puissance × Mult » géante à gauche de chaque secteur : tuile Puiss
 
 ## Symboles Attaque / Défense
 Nouvelle épée (lame d'acier, garde dorée, éclat) et nouveau bouclier (écu bleu à étoile) ; sur les cartes, l'Attaque est une pastille rouge et la Défense une pastille bleue, avec de gros symboles et des chiffres blancs.
+
+## Ordres expliqués sur la carte, pack Entraînement détaillé
+- Chaque carte d'ordre porte sous son image une phrase d'effet (`ORDER_EXPL`) : « +20 Attaque, 1 secteur », « Riposte ennemie ÷2 », « Attaque ×1,5, 1 secteur »…
+- Le pack Entraînement s'ouvre en 6 tuiles détaillées : unité colorée du type concerné, niveau (ex. 1 → 2), effet (+20 % Attaque et Défense) et nombre de cartes de votre paquet concernées ; une phrase d'aide rappelle la règle.
