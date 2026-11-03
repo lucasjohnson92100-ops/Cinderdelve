@@ -2793,6 +2793,18 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .dt-cards { min-height: 60px; }
 @media (max-height: 440px) { .di-nm { font-size: .76rem; } .di-tx { font-size: .64rem; } .di-ln { font-size: .58rem; } .dt-info { padding: 4px 6px; gap: 2px; } }
 @media (max-height: 340px) { .di-nm { font-size: .64rem; } .di-tx { font-size: .52rem; line-height: 1.12; } .di-ln { font-size: .48rem; } .di-ln.lim { display: none; } .dt-cards { min-height: 0; } .dt-tip { display: none; } .dtile { gap: 3px; grid-template-rows: auto auto minmax(0, 1fr) auto; } .dt-ic { display: none; } .dt-go { font-size: .7rem; padding: 2px 0; } .dc-card b { bottom: 10px; } }
+
+/* ===== Distinguer ordres et unités : unités = cadre à la couleur de la carte ; ordres = parchemin doré + pastille ORDRE ===== */
+.card.unitc { border: 3px solid var(--tint, #e8c75a) !important; box-shadow: 0 0 0 2px #1b2540, 0 3px 0 2px var(--ink) !important; }
+.card.ordc:not(.unitc) { border: 4px double #f3d27a !important; box-shadow: 0 0 0 2px #6b4a0c, 0 3px 0 2px var(--ink), 0 0 14px rgba(255, 214, 90, .6) !important; }
+.card.ordc:not(.unitc)::after { content: 'ORDRE'; position: absolute; right: 4px; top: 4px; z-index: 5; font-family: var(--font-display); font-size: .5rem; letter-spacing: .08em; color: #3b2a00; background: linear-gradient(180deg, #ffe27a, #e8a91e); border: 1.5px solid #6b4a0c; border-radius: 6px; padding: 1px 5px; box-shadow: 0 1px 0 rgba(0, 0, 0, .4); pointer-events: none; }
+.hc.ordc:not(.unitc)::after { display: none; }
+.hc.ordc:not(.unitc) .cn { color: #ffe27a !important; text-align: center; padding-right: 2cqw !important; padding-left: 21cqw !important; }
+.card.ordc:not(.unitc) .otx { background: linear-gradient(180deg, rgba(255, 244, 205, .0), rgba(255, 240, 190, .96) 38%) !important; color: #3b2a00 !important; text-shadow: none !important; font-weight: 800; }
+.card.ordc:not(.unitc) .cn { padding-right: 34px !important; }
+.hc.ordc:not(.unitc) .cn { padding-right: 24cqw !important; text-align: left; padding-left: 21cqw !important; }
+.dc-card.ord { border: 2px double #f3d27a; }
+.dc-card.ord::after { content: 'ORDRE'; position: absolute; top: 2px; right: 2px; z-index: 4; font-size: .4rem; font-weight: 800; color: #3b2a00; background: #ffd24a; border-radius: 4px; padding: 0 3px; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
