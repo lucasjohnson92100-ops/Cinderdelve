@@ -2709,8 +2709,8 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card.ordc:not(.hc) .otx { font-size: .74rem; min-height: 2.4em; }
 .hc.ordc .art { position: absolute !important; top: 33.5cqw !important; height: 38cqw !important; }
 .hc.ordc .otx { position: absolute; left: 3cqw; right: 3cqw; top: 74cqw; height: 38cqw; font-size: 11.4cqw; padding: 1cqw 2cqw; overflow: hidden; line-height: 1.05; }
-.packopen .card.ordc .art { height: 92px !important; }
-@media (max-height: 420px) { .card.ordc:not(.hc) .otx { font-size: .6rem; min-height: 2.3em; padding: 2px 4px; } .packopen .card.ordc .art { height: 70px !important; } }
+.packopen .card.ordc .art { height: auto !important; }
+@media (max-height: 420px) { .card.ordc:not(.hc) .otx { font-size: .6rem; } }
 /* Pack Entraînement : tuiles détaillées */
 .packopen.six .popt { min-width: 0; overflow: hidden; } .packopen.six .popt b { overflow-wrap: anywhere; line-height: 1.05; } .packopen.six .popt > span:last-child { min-width: 0; }
 .trhint { margin: 0 0 6px; text-align: center; font-size: .78rem; color: #5a4a3a; }
@@ -2720,7 +2720,23 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .packopen.six .popt.tr b { font-size: min(3.7vh, .9rem) !important; }
 .po-body { display: grid; gap: 1px; min-width: 0; } .po-lv { font-weight: 800; color: #b3351f; font-size: .72rem; } .po-fx { font-size: .64rem; color: #3a3226; } .po-n { font-size: .62rem; font-weight: 800; color: #2f7d3a; } .po-n.none { color: #8a7a5a; font-weight: 600; }
 @media (max-height: 420px) { .packopen.six .popt.tr { grid-template-columns: 38px 1fr; padding: 4px 6px !important; } .packopen.six .popt.tr .po-ic { width: 36px; height: 36px; border-radius: 9px; } .packopen.six .popt.tr .po-ic svg { width: 30px !important; height: 30px !important; } .po-lv { font-size: .6rem; } .po-fx, .po-n { font-size: .52rem; } .trhint { font-size: .62rem; margin-bottom: 3px; } }
-</style>
+
+/* ===== Cartes d'ordre : l'illustration occupe toute la carte, nom en haut, effet en bas ===== */
+.card.ordc { position: relative; overflow: visible; padding: 0 !important; background: #1b2540 !important; border: 3px solid #e8c75a !important; box-shadow: 0 0 0 2px #6b4a0c, 0 3px 0 2px var(--ink), 0 0 16px rgba(232, 199, 90, .5) !important; border-radius: 12px; }
+.card.ordc .art, .hc.ordc .art { position: absolute !important; inset: 0 !important; top: 0 !important; left: 0 !important; right: 0 !important; height: auto !important; width: auto !important; min-height: 0 !important; border: 0 !important; border-radius: 9px !important; overflow: hidden; z-index: 0; box-shadow: none !important; background: #1b2540 !important; }
+.card.ordc .art::after { background: linear-gradient(180deg, rgba(10, 14, 28, .55) 0%, rgba(10, 14, 28, 0) 28%, rgba(10, 14, 28, 0) 52%, rgba(10, 14, 28, .88) 100%) !important; }
+.card.ordc .cband, .card.ordc .cinfo-hide { display: none !important; }
+.card.ordc .cn, .hc.ordc .cn { position: absolute !important; left: 0 !important; right: 0 !important; top: 0 !important; z-index: 2; margin: 0; padding: 7px 8px 14px 30px !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: #fff !important; text-align: center; text-shadow: 0 2px 3px #000, 0 0 8px rgba(0, 0, 0, .8) !important; font-size: 1rem; letter-spacing: .02em; box-sizing: border-box; }
+.hc.ordc .cn { padding: 2.5cqw 2cqw 8cqw 21cqw !important; font-size: 11.5cqw !important; overflow: visible !important; text-overflow: clip !important; } .hc.ordc .cn.long { font-size: 10.5cqw !important; } .hc.ordc .cn.xl { font-size: 9cqw !important; }
+.hc.ordc { position: absolute !important; }
+.card.ordc .otx, .hc.ordc .otx { position: absolute !important; left: 0 !important; right: 0 !important; bottom: 0 !important; top: auto !important; height: auto !important; z-index: 2; border: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; color: #fff !important; text-shadow: 0 2px 3px #000, 0 0 8px rgba(0, 0, 0, .9); padding: 22px 8px 8px !important; border-radius: 0 0 9px 9px !important; font-size: .86rem; line-height: 1.15; min-height: 0 !important; }
+.hc.ordc .otx { padding: 12cqw 4cqw 4cqw !important; font-size: 11.6cqw; }
+.card.ordc .cost, .card.ordc .cinfo { z-index: 4; }
+.card.ordc:not(.hc) { min-height: 168px; grid-template-rows: none !important; }
+.packopen .card.ordc { height: 196px !important; aspect-ratio: auto !important; width: 140px; zoom: 1; }
+.shelf-row .card.ordc { min-height: 190px; }
+@media (max-height: 420px) { .packopen .card.ordc { height: 150px !important; width: 110px; } .card.ordc:not(.hc) { min-height: 128px; } .card.ordc:not(.hc) .otx { font-size: .64rem; padding: 16px 6px 6px !important; } .card.ordc:not(.hc) .cn { font-size: .78rem; padding: 5px 6px 10px 26px !important; } }
+</style></style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="rotate" aria-live="polite"><div class="ph"></div><b>Tournez votre téléphone</b><span>Ligne de Front se joue en mode paysage : votre plateau à gauche, la blinde à battre à droite.</span></div>
