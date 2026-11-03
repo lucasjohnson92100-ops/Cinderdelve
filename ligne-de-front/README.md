@@ -344,3 +344,6 @@ Plaque « Puissance × Mult » géante à gauche de chaque secteur : tuile Puiss
 ## Nombre exact sur les cartes, endurance implicite
 - Chaque carte d'unité dessine **exactement** son nombre de ressources (2 avions = 2 avions, 6 jeeps = 6 jeeps, 10 soldats = 10 soldats ; `squadSVG(..., exact)`).
 - Plus aucune mention d'« endurance » ou de « N tours » dans les cartes, fiches, jokers, ordres, effets ennemis et tutoriel : l'unité s'use, sa barre de solidité le montre (l'infanterie fond). La mécanique reste la même.
+
+## Symboles Attaque / Défense
+Nouvelle épée (lame d'acier, garde dorée, éclat) et nouveau bouclier (écu bleu à étoile) ; sur les cartes, l'Attaque est une pastille rouge et la Défense une pastille bleue, avec de gros symboles et des chiffres blancs.
