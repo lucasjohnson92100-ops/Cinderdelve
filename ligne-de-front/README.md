@@ -372,3 +372,7 @@ Chaque tuile de doctrine détaille maintenant : nom du style, effet, conseil et 
 
 ## Couleur sur les habits et les engins seulement
 Chaque illustration d'unité existe en 4 variantes (jaune, rouge, vert, noir, `UNIT_ART_C`) générées en recolorant uniquement les uniformes, carrosseries et coques (zones kaki/grises du sujet central ; peau, ciel, sol et feu inchangés). La carte affiche la variante de sa couleur ; les cartes bicolores utilisent leur première couleur.
+
+## Images de niveau
+- Insigne bronze / argent / or (`LEVEL_ART.rank`) sur toute carte dont le type + la couleur ont été entraînés (niv. 2 / 3 / 4+).
+- Le pack Entraînement affiche des scènes d'entraînement par type (infanterie, véhicules, aviation, marine) recolorées aux 4 couleurs, plus les images de fortification et de manuel (`art/levels/`).
