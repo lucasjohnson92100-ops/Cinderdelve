@@ -2902,6 +2902,13 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .ln.target { box-shadow: inset 4px 0 0 #ffd24a, inset 0 0 0 2px rgba(255, 210, 74, .55), 0 0 12px rgba(255, 210, 74, .5) !important; }
 .ln.target .lc.head .tname::after { content: ' 🎯'; }
 .mk.tgt { display: none !important; }
+
+/* Plus de numéro d'ordre de sélection sur les cartes ; bouton Annuler / Détails dans la ligne, sans recouvrir le texte */
+.hc .ord, .card .ord { display: none !important; }
+.bt-hint.spec { flex-wrap: nowrap !important; align-items: flex-start; }
+.bt-hint.spec .ht { flex: 1 1 0 !important; min-width: 0; }
+.bt-hint.spec .pill.sm { position: static !important; flex: none; align-self: flex-start; margin: 0 0 0 4px; }
+@media (max-height: 340px) { .bt-hint.spec .pill.sm { position: absolute !important; right: 3px; bottom: 2px; margin: 0; font-size: .5rem; padding: 0 5px; } .bt-hint.spec .ht { flex: 1 1 100% !important; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5060,6 +5067,10 @@ function hintText() {
     if (!P || !P.ok) return `<b class="advl">${what}</b> : ${WHY_DEP(P ? P.reason : 'card')}${dz}`;
     const b = P.best !== null ? P.map[P.best] : null;
     const tip = picked.length === 1 ? '' : ' Ajoutez d’autres cartes pour un plus gros combo.';
+    if (picked.length > 1) {
+      const seen = new Set(), rows = picked.filter(c => { if (seen.has(c.t) || !CARD_SPEC[c.t]) return false; seen.add(c.t); return true; }).slice(0, window.innerHeight < 340 ? 1 : window.innerHeight < 400 ? 2 : 3).map(c => { const w = short1(CARD_SPEC[c.t].what), ws = w.length > (window.innerHeight < 340 ? 40 : 58) ? w.slice(0, window.innerHeight < 340 ? 38 : 56).replace(/[ ,;:]+\S*$/, '') + '…' : w; return `<b class="hl">${CARD_SPEC[c.t].ic} ${TYPES[c.t].name}</b> ${ws}`; }).join('<br>');
+      return `<b class="advl">${picked.length} cartes · coût ${cost}</b><br>${rows}${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}`;
+    }
     if (picked.length === 1 && CARD_SPEC[k.t]) { const t = CARD_SPEC[k.t], now = cardUseNow(k), warn = cardWarnNow(k); return `<b class="advl">${t.ic} ${d.name} · coût ${cost}</b> <span class="hs">${t.nm}</span><br><b class="hl">Effet</b> ${short1(t.what)}<br><b class="hl ok">Conseil</b> ${short1(t.syn)}${now ? `<br><b class="hl now">★ Ici</b> ${now}` : ''}${warn ? `<br><b class="hl lim">⚠</b> ${warn.replace(/^Attention\s*:?\s*/, '')}` : ''}${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}`; }
     return `<b class="advl">${what}</b> : touchez un secteur pour tout y poser${dz ? ', ou ⟲ Défausser' : ''}.${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}${tip}`;
   }
@@ -5090,7 +5101,7 @@ function renderBattle() {
   const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : '', one = picked.length === 1 ? picked[0] : null;
   const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
-  const pop = picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
+  const pop = false && picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
   app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">${pop}
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
@@ -5182,6 +5193,10 @@ function onCard(i) {
   if (picked.includes(card)) { picked.splice(picked.indexOf(card), 1); SFX.play('deselect'); return renderBattle(); }
   // sélection libre, comme dans Balatro : la main choisie se pose dans un secteur ou part à la défausse
   picked.push(card);
+  // avions et navires n'ont qu'un seul secteur (le ciel, la mer) : ils se posent tout de suite à la sélection (sauf le bombardier, frappe immédiate)
+  if (picked.length === 1 && !isOrder(card) && zoneOf(S, card) !== null && !TYPES[card.t].kw?.includes('bomb')) {
+    SFX.play('select'); if (deployGroupAt([card], zoneOf(S, card))) return;
+  }
   SFX.play('select'); renderBattle();
 }
 // Pose la main choisie dans un secteur, puis fait claquer son score
