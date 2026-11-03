@@ -2894,7 +2894,8 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .card .own b { min-width: 18px; text-align: center; font-family: var(--font-display); font-size: .74rem; line-height: 1.25; padding: 0 5px; border-radius: 99px; background: var(--c); color: var(--t); border: 1.5px solid #fff; }
 .card .own b.z { opacity: .4; border-color: transparent; }
 @media (max-height: 420px) { .card .own { top: 26px; padding: 1px 5px; } .card .own em { font-size: .5rem; } .card .own b { font-size: .64rem; min-width: 15px; padding: 0 3px; } }
-</style></style>
+.s2-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+</style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="rotate" aria-live="polite"><div class="ph"></div><b>Tournez votre téléphone</b><span>Ligne de Front se joue en mode paysage : votre plateau à gauche, la blinde à battre à droite.</span></div>
@@ -6179,7 +6180,6 @@ function miniCardHTML(card) {
 const SVC = [
   { act: 'supply', ic: '⛽', name: 'Ravit. +1', fx: '+1 ravitaillement par tour', why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
   { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
-  { act: 'reform', ic: '✂', name: 'Réformer', fx: 'Retire une carte du paquet', why: 'Paquet trop petit', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
   { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, fx: `+${FORT_AMOUNT} PV max`, why: 'Maximum atteint', price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
 ];
 function shopTile(kind, i, it, inner) {
@@ -6211,7 +6211,7 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Remplacer les packs par d'autres">⟳ Autres packs $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
-    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row four">${svcs}</div></section></div>
+    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row three">${svcs}</div></section></div>
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
