@@ -10506,8 +10506,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var first = !tro[key]; tro[key] = Math.max(tro[key] || 0, (state.survDanger || 0) + 1); try { localStorage.setItem("donjon-surv-trophy", JSON.stringify(tro)); } catch (err) {} /* valeur = danger battu + 1 */
     var lti0 = LT.info(state.survMapTheme || 0); if (lti0) LORE.beaten(lti0.id);
     var dg = state.survDanger || 0; if (dg >= survDangerMax() && dg < 5) { try { localStorage.setItem("donjon-danger-max", String(dg + 1)); } catch (err) {} }
-    var mi = survMapIdx(), cl = survCleared(), newMap = null;
-    if (cl.indexOf(SURV_MAPS[mi].id) < 0) { cl.push(SURV_MAPS[mi].id); try { localStorage.setItem("donjon-surv-cleared", JSON.stringify(cl)); } catch (err) {} if (SURV_MAPS[mi + 1]) newMap = SURV_MAPS[mi + 1]; }
+    var mi = survMapIdx(), newMap = null; survMarkCleared();
+    if (state.survNewMap != null) { SURV_MAPS.forEach(function (m) { if (m.id === state.survNewMap) newMap = m; }); }
     var vLate = survFreeCheck(survGlob(SURV_WAVES + 1)); if (vLate.length) state.survFreedRun = (state.survFreedRun || []).concat(vLate);
     try { var mwv = parseInt(localStorage.getItem("donjon-surv-maxwave") || "0", 10); if (SURV_WAVES + 1 > mwv) localStorage.setItem("donjon-surv-maxwave", String(SURV_WAVES + 1)); } catch (err) {}
     banner("VICTOIRE !", "#ffd23c", 3000, 44); sfx("levelup");
@@ -12769,9 +12769,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survMapIdx() { if (!state) return 0; for (var i = 0; i < SURV_MAPS.length; i++) if (SURV_MAPS[i].id === (state.survMapTheme || 0)) return i; return 0; }
   function survGlob(w) { return survMapIdx() * SURV_WAVES + w; }
   function survNeedTxt(n) { var mi = Math.max(0, Math.floor((n - 1) / SURV_WAVES)), w = ((n - 1) % SURV_WAVES) + 1; return (SURV_MAPS[mi] ? SURV_MAPS[mi].name : "?") + " · vague " + w; }
+  /* le lieu en cours est noté comme terminé dès que son boss final tombe (et non 3 s plus tard, à la fin de la célébration : une interruption ne perd plus rien) */
+  function survMarkCleared() {
+    if (!state || !SURV_MAPS[survMapIdx()]) return;
+    var mi = survMapIdx(), cl = survCleared();
+    if (cl.indexOf(SURV_MAPS[mi].id) < 0) { cl.push(SURV_MAPS[mi].id); try { localStorage.setItem("donjon-surv-cleared", JSON.stringify(cl)); } catch (err) {} state.survNewMap = SURV_MAPS[mi + 1] ? SURV_MAPS[mi + 1].id : null; }
+  }
   function survCleared() { try { var c = JSON.parse(localStorage.getItem("donjon-surv-cleared") || "[]"); return Array.isArray(c) ? c : []; } catch (err) { return []; } }
   /* un lieu s'ouvre quand le précédent est terminé (ou n'importe quel lieu plus loin dans l'aventure : les anciennes parties gardent leur progression) */
-  function survMapUnlocked(i) { if (i === 0) return true; return survCleared().indexOf(SURV_MAPS[i - 1].id) >= 0; }
+  function survMapUnlocked(i) { if (i === 0) return true; var cl = survCleared(); for (var j = i - 1; j < SURV_MAPS.length; j++) if (cl.indexOf(SURV_MAPS[j].id) >= 0) return true; return false; }
   function survFreed() {
     var l = ["cocotte"];
     try { var r = JSON.parse(localStorage.getItem("donjon-surv-freed") || "[]"); if (Array.isArray(r)) r.forEach(function (id) { if (SURV_VARIANTS[id] && l.indexOf(id) < 0) l.push(id); }); } catch (err) {}
@@ -13296,6 +13302,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function survivalWin(boss) {
     state.survCycle = (state.survCycle || 0) + 1;
+    if (state.survCycle >= SURV_WAVES && !state.survEndless) survMarkCleared();
     var bx = boss ? boss.vx : p.vx, by = boss ? boss.vy : p.vy, tm = now();
     /* --- mise en scène de la mort du boss --- */
     state.survWinPos = { x: bx, y: by }; state.survWinT = 2.0; state.survWinFxT = 0;
