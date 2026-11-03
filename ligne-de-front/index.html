@@ -2807,6 +2807,49 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .dc-card.ord::after { content: 'ORDRE'; position: absolute; top: 2px; right: 2px; z-index: 4; font-size: .4rem; font-weight: 800; color: #3b2a00; background: #ffd24a; border-radius: 4px; padding: 0 3px; }
 /* Écrans de choix : toucher la carte la prend (ou l'ouvre), le « i » ne sert à rien */
 .card.pick .cinfo, .cardrow .card[data-spoil] .cinfo, .cardrow .card[data-add] .cinfo, .cardrow .card[data-cratepick] .cinfo, .cardrow .card[data-packpick] .cinfo { display: none !important; }
+
+/* ===== Pack Entraînement : grille 3×2 régulière, tuiles identiques ===== */
+.packopen.six { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 10px; width: 100%; max-width: 760px; margin: 0 auto; padding: 4px 2px; }
+.packopen.six .popt { transform: none !important; animation: none !important; width: auto !important; max-width: none !important; height: auto !important; min-height: 0 !important; aspect-ratio: auto !important; margin: 0 !important; display: grid !important; grid-template-columns: 76px minmax(0, 1fr); grid-template-rows: none !important; column-gap: 10px; align-items: center; text-align: left; padding: 8px 10px 8px 8px !important; border-radius: 12px; border: 3px solid #2b2116 !important; border-left: 8px solid var(--c, #8a5a00) !important; background: linear-gradient(180deg, #fff6d6, #f1dba0) !important; box-shadow: 0 3px 0 #2b2116, inset 0 2px 0 rgba(255, 255, 255, .7) !important; overflow: hidden; }
+.packopen.six .popt:hover, .packopen.six .popt:active { transform: translateY(-2px) !important; filter: brightness(1.05); }
+.packopen.six .popt .po-ic { grid-row: 1 / span 3; width: 76px !important; height: 76px !important; border-radius: 12px !important; border: 2px solid #2b2116 !important; display: grid; place-items: center; overflow: hidden; background: #1b2540 !important; padding: 0 !important; font-size: 2.4rem !important; line-height: 1; box-shadow: none !important; }
+.packopen.six .popt.up:not(.tr) .po-ic { background: linear-gradient(180deg, #ffe7a0, #e8a91e) !important; }
+.packopen.six .popt.mn .po-ic { background: linear-gradient(180deg, #cfe2ff, #7fa8ee) !important; }
+.packopen.six .popt .po-ic svg { width: 100% !important; height: 100% !important; transform: none !important; }
+.po-pic { position: relative; display: block; width: 100%; height: 100%; isolation: isolate; font-style: normal; }
+.po-pic .oimg { position: absolute; inset: 0; }
+.po-pic::after { content: ''; position: absolute; inset: 0; z-index: 1; background: var(--tint); mix-blend-mode: color; opacity: .6; }
+.packopen.six .popt b { font-size: 1rem !important; line-height: 1.1; color: #2b1a00; }
+.packopen.six .popt > span:not(.po-ic) { font-size: .74rem !important; line-height: 1.2; color: #3a3226; }
+.packopen.six .popt .po-body { display: grid; gap: 2px; }
+.packopen.six .popt .po-lv { font-size: .8rem !important; color: #b3351f; font-weight: 800; }
+.packopen.six .popt .po-fx { font-size: .72rem !important; }
+.packopen.six .popt .po-n { font-size: .72rem !important; }
+.trhint { font-size: .86rem; margin: 2px 0 8px; }
+@media (max-height: 440px) { .packopen.six { gap: 6px; } .packopen.six .popt { grid-template-columns: 52px minmax(0, 1fr); padding: 5px 7px 5px 6px !important; column-gap: 7px; } .packopen.six .popt .po-ic { width: 52px !important; height: 52px !important; font-size: 1.7rem !important; } .packopen.six .popt b { font-size: .8rem !important; } .packopen.six .popt > span:not(.po-ic), .packopen.six .popt .po-fx, .packopen.six .popt .po-n { font-size: .6rem !important; } .packopen.six .popt .po-lv { font-size: .64rem !important; } .trhint { font-size: .66rem; margin-bottom: 3px; } }
+
+.packopen.six .popt.tr { grid-template-columns: 76px minmax(0, 1fr) !important; grid-template-rows: none !important; padding: 8px 10px 8px 8px !important; }
+.packopen.six .popt.tr .po-ic { width: 76px !important; height: 76px !important; border-radius: 12px !important; }
+.packopen.six .popt.tr .po-ic svg { transform: none !important; }
+@media (max-height: 440px) { .packopen.six .popt.tr { grid-template-columns: 52px minmax(0, 1fr) !important; padding: 5px 7px 5px 6px !important; } .packopen.six .popt.tr .po-ic { width: 52px !important; height: 52px !important; border-radius: 9px !important; } }
+.packopen.six > .popt { min-width: 0 !important; max-width: 100% !important; width: 100% !important; justify-self: stretch; box-sizing: border-box; }
+.packopen.six .popt > b, .packopen.six .popt > span, .packopen.six .popt .po-body { min-width: 0; overflow-wrap: anywhere; }
+.crateopen.packopen.six { justify-content: stretch !important; justify-items: stretch; width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important; padding: 4px 0 !important; overflow: visible; zoom: 1 !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+
+.bt-hint .hl { color: #ffd24a; font-size: .86em; margin-right: 3px; text-transform: uppercase; letter-spacing: .04em; } .bt-hint .hl.ok { color: #8fd68f; } .bt-hint .hl.now { color: #ffb347; } .bt-hint .hl.lim { color: #ff9d8a; }
+.bt-hint .hs { display: inline-block; background: #ffd24a; color: #3b2a00; border-radius: 99px; padding: 0 7px; font-size: .84em; }
+.packopen.six > .popt { left: 0 !important; }
+
+.bt-hint.spec { max-height: none !important; overflow: visible !important; align-items: flex-start; flex-wrap: wrap; padding: 5px 7px !important; }
+.bt-hint.spec .ht { font-size: .66rem; line-height: 1.22; font-weight: 700; flex: 1 1 100%; }
+.bt-hint.spec .pill.sm { position: absolute; right: 6px; top: -9px; font-size: .56rem; padding: 1px 7px; z-index: 3; }
+.bt-hint.spec { position: relative; margin-top: 4px; }
+@media (min-height: 400px) { .bt-hint.spec .ht { font-size: .74rem; } }
+@media (max-height: 400px) { .btl.land:has(.bt-hint.spec) { grid-template-rows: auto minmax(0, .5fr) auto auto minmax(0, 1.5fr) auto !important; } .btl.land:has(.bt-hint.spec) .bt-hint.spec { overflow-y: auto !important; max-height: 100% !important; } }
+.bt-hint.spec .ht { display: block !important; -webkit-line-clamp: unset !important; -webkit-box-orient: initial !important; overflow: visible !important; max-height: none !important; text-overflow: clip !important; }
+.bt-hint.spec .pill.sm { top: -12px; }
+.bt-hint.spec .pill.sm { top: auto !important; bottom: 3px; right: 4px; font-size: .54rem; padding: 1px 6px; opacity: .92; }
+@media (max-height: 340px) { .btl.land:has(.bt-hint.spec) { grid-template-rows: auto minmax(0, .6fr) auto auto minmax(0, 1.8fr) auto !important; } .bt-hint.spec .ht { font-size: .54rem !important; line-height: 1.1 !important; } .bt-hint.spec { padding: 3px 5px !important; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4938,7 +4981,8 @@ function hintText() {
     const dz = S.discards > 0 && picked.length <= MAX_DISCARD ? ` Ou ⟲ Défausser pour les remplacer (+${DISCARD_SUPPLY + (has(S, 'intendant') ? 1 : 0)} ravit.).` : '';
     if (!P || !P.ok) return `<b class="advl">${what}</b> : ${WHY_DEP(P ? P.reason : 'card')}${dz}`;
     const b = P.best !== null ? P.map[P.best] : null;
-    const tip = picked.length === 1 ? ` ${d.txt}` : ' Ajoutez d’autres cartes pour un plus gros combo.';
+    const tip = picked.length === 1 ? '' : ' Ajoutez d’autres cartes pour un plus gros combo.';
+    if (picked.length === 1 && CARD_SPEC[k.t]) { const t = CARD_SPEC[k.t], now = cardUseNow(k), warn = cardWarnNow(k); return `<b class="advl">${t.ic} ${d.name} · coût ${cost}</b> <span class="hs">${t.nm}</span><br><b class="hl">Effet</b> ${short1(t.what)}<br><b class="hl ok">Conseil</b> ${short1(t.syn)}${now ? `<br><b class="hl now">★ Ici</b> ${now}` : ''}${warn ? `<br><b class="hl lim">⚠</b> ${warn.replace(/^Attention\s*:?\s*/, '')}` : ''}${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}`; }
     return `<b class="advl">${what}</b> : touchez un secteur pour tout y poser${dz ? ', ou ⟲ Défausser' : ''}.${b ? `<br><b class="advl">★ ${secName(P.best)} : ${fmtN(b.f0.strike)} → <span class="up">${fmtN(b.strike)}</span>${b.nc.length ? ` · ${b.nc.map(x => x.name).join(' + ')} !` : ''}</b>` : ''}${tip}`;
   }
   const F = frontForecast(S), tired = units(S, 'me').filter(u => u.stam <= 1).length;
@@ -4967,13 +5011,13 @@ function renderBattle() {
   const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : '', one = picked.length === 1 ? picked[0] : null;
   const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
-  const pop = picked.length && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
+  const pop = picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
   app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">${pop}
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
     <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px"><button class="hand-tog" data-act="handtog" aria-label="Afficher ou masquer la main">${window.__handHide ? '▴' : '▾'} Main <b>${n}</b></button>${hand}</div>
-    <div class="bt-side"><div class="bt-hint ${hint ? '' : 'empty'}" id="hint"><span class="ht">${hint}</span>${extra}</div>
+    <div class="bt-side"><div class="bt-hint ${hint ? '' : 'empty'} ${hint.includes('class="hl') ? 'spec' : ''}" id="hint"><span class="ht">${hint}</span>${extra}</div>
     <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried}</b>` : ''}</span><span class="pips">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `${picked.length ? '' : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes : touchez des cartes puis Défausser">⟲ ${S.discards}</button>`}<button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button>${picked.length ? `<button class="btn dscgo" data-act="discard" id="bend" ${S.discards > 0 && picked.length <= MAX_DISCARD ? '' : 'disabled'}>⟲ Défausser ${picked.length} <small class="dleft">${S.discards}</small></button>` : `<button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}`}</div>
     </div></div>
@@ -6073,7 +6117,6 @@ function miniCardHTML(card) {
   return `<span class="mc ${d.fam} col-${(card.c || "o")[0]}"><span class="mc-band" style="background:${chipBg(card.c)}"></span><span class="mc-cost">${baseCost(card)}</span><span class="mc-art">${art}</span><b class="mc-nm">${d.name}</b></span>`;
 }
 const SVC = [
-  { act: 'train', ic: '★', name: 'Entraîner', fx: 'Une carte monte d\'un niveau', why: 'Plus rien à entraîner', price: () => Math.min(...C.deck.filter(canUpgrade).map(upgradeCost), 99), ok: () => C.deck.some(canUpgrade) },
   { act: 'supply', ic: '⛽', name: 'Ravit. +1', fx: '+1 ravitaillement par tour', why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
   { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
   { act: 'reform', ic: '✂', name: 'Réformer', fx: 'Retire une carte du paquet', why: 'Paquet trop petit', price: () => REFORM_COST, ok: () => C.deck.length > 8 },
@@ -6108,7 +6151,7 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Remplacer les packs par d'autres">⟳ Autres packs $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
-    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row five">${svcs}</div></section></div>
+    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row four">${svcs}</div></section></div>
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait
@@ -6187,7 +6230,7 @@ function packOptHTML(o, k) {
   else {
     const lv = ((C.catLv || {})[o.id] || 0), { cat: ck, col: cc } = catPair(o.id), nb = C.deck.filter(c => { const d = TYPES[c.t]; return d && !d.order && catOf(d) === ck && (c.c || '').includes(cc); }).length;
     at2 = ` style="--k:${k};--c:${COLORS[cc].hex}"`; cls = 'up tr';
-    ic = spriteSVG({ foot: 'inf', veh: 'tank', air: 'chasseur', mer: 'destroyer' }[ck], 'me', 44, cc);
+    ic = `<i class="po-pic" style="--tint:${COLORS[cc].hex}">${unitImg({ foot: 'tireurs', veh: 'blinde', air: 'chasseur', mer: 'destroyer' }[ck])}</i>`;
     nm = catName(o.id); tx = `<span class="po-lv">niv. ${lv + 1} → ${lv + 2}</span><span class="po-fx">+${Math.round(CAT_STEP * 100)} % Attaque et Défense</span><span class="po-n ${nb ? '' : 'none'}">${nb ? nb + ' carte' + (nb > 1 ? 's' : '') + ' concernée' + (nb > 1 ? 's' : '') : 'aucune carte pour l\'instant'}</span>`;
   }
   return `<button class="popt ${cls}" ${at2 ? `data-packpick="${k}"${at2}` : at}><span class="po-ic">${ic}</span><b>${nm}</b>${tx.startsWith('<span class="po-lv"') ? `<span class="po-body">${tx}</span>` : `<span>${tx}</span>`}</button>`;

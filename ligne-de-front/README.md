@@ -364,3 +364,8 @@ Toutes les cartes (16 unités + 10 ordres) ont maintenant leur illustration pein
 Les tuiles occupent toute la hauteur de l'écran ; les 3 cartes de chaque doctrine sont des cartes illustrées (mêmes images que les cartes de combat, teintées à leur couleur) avec nom et couleur en bas.
 
 Chaque tuile de doctrine détaille maintenant : nom du style, effet, conseil et limite (la limite est masquée sur les très petits écrans).
+
+## Boutique, pack Entraînement et sélection de carte
+- Le service « Entraîner » est retiré de la boutique (les packs le remplacent) : 4 services restent.
+- Pack Entraînement : grille 3×2 régulière, illustrations teintées, niveau, effet et nombre de cartes concernées.
+- En bataille, quand une carte est sélectionnée, ses explications (effet, conseil, ★ ici, avertissement) s'affichent dans l'encadré en bas à droite, à la place de l'ancien texte « coût… touchez un secteur » ; la bulle du haut ne sert plus que pour une sélection multiple.
