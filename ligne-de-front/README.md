@@ -387,3 +387,8 @@ Ravitaillement +1 : sans limite et bien moins cher au départ, mais le prix grim
 
 ## Début de campagne plus exigeant
 `earlyK` renforce les premières blindes : QG ennemi et Attaque jusqu'à ×1,96 / ×1,58 à la 2e blinde, puis l'effet s'efface jusqu'à la 7e. La 1re bataille (tutoriel) reste douce. Selon le bot de simulation, les batailles 2 à 5 durent environ 60 % de tours en plus (de 3 à 5 tours).
+
+## Boutique plus décisive, QG ennemi plus solide
+- QG ennemi : `HQ_MULT` 22 → 28 (+27 %), boss ×1,15 (au lieu de ×1,05).
+- Prix (≈ −25 %) : Recrues et Ordres $3, Entraînement $4, Méga pack $5, État-major $6, soin du QG $3, Retraites +1 dès $3, QG max dès $4, Ravitaillement +1 dès $5, niveaux de fortification dès $4.
+- Niveaux d'entraînement : +25 % d'Attaque et de Défense par niveau (au lieu de +20 %).

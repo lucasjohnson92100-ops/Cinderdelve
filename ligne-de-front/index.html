@@ -3098,7 +3098,7 @@ const MAX_JOKERS = 5;
 const HQ_START = 60;
 // Bonus permanent de ravitaillement : gagné en battant un boss, ou acheté à l'intendance (jusqu'à +3 par tour)
 const MAX_SUPPLY_BONUS = Infinity;   // sans limite, mais de plus en plus cher : 6, 9, 13, 18, 24, 31…
-const supplyBonusCost = C => { const n = C.supplyBonus || 0; return 6 + 3 * n + (n * (n - 1)) / 2; };
+const supplyBonusCost = C => { const n = C.supplyBonus || 0; return 5 + 2 * n + (n * (n - 1)) / 2; };
 function addSupplyBonus(C) { if ((C.supplyBonus || 0) >= MAX_SUPPLY_BONUS) return false; C.supplyBonus = (C.supplyBonus || 0) + 1; return true; }
 
 function shuffle(a, rng = Math.random) {
@@ -3112,10 +3112,10 @@ const has = (S, id) => S.officers.includes(id);
 // Seul le joueur a une tactique par secteur : autant d'unités et d'appuis (avions, navires) qu'il veut dans chacun.
 // L'ennemi n'est qu'un QG, comme une « blinde » de Balatro : vos secteurs additionnent leur frappe sur lui, et il frappe
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
-const BASE_RETREATS = 3, MAX_RETREAT_UP = 5, TARGET_SHARE = 0.4, retreatCost = C => 4 + 2 * (C.retreatUp || 0);
+const BASE_RETREATS = 3, MAX_RETREAT_UP = 5, TARGET_SHARE = 0.4, retreatCost = C => 3 + 2 * (C.retreatUp || 0);
 const GW = 4, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
-  ENEMY_GROWTH = 0.08, HQ_MULT = 22, HQ_GROW = 1.10, ENEMY_ATK = 0.92, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
+  ENEMY_GROWTH = 0.08, HQ_MULT = 28, HQ_GROW = 1.10, ENEMY_ATK = 0.92, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
   MIN_THROUGH = 0.15, BARRAGE_ATK = 20;
 const TERRAIN = {
@@ -3166,14 +3166,14 @@ const zoneCols = S => [AIRC, S.seaCol];
 const zoneOf = (S, card) => { const d = TYPES[card.t]; if (!d || d.order || d.land) return null; return d.cls === 'ship' ? S.seaCol : AIRC; };
 const sectorCap = (S, c) => Math.min(MAX_CAP, BASE_CAP + ((S.capLv || {})[S.lanes[c]] || 0));
 const sectorLoad = (S, c) => S.units.filter(u => u.side === 'me' && u.c === c).length;
-// ---- Niveaux par type de cartes (comme les cartes Planète de Balatro) : +20 % d'Attaque et de Défense par niveau ----
+// ---- Niveaux par type de cartes (comme les cartes Planète de Balatro) : +25 % d'Attaque et de Défense par niveau ----
 const CATS = {
   foot: { name: 'Infanterie', ic: '🪖', test: u => !!u.land && u.cls === 'foot' },
   veh: { name: 'Véhicules', ic: '🛞', test: u => !!u.land && (u.cls === 'wheel' || u.cls === 'track') },
   air: { name: 'Aviation', ic: '✈', test: u => u.cls === 'air' },
   mer: { name: 'Marine', ic: '⚓', test: u => u.cls === 'ship' },
 };
-const CAT_STEP = 0.2;
+const CAT_STEP = 0.25;
 const catOf = u => Object.keys(CATS).find(k => CATS[k].test(u)) || null;
 // Entraînement : un niveau vaut pour un type d'unité ET une couleur (id « foot:J » = infanterie jaune). Une unité bicolore profite du meilleur de ses couleurs.
 const COLNAME_S = { J: 'jaune', R: 'rouge', V: 'verte', N: 'noire' }, COLNAME_P = { J: 'jaunes', R: 'rouges', V: 'verts', N: 'noirs' };
@@ -3189,7 +3189,7 @@ const LEVEL_ART = {"imgs": {"manuel": "data:image/webp;base64,UklGRp43AABXRUJQVl
 const ccVars = card => { if (!card.c) return ''; const h = colorHex(card.c), n = parseInt(h.slice(1), 16), lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255; return `;--cc:${h};--cct:${lum > 0.55 ? '#2b1a00' : '#fff'}`; };
 const ccStyle = card => (card.c ? ` style="${ccVars(card).slice(1)}"` : '');
 const rankBadge = card => { const n = cardTrainLv(card); return n ? `<span class="rank r${Math.min(n, 3)}" title="Entraînement niveau ${n + 1}" style="background-image:url(${LEVEL_ART.rank[Math.min(n, 3)]})"></span>` : ''; };
-const upgPrice = (C, kind, id) => 5 + 2 * ((((kind === 't' ? C.capLv : C.catLv) || {})[id]) || 0);
+const upgPrice = (C, kind, id) => 4 + 2 * ((((kind === 't' ? C.capLv : C.catLv) || {})[id]) || 0);
 function applyUpgrade(C, kind, id) {
   if (kind === 't') { C.capLv = C.capLv || {}; C.capLv[id] = Math.min(MAX_CAP - BASE_CAP, (C.capLv[id] || 0) + 1); return BASE_CAP + C.capLv[id]; }
   C.catLv = C.catLv || {}; C.catLv[id] = (C.catLv[id] || 0) + 1; return C.catLv[id] + 1;
@@ -3696,7 +3696,7 @@ const NODE_LABEL = { battle: 'Bataille', elite: 'Bataille d’élite', boss: 'Bo
 const BLINDS_PER_ANTE = 4, BLINDS_TO_WIN = 20;
 const BLIND_NAMES = ['Petite blinde', 'Moyenne blinde', 'Grosse blinde', 'Boss'];
 const BLIND_TYPES = ['battle', 'battle', 'elite', 'boss'];
-const BLIND_HQ = [1, 1, 1.08, 1.05];
+const BLIND_HQ = [1, 1, 1.08, 1.15];
 const BOSS_ORDER = ['train', 'battery', 'tank'];
 const SKIP_TAGS = {
   loot: { name: 'Butin', ic: '💰', w: 3, txt: n => `+$${n.bonus.n} de butin de guerre` },
@@ -3805,11 +3805,11 @@ function genShop(C, rng = Math.random, rare = false) {
 }
 // ---- Packs façon Balatro : on achète un pack fermé, on l'ouvre, on garde 1 carte parmi quelques-unes tirées au hasard ----
 const PACKS = {
-  recrues: { name: 'Pack Recrues', price: 4, n: 3, pick: 1, ic: '🪖', col: '#52b34f', txt: '3 unités au hasard' },
-  ordres: { name: 'Pack Ordres', price: 4, n: 3, pick: 1, ic: '📜', col: '#9aa3b2', txt: '3 ordres au hasard' },
-  staff: { name: 'Pack État-major', price: 8, n: 3, pick: 1, ic: '🃏', col: '#3d86e8', txt: '3 jokers au hasard' },
-  amelio: { name: 'Pack Entraînement', price: 6, n: 6, pick: 1, ic: '⬆', col: '#e8892b', txt: '6 choix : niveau type + couleur, fortification, manuel' },
-  mega: { name: 'Méga pack', price: 7, n: 5, pick: 2, ic: '🎁', col: '#b04fd6', txt: '5 cartes : gardez-en 2' },
+  recrues: { name: 'Pack Recrues', price: 3, n: 3, pick: 1, ic: '🪖', col: '#52b34f', txt: '3 unités au hasard' },
+  ordres: { name: 'Pack Ordres', price: 3, n: 3, pick: 1, ic: '📜', col: '#9aa3b2', txt: '3 ordres au hasard' },
+  staff: { name: 'Pack État-major', price: 6, n: 3, pick: 1, ic: '🃏', col: '#3d86e8', txt: '3 jokers au hasard' },
+  amelio: { name: 'Pack Entraînement', price: 4, n: 6, pick: 1, ic: '⬆', col: '#e8892b', txt: '6 choix : niveau type + couleur, fortification, manuel' },
+  mega: { name: 'Méga pack', price: 5, n: 5, pick: 2, ic: '🎁', col: '#b04fd6', txt: '5 cartes : gardez-en 2' },
 };
 // Niveaux d'entraînement proposés : des couples type + couleur qui existent dans votre paquet (les autres en dernier)
 function trainOptions(C, rng = Math.random) {
@@ -3848,9 +3848,9 @@ function genPacks(C, rng = Math.random, rare = false) {
   const kinds = shuffle(pool, rng).slice(0, 3);
   return kinds.map(kind => ({ kind, price: PACKS[kind].price, left: PACKS[kind].pick, opts: null }));
 }
-const HEAL_COST = 4, HEAL_AMOUNT = 12, MANUAL_PRICE = 4;
+const HEAL_COST = 3, HEAL_AMOUNT = 12, MANUAL_PRICE = 4;
 // Fortifier le QG : +10 PV max (et +10 PV), de plus en plus cher, 5 fois au plus par campagne
-const FORT_AMOUNT = 10, MAX_FORTIFY = 5, fortifyCost = C => 5 + 3 * (C.hqUp || 0);
+const FORT_AMOUNT = 10, MAX_FORTIFY = 5, fortifyCost = C => 4 + 2 * (C.hqUp || 0);
 // Manuel tactique : une combinaison d'assaut gagne un niveau pour toute la campagne
 function buyManual(C, id) { C.comboLv = C.comboLv || {}; C.comboLv[id] = (C.comboLv[id] || 1) + 1; return C.comboLv[id]; }
 // ==/CORE==
@@ -6350,7 +6350,7 @@ function packOptHTML(o, k) {
 function showPack(i) {
   const pk = C.shop.packs[i], d = PACKS[pk.kind]; if (!pk || !pk.opts) return;
   openModal(`<div class="hd"><span class="ribbon">${d.name}</span><span class="small">${pk.opts.length > 4 ? `${pk.opts.length} choix · ` : ''}${pk.left > 1 ? `Gardez-en encore ${pk.left}` : 'Gardez-en 1'}</span></div>
-    ${pk.opts.length > 4 ? '<p class="trhint">Un niveau améliore <b>toutes vos cartes</b> de ce type et de cette couleur (+20 % Attaque et Défense).</p>' : ''}
+    ${pk.opts.length > 4 ? '<p class="trhint">Un niveau améliore <b>toutes vos cartes</b> de ce type et de cette couleur (+25 % Attaque et Défense).</p>' : ''}
     <div class="cardrow crateopen packopen ${pk.opts.length > 4 ? 'six' : ''}">${pk.opts.map((o, k) => (o ? packOptHTML(o, k) : '<span class="popt gone"></span>')).join('')}</div>
     <button class="pill" data-act="packnone" data-pk="${i}" style="justify-self:center">${pk.left > 1 ? 'Terminer' : 'Ne rien garder'}</button>`);
   window.__pack = i;
@@ -6458,7 +6458,7 @@ const HELP_PAGES = () => [
   { t: 'Jouer une main', l: [
     '<b>Jouer une main</b>, comme dans Balatro : touchez plusieurs cartes, chaque secteur affiche alors son score <b>après</b> la pose (★ = le meilleur). Touchez le secteur : toutes s\'y posent et s\'ajoutent à ce qui s\'y trouve déjà.',
     '<b>Lire le score</b> : à droite de chaque secteur, Attaque (bleu) × Mult (rouge) = sa frappe, en gros chiffres dorés. Les étiquettes du secteur montrent ses combos ; une étiquette qui clignote est un combo que la main va déclencher.',
-    '<b>Places</b> : 3 par secteur au départ (les ronds sous le nom). <b>Fortifications</b> : +1 place pour un terrain. <b>Niveaux</b> (Infanterie, Véhicules, Aviation, Marine) : +20 % d\'Attaque et de Défense. À l\'intendance, ou en passant une blinde.',
+    '<b>Places</b> : 3 par secteur au départ (les ronds sous le nom). <b>Fortifications</b> : +1 place pour un terrain. <b>Niveaux</b> (Infanterie, Véhicules, Aviation, Marine) : +25 % d\'Attaque et de Défense. À l\'intendance, ou en passant une blinde.',
     '<b>Ordres</b> : ils ne prennent pas de place. Retranchement, Repli et Sabotage visent une unité : ils se jouent seuls.'] },
   { t: 'Tactique gagnante', l: [
     '<b>Concentrez, ne dispersez pas.</b> Un secteur gagne un Mult à chaque unité de plus (Paire, Trio, Bataillon…) : deux secteurs chargés valent bien plus que trois secteurs à moitié vides.',
