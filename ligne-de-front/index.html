@@ -3097,8 +3097,8 @@ const OFFICERS = JOKERS;
 const MAX_JOKERS = 5;
 const HQ_START = 60;
 // Bonus permanent de ravitaillement : gagné en battant un boss, ou acheté à l'intendance (jusqu'à +3 par tour)
-const MAX_SUPPLY_BONUS = 3;
-const supplyBonusCost = C => 14 + 12 * (C.supplyBonus || 0);
+const MAX_SUPPLY_BONUS = Infinity;   // sans limite, mais de plus en plus cher : 6, 9, 13, 18, 24, 31…
+const supplyBonusCost = C => { const n = C.supplyBonus || 0; return 6 + 3 * n + (n * (n - 1)) / 2; };
 function addSupplyBonus(C) { if ((C.supplyBonus || 0) >= MAX_SUPPLY_BONUS) return false; C.supplyBonus = (C.supplyBonus || 0) + 1; return true; }
 
 function shuffle(a, rng = Math.random) {
@@ -6226,7 +6226,7 @@ function miniCardHTML(card) {
 }
 const SVC = [
   { act: 'retreat', ic: '↩', name: 'Retraites +1', fx: '+1 retraite par bataille', why: 'Maximum atteint', price: () => retreatCost(C), ok: () => (C.retreatUp || 0) < MAX_RETREAT_UP },
-  { act: 'supply', ic: '⛽', name: 'Ravit. +1', fx: '+1 ravitaillement par tour', why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
+  { act: 'supply', ic: '⛽', name: 'Ravit. +1', get fx() { return `+1 par tour (actuel +${C.supplyBonus || 0})`; }, why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
   { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
   { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, fx: `+${FORT_AMOUNT} PV max`, why: 'Maximum atteint', price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
 ];
