@@ -384,3 +384,6 @@ Chaque illustration d'unité existe en 4 variantes (jaune, rouge, vert, noir, `U
 - **Retraites :** 3 par bataille (+1 par amélioration achetée en boutique, 5 au plus, service « Retraites +1 » de $4 à $12). Toucher une unité puis « Retraite » la retire du front, libère sa place et laisse sa carte à la défausse (≠ ordre Repli, qui la remet en main). Annulable avec ↶.
 
 Ravitaillement +1 : sans limite et bien moins cher au départ, mais le prix grimpe à chaque achat (6, 9, 13, 18, 24, 31… `supplyBonusCost`).
+
+## Début de campagne plus exigeant
+`earlyK` renforce les premières blindes : QG ennemi et Attaque jusqu'à ×1,96 / ×1,58 à la 2e blinde, puis l'effet s'efface jusqu'à la 7e. La 1re bataille (tutoriel) reste douce. Selon le bot de simulation, les batailles 2 à 5 durent environ 60 % de tours en plus (de 3 à 5 tours).
