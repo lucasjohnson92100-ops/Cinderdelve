@@ -426,7 +426,7 @@ body.land .scorecard { width: auto; max-height: 130px; }
 #gold, #lvl, #xptext { display: inline-block; }
 .pop { animation: popanim 0.38s ease; }
 @keyframes popanim { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
-.flash { animation: flashanim 0.4s ease; }
+.flash { animation: none; }
 @keyframes flashanim { 0% { filter: brightness(2.2); } 100% { filter: none; } }
 #bagbtn.alert::after { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #ff5a4f; display: inline-block; margin-left: 6px; }
 .slots { display: flex; gap: 8px; justify-content: center; }
@@ -909,7 +909,7 @@ body.land.surv .chip canvas.ic { width: 12px; height: 12px; }
 #hsplash .hs-glow { position: absolute; inset: 0; background: radial-gradient(circle at 35% 55%, rgba(255,110,30,0.35), rgba(255,60,0,0) 45%); animation: hsPulse 1.1s ease-in-out .8s infinite; }
 #hsplash .hs-ember { position: absolute; bottom: -10px; width: 6px; height: 6px; border-radius: 50%; background: #ffb040; box-shadow: 0 0 8px #ff7a20; animation: hsEmber linear infinite; opacity: 0; }
 #hsplash .hs-wrap { position: absolute; inset: 11vh 0; display: flex; align-items: center; justify-content: center; gap: 3vw; z-index: 2; }
-#hsplash .hs-wrap.shake { animation: hsShake .35s ease-out .95s both; }
+#hsplash .hs-wrap.shake { animation: none; }
 #hsplash img { width: auto !important; height: min(70vh, 46vw) !important; max-width: 46vw; object-fit: contain; filter: drop-shadow(0 0 22px rgba(255,120,30,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.7)); animation: hsImg2 .7s cubic-bezier(.2,1.3,.4,1) .28s both, hsBreath 2.4s ease-in-out 1s infinite !important; border: none !important; box-shadow: none !important; }
 #hsplash .hs-txt { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4vh; max-width: 50vw; animation: none !important; }
 #hsplash .hs-pre { font-family: 'Cinzel', Georgia, serif; font-weight: 700; color: #ffd98a; letter-spacing: .3em; font-size: clamp(.8rem, 2.4vw, 1.25rem); text-transform: uppercase; text-shadow: 0 2px 0 #1a0406; animation: hsUp .4s ease-out .6s both; }
@@ -7677,7 +7677,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   function puffFx(px, py, big) { puffs.push({ x: px, y: py, t0: now(), big: big, dx: (Math.random() - 0.5) * 4 }); }
   function starFx(tx, ty, big) { if (stars.length > (perf.low || perf.shed ? 8 : 20)) return; stars.push({ x: tx, y: ty, t0: now(), big: big, rot: Math.random() * 1.2 }); }
   function banner(text, col, ms, size) { if (smallScr()) { size = Math.min(size || 34, 22); ms = Math.min(ms || 1400, 1000); if (banners.length >= 1) banners.shift(); } banners.push({ text: text, col: col, t0: now(), dur: ms || 1400, size: size || 34 }); }
-  function screenFlash(col, ms) { flashCol = col; flashT0 = now(); flashDur = ms || 300; }
+  function screenFlash(col, ms) { return; /* plus aucun flash plein écran */ }
   /* en Survie, plus aucun « arrêt sur image » sauf les très gros moments (mort d'un boss) : chaque figement de 30 à 90 ms était ressenti comme de la latence */
   function hitStop(ms) { if (state && state.survival && ms < 140) return; freezeUntil = Math.max(freezeUntil, now() + ms); }
   function slowmo(ms, k) { slowUntil = Math.max(slowUntil, now() + ms); slowK = k; }
@@ -7958,6 +7958,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   }
 
   function shake(amp, ms) {
+    return; /* plus aucun tremblement d'écran */
     var t = now();
     shakeAmp = Math.max(t < shakeUntil ? shakeAmp : 0, amp);
     shakeUntil = Math.max(shakeUntil, t + ms);
@@ -13334,7 +13335,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function survivalWinEnd() {
     if (state.survCycle >= SURV_WAVES && !state.survEndless) { survVictory(); return; }
     if (state.survEndless) { try { var ek = "donjon-endless-best-" + (state.survMapTheme || 0), eb = parseInt(localStorage.getItem(ek) || "0", 10); if (state.survCycle + 1 > eb) localStorage.setItem(ek, String(state.survCycle + 1)); } catch (e) {} }
-    haltInput(); survOpenArcane(function () { openShop(); });
+    haltInput(); openShop(); /* plus de choix d'arcane : seulement la boutique */
   }
   /* ================= DUEL : l'Ogre se combat au tour par tour (inspiré de Clair Obscur) =================
      Le temps réel s'arrête, l'écran se brise et l'on passe sur une scène en fausse 3D : vraie caméra (plans, travellings, ralentis),
@@ -13469,10 +13470,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function after(ms, fn) { D.q.push({ at: D.time + ms, fn: fn }); }
     function tw(o, k, to, dur, ease, delay) { D.tw.push({ o: o, k: k, from: null, to: to, t0: D.time + (delay || 0), dur: Math.max(1, dur), e: ease || eio }); }
     function slow(k, ms) { D.slowK = k; D.slowUntil = performance.now() + ms; }
-    function shake(a) { D.shk = Math.max(D.shk, a); }
+    function shake(a) { /* plus aucun tremblement d'écran */ }
     function bvx(kind) { try { bossSfx(D.vt, kind); } catch (err) {} }
     function hitstop(ms) { D.freeUntil = Math.max(D.freeUntil, performance.now() + ms); }
-    function punch(a) { D.punch = Math.max(D.punch, a); }
+    function punch(a) { /* plus de coup de zoom de la caméra */ }
     /* ---------- caméra : projection perspective + plans de cinéma ---------- */
     function proj(px, py, pz) {
       var dx = px - cam.x, dz = pz - cam.z, c = Math.cos(cam.yaw), s = Math.sin(cam.yaw);
@@ -13660,7 +13661,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       D.fl.push({ x: o.x + o.ox, y: 2.9, z: o.z + o.oz - 0.4, t: "BRISÉ !", c: "#ffd23c", s: 1.5, t0: D.time, d: 1500, serif: 1 });
       sparks(o.x + o.ox, 1.8, o.z + o.oz, 30, "255,210,90");
     }
-    function flash(col, ms) { D.flashC = col; D.flashT = D.time; D.flashD = ms || 200; }
+    function flash(col, ms) { /* plus aucun flash plein écran */ }
     function endHeroAct(delay) { after(delay, function () { if (!D.over) nextTurn(); }); }
     function actAttack() {
       D.ap = Math.min(9, D.ap + 1); label("Attaque", "+1 PA", 900);
@@ -14352,7 +14353,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (D.sl > tt) { var si = (D.sl - tt) / D.slD, cx2 = W * 0.5, cy2 = H * 0.5; x.save(); x.strokeStyle = "rgba(255,255,255," + (0.28 * Math.min(1, si * 1.6)).toFixed(3) + ")"; x.lineWidth = Math.max(1, M * 0.003); for (var li = 0; li < 16; li++) { var la = Math.random() * 6.283, l0 = M * (0.32 + Math.random() * 0.2), l1 = l0 + M * (0.12 + Math.random() * 0.2); x.beginPath(); x.moveTo(cx2 + Math.cos(la) * l0, cy2 + Math.sin(la) * l0 * 1.2); x.lineTo(cx2 + Math.cos(la) * l1, cy2 + Math.sin(la) * l1 * 1.2); x.stroke(); } x.restore(); }
       var g = x.createRadialGradient(c.x, c.y, M * 0.18, c.x, c.y, M * 0.78); g.addColorStop(0, "rgba(6,4,12,0)"); g.addColorStop(0.6, "rgba(6,4,12,0.45)"); g.addColorStop(1, "rgba(4,2,8,0.92)");
       x.fillStyle = g; x.fillRect(0, 0, W, H);
-      var ht = tt - D.hurtT; if (ht < 500) { var a = (1 - ht / 500) * 0.5, gr = x.createRadialGradient(W / 2, H / 2, M * 0.3, W / 2, H / 2, M * 0.75); gr.addColorStop(0, "rgba(255,30,30,0)"); gr.addColorStop(1, "rgba(255,30,30," + a.toFixed(3) + ")"); x.fillStyle = gr; x.fillRect(0, 0, W, H); }
+      var ht = tt - D.hurtT; if (false && ht < 500) { var a = (1 - ht / 500) * 0.5, gr = x.createRadialGradient(W / 2, H / 2, M * 0.3, W / 2, H / 2, M * 0.75); gr.addColorStop(0, "rgba(255,30,30,0)"); gr.addColorStop(1, "rgba(255,30,30," + a.toFixed(3) + ")"); x.fillStyle = gr; x.fillRect(0, 0, W, H); }
       var ft = tt - D.flashT; if (ft < D.flashD) { x.fillStyle = "rgba(" + D.flashC + "," + (0.32 * (1 - ft / D.flashD)).toFixed(3) + ")"; x.fillRect(0, 0, W, H); }
       /* bandes de cinéma : présentes hors du choix d'action */
       var want = D.phase === "choose" ? 0 : 1; D.bars += (want - D.bars) * 0.08;
@@ -14435,7 +14436,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
           x.drawImage(D.snap.c, r.left, r.top, r.width, r.height);
           var k = el / 230; x.strokeStyle = "rgba(255,255,255,0.9)"; x.lineWidth = 1.5;
           D.shards.forEach(function (s) { x.beginPath(); s.p.forEach(function (q, i) { var qx = W * 0.52 + (q[0] - W * 0.52) * k, qy = H * 0.46 + (q[1] - H * 0.46) * k; if (i) x.lineTo(qx, qy); else x.moveTo(qx, qy); }); x.closePath(); x.stroke(); });
-          x.fillStyle = "rgba(255,255,255," + (k * 0.35).toFixed(2) + ")"; x.fillRect(0, 0, W, H);
+          
         } else {
           var s2 = (el - 230) / 1000;
           D.shards.forEach(function (s) {
@@ -14567,7 +14568,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       else if (state.phPeak && state.phT > Math.min(19, 11 + 1.5 * (state.survCycle || 0))) { state.phPeak = false; state.phT = 0; say("Accalmie : ramasse, positionne-toi."); }
     }
     /* défi de vague (à partir de la 2e vague) */
-    if ((state.survCycle || 0) >= 1 && !state.survModDone && state.survT > 0.6 && !state.survOpenRush) { survOpenWaveMod(); }
+    if ((state.survCycle || 0) >= 1 && !state.survModDone && state.survT > 0.6 && !state.survOpenRush) { state.survModDone = true; /* plus de choix de défi de vague */ }
   }
   function survivalTick(dt) {
     updateGems(dt); if (mode !== "play") return;
@@ -16715,7 +16716,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var w = 96, h = Math.max(32, Math.round(96 * vh / vw)); c = mkCanvas(w, h); var x = c.getContext("2d"), g = x.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.36, w / 2, h / 2, Math.hypot(w, h) * 0.55);
     g.addColorStop(0, "rgba(" + col + ",0)"); g.addColorStop(1, "rgba(" + col + ",1)"); x.fillStyle = g; x.fillRect(0, 0, w, h); return (EDGE[k] = c);
   }
-  function edgeFlash(col, a, dur) { var t = now(); if (t - edgeFx.t0 < edgeFx.dur * 0.5 && edgeFx.a > a) return; edgeFx = { t0: t, dur: dur || 420, col: col, a: a || 0.5 }; }
+  function edgeFlash(col, a, dur) { return; var t = now(); if (t - edgeFx.t0 < edgeFx.dur * 0.5 && edgeFx.a > a) return; edgeFx = { t0: t, dur: dur || 420, col: col, a: a || 0.5 }; }
   /* position du canevas gardée en mémoire (la relire à chaque image force le navigateur à recalculer la page) */
   var CVR = { r: null, t: 0 };
   function cvRect() { var t = now(); if (!CVR.r || t - CVR.t > 500) { CVR.r = canvas.getBoundingClientRect(); CVR.t = t; } return CVR.r; }
