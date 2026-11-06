@@ -3,7 +3,7 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='retreatUnit,BASE_RETREATS,TARGET_SHARE,retreatCost,AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='activateUlt,ULTS,canUlt,ENEMY_ACTS,COMMANDERS,ACT_SHARE,retreatUnit,BASE_RETREATS,TARGET_SHARE,retreatCost,AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
@@ -46,9 +46,23 @@ S=blank(['mer','champ','champ','champ','champ']);S.hq.en=500;
 E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),1);E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),3);
 let F=E.frontForecast(S);check('frappe = somme des secteurs',F.strike,40);check('Défense totale',F.def,6);
 check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('au moins un quart passe',F.toMe,Math.max(Math.ceil(F.enAtk*E.MIN_THROUGH),F.enAtk-6));
+// intentions ennemies, capacités spéciales, commandants, phase 2
+{const Si=blank(['mer','champ','champ','champ','champ']);Si.hq.en=900;E.placeUnit(Si,E.mkUnit(Si,'me','mitrailleuse','V'),1);
+ Si.plan={act:'assault',target:1};let Fi=E.frontForecast(Si);check('assaut en force : Attaque ×1,25',Fi.lines[0].atk,Math.round(Fi.enAtk*1.25));
+ Si.plan={act:'raid'};Fi=E.frontForecast(Si);check('raid : 30 % par les airs',Fi.lines[0].atk,Math.round(Fi.enAtk*0.3));check('raid non intercepté : sans Défense',Fi.lines[0].dmg,Fi.lines[0].atk);
+ const Sj=blank(['mer','champ','champ','champ','champ']);Sj.hq.en=900;E.placeUnit(Sj,E.mkUnit(Sj,'me','chasseur','J'),E.AIRC);Sj.plan={act:'raid'};check('raid intercepté par un chasseur',E.frontForecast(Sj).lines[0].dmg,0);
+ Si.plan={act:'dig'};const Fd=E.frontForecast(Si);check('retranchement : riposte ×0,75',Fd.lines[0].atk,Math.round(Fd.enAtk*0.75));
+ const Sk=blank(['mer','champ','champ','champ','champ']);Sk.hq.en=900;const tk=E.mkUnit(Sk,'me','tireurs','J');E.placeUnit(Sk,tk,1);Sk.plan={act:'dig'};const sk0=E.sectorForecast(Sk,1).strike;Sk.plan={act:'focus',target:1};const sk1=E.sectorForecast(Sk,1).strike;check('retranchement : frappe −30 %',sk0,Math.round(sk1*0.7));
+ // capacité spéciale
+ Sk.plan={act:'focus',target:1};const a0=E.unitAtk(Sk,tk);check('capacité : disponible',E.canUlt(Sk,tk),true);const r=E.activateUlt(Sk,tk.uid);check('capacité : activée',!!r,true);check('capacité : Attaque ×1,75',Math.round(E.unitAtk(Sk,tk)*100),Math.round(a0*175));check('une seule fois',E.activateUlt(Sk,tk.uid),null);
+ E.endTurn(Sk);check('l’effet disparaît en fin de tour',E.unitAtk(Sk,tk)<=a0+0.01||!Sk.units.includes(tk),true);
+ check('chaque unité a une capacité (sauf bombardier)',Object.keys(E.TYPES).filter(k=>!E.TYPES[k].order&&k!=='bombardier').every(k=>E.ULTS[k]),true);
+ check('5 commandants',E.COMMANDERS.length,5);check('4 intentions',Object.keys(E.ENEMY_ACTS).length,4);
+ // phase 2 du boss
+ const Sb=blank(['mer','champ','champ','champ','champ']);Sb.lvl=Object.assign({},Sb.lvl,{boss:'tank',hq:100});Sb.hq.en=100;E.placeUnit(Sb,E.mkUnit(Sb,'me','blinde','J'),1);Sb.units.forEach(u=>u.dmg=99);const stb=E.endTurn(Sb);check('boss : phase 2 sous 50 % de PV',!!Sb.phase2&&stb.some(x=>x.ph==='phase'),true);}
 // riposte ciblée : une part de l'Attaque sur le secteur annoncé, défenses non mélangées
 {const Sg=blank(['mer','champ','champ','champ','champ']);Sg.hq.en=500;Sg.plan={target:1};E.placeUnit(Sg,E.mkUnit(Sg,'me','mitrailleuse','V'),3);
- const Fg=E.frontForecast(Sg);check('cible annoncée',Fg.tgt,1);check('part concentrée',Fg.share,Math.round(Fg.enAtk*E.TARGET_SHARE));check('défense hors cible inutile sur la cible',Fg.defT,0);
+ const Fg=E.frontForecast(Sg);check('cible annoncée',Fg.tgt,1);check('part concentrée',Fg.share,Math.round(Fg.enAtk*E.ACT_SHARE));check('défense hors cible inutile sur la cible',Fg.defT,0);
  check('la défense du mauvais secteur ne protège pas la cible',Fg.toMe>=Fg.share,true);
  Sg.plan={target:3};const Fh=E.frontForecast(Sg);check('défense sur la cible',Fh.defT>0,true);check('renforcer la cible réduit les dégâts sur la cible',Fh.toT<Fg.toT,true);
  check('retraites au départ',Sg.retreats,E.BASE_RETREATS);const uu=Sg.units.find(u=>u.side==='me');check('retraite : unité retirée',!!E.retreatUnit(Sg,uu.uid)&&Sg.units.length===0,true);check('… et compteur décrémenté',Sg.retreats,E.BASE_RETREATS-1);

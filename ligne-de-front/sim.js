@@ -3,7 +3,7 @@ const fs=require('fs');
 let core=fs.readFileSync(process.argv[3]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // réglages d'équilibrage à tester sans toucher au jeu : HQM=… EHP=… EATK=…
 for(const [k,e] of [['HQ_MULT','HQM'],['ENEMY_ATK','EATK'],['ATK_RAMP','RAMP'],['HQ_GROW','HQG'],['ENEMY_GROWTH','EG'],['MIN_THROUGH','MT']])if(process.env[e])core=core.replace(new RegExp(k+' = [0-9.]+'),k+' = '+process.env[e]);
-const E=new Function(core+';return {newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,applyUpgrade,packOptions,applyPackPick,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
+const E=new Function(core+';return {unitAtk,activateUlt,canUlt,newBattle,endTurn,TYPES,START_DECK,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,cardCost,airStrike,playOrder,discardHand,isOrder,frontForecast,units,pickDoctrines,doctrineCards,rewardCards,DOCTRINES,addSupplyBonus,supplyBonusCost,MAX_SUPPLY_BONUS,battleCfg,genMap,lootFor,applyUpgrade,packOptions,applyPackPick,genShop,upgradeCost,canUpgrade,MAX_JOKERS,HQ_START,GW,landCols};')();
 const rnd=Math.random;
 // STRAT=inf|blinde|arty|marine|air : le bot ne recrute que (en priorité) ces unités, pour comparer des tactiques de paquet
 const STRATS={inf:['tireurs','mitrailleuse','infirmiers','genie','paras'],blinde:['blinde','halftrack','jeep','antichar'],arty:['artillerie','observateur','reco','croiseur','destroyer'],marine:['destroyer','croiseur','sousmarin','tireurs'],air:['chasseur','bombardier','tireurs','reco']};
@@ -48,7 +48,8 @@ function botTurn(S){
 }
 const RES=0;
 const DIAG={n:0,turns:0,enHpLeft:0,defGap:0,causes:{}};
-function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));let last=null;for(let k=0;k<40&&!S.over;k++){botTurn(S);if(process.env.DIAG){const F=E.frontForecast(S);last={toEn:F.toEn,enHp:S.hq.en,max:S.lvl.hq,def:F.def,enAtk:F.enAtk,units:E.units(S,'me').length,sup:S.supply,turn:S.turn,fx:S.fx.join(',')};}E.endTurn(S);if(S.over)break;}
+function botUlt(S){if(process.env.NOULT)return;const c=S.units.filter(u=>E.canUlt(S,u)&&(u.dmg>0||u.kw.includes('guard')||u.key==='genie'));if(!c.length)return;c.sort((a,b)=>E.unitAtk(S,b)-E.unitAtk(S,a));E.activateUlt(S,c[0].uid);}
+function fight(C,node){const S=E.newBattle(C,rnd,E.battleCfg(node));let last=null;for(let k=0;k<40&&!S.over;k++){botTurn(S);botUlt(S);if(process.env.DIAG){const F=E.frontForecast(S);last={toEn:F.toEn,enHp:S.hq.en,max:S.lvl.hq,def:F.def,enAtk:F.enAtk,units:E.units(S,'me').length,sup:S.supply,turn:S.turn,fx:S.fx.join(',')};}E.endTurn(S);if(S.over)break;}
   if(process.env.DIAG&&S.over!=='win'){DIAG.n++;DIAG.turns+=S.turn;DIAG.enHpLeft+=last.enHp/Math.max(1,last.max);DIAG.defGap+=last.enAtk-last.def;const c=last.units<=2?'peu_unites':last.def<last.enAtk*0.6?'defense_faible':last.toEn<last.enHp*0.5?'attaque_faible':'serre';DIAG.causes[c]=(DIAG.causes[c]||0)+1;(DIAG.fx=DIAG.fx||{})[last.fx]=((DIAG.fx||{})[last.fx]||0)+1;}
   return{S,win:S.over==='win'};}
 const PATH=Array.from({length:+process.env.BLINDS||20},(_,i)=>[['battle','battle','elite','boss'][i%4],i]);

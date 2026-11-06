@@ -392,3 +392,11 @@ Ravitaillement +1 : sans limite et bien moins cher au départ, mais le prix grim
 - QG ennemi : `HQ_MULT` 22 → 28 (+27 %), boss ×1,15 (au lieu de ×1,05).
 - Prix (≈ −25 %) : Recrues et Ordres $3, Entraînement $4, Méga pack $5, État-major $6, soin du QG $3, Retraites +1 dès $3, QG max dès $4, Ravitaillement +1 dès $5, niveaux de fortification dès $4.
 - Niveaux d'entraînement : +25 % d'Attaque et de Défense par niveau (au lieu de +20 %).
+
+## Un jeu plus passionnant : intentions, capacités, boss à phases, paris
+- **Intentions ennemies** (`ENEMY_ACTS`) : chaque tour l'ennemi annonce Concentration 🎯 (50 % de l'Attaque sur un secteur), Assaut en force 💥 (×1,25 sur tout le front), Raid aérien ✈ (30 % qui ignore la Défense, intercepté par un chasseur) ou Retranchement ⛏ (riposte ×0,75 mais vos frappes −30 %, génie et paras l'ignorent). Jamais deux fois la même d'affilée. Pastille jaune cliquable sur le QG ennemi.
+- **Commandants** (`COMMANDERS`) : 5 profils (Vogel vise le secteur le plus faible, Kessler aime les assauts, Richter les raids, Weiss se retranche, Haas imprévisible), affichés avant la bataille et sur le QG.
+- **Capacités spéciales** (`ULTS`) : chaque unité (sauf le bombardier) peut, une fois par bataille et gratuitement, jouer un coup (Attaque ×1,75, Défense ×2, soins du secteur, Assaut ×1,5). Étoile ★ sur l'unité, bouton dans sa fiche.
+- **Boss à phases** : à 50 % de PV, bannière « PHASE 2 » : Attaque ×1,25, plus d'assauts ; Mammouth blindage ×1,5, Batterie navires ×0,35, Train blindé ajoute des obus.
+- **Paris** avant chaque bataille (dès la 3e) : Défi (QG +25 %, Attaque +10 %, +$5) ou Offensive éclair (gagner en 4 tours, +$7).
+- Simulation : taux de réussite du bot inchangé (≈ 0,5 %) ; il utilise une capacité par tour (`NOULT=1` pour l'en priver).
