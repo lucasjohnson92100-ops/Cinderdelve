@@ -400,3 +400,6 @@ Ravitaillement +1 : sans limite et bien moins cher au départ, mais le prix grim
 - **Boss à phases** : à 50 % de PV, bannière « PHASE 2 » : Attaque ×1,25, plus d'assauts ; Mammouth blindage ×1,5, Batterie navires ×0,35, Train blindé ajoute des obus.
 - **Paris** avant chaque bataille (dès la 3e) : Défi (QG +25 %, Attaque +10 %, +$5) ou Offensive éclair (gagner en 4 tours, +$7).
 - Simulation : taux de réussite du bot inchangé (≈ 0,5 %) ; il utilise une capacité par tour (`NOULT=1` pour l'en priver).
+
+## Affinités de couleur
+Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : train noir, batterie rouge, Mammouth vert). Cycle : jaune bat rouge, rouge bat vert, vert bat noir, noir bat jaune. Contre la couleur qu'elle bat, une unité fait **+25 %** d'Attaque ; contre la couleur qui la bat, **−25 %** (une carte bicolore dont les deux couleurs s'opposent reste neutre). Le cumul avec un terrain fort est plafonné à ×1,7. Affichage : pastille de couleur ennemie sur le QG, flèches ▲ / ▼ vertes et rouges sur les cartes et les unités, rappel sur l'écran de pari et dans la fiche d'unité. La 1re bataille (tutoriel) n'a pas d'affinité. Simulation : difficulté inchangée.

@@ -2930,6 +2930,18 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 
 .btl .actchip { display: inline-flex !important; width: auto !important; height: auto !important; min-width: 0 !important; aspect-ratio: auto !important; border-radius: 99px !important; padding: 1px 8px !important; white-space: nowrap; flex: none; line-height: 1.2; }
 .enrow.en2 { display: flex; flex-wrap: wrap; gap: 3px 5px; align-items: center; margin-top: 2px; }
+
+/* Affinités de couleur */
+.colchip { font-weight: 800; font-size: .62rem; padding: 1px 6px; border-radius: 99px; background: rgba(10, 14, 28, .7); color: #fff; border: 1.5px solid var(--c); white-space: nowrap; } .colchip i { font-style: normal; margin-left: 3px; } .colchip i.u { color: #8fd68f; } .colchip i.d { color: #ff9d8a; }
+.aff { position: absolute; z-index: 8; top: 3px; right: 3px; width: 1.5em; height: 1.5em; display: grid; place-items: center; border-radius: 50%; font-size: .66rem; font-weight: 900; line-height: 1; color: #fff; border: 1.5px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .6); pointer-events: none; } .aff.up { background: #2f9e44; } .aff.dn { background: #d5281a; }
+.hc .aff { top: 2cqw; right: 2cqw; font-size: 11cqw; }
+.gaff { position: absolute; top: -3px; right: -3px; z-index: 6; width: 14px; height: 14px; display: grid; place-items: center; border-radius: 50%; font-size: 8px; font-weight: 900; color: #fff; border: 1.2px solid #fff; pointer-events: none; } .gaff.up { background: #2f9e44; } .gaff.dn { background: #d5281a; }
+@media (max-height: 420px) { .colchip { font-size: .54rem; padding: 0 5px; } }
+
+.btl.land .enhq .enrow.en2 { flex-wrap: wrap !important; overflow: visible !important; margin-top: 0; }
+.gaff { top: 2px !important; right: auto !important; left: 16px !important; }
+.btl.land .enhq .enmain { overflow: visible; }
+@media (max-height: 340px) { .modal .box:has([data-retreat]) > p.small.muted { display: none; } .modal .box:has([data-retreat]) .btn { padding-block: 4px; font-size: .74rem; } .modal .box:has([data-retreat]) .effl { margin: 2px 0; font-size: .7rem; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -3137,10 +3149,10 @@ const ENEMY_ACTS = {
 const ACT_SHARE = 0.5, ASSAULT_K = 1.25, RAID_SHARE = 0.3, RAID_K = 1, DIG_ATK = 0.75, DIG_STRIKE = 0.7, PHASE2_ATK = 1.25;
 // Commandants ennemis : un trait connu à l'avance, qui pèse sur le choix des intentions
 const COMMANDERS = [
-  { id: 'vogel', name: 'Gén. Vogel', trait: 'vise toujours votre secteur le plus faible', bias: { focus: 2 }, weakest: true },
-  { id: 'kessler', name: 'Col. Kessler', trait: 'adore les assauts en force', bias: { assault: 3 } },
-  { id: 'richter', name: 'Cdt Richter', trait: 'lance des raids aériens', bias: { raid: 4 } },
-  { id: 'weiss', name: 'Maj. Weiss', trait: 'se retranche souvent', bias: { dig: 3 } },
+  { id: 'vogel', col: 'N', name: 'Gén. Vogel', trait: 'vise toujours votre secteur le plus faible', bias: { focus: 2 }, weakest: true },
+  { id: 'kessler', col: 'R', name: 'Col. Kessler', trait: 'adore les assauts en force', bias: { assault: 3 } },
+  { id: 'richter', col: 'J', name: 'Cdt Richter', trait: 'lance des raids aériens', bias: { raid: 4 } },
+  { id: 'weiss', col: 'V', name: 'Maj. Weiss', trait: 'se retranche souvent', bias: { dig: 3 } },
   { id: 'haas', name: 'Cpt Haas', trait: 'imprévisible', bias: { focus: 1.2, assault: 1.2, raid: 1.2, dig: 1.2 } },
 ];
 const BASE_RETREATS = 3, MAX_RETREAT_UP = 5, TARGET_SHARE = 0.4, retreatCost = C => 3 + 2 * (C.retreatUp || 0);
@@ -3167,6 +3179,22 @@ function terrainMult(cols, ter) {
   for (const ch of cols || '') { const t = COLOR_TERRAIN[ch]; if (!t) continue; if (t.fort === ter) m += 0.5; if (t.faible === ter) m -= 0.25; }
   return Math.max(0.5, Math.min(2, m));
 }
+// Affinités de couleur : l'ennemi a une couleur ; la couleur qui la bat fait +25 % d'Attaque, celle qu'elle bat −25 % (cycle jaune > rouge > vert > noir > jaune)
+const COLOR_BEATS = { J: 'R', R: 'V', V: 'N', N: 'J' }, AFF_K = 0.25, AFF_CAP = 1.7;
+const colorBeatenBy = c => Object.keys(COLOR_BEATS).find(k => COLOR_BEATS[k] === c);
+// +1 : avantage, −1 : désavantage, 0 : neutre (une couleur qui bat et une battue s'annulent)
+function affinityOf(enemyCol, cols) {
+  if (!enemyCol || !cols) return 0;
+  let up = false, dn = false;
+  for (const ch of cols) { if (COLOR_BEATS[ch] === enemyCol) up = true; if (COLOR_BEATS[enemyCol] === ch) dn = true; }
+  return up && !dn ? 1 : dn && !up ? -1 : 0;
+}
+const affMult = (S, u, tm = 1) => {
+  const a = u && u.side === 'me' ? affinityOf(S.lvl && S.lvl.col, u.cols) : 0;
+  if (a < 0) return 1 - AFF_K;
+  if (a > 0) return tm > 1 ? Math.min(tm * (1 + AFF_K), AFF_CAP) / tm : 1 + AFF_K;   // le cumul avec un terrain fort est plafonné
+  return 1;
+};
 const unitMult = (S, u) => (u.land && u.cols ? terrainMult(u.cols, S.lanes[u.c]) : 1);
 const coverOf = (S, u) => (u.land ? (TERRAIN[S.lanes[u.c]] || {}).cover || 0 : 0);
 
@@ -3567,7 +3595,7 @@ function checkOver(S) {
 // Attaque = hommes × (dégâts par tir + perçage), × terrain de la couleur, et les effets du QG ennemi
 function unitAtk(S, u) {
   if (!u || u.dmg <= 0) return 0;
-  let a = menNow(u) * (u.dmg + Math.min(2, u.pierce || 0) * 0.5) * unitMult(S, u);
+  let a = menNow(u) * (u.dmg + Math.min(2, u.pierce || 0) * 0.5) * unitMult(S, u) * affMult(S, u, unitMult(S, u));
   if (u.kw.includes('antitank') && hasFx(S, 'panzer')) a *= 2;
   if (u.kw.includes('mines') && (hasFx(S, 'bunker') || has(S, 'sapeur'))) a *= 2;
   if (u.land && u.cls === 'foot' && hasFx(S, 'nids')) a *= 0.75;
@@ -3833,7 +3861,8 @@ function battleCfg(node) {
   // « Frappe décisive » : gagner en infligeant assez en un seul tour (remplace l'ancien objectif « éliminer »)
   const obj = o.type === 'kills' || o.type === 'burst' ? { type: 'burst', n: Math.round(hq * 0.3) } : o;
   return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6) * (1 + (earlyK(lv) - 1) * 0.6), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
-    levelIdx: lv, obj, elite, tutorial: node.layer === 0, cmd: node.type === 'boss' || node.layer === 0 ? undefined : (node.layer + (node.layer >> 2)) % COMMANDERS.length };
+    levelIdx: lv, obj, elite, tutorial: node.layer === 0, cmd: node.type === 'boss' || node.layer === 0 ? undefined : (node.layer + (node.layer >> 2)) % COMMANDERS.length,
+    col: node.layer === 0 ? undefined : node.type === 'boss' ? { train: 'N', battery: 'R', tank: 'V' }[node.boss] : (node.layer + (node.layer >> 2)) % COMMANDERS.length === 4 ? 'JRVN'[(node.layer * 3 + 1) % 4] : COMMANDERS[(node.layer + (node.layer >> 2)) % COMMANDERS.length].col };
 }
 // Cartes proposées en récompense : type et couleur tirés au hasard
 function rewardCards(rng = Math.random, minRar = 1, deck = null) {
@@ -4840,9 +4869,9 @@ const WAGERS = {
   fast: { nm: 'Offensive éclair', ic: '⚡', desc: 'Gagnez en 4 tours ou moins : +$7 (aucune pénalité sinon).' },
 };
 function wagerStep(n) {
-  const cmd = battleCfg(n).cmd, cm = cmd !== undefined ? COMMANDERS[cmd] : null;
+  const cfg = battleCfg(n), cmd = cfg.cmd, cfgCol = cfg.col, cm = cmd !== undefined ? COMMANDERS[cmd] : null;
   app.innerHTML = `<div class="stack briefing wager"><div class="hd"><span class="ribbon">${n.name || 'Bataille'}</span><span class="num">${n.label || ''}</span></div>
-    ${cm ? `<div class="panel">🎖 <b>${cm.name}</b> ${cm.trait}.</div>` : ''}
+    ${cm || cfgCol ? `<div class="panel">${cm ? `🎖 <b>${cm.name}</b> ${cm.trait}.` : ''} ${cfgCol ? `Couleur ennemie : <b style="color:${COLORS[cfgCol].hex === '#ffd24a' ? '#b38600' : COLORS[cfgCol].hex}">${COLORS[cfgCol].name}</b> · ▲ ${COLORS[colorBeatenBy(cfgCol)].name} +25 % · ▼ ${COLORS[COLOR_BEATS[cfgCol]].name} −25 %.` : ''}</div>` : ''}
     <div class="wrow">${Object.entries(WAGERS).map(([k, w]) => `<button class="wtile" data-wager="${k}"><i>${w.ic}</i><b>${w.nm}</b><span>${w.desc}</span></button>`).join('')}</div></div>`;
 }
 function startBattle(node, wager) {
@@ -5000,7 +5029,7 @@ function slotUnitHTML(u, sel, tgt) {
   return `<button class="gu me tok k-${kindOf(key)} ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''} wear${wearLv(u)}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
     <span class="gart">${u.land ? squadSVG(key, 'me', menNow(u), u.menMax, 30, u.cols) : spriteSVG(key, 'me', 26, u.cols)}</span><i class="ifx"></i>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
     ${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${um !== 1 ? `<span class="gtm ${um > 1 ? 'up' : 'dn'}">${um > 1 ? '▲' : '▼'}</span>` : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
-    ${canUlt(S, u) ? '<span class="gult" title="Capacité spéciale disponible">★</span>' : ''}<span class="gbase"><span class="gmen" title="${menNow(u)} ${noun(u.key, menNow(u))}${menNow(u) < u.menMax ? ' sur ' + u.menMax : ''}">${menNow(u)}</span>${pipsHTML(u)}</span></button>`;
+    ${(() => { const a = affinityOf(S.lvl && S.lvl.col, u.cols); return a ? `<span class="gaff ${a > 0 ? 'up' : 'dn'}">${a > 0 ? '▲' : '▼'}</span>` : ''; })()}${canUlt(S, u) ? '<span class="gult" title="Capacité spéciale disponible">★</span>' : ''}<span class="gbase"><span class="gmen" title="${menNow(u)} ${noun(u.key, menNow(u))}${menNow(u) < u.menMax ? ' sur ' + u.menMax : ''}">${menNow(u)}</span>${pipsHTML(u)}</span></button>`;
 }
 // Bilan des forces d'un secteur : soldats, véhicules, avions, navires
 function laneForcesHTML(q) {
@@ -5049,8 +5078,12 @@ function laneTag(ter) {
   return `<span class="ltag">${up.map(k => `<i class="up" style="--c:${COLORS[k].hex}">▲</i>`).join('')}${dn.map(k => `<i class="dn" style="--c:${COLORS[k].hex}">▼</i>`).join('')}</span>`;
 }
 // QG ennemi : forteresse, PV (la blinde), Attaque annoncée et effets
+// couleur de l'ennemi et affinités (en bataille seulement)
+const inBattleCol = () => (typeof C !== 'undefined' && C && C.phase === 'node' && typeof S !== 'undefined' && S && S.lvl && S.lvl.col) || '';
+const affBadge = card => { const col = inBattleCol(); if (!col || isOrder(card) || !card.c) return ''; const a = affinityOf(col, card.c); return a ? `<span class="aff ${a > 0 ? 'up' : 'dn'}" title="${a > 0 ? 'Avantage de couleur : +25 % d’Attaque' : 'Désavantage de couleur : −25 % d’Attaque'}">${a > 0 ? '▲' : '▼'}</span>` : ''; };
+const colChip = () => { const c = S.lvl && S.lvl.col; if (!c) return ''; const up = colorBeatenBy(c), dn = COLOR_BEATS[c]; return `<span class="colchip" style="--c:${COLORS[c].hex}" title="Couleur de l’ennemi : ${COLORS[c].name}. ▲ ${COLORS[up].name} : +25 % d’Attaque · ▼ ${COLORS[dn].name} : −25 %">● ${COLORS[c].name}</span>`; };
 // intention annoncée pour ce tour + commandant ennemi
-const actChip = () => { const a = S.plan && S.plan.act && ENEMY_ACTS[S.plan.act], cmd = S.lvl && S.lvl.cmd !== undefined ? COMMANDERS[S.lvl.cmd] : null; return `${a ? `<button class="actchip" data-act-info="${S.plan.act}" title="${a.tip}">${a.ic} ${a.name}</button>` : ''}${cmd ? `<span class="cmdchip" title="${cmd.name} ${cmd.trait}">🎖 ${cmd.name}</span>` : ''}`; };
+const actChip = () => { const a = S.plan && S.plan.act && ENEMY_ACTS[S.plan.act], cmd = S.lvl && S.lvl.cmd !== undefined ? COMMANDERS[S.lvl.cmd] : null; return `${a ? `<button class="actchip" data-act-info="${S.plan.act}" title="${a.tip}">${a.ic} ${a.name}</button>` : ''}${colChip()}${cmd ? `<span class="cmdchip" title="${cmd.name} ${cmd.trait}">🎖 ${cmd.name.split(' ').pop()}</span>` : ''}`; };
 function enemyHQHTML(view, live, F) {
   const hold = S.obj.type === 'hold', max = S.lvl.hq || 1, cur = Math.max(0, view.hq.en), pct = hold ? 100 : Math.max(0, Math.min(100, (cur / max) * 100));
   const atk = F ? F.enAtk : enemyAtk(S), fx = (S.fx || []).map(k => `<button class="fxchip ${HQFX[k].boss ? 'boss' : ''}" data-fx="${k}">${spriteSVG(HQFX[k].icon, 'en', 18)}<b>${HQFX[k].name}</b></button>`).join('');
@@ -5137,7 +5170,7 @@ function cardHTML(card, extra = '', attrs = '') {
   const tags = [isOrder(card) ? ORDER_SHORT[card.t] : SHORT_TAG[card.t]].filter(Boolean).join(' · ');
   const eff = [...card.c].map(ch => `<span class="eff"><i style="background:${COLORS[ch].hex}"></i>${SHORT_EFF[ch]}</span>`).join('');
   const ord = inB ? picked.indexOf(card) : -1;
-  return `<button class="card ${d.fam} ${d.order ? 'ordc' : UNIT_ART[card.t] ? 'ordc unitc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}${ccStyle(card)}><span class="cost">${cost}</span>${rankBadge(card)}${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
+  return `<button class="card ${d.fam} ${d.order ? 'ordc' : UNIT_ART[card.t] ? 'ordc unitc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs}${ccStyle(card)}><span class="cost">${cost}</span>${rankBadge(card)}${affBadge(card)}${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}<span class="cinfo" data-cinfo="${reg}" role="button" aria-label="Détails">i</span>
     <span class="cband" style="background:${chipBg(card.c)}"><b>${colorName(card.c)}</b><small>${card.parts ? 'Fusion' : isOrder(card) ? (TGT_SHORT[d.tgt] || '') : FAM_SHORT[d.fam]}</small></span>
     <span class="cn ${d.name.length > 11 ? 'long' : ''}" title="${d.name}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art" style="--as:${artScale(card)};${artBg(card)};--tint:${card.c ? colorHex(card.c) : 'transparent'}">${isOrder(card) ? ordArt(card.t, 46, 1) : UNIT_ART[card.t] ? unitImg(card.t, card.c) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 50, card.c, 1)}</span>${isOrder(card) ? `<span class="otx">${ORDER_EXPL[card.t] || ORDER_SHORT[card.t] || ''}</span>` : ''}
@@ -5149,7 +5182,7 @@ const artBg = card => { const d = TYPES[card.t]; if (!d || d.order) return ''; c
 const artScale = card => (isOrder(card) || UNIT_ART[card.t] ? 1 : cardStats(card).st.men >= 3 ? 1 : ART_SCALE[SPR_OF[card.t]] || 1.2);
 function handCardHTML(card, extra, attrs, style) {
   const d = TYPES[card.t], cost = cardCost(S, card), cs = cardStats(card), reg = CARD_REG.push(card) - 1, ord = picked.indexOf(card);
-  return `<button class="card hc ${d.fam} ${d.order ? 'ordc' : UNIT_ART[card.t] ? 'ordc unitc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}${ccVars(card)}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${rankBadge(card)}${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
+  return `<button class="card hc ${d.fam} ${d.order ? 'ordc' : UNIT_ART[card.t] ? 'ordc unitc' : ''} col-${(card.c || "o")[0]} rar${d.rar || 1} ${card.parts ? 'fused' : ''} ${extra}" ${attrs} style="${style}${ccVars(card)}" data-reg="${reg}"><span class="shine"></span>${cardUseNow(card) ? `<span class="cuse" title="${cardUseNow(card)}">★</span>` : ''}${card.parts ? `<span class="fcount">×${card.parts.length}</span>` : ''}<span class="cost">${cost}</span>${rankBadge(card)}${affBadge(card)}${ord >= 0 ? `<span class="ord">${ord + 1}</span>` : ''}
     <span class="cband" style="background:${chipBg(card.c)}" title="${colorName(card.c)}"></span>${specBadge(card)}
     <span class="cn ${d.name.length > 12 ? 'xl' : d.name.length > 10 ? 'long' : ''}">${d.name}${(card.lv || 1) > 1 ? ' <b class="star">' + '★'.repeat(card.lv - 1) + '</b>' : ''}</span>
     <span class="art" style="--as:${artScale(card)};${artBg(card)};--tint:${card.c ? colorHex(card.c) : 'transparent'}">${isOrder(card) ? ordArt(card.t, 38, 1) : UNIT_ART[card.t] ? unitImg(card.t, card.c) : squadSVG(SPR_OF[card.t], 'me', cs.st.men, cs.st.men, 40, card.c, 1)}</span>${isOrder(card) ? `<span class="otx">${ORDER_EXPL[card.t] || ORDER_SHORT[card.t] || ''}</span>` : ''}
@@ -5497,6 +5530,7 @@ function unitSheet(uid) {
       <div class="stack" style="gap:3px"><span>${SWORD} Attaque <b>${fmtN(unitAtk(S, u))}</b> · ${SHIELD} Défense <b>${fmtN(unitDef(S, u))}</b></span>
       <span>Solidité ${pipsHTML(u)}</span>
       <span>Secteur <b>${TERRAIN[S.lanes[u.c]].name}</b>${u.land ? '' : ' (appui)'}</span>
+      ${(() => { const a = affinityOf(S.lvl && S.lvl.col, u.cols); return a ? `<span>${a > 0 ? '▲ avantage de couleur' : '▼ désavantage de couleur'} : ${a > 0 ? '+25' : '−25'} % d'Attaque contre ${COLORS[S.lvl.col].name.toLowerCase()}</span>` : ''; })()}
       ${unitMult(S, u) !== 1 ? `<span>${unitMult(S, u) > 1 ? '▲ terrain fort' : '▼ terrain faible'} : ${tmodTxt(unitMult(S, u))} d'Attaque</span>` : ''}${u.elan ? `<span><b>Élan</b> : +${u.elan} dégât${u.elan > 1 ? 's' : ''} par tir</span>` : ''}${u.dig ? `<span><b>Retranché</b> : +${Math.round(u.dig * 100)} % de Défense</span>` : ''}${u.lv > 1 ? `<span class="star">Niveau ${u.lv}</span>` : ''}</div></div>
     ${kws.length ? `<p>${kws.map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(' · ')}.</p>` : ''}${eff ? `<ul class="effl">${eff}</ul>` : ''}
     <p class="small muted">Chaque fin de tour, l'unité ajoute son Attaque à la frappe de son secteur et sa Défense à votre défense totale, puis s'use. Épuisée, elle quitte le front.</p>
@@ -6562,7 +6596,7 @@ function guideModal() {
       <li><b>Vos secteurs</b> (couloirs) : posez-y autant de cartes que vous voulez, ensemble ou au fil du tour. À droite, leur score : Attaque (bleu) × Mult des combos (rouge).</li>
       <li><b>La barre</b> sous une unité = sa solidité : elle s'use au fil des combats, puis l'unité rentre (sa carte est déjà dans la défausse).</li>
     </ol></div>
-    <div class="gm-calc"><b>Intentions ennemies :</b> chaque tour, l'ennemi annonce ce qu'il va faire (🎯 concentration sur un secteur, 💥 assaut en force, ✈ raid aérien, ⛏ retranchement) : touchez la pastille jaune du QG ennemi pour lire la réponse adaptée. Son commandant 🎖 a un trait connu à l'avance. <b>Capacités :</b> touchez une unité marquée ★ pour jouer un coup puissant, une fois par bataille. <b>Boss :</b> à la moitié de ses PV, il passe en phase 2. <b>Paris :</b> avant chaque bataille, un risque facultatif contre un bonus de butin. <b>Retraite :</b> touchez une unité puis « Retraite » pour libérer sa place (carte à la défausse), 3 par bataille. <b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
+    <div class="gm-calc"><b>Intentions ennemies :</b> chaque tour, l'ennemi annonce ce qu'il va faire (🎯 concentration sur un secteur, 💥 assaut en force, ✈ raid aérien, ⛏ retranchement) : touchez la pastille jaune du QG ennemi pour lire la réponse adaptée. Son commandant 🎖 a un trait connu à l'avance. <b>Affinités :</b> l'ennemi a une couleur ; la couleur qui la bat fait +25 % d'Attaque (▲), celle qu'elle bat −25 % (▼) : jaune bat rouge, rouge bat vert, vert bat noir, noir bat jaune. <b>Capacités :</b> touchez une unité marquée ★ pour jouer un coup puissant, une fois par bataille. <b>Boss :</b> à la moitié de ses PV, il passe en phase 2. <b>Paris :</b> avant chaque bataille, un risque facultatif contre un bonus de butin. <b>Retraite :</b> touchez une unité puis « Retraite » pour libérer sa place (carte à la défausse), 3 par bataille. <b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
     <div class="gm-steps"><span><b>1</b> Touchez une carte : ★ indique le meilleur secteur</span><span><b>2</b> Glissez-la : score et frappe totale avant/après s'affichent</span><span><b>3</b> « Fin du tour » : décompte, frappe, riposte, usure</span></div>`;
   document.querySelectorAll('.coach').forEach(x => x.remove());
   openModal(`<div class="hd"><span class="ribbon">Lire le plateau</span><button class="pill" data-act="close">Compris</button></div>${mock}`);
