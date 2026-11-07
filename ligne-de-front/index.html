@@ -2964,6 +2964,23 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .enemybtn { white-space: normal !important; text-align: left; line-height: 1.1; }
 @media (max-height: 340px) { .btl.land .enhq .enatk { font-size: .56rem; padding: 0 4px; } .btl.land .enhq .enmain { gap: 1px; } .btl.land .enhq .enobj { display: none; } .btl.land .enhq .enrow { margin-top: 0 !important; } .enemybtn { font-size: .54rem !important; padding: 0 5px !important; } }
 .tipbub { position: fixed !important; top: 6px !important; bottom: auto !important; }
+
+/* Salve unique par secteur ; capacité : double touche, mise en valeur */
+.awb.volley .awu.fire { z-index: 5; }
+.awb.volley::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(60% 90% at 30% 50%, rgba(255, 220, 120, .38), transparent 70%); animation: volleyflash .5s ease-out; }
+@keyframes volleyflash { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
+.gult { top: -5px !important; left: -5px !important; display: flex; align-items: center; gap: 0; font-size: 1.05rem !important; padding: 0 3px; border-radius: 99px; background: linear-gradient(180deg, #d5281a, #8a1208); border: 1.5px solid #ffd24a; text-shadow: 0 1px 0 #000 !important; box-shadow: 0 0 10px rgba(255, 210, 74, .95); animation: ultbeat 1s ease-in-out infinite !important; }
+.gult small { font-size: .5rem; color: #fff; margin-left: 1px; font-weight: 800; }
+@keyframes ultbeat { 50% { transform: scale(1.25); box-shadow: 0 0 16px rgba(255, 210, 74, 1); } }
+.ultglow { position: absolute; inset: -3px; z-index: 0; border-radius: 10px; pointer-events: none; border: 2px solid #ffd24a; box-shadow: 0 0 12px 2px rgba(255, 210, 74, .85), inset 0 0 10px rgba(255, 210, 74, .45); animation: ultring 1.3s ease-in-out infinite; }
+@keyframes ultring { 50% { opacity: .45; transform: scale(1.06); } }
+.gu.ultfire { animation: ultfire .7s cubic-bezier(.2, 1.6, .4, 1); } @keyframes ultfire { 0% { transform: scale(1); filter: brightness(1); } 35% { transform: scale(1.5) rotate(-5deg); filter: brightness(2) saturate(1.5); } 100% { transform: scale(1); } }
+.ultban { position: fixed; z-index: 800; left: 50%; top: 38%; transform: translate(-50%, -50%); display: grid; gap: 2px; justify-items: center; padding: 10px 26px; border-radius: 16px; border: 3px solid #ffd24a; background: linear-gradient(180deg, #d5281a, #7d0f06); color: #fff; text-align: center; box-shadow: 0 0 30px rgba(255, 210, 74, .9), 0 8px 24px rgba(0, 0, 0, .6); animation: ultin 1.5s cubic-bezier(.2, 1.5, .4, 1) both; pointer-events: none; }
+.ultban small { font-size: .7rem; opacity: .85; letter-spacing: .08em; text-transform: uppercase; } .ultban b { font-family: var(--font-display); font-size: 1.7rem; text-shadow: 0 3px 0 #000; } .ultban span { font-size: .8rem; font-weight: 700; color: #ffe27a; }
+@keyframes ultin { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 18% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; } 30% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { transform: translate(-50%, -62%) scale(1); opacity: 0; } }
+@media (max-height: 420px) { .ultban { padding: 5px 16px; } .ultban b { font-size: 1.1rem; } .ultban span { font-size: .62rem; } .gult { font-size: .8rem !important; } }
+.ultban { top: 70px !important; padding: 6px 18px !important; } .ultban b { font-size: 1.3rem !important; } .gult { font-size: .85rem !important; }
+@media (max-height: 420px) { .ultban { top: 44px !important; } .ultban b { font-size: 1rem !important; } }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5055,7 +5072,7 @@ function slotUnitHTML(u, sel, tgt) {
   return `<button class="gu me tok k-${kindOf(key)} ${u.land ? '' : 'sup'} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${u.born === S.turn ? 'new' : ''} ${u.stam <= 1 ? 'tired' : ''} wear${wearLv(u)}" data-uid="${u.uid}" aria-label="${u.name}" title="${u.name}${u.land ? '' : ' (appui)'}" style="--d:${(u.uid * 37 % 10) / 10}">
     <span class="gart">${u.land ? squadSVG(key, 'me', menNow(u), u.menMax, 30, u.cols) : spriteSVG(key, 'me', 26, u.cols)}</span><i class="ifx"></i>${u.cols ? `<span class="cchip" style="background:${chipBg(u.cols)}"></span>` : ''}
     ${u.dig ? '<span class="gdig" title="Retranché">▤</span>' : ''}${um !== 1 ? `<span class="gtm ${um > 1 ? 'up' : 'dn'}">${um > 1 ? '▲' : '▼'}</span>` : ''}${u.elan ? `<span class="gel" title="Élan">»${u.elan}</span>` : ''}
-    ${(() => { const a = affinityOf(S.lvl && S.lvl.col, u.cols); return a ? `<span class="gaff ${a > 0 ? 'up' : 'dn'}">${a > 0 ? '▲' : '▼'}</span>` : ''; })()}${canUlt(S, u) ? '<span class="gult" title="Capacité spéciale disponible">★</span>' : ''}<span class="gbase"><span class="gmen" title="${menNow(u)} ${noun(u.key, menNow(u))}${menNow(u) < u.menMax ? ' sur ' + u.menMax : ''}">${menNow(u)}</span>${pipsHTML(u)}</span></button>`;
+    ${(() => { const a = affinityOf(S.lvl && S.lvl.col, u.cols); return a ? `<span class="gaff ${a > 0 ? 'up' : 'dn'}">${a > 0 ? '▲' : '▼'}</span>` : ''; })()}${canUlt(S, u) ? '<span class="ultglow" aria-hidden="true"></span><span class="gult" title="Capacité spéciale : double touche">★<small>×2</small></span>' : ''}<span class="gbase"><span class="gmen" title="${menNow(u)} ${noun(u.key, menNow(u))}${menNow(u) < u.menMax ? ' sur ' + u.menMax : ''}">${menNow(u)}</span>${pipsHTML(u)}</span></button>`;
 }
 // Bilan des forces d'un secteur : soldats, véhicules, avions, navires
 function laneForcesHTML(q) {
@@ -5569,7 +5586,21 @@ function onUnit(uid) {
   const u = findUnit(S, uid); if (!u) return;
   if (picked.length === 1 && isUnitTargetOrder(picked[0])) { if (deployTargets(S, picked[0]).some(t => t.uid === uid)) return deployCardAt(picked[0], { uid }); }
   else if (picked.length) return deployGroupAt(picked.slice(), u.c);
-  picked = []; selU = uid; SFX.play('tap'); renderBattle(); unitSheet(uid);
+  // double touche sur une unité marquée ★ : capacité spéciale ; sinon la fiche s'ouvre (avec un court délai si une capacité est disponible)
+  const now = Date.now();
+  if (canUlt(S, u) && window.__lastTap && window.__lastTap.uid === uid && now - window.__lastTap.t < 380) {
+    clearTimeout(window.__tapT); window.__lastTap = null; return fireUlt(uid);
+  }
+  picked = []; selU = uid; SFX.play('tap'); renderBattle();
+  if (canUlt(S, u)) { window.__lastTap = { uid, t: now }; clearTimeout(window.__tapT); window.__tapT = setTimeout(() => { window.__lastTap = null; unitSheet(uid); }, 390); }
+  else unitSheet(uid);
+}
+function fireUlt(uid) {
+  undo.push(snapshotState(S)); const r = activateUlt(S, uid);
+  if (!r) { undo.pop(); SFX.play('deny'); return; }
+  closeModal(); picked = []; selU = null; SFX.play('stamp'); renderBattle();
+  const el = unitEl(uid); if (el) { el.classList.add('ultfire'); popAt(el, `${r.ult.ic} ${r.ult.nm.toUpperCase()} !`, '#d5281a'); boomAt(el); shakeBoard(false); }
+  const b = document.createElement('div'); b.className = 'ultban'; b.innerHTML = `<small>${r.name}</small><b>${r.ult.ic} ${r.ult.nm}</b><span>${r.ult.desc}</span>`; document.body.appendChild(b); setTimeout(() => b.remove(), 1500);
 }
 const comboRow = (k, on) => `<li class="${on}"><b>${k.name}${k.lv > 1 ? ' niv. ' + k.lv : ''}</b><span>${k.mul ? '×' + fmtMult(k.mul) : '+' + fmtMult(k.add)}</span></li>`;
 // Fiche d'un secteur : unités, combinaisons, calcul de sa frappe
@@ -6099,10 +6130,11 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const toks = [...band.querySelectorAll('.awu')], per = Math.max(100, Math.min(230, 900 / Math.max(1, toks.length)));
     let chips = 0;
     toks.forEach((t, j) => { t.style.setProperty('--j', j); const q = live.find(x => x.uid === +t.dataset.uid); if (q && q.stam <= 1) t.classList.add('tired'); });
-    for (const tk of toks) {
-      const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) continue;
-      const a = unitAtk(S, u); if (!a) continue;
-      landings.length = 0; tk.classList.add('fire'); SFX.play(SND_OF[u.key] || 'rifle', Math.min(u.menMax, 10));
+    landings.length = 0; band.classList.add('volley'); let volleyN = 0, volleyA = 0;
+    await Promise.all(toks.map(async tk => {
+      const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) return;
+      const a = unitAtk(S, u); if (!a) return;
+      volleyN++; volleyA += a; tk.classList.add('fire'); SFX.play(SND_OF[u.key] || 'rifle', Math.min(u.menMax, 10));
       void tk.offsetWidth; // la pose de tir doit être affichée avant de lancer sa séquence
       requestAnimationFrame(() => tk.querySelectorAll('animate[data-once]').forEach(a => { try { a.beginElement(); } catch (e) { /* navigateur sans SMIL */ } }));
       const naval = u.cls === 'ship' && typeof VFX !== 'undefined' && VFX.broad, aerial = u.cls === 'air' && typeof VFX !== 'undefined' && VFX.strafe, rolling = (u.cls === 'wheel' || u.cls === 'track') && typeof VFX !== 'undefined' && VFX.dust;
@@ -6117,10 +6149,12 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       for (let k = 0; k < shots; k++) setTimeout(() => fly(tk, mk, u.cls === 'ship' || u.kw.includes('arty') ? 'shell' : u.cls === 'air' ? 'bullet air' : 'bullet', 300 + k * 30), k * 50);
       popAt(tk, '+' + fmtN(a), '#2559b5');
       await Promise.all([T(special ? Math.max(per * 0.55, 500) : poses ? Math.max(per * 0.55, 480) : per * 0.55), Promise.race([Promise.all(landings), sleep(1600)])]);
-      chips += a; chEl.textContent = fmtN(chips); bump(chEl); shk(chEl); hqImpact(a);
+      chips += a; chEl.textContent = fmtN(chips);
       if (!special && !UNARMED[SPR_OF[u.key]]) setTimeout(() => { if (u.cls === 'foot' && !heavy) bulletHits(mk, 3); else boomOn(mk, false, (Math.random() - .5) * 40, (Math.random() - .5) * 30); }, 0);
       await T(special ? Math.max(per * 0.45, 380) : poses ? Math.max(per * 0.45, 340) : per * 0.45); tk.classList.remove('fire'); if (u.stam <= 1) tk.classList.add('spent');
-    }
+        }));
+    if (volleyN) { SFX.play('bigcannon'); chEl.textContent = fmtN(chips); bump(chEl); shk(chEl); hqImpact(volleyA); await T(160); }
+    band.classList.remove('volley');
     if (f.barrage) { SFX.play('shell'); boomOn(mk, true); chips += f.barrage; chEl.textContent = fmtN(chips); bump(chEl); cbs.insertAdjacentHTML('beforeend', `<i class="cb a lit">Barrage +${f.barrage}</i>`); await T(320); }
     chEl.textContent = fmtN(f.baseAtk);
     // les combos s'allument et le Mult grimpe
@@ -6351,7 +6385,7 @@ function maybeTip() {
   const seen = tipsSeen(), tips = [
     ['act', S.plan && S.plan.act, 'L’ennemi annonce ce qu’il va faire ce tour. Touchez la pastille jaune pour lire la bonne réponse.'],
     ['aff', S.lvl && S.lvl.col && S.hand.some(k => !isOrder(k) && affinityOf(S.lvl.col, k.c)), '▲ vert : +25 % d’Attaque contre la couleur de l’ennemi. ▼ rouge : −25 %.'],
-    ['ult', units(S, 'me').some(u => canUlt(S, u)), '★ sur une unité : touchez-la pour jouer son coup spécial, une seule fois par bataille.'],
+    ['ult', units(S, 'me').some(u => canUlt(S, u)), '★ sur une unité : touchez-la DEUX FOIS pour jouer son coup spécial, une seule fois par bataille.'],
     ['danger', S.turn >= 2, 'Le voyant sous le QG ennemi (vert, orange, rouge) montre le danger pour votre QG. Touchez-le pour le détail.'],
   ];
   const tip = tips.find(([id, cond]) => cond && !seen[id]); if (!tip) return;
@@ -6679,7 +6713,7 @@ function guideModal() {
       <li><b>Vos secteurs</b> (couloirs) : posez-y autant de cartes que vous voulez, ensemble ou au fil du tour. À droite, leur score : Attaque (bleu) × Mult des combos (rouge).</li>
       <li><b>La barre</b> sous une unité = sa solidité : elle s'use au fil des combats, puis l'unité rentre (sa carte est déjà dans la défausse).</li>
     </ol></div>
-    <div class="gm-calc"><b>Intentions ennemies :</b> chaque tour, l'ennemi annonce ce qu'il va faire (🎯 concentration sur un secteur, 💥 assaut en force, ✈ raid aérien, ⛏ retranchement) : touchez la pastille jaune du QG ennemi pour lire la réponse adaptée. Son commandant 🎖 a un trait connu à l'avance. <b>Affinités :</b> l'ennemi a une couleur ; la couleur qui la bat fait +25 % d'Attaque (▲), celle qu'elle bat −25 % (▼) : jaune bat rouge, rouge bat vert, vert bat noir, noir bat jaune. <b>Capacités :</b> touchez une unité marquée ★ pour jouer un coup puissant, une fois par bataille. <b>Boss :</b> à la moitié de ses PV, il passe en phase 2. <b>Paris :</b> avant chaque bataille, un risque facultatif contre un bonus de butin. <b>Retraite :</b> touchez une unité puis « Retraite » pour libérer sa place (carte à la défausse), 3 par bataille. <b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
+    <div class="gm-calc"><b>Intentions ennemies :</b> chaque tour, l'ennemi annonce ce qu'il va faire (🎯 concentration sur un secteur, 💥 assaut en force, ✈ raid aérien, ⛏ retranchement) : touchez la pastille jaune du QG ennemi pour lire la réponse adaptée. Son commandant 🎖 a un trait connu à l'avance. <b>Affinités :</b> l'ennemi a une couleur ; la couleur qui la bat fait +25 % d'Attaque (▲), celle qu'elle bat −25 % (▼) : jaune bat rouge, rouge bat vert, vert bat noir, noir bat jaune. <b>Capacités :</b> double-touchez une unité marquée ★ pour jouer un coup puissant, une fois par bataille. <b>Boss :</b> à la moitié de ses PV, il passe en phase 2. <b>Paris :</b> avant chaque bataille, un risque facultatif contre un bonus de butin. <b>Retraite :</b> touchez une unité puis « Retraite » pour libérer sa place (carte à la défausse), 3 par bataille. <b>Fin du tour :</b> la somme des scores de vos secteurs frappe le QG ennemi. Puis il riposte : son Attaque − votre Défense totale ${SHIELD} = les dégâts sur votre QG (au moins un quart passe toujours).</div>
     <div class="gm-steps"><span><b>1</b> Touchez une carte : ★ indique le meilleur secteur</span><span><b>2</b> Glissez-la : score et frappe totale avant/après s'affichent</span><span><b>3</b> « Fin du tour » : décompte, frappe, riposte, usure</span></div>`;
   document.querySelectorAll('.coach').forEach(x => x.remove());
   openModal(`<div class="hd"><span class="ribbon">Lire le plateau</span><button class="pill" data-act="close">Compris</button></div>${mock}`);
@@ -6800,12 +6834,7 @@ document.addEventListener('click', e => {
   const bm = t.closest('[data-buym]'); if (bm) { const m = C.shop.manuals[+bm.dataset.buym]; if (!m || m.sold || C.loot < m.price) return; C.loot -= m.price; m.sold = true; const lv = buyManual(C, m.id); SFX.play('buy'); toast(`${COMBOS.find(x => x.id === m.id).name} passe au niveau ${lv}.`); return renderShop(); }
   const bc = t.closest('[data-buyc]'); if (bc) { const c = C.shop.cards[+bc.dataset.buyc]; if (c.sold || C.loot < c.price) return; C.loot -= c.price; C.deck.push({ ...c.card }); c.sold = true; SFX.play('buy'); toast('Carte ajoutée au paquet.'); return renderShop(); }
   const wg = t.closest('[data-wager]'); if (wg) { SFX.play('select'); return startBattle(C.node, wg.dataset.wager); }
-  const ut = t.closest('[data-ult]'); if (ut && S) {
-    const uid = +ut.dataset.ult; undo.push(snapshotState(S)); const r = activateUlt(S, uid);
-    if (!r) { undo.pop(); SFX.play('deny'); return toast('Capacité indisponible.'); }
-    closeModal(); picked = []; selU = null; SFX.play('stamp'); renderBattle(); const el = unitEl(uid); if (el) { popAt(el, `${r.ult.ic} ${r.ult.nm.toUpperCase()} !`, '#d5281a'); boomAt(el); shakeBoard(false); }
-    return;
-  }
+  const ut = t.closest('[data-ult]'); if (ut && S) { return fireUlt(+ut.dataset.ult); }
   const rt = t.closest('[data-retreat]'); if (rt && S) {
     const uid = +rt.dataset.retreat; undo.push(snapshotState(S)); const r = retreatUnit(S, uid);
     if (!r) { undo.pop(); SFX.play('deny'); return toast('Plus de retraite pour cette bataille.'); }

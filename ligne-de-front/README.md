@@ -413,3 +413,7 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 
 ## Réglage d'équilibrage (simulation, 200 campagnes)
 `tuneK` : QG ennemi ×1,3 sur les blindes 2, 3, 5, 6 (hors boss) et ×0,92 sur les blindes 14 à 16. Résultat du bot : batailles 2 à 6 passées de 3-4 à 5-6 tours, boss de la blinde 4 à ≈ 89 %, blinde 15 ≈ 50 %. Les cinq doctrines et les cinq tactiques de paquet donnent des taux équivalents (< 1,5 % de campagnes terminées) ; les capacités spéciales sont le levier le plus fort (sans elles, ≈ −10 points vers la blinde 8). Variables : `EARLY2`, `LATE`.
+
+## Salve unique et double touche
+- **Assaut** : toutes les unités d'un même secteur tirent **en même temps** (une seule salve, une seule explosion sur le QG ennemi avec le total) au lieu d'un tir après l'autre ; flash doré sur le secteur.
+- **Capacités** : **double touche** sur une unité ★ pour la déclencher (un seul toucher ouvre toujours sa fiche, avec un court délai si une capacité est disponible). Mise en valeur : anneau doré pulsé autour de l'unité, pastille ★×2 rouge et dorée qui bat, puis à l'activation l'unité grossit et une bannière « Charge à la baïonnette — Attaque ×1,75 ce tour » s'affiche.
