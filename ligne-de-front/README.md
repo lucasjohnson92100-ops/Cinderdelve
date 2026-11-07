@@ -410,3 +410,6 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 - **Fiche ennemie** : un seul bouton sur le QG ennemi (intention, couleur, ⓘ) qui ouvre intention, commandant, couleur et effets du QG.
 - **Astuces à usage unique** (`front-tips`) : une bulle explique en une phrase la première fois une règle apparaît (intention, affinité, ★, danger), avec « Compris ».
 - **Garde-fou de fin de tour** : confirmation si rien n'a été joué, si le QG est en danger de mort, ou si du ravitaillement jouable va être perdu.
+
+## Réglage d'équilibrage (simulation, 200 campagnes)
+`tuneK` : QG ennemi ×1,3 sur les blindes 2, 3, 5, 6 (hors boss) et ×0,92 sur les blindes 14 à 16. Résultat du bot : batailles 2 à 6 passées de 3-4 à 5-6 tours, boss de la blinde 4 à ≈ 89 %, blinde 15 ≈ 50 %. Les cinq doctrines et les cinq tactiques de paquet donnent des taux équivalents (< 1,5 % de campagnes terminées) ; les capacités spéciales sont le levier le plus fort (sans elles, ≈ −10 points vers la blinde 8). Variables : `EARLY2`, `LATE`.
