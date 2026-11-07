@@ -2942,6 +2942,28 @@ body:has(.loot-win) { background: linear-gradient(180deg, rgba(12, 16, 22, .35),
 .gaff { top: 2px !important; right: auto !important; left: 16px !important; }
 .btl.land .enhq .enmain { overflow: visible; }
 @media (max-height: 340px) { .modal .box:has([data-retreat]) > p.small.muted { display: none; } .modal .box:has([data-retreat]) .btn { padding-block: 4px; font-size: .74rem; } .modal .box:has([data-retreat]) .effl { margin: 2px 0; font-size: .7rem; } }
+
+/* Conseil du tour, voyant de danger, fiche ennemie, astuces */
+.bt-hint.advice { font-weight: 800; align-items: center; } .bt-hint.advice .adv-ic { font-size: 1.1em; margin-right: 3px; }
+.bt-hint.advice.tone-ok { border-left: 5px solid #2f9e44; } .bt-hint.advice.tone-warn { border-left: 5px solid #f08c00; } .bt-hint.advice.tone-bad { border-left: 5px solid #d5281a; animation: tgtpulse 1.2s ease-in-out infinite; }
+.bt-hint.advice .ht { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit; }
+.totals .lamp { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 3px; border: 1.5px solid #1b2540; background: #2f9e44; box-shadow: 0 0 5px rgba(47, 158, 68, .9); }
+.totals.tone-warn .lamp { background: #f08c00; box-shadow: 0 0 5px rgba(240, 140, 0, .9); } .totals.tone-bad .lamp { background: #d5281a; box-shadow: 0 0 6px rgba(213, 40, 26, 1); animation: tgtpulse .9s ease-in-out infinite; }
+.enemybtn { display: inline-flex !important; align-items: center; gap: 4px; } .enemybtn small { opacity: .7; } .enemybtn.ph2 { background: #d5281a !important; color: #fff !important; border-color: #fff !important; }
+.ecol { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid #1b2540; vertical-align: -1px; }
+.efiche { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; } .efiche li { background: rgba(255, 255, 255, .5); border-radius: 8px; padding: 6px 8px; line-height: 1.3; } .efiche ul { margin: 3px 0 0; padding-left: 16px; }
+.dlines { margin: 0 0 6px; padding-left: 16px; line-height: 1.4; } .dlines li.bad { color: #b3351f; font-weight: 800; }
+.tipbub { position: absolute; z-index: 700; left: 50%; top: 10px; transform: translateX(-50%); max-width: min(520px, 72%); display: flex; gap: 8px; align-items: center; padding: 7px 10px; border-radius: 12px; border: 2px solid #3b2a00; background: linear-gradient(180deg, #fff6d6, #f1dba0); color: #2b1a00; font-weight: 700; font-size: .8rem; line-height: 1.25; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); animation: tipin .35s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes tipin { from { transform: translateX(-50%) translateY(-14px); opacity: 0; } }
+.tipbub button { flex: none; font: inherit; font-weight: 800; padding: 3px 9px; border-radius: 99px; border: 2px solid #3b2a00; background: #ffd24a; cursor: pointer; }
+@media (max-height: 420px) { .tipbub { font-size: .66rem; padding: 4px 8px; top: 4px; } }
+@media (max-height: 340px) { .btl.land:has(.bt-hint.advice) { grid-template-rows: auto minmax(0, 1.6fr) auto auto minmax(0, .8fr) auto !important; } .bt-hint.advice .ht { font-size: .58rem; line-height: 1.12; -webkit-line-clamp: 3; } .bt-hint.advice { padding: 2px 5px !important; } .totals .lamp { width: 8px; height: 8px; } }
+@media (max-height: 440px) { .enemybtn { max-width: 100%; font-size: .6rem !important; } .enemybtn .ecol { width: 8px; height: 8px; } }
+.btl.land .enhq .enrow { flex-wrap: wrap !important; overflow: visible !important; }
+.enemybtn { white-space: normal !important; text-align: left; line-height: 1.1; }
+@media (max-height: 340px) { .btl.land .enhq .enatk { font-size: .56rem; padding: 0 4px; } .btl.land .enhq .enmain { gap: 1px; } .btl.land .enhq .enobj { display: none; } .btl.land .enhq .enrow { margin-top: 0 !important; } .enemybtn { font-size: .54rem !important; padding: 0 5px !important; } }
+.tipbub { position: fixed !important; top: 6px !important; bottom: auto !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4892,7 +4914,7 @@ const TUTO = [
   { id: 'b-stam', stage: 1, info: true, sel: '.gu .pips', text: 'La barre sous une unité = sa solidité. Elle s\'use au fil des combats, puis l\'unité quitte le front : il faut renouveler vos troupes.' },
   { id: 'b-end', stage: 1, sel: '#bend', when: () => myUnits().length >= 2, done: () => S.turn >= 2, text: 'Quand vous avez posé ce que vous voulez, touchez « Fin du tour » : décompte des secteurs, frappe sur le QG, riposte, puis usure.' },
   { id: 'main', stage: 1, sel: '#hand', when: () => S.hand.filter(k => !isOrder(k)).length >= 2 && myUnits().length > 0, done: () => landCols(S).some(c => queue(S, 'me', c).length + supportsAt(S, c).length >= 2), text: 'Comme une main de Balatro : touchez plusieurs cartes, puis un secteur. Elles s’y posent ensemble, et le score du secteur (Attaque × Mult) s’affiche avant la pose.' },
-  { id: 'b-fx', stage: 2, info: true, sel: '.fxchip', text: 'Ce QG a un effet spécial, comme les boss de Balatro. Touchez-le pour le lire : il change la meilleure tactique.' },
+  { id: 'b-fx', stage: 2, info: true, sel: '.enemybtn', text: 'Ce bouton résume l’ennemi : son intention du tour, sa couleur et ses effets spéciaux. Touchez-le pour tout lire.' },
   { id: 'b-combo', stage: 2, info: true, sel: '.lc.units .cb', text: 'Combinaisons : chaque étiquette (Trio, Armes combinées, Même couleur…) augmente le Mult rouge du secteur. Plus la main est riche, plus le score grimpe.' },
   { id: 'terrain', stage: 2, info: true, sel: '.ln .ltag', text: 'Chaque couleur a un terrain fort (▲ +50 % d’Attaque) et faible (▼ −25 %). Les pastilles en tête de colonne le rappellent.' },
   { id: 'orders', stage: 2, sel: '#hand .hc.ordre', when: () => S.hand.some(isOrder), done: () => S.discard.some(isOrder), text: 'Les cartes blanches sont des ordres : Barrage, Assaut, Fumigènes, Repli… Glissez-les sur leur cible.' },
@@ -5078,11 +5100,49 @@ function laneTag(ter) {
   return `<span class="ltag">${up.map(k => `<i class="up" style="--c:${COLORS[k].hex}">▲</i>`).join('')}${dn.map(k => `<i class="dn" style="--c:${COLORS[k].hex}">▼</i>`).join('')}</span>`;
 }
 // QG ennemi : forteresse, PV (la blinde), Attaque annoncée et effets
+// Conseil du tour : une seule phrase d'action, et un voyant de danger pour le QG
+function totalsModal() {
+  const F = frontForecast(S), a = ENEMY_ACTS[F.act];
+  openModal(`<div class="hd"><span class="ribbon red">${a.ic} ${a.name}</span><button class="pill" data-act="close">Fermer</button></div>
+    <p>${a.tip}</p>
+    <ul class="dlines">${F.lines.map(l => `<li class="${l.bad ? 'bad' : ''}"><b>${l.ic ? l.ic + ' ' : ''}${l.lab}</b> : ${SWORD}${fmtN(l.atk)} ennemi − ${l.def >= 99 ? 'interceptée' : SHIELD + fmtN(l.def) + ' de Défense'} = <b>${fmtN(l.dmg)}</b> dégâts</li>`).join('')}</ul>
+    <p><b>Votre QG perdrait ${fmtN(F.toMe)} PV</b> (${fmtN(S.hq.me)} → ${fmtN(Math.max(0, S.hq.me - F.toMe))}). Au moins 15 % de l'attaque passe toujours.</p>`);
+}
+function dangerTone(F) { const r = F.toMe / Math.max(1, S.hq.me); return F.toMe >= S.hq.me || r >= 0.3 ? 'bad' : r >= 0.12 ? 'warn' : 'ok'; }
+function adviceInfo(F) {
+  const tone = dangerTone(F), a = F.act, n = units(S, 'me').length;
+  if (!n) return { tone: 'ok', ic: '🃏', text: 'Touchez des cartes, puis un secteur, pour attaquer.' };
+  if (F.toMe >= S.hq.me) return { tone: 'bad', ic: '⚠', text: 'Votre QG tomberait ce tour : ajoutez de la Défense !' };
+  if (F.toEn >= S.hq.en && S.obj.type !== 'hold') return { tone: 'ok', ic: '🏆', text: 'Finissez le tour : vous détruisez le QG ennemi !' };
+  if (tone !== 'ok') {
+    if (a === 'focus' && F.tgt !== undefined) return { tone, ic: '🎯', text: `Renforcez ${secName(F.tgt)} : l'ennemi y concentre son attaque.` };
+    if (a === 'raid') return { tone, ic: '✈', text: 'Raid aérien : posez un chasseur dans le ciel pour l’arrêter.' };
+    if (a === 'assault') return { tone, ic: '💥', text: 'Assaut en force : ajoutez de la Défense ou jouez Fumigènes.' };
+    if (a === 'dig') return { tone, ic: '⛏', text: 'L’ennemi se retranche : vos coups baissent, tenez bon.' };
+    return { tone, ic: '🛡', text: 'Ajoutez de la Défense : votre QG va encaisser.' };
+  }
+  const spare = S.hand.some(k => canDeployNow(S, k).ok && cardCost(S, k) <= S.supply);
+  if (spare && S.supply >= 3) return { tone: 'ok', ic: '➕', text: `Il reste ${S.supply} de ravitaillement : jouez encore une carte.` };
+  return { tone: 'ok', ic: '✔', text: 'Rien à craindre : ajoutez de l’Attaque pour finir plus vite.' };
+}
 // couleur de l'ennemi et affinités (en bataille seulement)
 const inBattleCol = () => (typeof C !== 'undefined' && C && C.phase === 'node' && typeof S !== 'undefined' && S && S.lvl && S.lvl.col) || '';
 const affBadge = card => { const col = inBattleCol(); if (!col || isOrder(card) || !card.c) return ''; const a = affinityOf(col, card.c); return a ? `<span class="aff ${a > 0 ? 'up' : 'dn'}" title="${a > 0 ? 'Avantage de couleur : +25 % d’Attaque' : 'Désavantage de couleur : −25 % d’Attaque'}">${a > 0 ? '▲' : '▼'}</span>` : ''; };
 const colChip = () => { const c = S.lvl && S.lvl.col; if (!c) return ''; const up = colorBeatenBy(c), dn = COLOR_BEATS[c]; return `<span class="colchip" style="--c:${COLORS[c].hex}" title="Couleur de l’ennemi : ${COLORS[c].name}. ▲ ${COLORS[up].name} : +25 % d’Attaque · ▼ ${COLORS[dn].name} : −25 %">● ${COLORS[c].name}</span>`; };
 // intention annoncée pour ce tour + commandant ennemi
+const enemyBtn = () => { const a = S.plan && S.plan.act && ENEMY_ACTS[S.plan.act], c = S.lvl && S.lvl.col; return `<button class="actchip enemybtn ${S.phase2 ? 'ph2' : ''}" data-enemy-info title="Fiche de l’ennemi : intention, commandant, couleur, effets">${a ? a.ic + ' ' + a.name : 'Ennemi'}${S.phase2 ? ' · PHASE 2' : ''}${c ? `<i class="ecol" style="background:${COLORS[c].hex}"></i>` : ''} <small>ⓘ</small></button>`; };
+function enemyModal() {
+  const a = S.plan && S.plan.act && ENEMY_ACTS[S.plan.act], cmd = S.lvl && S.lvl.cmd !== undefined ? COMMANDERS[S.lvl.cmd] : null, c = S.lvl && S.lvl.col;
+  const fxs = (S.fx || []).map(k => `<li><b>${HQFX[k].name}</b> : ${HQFX[k].txt}</li>`).join('');
+  openModal(`<div class="hd"><span class="ribbon red">${S.lvl.name || 'QG ennemi'}</span><button class="pill" data-act="close">Fermer</button></div>
+    <ul class="efiche">
+      ${a ? `<li><b>${a.ic} Intention : ${a.name}</b><br>${a.tip}</li>` : ''}
+      ${cmd ? `<li><b>🎖 Commandant : ${cmd.name}</b><br>${cmd.name.split(' ').pop()} ${cmd.trait}.</li>` : ''}
+      ${c ? `<li><b><i class="ecol" style="background:${COLORS[c].hex}"></i> Couleur : ${COLORS[c].name}</b><br>▲ ${COLORS[colorBeatenBy(c)].name} : +25 % d'Attaque · ▼ ${COLORS[COLOR_BEATS[c]].name} : −25 %.</li>` : ''}
+      ${fxs ? `<li><b>Effets du QG</b><ul>${fxs}</ul></li>` : ''}
+      ${S.phase2 ? '<li><b>PHASE 2</b><br>Le boss est plus dur et enchaîne surtout des assauts.</li>' : ''}
+    </ul>`);
+}
 const actChip = () => { const a = S.plan && S.plan.act && ENEMY_ACTS[S.plan.act], cmd = S.lvl && S.lvl.cmd !== undefined ? COMMANDERS[S.lvl.cmd] : null; return `${a ? `<button class="actchip" data-act-info="${S.plan.act}" title="${a.tip}">${a.ic} ${a.name}</button>` : ''}${colChip()}${cmd ? `<span class="cmdchip" title="${cmd.name} ${cmd.trait}">🎖 ${cmd.name.split(' ').pop()}</span>` : ''}`; };
 function enemyHQHTML(view, live, F) {
   const hold = S.obj.type === 'hold', max = S.lvl.hq || 1, cur = Math.max(0, view.hq.en), pct = hold ? 100 : Math.max(0, Math.min(100, (cur / max) * 100));
@@ -5092,7 +5152,7 @@ function enemyHQHTML(view, live, F) {
     <div class="enmain"><div class="enl"><b>${hold ? 'Tenir la position' : S.lvl.name || 'QG ennemi'}</b><span class="tour">Tour ${S.turn}</span></div>
       <div class="enobj" id="obj">${objLine()}</div>
       <div class="bar big"><i style="width:${pct}%"></i>${live && F && !hold ? `<i class="dmgp" style="left:${Math.max(0, pct - Math.min(pct, (F.toEn / max) * 100))}%;width:${Math.min(pct, (F.toEn / max) * 100)}%"></i>` : ''}<span class="enhp" id="enhp">${hold ? `Tour ${Math.min(S.obj.n, S.turn)} / ${S.obj.n}` : `${fmtN(cur)} / ${fmtN(max)} PV`}</span></div>
-      <div class="enrow"><span class="enatk" title="Attaque ennemie de ce tour, contre votre Défense totale">${SWORD} Riposte <b>${fmtN(atk)}</b>${S.smoke ? ' <small>(fumée ÷2)</small>' : ''}</span></div><div class="enrow en2">${actChip()}${S.phase2 ? '<span class="phchip" title="Le boss est passé en phase 2 : plus dur, nouvelle mécanique">PHASE 2</span>' : ''}${fx}</div></div></div>`;
+      <div class="enrow"><span class="enatk" title="Attaque ennemie de ce tour, contre votre Défense totale">${SWORD} Attaque ennemie <b>${fmtN(atk)}</b>${S.smoke ? ' <small>(fumée ÷2)</small>' : ''}</span>${enemyBtn()}</div></div></div>`;
 }
 function boardHTML(view, live) {
   const P = live ? selPV() : null, one = live && !busy && picked.length === 1 ? picked[0] : null;
@@ -5116,7 +5176,7 @@ function boardHTML(view, live) {
       <div class="lc units" data-c="${c}" data-row="2">${zone ? '' : decoSVG(S.grid, 2, c, '', 1)}<div class="toks" style="--n:${q.length}">${toks}</div>${ph}${cbs ? `<span class="cbs">${cbs}</span>` : ''}</div>
       <div class="lc foot ${pv ? 'pv' : ''}" data-c="${c}" data-row="5">${f ? laneScoreHTML(f, pv && pv.baseAtk !== undefined ? pv : null, best) : ''}</div></div>`;
   }
-  const tot = F ? `<div class="totals ${F.toMe > 0 ? 'hurt' : ''}" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def">${F.lines.map(l => `<span class="td-r ${l.bad ? 'bad' : ''}">${l.ic ? l.ic + ' ' : ''}${l.lab} : ${l.def >= 99 ? '✔' : SHIELD + '<b>' + fmtN(l.def) + '</b>'} contre ${SWORD}${fmtN(l.atk)}</span>`).join('')}<span class="td-r">QG <b class="dn">−${fmtN(F.toMe)}</b></span></span></div>`
+  const tot = F ? `<button class="totals tone-${dangerTone(F)} ${F.toMe > 0 ? 'hurt' : ''}" id="totals" data-totals title="Touchez pour le détail de la riposte"><span class="t-strike">⚔ Vos dégâts <b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def"><i class="lamp"></i>${ENEMY_ACTS[F.act].ic} Danger : QG <b class="dn">−${fmtN(F.toMe)}</b></span></button>`
     : `<div class="totals" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">0</b></span><span class="t-def" id="tot-def"></span></div>`;
   return `${enemyHQHTML(view, live, F)}<div class="bgrid front" id="bgrid">${lanes}</div>${tot}${hqBar('me', 'Votre QG', view.hq.me, C.hqMax, '', false, F && F.toMe > 0)}`;
 }
@@ -5250,7 +5310,8 @@ function renderBattle() {
     return handCardHTML(k, (on ? 'sel ' : '') + (ds ? 'dsel ' : '') + (needsInf(k) && !infCover(S, k, picked) ? 'needinf ' : '') + (off && !discardSel ? 'off' : ''), `data-hi="${i}"`, `width:${cw}px;height:${ch}px;left:${Math.round(x0 + i * step)}px;top:${Math.round((short ? 8 : 12) + dy)}px;transform:rotate(${rot}deg);z-index:${i};--i:${i}`);
   }).join('');
   const dealKey = S.lvl.name + S.turn, dealNow = window.__dealKey !== dealKey; window.__dealKey = dealKey;
-  const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : '', one = picked.length === 1 ? picked[0] : null;
+  const adv = !picked.length && !discardSel && !busy && !(S.turn === 1 && !units(S, 'me').length) ? adviceInfo(frontForecast(S)) : null;
+  const hint = picked.length || discardSel || (S.turn === 1 && !units(S, 'me').length) ? hintText() : adv ? `<span class="adv-ic">${adv.ic}</span> ${adv.text}` : '', one = picked.length === 1 ? picked[0] : null;
   const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
   const pop = false && picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
@@ -5259,7 +5320,7 @@ function renderBattle() {
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
     <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px"><button class="hand-tog" data-act="handtog" aria-label="Afficher ou masquer la main">${window.__handHide ? '▴' : '▾'} Main <b>${n}</b></button>${hand}</div>
-    <div class="bt-side"><div class="bt-hint ${hint ? '' : 'empty'} ${hint.includes('class="hl') ? 'spec' : ''}" id="hint"><span class="ht">${hint}</span>${extra}</div>
+    <div class="bt-side"><div class="bt-hint ${hint ? '' : 'empty'} ${hint.includes('class="hl') ? 'spec' : ''} ${adv ? 'advice tone-' + adv.tone : ''}" id="hint"><span class="ht">${hint}</span>${extra}</div>
     <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried}</b>` : ''}</span><span class="pips">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `${picked.length ? '' : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes : touchez des cartes puis Défausser">⟲ ${S.discards}</button>`}<button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button>${picked.length ? `<button class="btn dscgo" data-act="discard" id="bend" ${S.discards > 0 && picked.length <= MAX_DISCARD ? '' : 'disabled'}>⟲ Défausser ${picked.length} <small class="dleft">${S.discards}</small></button>` : `<button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}`}</div>
     </div></div>
@@ -6276,6 +6337,24 @@ function turnReport(t0, hq0, info) {
   setTimeout(done, tutoStage() ? 6500 : 4000);
 }
 // Bannière qui traverse l'écran au début de chaque tour
+// Astuces à usage unique : une règle est expliquée en une phrase la première fois qu'elle apparaît
+const TIPS_KEY = 'front-tips';
+const tipsSeen = () => { try { return JSON.parse(localStorage.getItem(TIPS_KEY) || '{}'); } catch (e) { return {}; } };
+const tipMark = id => { try { const t = tipsSeen(); t[id] = 1; localStorage.setItem(TIPS_KEY, JSON.stringify(t)); } catch (e) { /* stockage indisponible */ } };
+function maybeTip() {
+  if (!S || S.over || busy || !C || !C.node || (C.node.layer || 0) < 2 || document.querySelector('.modal, .tipbub, .coach')) return;
+  const host = document.querySelector('.btl'); if (!host) return;
+  const seen = tipsSeen(), tips = [
+    ['act', S.plan && S.plan.act, 'L’ennemi annonce ce qu’il va faire ce tour. Touchez la pastille jaune pour lire la bonne réponse.'],
+    ['aff', S.lvl && S.lvl.col && S.hand.some(k => !isOrder(k) && affinityOf(S.lvl.col, k.c)), '▲ vert : +25 % d’Attaque contre la couleur de l’ennemi. ▼ rouge : −25 %.'],
+    ['ult', units(S, 'me').some(u => canUlt(S, u)), '★ sur une unité : touchez-la pour jouer son coup spécial, une seule fois par bataille.'],
+    ['danger', S.turn >= 2, 'Le voyant sous le QG ennemi (vert, orange, rouge) montre le danger pour votre QG. Touchez-le pour le détail.'],
+  ];
+  const tip = tips.find(([id, cond]) => cond && !seen[id]); if (!tip) return;
+  const el = document.createElement('div'); el.className = 'tipbub'; el.innerHTML = `<b>💡</b><span>${tip[2]}</span><button data-tipok="${tip[0]}">Compris</button>`;
+  host.appendChild(el); tipMark(tip[0]); setTimeout(() => el.remove(), 14000);
+}
+{ const _rb = renderBattle; renderBattle = function () { const r = _rb.apply(this, arguments); setTimeout(maybeTip, 400); return r; }; }
 function turnBanner(text, side) {
   const host = document.querySelector('.btl'); if (!host) return Promise.resolve();
   const b = document.createElement('div'); b.className = 'tban ' + side; b.innerHTML = `<span>${text}</span>`; host.appendChild(b);
@@ -6756,7 +6835,9 @@ document.addEventListener('click', e => {
   if (S && document.getElementById('hand')) {
     const info = t.closest('[data-cinfo]'); if (info) { SFX.play('tap'); return cardModal(+info.dataset.cinfo); }
     const card = t.closest('.card[data-hi]'); if (card) return onCard(+card.dataset.hi);
-    const ai = t.closest('[data-act-info]'); if (ai && !busy) { SFX.play('tap'); return actModal(ai.dataset.actInfo); }
+    const tk = t.closest('[data-tipok]'); if (tk) { tk.closest('.tipbub')?.remove(); return setTimeout(maybeTip, 300); }
+    const tt = t.closest('[data-totals]'); if (tt && !busy && S) { SFX.play('tap'); return totalsModal(); }
+    const ei = t.closest('[data-enemy-info]'); if (ei && !busy && S) { SFX.play('tap'); return enemyModal(); }
     const fxb = t.closest('[data-fx]'); if (fxb && !busy) { SFX.play('tap'); return fxModal(fxb.dataset.fx); }
     if (!t.closest('.modal')) {
       const gu = t.closest('.gu[data-uid]'); if (gu) return onUnit(+gu.dataset.uid);
@@ -6784,8 +6865,10 @@ document.addEventListener('click', e => {
   else if (a === 'close') { closeModal(); if (S && document.getElementById('hand') && !busy) showCoach(); }
   else if (a === 'deploy') {
     // garde-fou : fin de tour sans rien jouer alors qu'il reste de quoi jouer → une seconde touche confirme
-    const idle = S && !S.flags.used && S.hand.some(k => canDeployNow(S, k).ok), armed = window.__endArm > Date.now();
-    if (idle && !armed) { window.__endArm = Date.now() + 3500; b.classList.add('warn'); b.textContent = 'Rien joué : confirmer ?'; SFX.play('deny'); return setTimeout(() => { b.classList.remove('warn'); if (b.isConnected) b.textContent = 'Fin du tour'; }, 3500); }
+    const F0 = S && frontForecast(S), idle = S && !S.flags.used && S.hand.some(k => canDeployNow(S, k).ok), armed = window.__endArm > Date.now();
+    const spare = S && S.supply > MAX_CARRY && S.hand.some(k => canDeployNow(S, k).ok && cardCost(S, k) <= S.supply);
+    const why = idle ? 'Rien joué : confirmer ?' : F0 && dangerTone(F0) === 'bad' ? '⚠ QG en danger : confirmer ?' : spare ? 'Ravitaillement perdu : confirmer ?' : '';
+    if (why && !armed) { window.__endArm = Date.now() + 3500; b.classList.add('warn'); b.textContent = why; SFX.play('deny'); return setTimeout(() => { b.classList.remove('warn'); if (b.isConnected) b.textContent = 'Fin du tour'; }, 3500); }
     window.__endArm = 0; doEnd();
   }
   else if (a === 'handtog') { window.__handHide = !window.__handHide; const h = document.getElementById('hand'); if (h) { h.classList.toggle('hidden', !!window.__handHide); h.classList.remove('low'); const t = h.querySelector('.hand-tog'); if (t) t.innerHTML = `${window.__handHide ? '▴' : '▾'} Main <b>${S.hand.length}</b>`; } SFX.play('tap'); }

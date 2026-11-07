@@ -403,3 +403,10 @@ Ravitaillement +1 : sans limite et bien moins cher au départ, mais le prix grim
 
 ## Affinités de couleur
 Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : train noir, batterie rouge, Mammouth vert). Cycle : jaune bat rouge, rouge bat vert, vert bat noir, noir bat jaune. Contre la couleur qu'elle bat, une unité fait **+25 %** d'Attaque ; contre la couleur qui la bat, **−25 %** (une carte bicolore dont les deux couleurs s'opposent reste neutre). Le cumul avec un terrain fort est plafonné à ×1,7. Affichage : pastille de couleur ennemie sur le QG, flèches ▲ / ▼ vertes et rouges sur les cartes et les unités, rappel sur l'écran de pari et dans la fiche d'unité. La 1re bataille (tutoriel) n'a pas d'affinité. Simulation : difficulté inchangée.
+
+## Indications simplifiées
+- **Conseil du tour** : une phrase d'action dans l'encadré du bas (« Renforcez Champ : l'ennemi y concentre son attaque », « Rien à craindre : ajoutez de l'Attaque… », « Finissez le tour : vous détruisez le QG ennemi ! »), bordée de vert / orange / rouge.
+- **Voyant de danger** : les totaux deviennent « ⚔ Vos dégâts N → QG ennemi » et « Danger : QG −N » avec un voyant ; toucher ce bloc ouvre le détail chiffré de la riposte.
+- **Fiche ennemie** : un seul bouton sur le QG ennemi (intention, couleur, ⓘ) qui ouvre intention, commandant, couleur et effets du QG.
+- **Astuces à usage unique** (`front-tips`) : une bulle explique en une phrase la première fois une règle apparaît (intention, affinité, ★, danger), avec « Compris ».
+- **Garde-fou de fin de tour** : confirmation si rien n'a été joué, si le QG est en danger de mort, ou si du ravitaillement jouable va être perdu.
