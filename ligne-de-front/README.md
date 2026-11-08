@@ -426,3 +426,10 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 `atkTune` (Attaque ennemie ×1,45 à la 2e blinde, dégressive jusqu'à la 10e, `ATKE`) et `tuneK` (QG ennemi ×1,8 sur les batailles ordinaires des blindes 2, 5 et 6, `EARLY2`) ; la 1re bataille reste un tutoriel et les boss/élites ne sont pas gonflés davantage. Résultat du bot (200 campagnes, qui joue presque parfaitement) : blinde 2 ≈ 96 % en 7-8 tours, élite 3 ≈ 92 %, **boss de la blinde 4 ≈ 66 %** ; un joueur qui atteint la 8e blinde représente ≈ 40 % des parties. Doctrines équilibrées entre elles.
 
 **Correction (QG strictement croissant)** : les PV du QG ennemi ne baissent plus jamais d'une blinde à la suivante (`hqFor` : +4 % minimum jusqu'à la 11e, +1 % ensuite). La difficulté du début vient de l'Attaque ennemie : `ATKE` 1,5 dégressif jusqu'à la 10e, ×`ATKO` 1,35 sur les batailles ordinaires. PV : 616 · 1419 · 1631 · 1812 · 1884 · 1959 · 2037 · 2157 · 2243 · 2381 · 2765 · 3154… Bot : blinde 2 ≈ 95 %, élite 3 ≈ 94 %, **boss 4 ≈ 64 %**, blinde 6 ≈ 84 %.
+
+## Packs : affichage Renforts, Fortification et Entraînement distincts
+- Les packs de cartes (Recrues, Ordres, Méga) s'ouvrent comme l'écran Renforts : grandes cartes illustrées sur une rangée, avec le décompte « Au paquet » par couleur.
+- « Autres packs » régénère **tous** les packs, y compris ceux déjà ouverts.
+- **Pack Entraînement** : 5 niveaux type + couleur et 1 manuel. **Pack Fortification** (nouveau) : jusqu'à 6 terrains, +1 place dans les secteurs du terrain choisi. Visuels différents (sacs de sable orange / bunker doré).
+- Corrections : le « +$7070 » de l'écran de butin (c'était « 70/70 » traité comme un montant) ; le style de couleur des cartes (coût, cadre) était perdu dans les packs.
+- Double touche sur une unité ★ : `touch-action: manipulation` empêche désormais le zoom du navigateur d'avaler le second toucher.
