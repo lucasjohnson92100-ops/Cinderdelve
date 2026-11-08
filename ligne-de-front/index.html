@@ -3895,18 +3895,28 @@ const midK = lv => { const b = lv / 0.37; return b < 4.5 ? 1 : b <= 8 ? 1 + MID_
 const EARLY = typeof process !== 'undefined' && process.env && process.env.EARLY ? +process.env.EARLY : 1.6;
 const earlyK = lv => { const b = lv / 0.37; return b < 0.5 || b >= 7 ? 1 : 1 + EARLY * 0.6 * (b < 1 ? 1 : 1 - (b - 1) / 6); };   // la 1re bataille (tutoriel) reste douce
 // Réglages d'équilibrage (simulation) : début plus exigeant (blindes 2 à 7), mur des blindes 14 à 16 adouci
-const EARLY2 = typeof process !== 'undefined' && process.env && process.env.EARLY2 ? +process.env.EARLY2 : 1.8;
+const EARLY2 = typeof process !== 'undefined' && process.env && process.env.EARLY2 ? +process.env.EARLY2 : 1.0;
 const LATE = typeof process !== 'undefined' && process.env && process.env.LATE ? +process.env.LATE : 0.92;
 // Début de campagne exigeant (Attaque ennemie) : ×ATKE à la 2e blinde, dégressif jusqu'à la 10e ; la 1re bataille reste un tutoriel
-const ATKE = typeof process !== 'undefined' && process.env && process.env.ATKE ? +process.env.ATKE : 1.45;
-const atkTune = lv => { const b = Math.round(lv / 0.37); return b < 1 || b > 10 ? 1 : 1 + (ATKE - 1) * (1 - (b - 1) / 10); };
-const tuneK = lv => { const b = Math.round(lv / 0.37); return (b >= 1 && b <= 6 && b % 4 < 2 ? EARLY2 : 1) * (b >= 13 && b <= 15 ? LATE : 1); };
+const ATKE = typeof process !== 'undefined' && process.env && process.env.ATKE ? +process.env.ATKE : 1.5;
+const ATKO = typeof process !== 'undefined' && process.env && process.env.ATKO ? +process.env.ATKO : 1.35;   // batailles ordinaires un peu plus offensives (élites et boss gardent leur courbe)
+const atkTune = (lv, slot) => { const b = Math.round(lv / 0.37); return b < 1 || b > 10 ? 1 : (1 + (ATKE - 1) * (1 - (b - 1) / 10)) * (slot < 2 ? ATKO : 1); };
+// QG ennemi : le début est relevé de façon continue (EARLY2 à la 2e blinde, dégressif jusqu'à la 11e) ; l'ensemble est ensuite forcé à croître de blinde en blinde
+const tuneK = lv => { const b = Math.round(lv / 0.37); return (b >= 1 && b <= 10 ? 1 + (EARLY2 - 1) * (1 - (b - 1) / 10) : 1) * (b >= 13 && b <= 15 ? LATE : 1); };
+const hqBase = lv => Math.round((22 + 8 * lv) * HQ_MULT * Math.pow(HQ_GROW, lv) * midK(lv) * earlyK(lv) * tuneK(lv));
+const HQ_STEP = 1.04;   // chaque blinde du début a au moins 5 % de PV de plus que la précédente
+function hqFor(node) {
+  const b = Math.round(node.levelIdx / 0.37), slotK = BLIND_HQ[node.slot === undefined ? 1 : node.slot];
+  let h = Math.round(hqBase(b * 0.37) * slotK);
+  if (b >= 1 && b <= 19) { let prev = Math.round(hqBase(0) * BLIND_HQ[0]); for (let k = 1; k <= b; k++) { const slot = BLIND_HQ[k % 4], raw = Math.round(hqBase(k * 0.37) * slot); prev = Math.max(raw, Math.round(prev * (k <= 11 ? HQ_STEP : 1.01))); } h = prev; }
+  return h;
+}
 function battleCfg(node) {
   const lv = node.levelIdx, elite = node.type === 'elite', o = node.obj || { type: 'hq' };
-  const hq = Math.round((22 + 8 * lv) * BLIND_HQ[node.slot === undefined ? 1 : node.slot] * HQ_MULT * Math.pow(HQ_GROW, lv) * midK(lv) * earlyK(lv) * tuneK(lv));
+  const hq = hqFor(node);
   // « Frappe décisive » : gagner en infligeant assez en un seul tour (remplace l'ancien objectif « éliminer »)
   const obj = o.type === 'kills' || o.type === 'burst' ? { type: 'burst', n: Math.round(hq * 0.3) } : o;
-  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * atkTune(lv) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6) * (1 + (earlyK(lv) - 1) * 0.6), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
+  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * atkTune(lv, node.slot === undefined ? 3 : node.slot) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6) * (1 + (earlyK(lv) - 1) * 0.6), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
     levelIdx: lv, obj, elite, tutorial: node.layer === 0, cmd: node.type === 'boss' || node.layer === 0 ? undefined : (node.layer + (node.layer >> 2)) % COMMANDERS.length,
     col: node.layer === 0 ? undefined : node.type === 'boss' ? { train: 'N', battery: 'R', tank: 'V' }[node.boss] : (node.layer + (node.layer >> 2)) % COMMANDERS.length === 4 ? 'JRVN'[(node.layer * 3 + 1) % 4] : COMMANDERS[(node.layer + (node.layer >> 2)) % COMMANDERS.length].col };
 }

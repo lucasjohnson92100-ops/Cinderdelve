@@ -152,13 +152,13 @@ S=mk({},E.battleCfg({type:'battle',levelIdx:2,layer:3,obj:{type:'hold',n:2}}));S
 // campagne
 {const M=E.genMap(),B=M.map(l=>l[0]);check('20 blindes',M.length,20);check('boss toutes les 4',B.filter(n=>n.type==='boss').map(n=>n.layer).join(),'3,7,11,15,19');check('boss final',B.filter(n=>n.final).map(n=>n.layer).join(),'19');
  check('petite/moyenne/grosse/boss',B.slice(0,4).map(n=>n.type).join(),'battle,battle,elite,boss');check('boss sans passe',B.filter(n=>n.type==='boss'&&n.bonus).length,0);check('tutoriel sans passe',B.slice(0,2).filter(n=>n.bonus).length,0);check('passe avec bonus',B.filter(n=>n.type!=='boss'&&n.layer>=2).every(n=>n.bonus&&n.bonus.tag),true);
- const R0=new Function(coreReal+';return {battleCfg,ensureMap,genMap}')();const hq=R0.genMap().map(l=>R0.battleCfg(l[0]).hq);check('la difficulté monte globalement (début exigeant, puis croissante)',hq.every((h,i)=>i<10||h>hq[i-1]*0.9)&&hq[19]>hq[3]*2,true);const atk=B.map(n=>{const c=E.battleCfg(n);return c.atk/(c.obj.type==='hold'?1.25:1)});check('attaque croissante',atk.every((a,i)=>i<10||a>=atk[i-1]*0.99)&&atk[19]>atk[2],true);
+ const R0=new Function(coreReal+';return {battleCfg,ensureMap,genMap}')();const hq=R0.genMap().map(l=>R0.battleCfg(l[0]).hq);check('la difficulté monte globalement (début exigeant, puis croissante)',hq.every((h,i)=>i<10||h>hq[i-1]*0.9)&&hq[19]>hq[3]*2,true);const atk=B.map(n=>{const c=E.battleCfg(n);return c.atk/(c.obj.type==='hold'?1.25:1)});check('attaque croissante',atk.every((a,i)=>i<12||a>=atk[i-1]*0.99)&&atk[19]>atk[2],true);
  E.ensureMap(M,45);check('mode infini',M.length,46);const M2=R0.ensureMap(R0.genMap(),45),hq2=M2.map(l=>R0.battleCfg(l[0]).hq);check('infini toujours plus fort',hq2.slice(19).every((h,i,a)=>i<3||h>a[i-3]),true);check('un seul boss final',M.filter(l=>l[0].final).length,1);check('ante',E.anteOf(0)+','+E.anteOf(3)+','+E.anteOf(4)+','+E.anteOf(19),'1,1,2,5');}
 check('paquet de départ 15',E.START_DECK.length,15);check('5 doctrines',Object.keys(E.DOCTRINES).length,5);
 check('boss : effets de boss',Object.values(E.BOSSES).every(b=>b.desc.length>10),true);
 {const Cc={deck:E.START_DECK.slice(),hq:40,hqMax:60,loot:3,officers:[]};E.applyEvent(Cc,'convoi',0);check('convoi : +7',Cc.loot,10);}
 // vraies constantes : progression exponentielle
 {const R=new Function(coreReal+';return {battleCfg,LEVELS,HQ_MULT,newBattle,START_DECK,enemyAtk}')();
- const h=i=>R.battleCfg({type:'battle',levelIdx:i,layer:i+1,obj:{type:'hq'}}).hq;check('QG ennemi : base × multiplicateur',h(0),Math.round(R.LEVELS[0].hq*R.HQ_MULT));check('QG ennemi : croissance',h(6)>h(1)*2,true);
+ const h=i=>R.battleCfg({type:'battle',levelIdx:i,layer:i+1,obj:{type:'hq'}}).hq;check('QG ennemi : base × multiplicateur',h(0),Math.round(R.LEVELS[0].hq*R.HQ_MULT));check('QG ennemi : croissance',h(6)>h(1)*1.4,true);
  const Q=R.newBattle({level:0,deck:R.START_DECK.slice(),hq:60,hqMax:60,officers:[]},()=>0.5,R.battleCfg({type:'battle',levelIdx:4,layer:5,obj:{type:'hq'}}));check('riposte qui grimpe',R.enemyAtk(Q,5)>R.enemyAtk(Q,1),true);}
 console.log(bad?`${bad} échec(s) sur ${n}`:`tous les tests passent (${n})`);process.exit(bad?1:0);
