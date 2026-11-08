@@ -19281,6 +19281,20 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     document.getElementById("pause").classList.add("show");
   }
   function closePause() { document.getElementById("pause").classList.remove("show"); if (mode === "paused") mode = "play"; AU.duck = false; if (AU.musG) AU.musG.gain.setTargetAtTime(musGain(), AU.ctx.currentTime, 0.15); }
+  /* « Version pour ordinateur » : le navigateur ignore alors la balise viewport, affiche le jeu en 980 px de large puis le réduit (tout est minuscule, bande noire en haut). On prévient le joueur et on lui dit quoi décocher. */
+  (function () {
+    try {
+      var sw = Math.min(screen.width, screen.height), iw = window.innerWidth;
+      if (!(sw && sw <= 600 && iw > sw * 1.5 && (navigator.maxTouchPoints || 0) > 0)) return;
+      var till = 0; try { till = parseInt(localStorage.getItem("donjon-desk-hint") || "0", 10) || 0; } catch (e) {}
+      if (Date.now() < till) return;
+      var k = iw / sw, el = document.createElement("div");
+      el.style.cssText = "position:fixed;left:" + (10 * k) + "px;right:" + (10 * k) + "px;top:" + (12 * k) + "px;z-index:900;background:rgba(24,10,6,.96);color:#fff0d0;border:" + (2 * k) + "px solid #ffc83a;border-radius:" + (10 * k) + "px;padding:" + (10 * k) + "px;font:600 " + (14 * k) + "px/1.35 Georgia,serif;text-align:center;box-shadow:0 " + (4 * k) + "px " + (20 * k) + "px rgba(0,0,0,.7)";
+      el.innerHTML = "Ton navigateur affiche la <b>version ordinateur</b> du jeu : tout paraît minuscule.<br>Dans Chrome : menu ⋮ → décoche <b>« Version pour ordinateur »</b>, puis rouvre le jeu. (Samsung Internet : menu ☰ → « Site pour ordinateur ».)<br><button type='button' style='margin-top:" + (8 * k) + "px;padding:" + (6 * k) + "px " + (18 * k) + "px;border-radius:" + (8 * k) + "px;border:" + (2 * k) + "px solid #b98a34;background:#3a1a0a;color:#ffd23c;font:700 " + (14 * k) + "px Georgia,serif'>Compris</button>";
+      el.querySelector("button").addEventListener("click", function () { try { localStorage.setItem("donjon-desk-hint", String(Date.now() + 7 * 864e5)); } catch (e) {} el.remove(); });
+      var go = function () { document.body.appendChild(el); }; if (document.body) go(); else document.addEventListener("DOMContentLoaded", go);
+    } catch (e) {}
+  })();
   window.addEventListener("keydown", function (e) { if (e.key === "Escape") { if (document.getElementById("help").classList.contains("show")) { document.getElementById("help-close").click(); return; } if (document.getElementById("settings").classList.contains("show")) { document.getElementById("set-close").click(); return; } if (mode === "play") openPause(); else if (mode === "paused" && !document.getElementById("settings").classList.contains("show") && !document.getElementById("help").classList.contains("show")) closePause(); } });
   function openSettings() {
     if (mode !== "play" && mode !== "intro" && mode !== "dead" && mode !== "paused") return;
