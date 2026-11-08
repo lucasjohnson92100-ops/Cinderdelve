@@ -5026,16 +5026,17 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       taureau: ["255,80,70", "255,210,90", "120,10,10"]
     };
     function low() { return typeof perf !== "undefined" && perf && perf.low; }
-    function rg(c, a) { return "rgba(" + c + "," + Math.max(0, Math.min(1, a)).toFixed(3) + ")"; }
+    var FXK = 0.75, DISCK = 0.6; /* intensité des effets : moins de lumière = plus lisible et moins de pixels mélangés */
+    function rg(c, a) { return "rgba(" + c + "," + Math.max(0, Math.min(1, a * FXK)).toFixed(3) + ")"; }
     function px(v) { return v * TILE + 8; }
     var NOSC = { crow: 1, drain: 1, rope: 1, cracks: 1, icering: 1, swirl: 1, axechop: 1, quills: 1, sonarw: 1, eggarc: 1, hoof: 1, fork: 1, shoe: 1, coin: 1, bellring: 1, firecol: 1, fwork: 1, stormhit: 1, grains: 1, crater: 1, bramble: 1, pop: 1, shout: 1, milkwave: 1, bog: 1, scarecrow: 1, healup: 1, wolf: 1, howl: 1, nuke: 1, peacock: 1, hypno: 1, dawn: 1 };
     function add(k, x, y, dur, ex) {
       var f = { k: k, x: px(x), y: px(y), t0: now() + ((ex && ex.delay) || 0), dur: dur, seed: Math.random() * T2 };
       if (ex) for (var q in ex) f[q] = ex[q];
       if (f.R && k !== "beam" && !NOSC[k] && typeof state !== "undefined" && state && state.survival) f.R *= (k === "slash" ? 1.9 : 1.35); /* effets plus gros et plus lisibles en survie */
-      L.push(f); if (L.length > 80) L.shift(); return f;
+      L.push(f); if (L.length > 48) L.shift(); return f;
     }
-    function disc(c, x, y, r, col, a) { if (r > 0.5 && typeof GX !== "undefined" && GX) { var ga0 = c.globalAlpha; c.globalAlpha = ga0 * Math.max(0, Math.min(1, a)); c.drawImage(GX.soft(col, 1), x - r, y - r, r * 2, r * 2); c.globalAlpha = ga0; return; } var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(col, a)); g.addColorStop(1, rg(col, 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill(); }
+    function disc(c, x, y, r, col, a) { if (r > 0.5 && typeof GX !== "undefined" && GX) { var ga0 = c.globalAlpha; c.globalAlpha = ga0 * Math.max(0, Math.min(1, a * DISCK)); c.drawImage(GX.soft(col, 1), x - r, y - r, r * 2, r * 2); c.globalAlpha = ga0; return; } var g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, rg(col, a)); g.addColorStop(1, rg(col, 0)); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, T2); c.fill(); }
 
     /* ---- sceau au sol : disque teinté + anneau runique qui tourne, reste ~1 s pour bien lire le pouvoir ---- */
     DR.stamp = function (c, f, k) {
@@ -16805,7 +16806,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var pts = [], i, n = kind === "pool" ? 6 + Math.floor(Math.random() * 4) : 1 + Math.floor(Math.random() * 2);
     for (i = 0; i < n; i++) pts.push([(Math.random() - 0.5) * sz, (Math.random() - 0.5) * sz * 0.6, 2 + Math.random() * sz * 0.4, 1 + Math.random() * sz * 0.25]);
     decals.push({ x: px, y: py, kind: kind, col: col, pts: pts, t0: now() });
-    if (decals.length > 260) decals.shift();
+    if (decals.length > (smallScr() ? 90 : 150)) decals.shift(); /* moins de taches gardées : elles sont redessinées à chaque image */
   }
   function bloodSplash(tx, ty, n, base) {
     for (var i = 0; i < n; i++) addDecal(tx * TILE + 8 + (Math.random() - 0.5) * 12, ty * TILE + 10 + (Math.random() - 0.5) * 8, "drop", [base || "#6e0e10", base || "#a01a1a"], 3);
@@ -17718,7 +17719,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var LL = [];
     function lightAt(x, y, r, col, a) { LL.push(x, y, r, col, a); }
     function lightMap(x, y, r, col, a) {
-      var cx = (x - LX.x0) / LS, cy = (y - LX.y0) / LS, rr = r / LS;
+      a = Math.abs(a); var cx = (x - LX.x0) / LS, cy = (y - LX.y0) / LS, rr = r / LS;
       if (cx + rr < 0 || cy + rr < 0 || cx - rr > LC.width || cy - rr > LC.height) return;
       if (a !== 1) LX.c.globalAlpha = Math.max(0, Math.min(1, a));
       LX.c.drawImage(glow(col), cx - rr, cy - rr, rr * 2, rr * 2);
@@ -17741,9 +17742,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     function pools(c, t, th, vw, vh, camX, camY) {
       LL.length = 0; collect(t, vw, vh, camX, camY);
       c.save(); c.globalCompositeOperation = "lighter";
-      var K = GFX === "dark" ? 0.3 : 0.2;
-      for (var i = 0; i < LL.length; i += 5) {
-        var r = LL[i + 2] * 0.62, a = LL[i + 4] * K; if (a <= 0.01) continue;
+      var K = GFX === "dark" ? 0.17 : 0.11, nP = 0;
+      for (var i = 0; i < LL.length && nP < 14; i += 5) {
+        if (LL[i + 5 * 0 + 4] < 0) continue; nP++;
+        var r = LL[i + 2] * 0.55, a = LL[i + 4] * K; if (a <= 0.01) continue;
         c.globalAlpha = Math.min(1, a); c.drawImage(glow(LL[i + 3]), LL[i] - r, LL[i + 1] - r, r * 2, r * 2);
       }
       c.restore();
@@ -17756,21 +17758,21 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var x0 = camX - 48, y0 = camY - 48, x1 = camX + vw + 48, y1 = camY + vh + 48;
       function on(x, y) { return x > x0 && x < x1 && y > y0 && y < y1; }
       /* braseros, runes, autels */
-      var nG = 0;
+      var nG = 0, nPr = 0;
       for (i = 0; i < gems.length; i++) {
         var gm = gems[i], gx = gm.x * TILE + 8, gy = gm.y * TILE + 8; if (!on(gx, gy)) continue;
         if (gm.k === "brazier") lightAt(gx, gy - 4, TILE * 4.2 * (0.9 + 0.1 * Math.sin(t / 90 + i * 2.1)), "255,150,60", 1);
         else if (gm.k === "rune") lightAt(gx, gy, TILE * 2.6, "190,140,255", 0.8);
         else if (gm.k === "shrine") lightAt(gx, gy, TILE * 3.4, "255,210,90", 0.8);
-        else if (!gm.k && nG < 16) { nG++; lightAt(gx, gy, TILE * 0.9, "255,200,90", 0.35); }
+        else if (!gm.k && nG < 12) { nG++; lightAt(gx, gy, TILE * 0.9, "255,200,90", -0.3); }
       }
       /* projectiles */
-      for (i = 0; i < projs.length && i < 60; i++) {
-        var pr = projs[i], prx = (pr.x - 0.5) * TILE + 8, pry = (pr.y - 0.5) * TILE + 8; if (!on(prx, pry)) continue;
-        if (pr.own !== "player") lightAt(prx, pry, TILE * 1.5, "255,90,80", 0.6);
-        else if (pr.kind === "fire") lightAt(prx, pry, TILE * 2.2, "255,150,50", 0.8);
-        else if (pr.kind === "ice") lightAt(prx, pry, TILE * 1.8, "140,210,255", 0.7);
-        else lightAt(prx, pry, TILE * 1.7, "180,130,255", 0.6);
+      for (i = 0, nPr = 0; i < projs.length && nPr < 24; i++) {
+        var pr = projs[i], prx = (pr.x - 0.5) * TILE + 8, pry = (pr.y - 0.5) * TILE + 8; if (!on(prx, pry)) continue; nPr++;
+        if (pr.own !== "player") lightAt(prx, pry, TILE * 1.5, "255,90,80", 0.6); /* projectile ennemi : reste bien visible */
+        else if (pr.kind === "fire") lightAt(prx, pry, TILE * 1.8, "255,150,50", -0.55);
+        else if (pr.kind === "ice") lightAt(prx, pry, TILE * 1.5, "140,210,255", -0.5);
+        else lightAt(prx, pry, TILE * 1.4, "180,130,255", -0.4);
       }
       /* lave, cristaux et chandeliers du décor */
       var tx0 = Math.floor(x0 / TILE), tx1 = Math.floor(x1 / TILE), ty0 = Math.floor(y0 / TILE), ty1 = Math.floor(y1 / TILE), nL = 0;
@@ -17790,11 +17792,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       }
       /* les effets de sorts éclairent le sol autour d'eux */
       var FL = AFX.list ? AFX.list() : [], nF = 0, tn = now();
-      for (i = FL.length - 1; i >= 0 && nF < 26; i--) {
+      for (i = FL.length - 1; i >= 0 && nF < 8; i--) {
         var f = FL[i], k = (tn - f.t0) / f.dur; if (k < 0 || k >= 1 || !f.pal || !f.pal[0]) continue;
-        nF++; lightAt(f.x, f.y, Math.min(TILE * 6, TILE * ((f.R || 1.2) * 1.3 + 1)), f.pal[0], 0.55 * (1 - k));
+        nF++; lightAt(f.x, f.y, Math.min(TILE * 4.5, TILE * ((f.R || 1.2) * 1.1 + 1)), f.pal[0], -0.32 * (1 - k));
       }
-      for (i = 0; i < slashes.length; i++) { var sl = slashes[i], sk = (t - sl.t0) / 190; if (sk >= 0 && sk < 1) lightAt(sl.x * TILE, sl.y * TILE, TILE * 2.4, "255,240,210", 0.4 * (1 - sk)); }
     }
     /* 2) pénombre : les bords s'assombrissent, les zones éclairées gardent leurs couleurs */
     function light(c, t, th, vw, vh, camX, camY) {
