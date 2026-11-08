@@ -3914,8 +3914,11 @@ const ATKE = typeof process !== 'undefined' && process.env && process.env.ATKE ?
 const ATKO = typeof process !== 'undefined' && process.env && process.env.ATKO ? +process.env.ATKO : 1.35;   // batailles ordinaires un peu plus offensives (élites et boss gardent leur courbe)
 const atkTune = (lv, slot) => { const b = Math.round(lv / 0.37); return b < 1 || b > 10 ? 1 : (1 + (ATKE - 1) * (1 - (b - 1) / 10)) * (slot < 2 ? ATKO : 1); };
 // QG ennemi : le début est relevé de façon continue (EARLY2 à la 2e blinde, dégressif jusqu'à la 11e) ; l'ensemble est ensuite forcé à croître de blinde en blinde
+// Fin de campagne plus exigeante : à partir de la 9e blinde, +LATEH par blinde (QG ×, Attaque ×racine) ; un joueur expérimenté doit y perdre
+const LATEH = typeof process !== 'undefined' && process.env && process.env.LATEH ? +process.env.LATEH : 0.04;
+const lateK = lv => { const b = Math.round(lv / 0.37); return b <= 8 ? 1 : 1 + LATEH * (Math.min(b, 19) - 8) + (b >= 20 ? LATEH * 0.5 * (b - 19) : 0); };
 const tuneK = lv => { const b = Math.round(lv / 0.37); return (b >= 1 && b <= 10 ? 1 + (EARLY2 - 1) * (1 - (b - 1) / 10) : 1) * (b >= 13 && b <= 15 ? LATE : 1); };
-const hqBase = lv => Math.round((22 + 8 * lv) * HQ_MULT * Math.pow(HQ_GROW, lv) * midK(lv) * earlyK(lv) * tuneK(lv));
+const hqBase = lv => Math.round((22 + 8 * lv) * HQ_MULT * Math.pow(HQ_GROW, lv) * midK(lv) * earlyK(lv) * tuneK(lv) * lateK(lv));
 const HQ_STEP = 1.04;   // chaque blinde du début a au moins 5 % de PV de plus que la précédente
 function hqFor(node) {
   const b = Math.round(node.levelIdx / 0.37), slotK = BLIND_HQ[node.slot === undefined ? 1 : node.slot];
@@ -3928,7 +3931,7 @@ function battleCfg(node) {
   const hq = hqFor(node);
   // « Frappe décisive » : gagner en infligeant assez en un seul tour (remplace l'ancien objectif « éliminer »)
   const obj = o.type === 'kills' || o.type === 'burst' ? { type: 'burst', n: Math.round(hq * 0.3) } : o;
-  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * atkTune(lv, node.slot === undefined ? 3 : node.slot) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6) * (1 + (earlyK(lv) - 1) * 0.6), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
+  return { name: node.name, label: node.label, hq, atk: (7 + 2.5 * lv) * atkTune(lv, node.slot === undefined ? 3 : node.slot) * (o.type === 'hold' ? 1.25 : 1) * (1 + (midK(lv) - 1) * 0.6) * (1 + (earlyK(lv) - 1) * 0.6) * Math.sqrt(lateK(lv)), boss: node.type === 'boss' ? node.boss : undefined, final: node.type === 'boss' && !!node.final,
     levelIdx: lv, obj, elite, tutorial: node.layer === 0, cmd: node.type === 'boss' || node.layer === 0 ? undefined : (node.layer + (node.layer >> 2)) % COMMANDERS.length,
     col: node.layer === 0 ? undefined : node.type === 'boss' ? { train: 'N', battery: 'R', tank: 'V' }[node.boss] : (node.layer + (node.layer >> 2)) % COMMANDERS.length === 4 ? 'JRVN'[(node.layer * 3 + 1) % 4] : COMMANDERS[(node.layer + (node.layer >> 2)) % COMMANDERS.length].col };
 }

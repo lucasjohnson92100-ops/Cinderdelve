@@ -433,3 +433,6 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 - **Pack Entraînement** : 5 niveaux type + couleur et 1 manuel. **Pack Fortification** (nouveau) : jusqu'à 6 terrains, +1 place dans les secteurs du terrain choisi. Visuels différents (sacs de sable orange / bunker doré).
 - Corrections : le « +$7070 » de l'écran de butin (c'était « 70/70 » traité comme un montant) ; le style de couleur des cartes (coût, cadre) était perdu dans les packs.
 - Double touche sur une unité ★ : `touch-action: manipulation` empêche désormais le zoom du navigateur d'avaler le second toucher.
+
+## Fin de campagne plus exigeante
+`lateK` : à partir de la 9e blinde, QG ennemi +4 % par blinde (jusqu'à ×1,44 à la 19e, davantage ensuite) et Attaque ×√ de ce facteur (`LATEH`). PV du QG de la 20e blinde : 4924 → 7090. Les bots de simulation ne maîtrisent ni les paris, ni les retraites, ni les affinités, ni le ciblage de la défense : un joueur humain fait nettement mieux qu'eux, d'où une marge volontaire.
