@@ -421,3 +421,6 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 ## QG en jeu à chaque bataille, tirs vraiment simultanés
 - Le QG est **entièrement remis en état après chaque bataille** (plus de +12 PV) : sa vie n'est en jeu que dans la bataille en cours. Le service « QG +12 » disparaît de la boutique (3 services restent). En contrepartie l'Attaque ennemie monte (`ENEMY_ATK` 0,92 → 1,2) et « QG max +10 » devient un achat de défense plus décisif. Simulation : courbe de difficulté proche de la précédente (≈ 1,5 % de campagnes terminées).
 - Animations d'assaut : plus aucun décalage entre les unités d'un secteur (arrivée comprise) ; elles entrent et tirent toutes ensemble.
+
+## Début de campagne dangereux (défaites possibles dès les premières batailles)
+`atkTune` (Attaque ennemie ×1,45 à la 2e blinde, dégressive jusqu'à la 10e, `ATKE`) et `tuneK` (QG ennemi ×1,8 sur les batailles ordinaires des blindes 2, 5 et 6, `EARLY2`) ; la 1re bataille reste un tutoriel et les boss/élites ne sont pas gonflés davantage. Résultat du bot (200 campagnes, qui joue presque parfaitement) : blinde 2 ≈ 96 % en 7-8 tours, élite 3 ≈ 92 %, **boss de la blinde 4 ≈ 66 %** ; un joueur qui atteint la 8e blinde représente ≈ 40 % des parties. Doctrines équilibrées entre elles.
