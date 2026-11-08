@@ -417,3 +417,7 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 ## Salve unique et double touche
 - **Assaut** : toutes les unités d'un même secteur tirent **en même temps** (une seule salve, une seule explosion sur le QG ennemi avec le total) au lieu d'un tir après l'autre ; flash doré sur le secteur.
 - **Capacités** : **double touche** sur une unité ★ pour la déclencher (un seul toucher ouvre toujours sa fiche, avec un court délai si une capacité est disponible). Mise en valeur : anneau doré pulsé autour de l'unité, pastille ★×2 rouge et dorée qui bat, puis à l'activation l'unité grossit et une bannière « Charge à la baïonnette — Attaque ×1,75 ce tour » s'affiche.
+
+## QG en jeu à chaque bataille, tirs vraiment simultanés
+- Le QG est **entièrement remis en état après chaque bataille** (plus de +12 PV) : sa vie n'est en jeu que dans la bataille en cours. Le service « QG +12 » disparaît de la boutique (3 services restent). En contrepartie l'Attaque ennemie monte (`ENEMY_ATK` 0,92 → 1,2) et « QG max +10 » devient un achat de défense plus décisif. Simulation : courbe de difficulté proche de la précédente (≈ 1,5 % de campagnes terminées).
+- Animations d'assaut : plus aucun décalage entre les unités d'un secteur (arrivée comprise) ; elles entrent et tirent toutes ensemble.

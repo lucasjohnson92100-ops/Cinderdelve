@@ -3197,7 +3197,7 @@ const COMMANDERS = [
 const BASE_RETREATS = 3, MAX_RETREAT_UP = 5, TARGET_SHARE = 0.4, retreatCost = C => 3 + 2 * (C.retreatUp || 0);
 const GW = 4, MAX_LAND = 99, BASE_SUPPLY = 5, BASE_DISCARDS = 3, DISCARD_SUPPLY = 1, MAX_CARRY = 3,
   // progression exponentielle (comme les blinds de Balatro) : PV du QG ennemi et Attaque ennemie
-  ENEMY_GROWTH = 0.08, HQ_MULT = 28, HQ_GROW = 1.10, ENEMY_ATK = 0.92, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
+  ENEMY_GROWTH = 0.08, HQ_MULT = 28, HQ_GROW = 1.10, ENEMY_ATK = 1.2, ATK_RAMP = 0.12, egrow = lv => Math.pow(1 + ENEMY_GROWTH, lv || 0),
   // au moins un quart de l'Attaque ennemie passe toujours votre Défense
   MIN_THROUGH = 0.15, BARRAGE_ATK = 20;
 const TERRAIN = {
@@ -6129,7 +6129,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     band.classList.add('adv'); SFX.play('land'); await T(200);
     const toks = [...band.querySelectorAll('.awu')], per = Math.max(100, Math.min(230, 900 / Math.max(1, toks.length)));
     let chips = 0;
-    toks.forEach((t, j) => { t.style.setProperty('--j', j); const q = live.find(x => x.uid === +t.dataset.uid); if (q && q.stam <= 1) t.classList.add('tired'); });
+    toks.forEach((t, j) => { t.style.setProperty('--j', 0); const q = live.find(x => x.uid === +t.dataset.uid); if (q && q.stam <= 1) t.classList.add('tired'); });
     landings.length = 0; band.classList.add('volley'); let volleyN = 0, volleyA = 0;
     await Promise.all(toks.map(async tk => {
       const u = live.find(x => x.uid === +tk.dataset.uid); if (!u) return;
@@ -6415,13 +6415,14 @@ function finishBattle() {
 
 // ---- Récompenses ----
 function toReward() {
-  C.hq = Math.min(C.hqMax, S.hq.me + 12);
+  C.hq = C.hqMax;   // le QG est entièrement remis en état après chaque bataille : il n'est en jeu que dans la bataille en cours
   const n = C.node;
   if (n.final && !C.won) return victory();
   const lo = lootFor(S, C, n.type); C.loot += lo.total; const gotSupply = n.type === 'boss' && addSupplyBonus(C); C.phase = 'reward'; C.shop = null; C.spoils = rewardCards(Math.random, n.type === 'battle' ? 1 : 2, C.deck); saveRun('reward'); setTimeout(() => SFX.play('coins'), 250);
   app.innerHTML = `<div class="stack loot-win"><div class="hd"><span class="ribbon">Butin de guerre</span><span class="coin num">$${C.loot}</span></div>
     <div class="panel lines">${lo.lines.map(l => `<div class="line"><span>${l[0]}</span><span class="num gold">+$${l[1]}</span></div>`).join('')}
       <div class="line total"><span>Total</span><span class="num gold">+$${lo.total}</span></div></div>
+    <div class="panel lines"><div class="line"><span>🛡 <b>QG remis en état</b> : il retrouve tous ses PV avant la prochaine bataille</span><span class="num gold">${C.hqMax}/${C.hqMax}</span></div></div>
     ${gotSupply ? `<div class="panel lines"><div class="line"><span><b>Ravitaillement renforcé</b> : +1 point à chaque tour, pour toute la campagne</span><span class="num gold">+1</span></div></div>` : ''}
     <p class="small">Choisissez maintenant une carte de renfort, puis dépensez votre butin à l’intendance.</p>
     <div class="coinburst" aria-hidden="true">${Array.from({ length: 12 }, (_, k) => `<i style="--a:${k * 30}deg;--d:${k * 25}ms"></i>`).join('')}</div>
@@ -6485,7 +6486,6 @@ function crateHTML(cr, i) {
 }
 function quartermasterTip() {
   const sh = C.shop, main = mainCompo(C.deck);
-  if (C.hq < C.hqMax * 0.6) return `Votre QG a pris des coups (${C.hq}/${C.hqMax}). L'infirmerie le remet d'aplomb pour $${HEAL_COST}.`;
   if (main && sh.crates.some(c => c.id === main && !c.sold)) return `Votre paquet penche vers « ${COMPOS[main].tip} ». La ${COMPOS[main].name} renforcerait cette composition.`;
   if (C.officers.length < 2 && sh.jokers.some(j => !j.sold && C.loot >= j.price)) return 'Un joker agit à chaque bataille : c’est souvent le meilleur achat au début.';
   return 'Les ordres se jouent en plus de vos unités, sans règle de couleur : un bon complément à toute composition.';
@@ -6500,7 +6500,6 @@ function miniCardHTML(card) {
 const SVC = [
   { act: 'retreat', ic: '↩', name: 'Retraites +1', fx: '+1 retraite par bataille', why: 'Maximum atteint', price: () => retreatCost(C), ok: () => (C.retreatUp || 0) < MAX_RETREAT_UP },
   { act: 'supply', ic: '⛽', name: 'Ravit. +1', get fx() { return `+1 par tour (actuel +${C.supplyBonus || 0})`; }, why: 'Maximum atteint', price: () => supplyBonusCost(C), ok: () => (C.supplyBonus || 0) < MAX_SUPPLY_BONUS },
-  { act: 'shopheal', ic: '✚', name: `QG +${HEAL_AMOUNT}`, fx: `Soigne ${HEAL_AMOUNT} PV`, why: 'QG au maximum', price: () => HEAL_COST, ok: () => C.hq < C.hqMax },
   { act: 'fortify', ic: '🏰', name: `QG max +${FORT_AMOUNT}`, fx: `+${FORT_AMOUNT} PV max`, why: 'Maximum atteint', price: () => fortifyCost(C), ok: () => (C.hqUp || 0) < MAX_FORTIFY },
 ];
 function shopTile(kind, i, it, inner) {
@@ -6533,7 +6532,7 @@ function renderShop() {
     <footer class="s2-foot"><button class="pill" data-act="reroll" ${C.loot < rc ? 'disabled' : ''} title="Remplacer les packs par d'autres">⟳ Autres packs $${rc}</button><button class="pill" data-act="deck">Paquet ${C.deck.length}</button><button class="btn go" data-act="leave">Quitter</button></footer>
     </aside><div class="s2-shelves">
     <section class="s2-shelf s2-packs"><h3>Packs · achetez, ouvrez, gardez votre préféré</h3><div class="pk-row n${sh.packs.length}">${packs}</div></section>
-    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row four">${svcs}</div></section></div>
+    <section class="s2-shelf s2-svc"><h3>Services</h3><div class="s2-row three">${svcs}</div></section></div>
   </div>`;
 }
 // Achat d'un article de l'intendance ; renvoie un message d'erreur, ou '' si l'achat est fait

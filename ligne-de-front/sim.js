@@ -65,7 +65,7 @@ for(let r=0;r<N;r++){
     const node=MAP[i][0],type=node.type;reach[i].n++;reach[i].hq+=C.hq;
     if(process.env.SKIP&&type!=='boss'&&i>=2&&node.slot===0){C.loot+=node.bonus.tag==='loot'?node.bonus.n:5;reach[i].w++;continue;}
     const f=fight(C,node);reach[i].t+=f.S.turn;if(!f.win){ok=false;break;}reach[i].w++;
-    C.hq=Math.min(C.hqMax,f.S.hq.me+12);C.loot+=E.lootFor(f.S,C,type).total;
+    C.hq=C.hqMax;C.loot+=E.lootFor(f.S,C,type).total;
     if(type==='boss'&&i<PATH.length-1)E.addSupplyBonus(C);
     // carte de récompense : de préférence un type que le paquet n'a pas encore, sinon une unité
     {const opts=E.rewardCards(rnd,type==='battle'?1:2,C.deck);const own=new Set(C.deck.map(c=>c.t));const pick=(PREF&&(opts.find(c=>PREF.includes(c.t)&&!own.has(c.t))||opts.find(c=>PREF.includes(c.t))))||opts.find(c=>!own.has(c.t)&&!E.isOrder(c))||opts.find(c=>!E.isOrder(c))||opts[0];if(pick&&!process.env.NOREWARD)C.deck.push({...pick});}
