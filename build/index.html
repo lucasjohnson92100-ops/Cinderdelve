@@ -7780,6 +7780,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   }
 
   function gainXp(v) {
+    if (state && state.survival && (state.survCycle || 0) < BAL.earlyXp.length) v = Math.round(v * BAL.earlyXp[state.survCycle || 0]);
     if (state && state.survival && state.survMod) v = Math.round(v * survRew());
     if (state && state.survival && (state.arcXp || state.survDanger)) v = Math.round(v * (state.arcXp || 1) * (1 + 0.12 * (state.survDanger || 0)));
     if (ht() && ht().xp) v = Math.round(v * (1 + ht().xp));
@@ -13174,14 +13175,17 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
     spawnCyc: 0.95,                      /* nombre de monstres par lot : + 95 % par vague passée */
     capBase: 100, capCyc: 22,           /* nombre maximal de monstres à l'écran */
-    firstWaveN: 0.75,                   /* vague 1 : proportion du lot normal (débutants) */
+    firstWaveN: 1,                      /* vague 1 : proportion du lot normal (le gros du soulagement est dans earlyN) */
+    earlyN: [0.62, 0.62, 0.78, 0.9],    /* vagues 1 à 4 : proportion des monstres (lots ET événements : mur, déferlante, assaut) */
+    earlyXp: [1.4, 1.4, 1.25, 1.1],     /* vagues 1 à 4 : expérience en plus, pour compenser les monstres en moins */
     ivStart: 2.5, ivSlope: 1.2, ivMin: 0.65, ivCyc: 0.22,   /* cadence des lots : intervalle en secondes */
     eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
     boss1: 1.1, bossCyc: 0.6, superBoss: 3.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
     xpQuad: 1.1, xpCube: 0.09           /* coût du niveau suivant : plus haut = on monte moins vite (le terme cubique ralentit surtout la suite) */
   };
 
-  function survCyc() { return (state && state.survival) ? (state.survCycle || 0) * 1.0 + survMapIdx() * 0.6 + 0.35 * (state.survDanger || 0) : 0; }
+  /* difficulté d'une vague : numéro de vague + bonus du lieu (0,6 par lieu). Le bonus du lieu n'est appliqué qu'à moitié en vague 1 et aux trois quarts en vague 2 : les premières vagues d'un lieu avancé restent abordables. */
+  function survCyc() { if (!(state && state.survival)) return 0; var cy = state.survCycle || 0, mk = cy === 0 ? 0.5 : cy === 1 ? 0.75 : 1; return cy * 1.0 + survMapIdx() * 0.6 * mk + 0.35 * (state.survDanger || 0); }
   function survHpMul() { var c = survCyc(); return 1 + c * BAL.hpLin + c * c * BAL.hpQuad; }
   /* début de partie plus doux : les monstres de la 1re vague frappent à 65 % puis montent progressivement jusqu'à 100 % à la fin de la vague */
   function survAtkMul() { var c = survCyc(), early = (state && (state.survCycle || 0) === 0 && state.survDur > 0) ? 0.65 + 0.35 * Math.min(1, (state.survT || 0) / state.survDur) : 1; return (1 + c * BAL.atkLin + c * c * BAL.atkQuad) * early; }
@@ -13198,7 +13202,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
     return Math.max(1, Math.floor(dm * k * 1.04)); /* vie d'origine, +4 % */
   }
-  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
+  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); if ((state.survCycle || 0) < 3) c = Math.min(c, [60, 85, 105][state.survCycle || 0]); /* peu de monstres à l'écran dans les premières vagues */ return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
   /* Brotato : quand il y a trop de monstres, les plus éloignés disparaissent (sans butin) au lieu de bloquer les arrivées */
   function survCull(keep) {
     var cand = enemies.filter(function (e) { return e.hp > 0 && !e.elite && !e.survivalBoss && !e.boss && !e.mini; });
@@ -13218,11 +13222,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var WT = WAVE_THEMES[state.survThemeW];
     if (WT) { var full = MD.a.concat(MD.b, MD.c), fl2 = full.filter(function (t) { return WT.pool.indexOf(t) >= 0; }); pool = fl2.length >= 2 ? fl2 : full; }
     var rad = Math.min(Math.floor(W / 2), Math.floor(H / 2)) - 2;
-    var nB0 = cycW === 0 ? 3 : 5, nB1 = cycW === 0 ? 9 : 13, nBase = (frac < 0.15 ? nB0 : nB0 + Math.floor((frac - 0.15) * nB1 + Math.random() * 4)) * (1 + cycW * BAL.spawnCyc) * (1 + 0.06 * survMapIdx()) * (1 + 0.08 * dgW) * survPhaseN() * (survModIs("dense") ? 1.35 : 1) * (state.arcHorde || 1);
+    var nB0 = cycW === 0 ? 3 : 5, nB1 = cycW === 0 ? 9 : 13, nBase = (frac < 0.15 ? nB0 : nB0 + Math.floor((frac - 0.15) * nB1 + Math.random() * 4)) * (1 + cycW * BAL.spawnCyc) * (1 + 0.06 * survMapIdx() * (cycW === 0 ? 0.4 : cycW === 1 ? 0.7 : 1)) * (1 + 0.08 * dgW) * survPhaseN() * (survModIs("dense") ? 1.35 : 1) * (state.arcHorde || 1);
     var n = Math.min(capW - enemies.length, Math.round(nBase)), placed = 0, tries = 0;
     if (WT) n = Math.max(1, Math.round(n * WT.n));
     if (cycW === 0) n = Math.max(1, Math.round(n * BAL.firstWaveN * Math.min(1, 0.6 + frac * 1.4)));
     if (forceN) n = Math.min(capW - enemies.length, forceN);
+    if (cycW < BAL.earlyN.length) n = Math.max(1, Math.round(n * BAL.earlyN[cycW])); /* début de partie plus léger */
     if (WT && WT.ring) ringMode = true;
     var wallOffs = null, swarmPool = null, gapC = 0;
     if (layout === "wall") { wallOffs = []; gapC = (Math.random() - 0.5) * 8; for (var wi = 0; wi < n + 4; wi++) { var wlt = (wi - (n + 3) / 2) * 1.15; if (Math.abs(wlt - gapC) > 1.9) wallOffs.push(wlt); } n = Math.min(n, wallOffs.length); }
