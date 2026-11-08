@@ -857,5 +857,17 @@
  "Lieu terminé :": "Place completed:",
  "Ultime pas chargé": "Ultimate not charged",
  "Une seule main : touche l'écran pour te déplacer. <b>Double tape à gauche</b> = pouvoir spécial, <b>double tape à droite</b> = ultime (jauge ⚡ pleine).": "One hand: touch the screen to move. <b>Double tap on the left</b> = special power, <b>double tap on the right</b> = ultimate (⚡ gauge full).",
- "<b>Mode Survie, à une main :</b> touche l'écran pour te déplacer. Double tape à gauche : pouvoir spécial. Double tape à droite : ultime (quand la jauge est pleine).": "<b>Survival mode, one-handed:</b> touch the screen to move. Double tap on the left: special power. Double tap on the right: ultimate (when the gauge is full)."
+ "<b>Mode Survie, à une main :</b> touche l'écran pour te déplacer. Double tape à gauche : pouvoir spécial. Double tape à droite : ultime (quand la jauge est pleine).": "<b>Survival mode, one-handed:</b> touch the screen to move. Double tap on the left: special power. Double tap on the right: ultimate (when the gauge is full).",
+ "Code de sauvegarde": "Save code",
+ "Copie ta progression vers un autre appareil ou une autre version du jeu": "Copy your progress to another device or another version of the game",
+ "Ta progression reste sur cet appareil (et dans ce navigateur). Copie ce code, puis colle-le dans l'autre version du jeu (site, appli, itch…) avec « Importer ».": "Your progress stays on this device (and in this browser). Copy this code, then paste it into the other version of the game (site, app, itch…) with “Import”.",
+ "Copier": "Copy",
+ "Importer": "Import",
+ "Code copié. Colle-le dans l'autre version avec « Importer ».": "Code copied. Paste it into the other version with “Import”.",
+ "Sélectionne le code et copie-le à la main.": "Select the code and copy it by hand.",
+ "Colle d'abord le code venu d'une autre version, puis touche « Importer ».": "First paste the code from another version, then tap “Import”.",
+ "Code invalide : recopie-le en entier (il commence par CD1-).": "Invalid code: copy it in full (it starts with CD1-).",
+ "Progression importée (": "Progress imported (",
+ " éléments mis à jour). Relance le jeu pour tout voir.": " items updated). Restart the game to see everything.",
+ "Rien de nouveau : ta progression contient déjà tout.": "Nothing new: your progress already contains everything."
 }
