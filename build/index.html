@@ -5154,14 +5154,13 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       var ca = Math.cos(ang), sa = Math.sin(ang), bx = x + ca * off, by = y + sa * off, len = L * 0.9 * sc;
       c.globalCompositeOperation = "lighter";
       if (st === "arc") {
-        /* traînée en anneau : s'estompe derrière la lame, bord extérieur lumineux */
-        var a0 = f.a + (f.flip ? 1 : -1) * f.sp, span = ang - a0, NS = 12, r0 = len * 0.42, r1 = len * 1.02, js, u0, u1, aa, ab;
-        for (js = 0; js < NS; js++) {
-          u0 = js / NS; u1 = (js + 1) / NS; aa = a0 + span * u0; ab = a0 + span * u1 + (span > 0 ? 0.02 : -0.02);
-          var wq = Math.pow(u1, 1.8), rin = r1 - (r1 - r0) * (0.35 + 0.65 * wq);
-          c.fillStyle = rg(js > NS - 4 ? P[1] : P[0], 0.7 * a * wq); c.beginPath(); c.arc(x, y, r1, aa, ab, span < 0); c.arc(x, y, rin, ab, aa, span >= 0); c.closePath(); c.fill();
+        /* traînée en comète : arcs superposés, de plus en plus courts et épais vers la lame (pas de raccords visibles) */
+        var a0 = f.a + (f.flip ? 1 : -1) * f.sp, span = ang - a0, r0 = len * 0.42, r1 = len * 1.02, js, ccw = span < 0;
+        if (Math.abs(span) > 0.03) {
+          c.lineCap = "butt";
+          for (js = 0; js < 6; js++) { var wj = (r1 - r0) * (0.22 + 0.78 * js / 5); c.strokeStyle = rg(js > 3 ? P[1] : P[0], 0.2 * a); c.lineWidth = wj; c.beginPath(); c.arc(x, y, r1 - wj / 2, a0 + span * (js / 6.5), ang, ccw); c.stroke(); }
+          c.strokeStyle = rg("255,255,255", 0.7 * a); c.lineWidth = 1.4; c.beginPath(); c.arc(x, y, r1, a0 + span * 0.35, ang, ccw); c.stroke();
         }
-        c.strokeStyle = rg(P[1], 0.75 * a); c.lineWidth = 1.6; c.beginPath(); c.arc(x, y, r1, a0 + span * 0.45, ang, span < 0); c.stroke();
         c.strokeStyle = rg("255,255,255", 0.6 * a); c.lineWidth = 2; c.lineCap = "round"; c.beginPath(); c.moveTo(x + Math.cos(ang) * r0, y + Math.sin(ang) * r0); c.lineTo(x + Math.cos(ang) * r1, y + Math.sin(ang) * r1); c.stroke();
       }
       c.globalCompositeOperation = "source-over"; c.save(); c.translate(bx, by); c.rotate(ang); c.globalAlpha = Math.min(1, a * 1.6); c.lineCap = "round";
@@ -11593,9 +11592,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       var aev = state.survWEvo && state.survWEvo.aura, arp = (1.4 + 0.2 * (SW.aura - 1) + (aev ? 0.6 : 0)) * survArea() * TILE;
       var acol = aev ? "90,210,90" : "255,110,30", acol2 = aev ? "200,255,140" : "255,225,130", afk = state.survAuraFx ? Math.min(1, (t - state.survAuraFx) / 420) : 1;
       ctx.save(); ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.5 + 0.15 * Math.sin(t / 200); ctx.drawImage(GX.glow(acol), cx0 - arp, cy0 - arp, arp * 2, arp * 2); ctx.globalAlpha = 1;
-      ctx.strokeStyle = "rgba(" + acol + ",0.4)"; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(cx0, cy0, arp * 0.97, 0, 6.283); ctx.stroke();
-      var na = Math.max(22, Math.min(56, Math.round(arp / 1.7)));
+      ctx.globalAlpha = 0.16 + 0.05 * Math.sin(t / 200); ctx.drawImage(GX.glow(acol), cx0 - arp, cy0 - arp, arp * 2, arp * 2); ctx.globalAlpha = 1;
+      ctx.strokeStyle = "rgba(" + acol + ",0.55)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx0, cy0, arp * 0.97, 0, 6.283); ctx.stroke();
+      var na = Math.max(18, Math.min(38, Math.round(arp / 2.2)));
       for (var ai = 0; ai < na; ai++) {
         var aan = ai / na * 6.283 + t / 2600, hv = 0.6 + 0.7 * Math.abs(Math.sin(ai * 12.9898)), afl = (0.55 + 0.45 * Math.sin(t / 75 + ai * 2.3)) * hv, abx = cx0 + Math.cos(aan) * arp * 0.95, aby = cy0 + Math.sin(aan) * arp * 0.95, aw = arp * 6.283 / na * 0.42, ah = (4 + arp * 0.11) * afl, sway = Math.sin(t / 95 + ai * 1.7) * aw * 0.9;
         ctx.fillStyle = "rgba(" + acol + ",0.42)"; ctx.beginPath(); ctx.moveTo(abx - aw, aby); ctx.bezierCurveTo(abx - aw, aby - ah * 0.45, abx + sway - aw * 0.3, aby - ah * 0.7, abx + sway, aby - ah); ctx.bezierCurveTo(abx + sway + aw * 0.2, aby - ah * 0.6, abx + aw, aby - ah * 0.4, abx + aw, aby); ctx.closePath(); ctx.fill();
@@ -11611,8 +11610,10 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var an = (state.survOrbA || 0) + b / nb * 6.283, bx = cx0 + Math.cos(an) * orRd * TILE, by = cy0 + Math.sin(an) * orRd * TILE;
         var oevd = state.survWEvo && state.survWEvo.orbit, ocol = oevd ? "150,225,255" : "210,230,255";
         ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-        for (var tr2 = 0; tr2 < 4; tr2++) { ctx.strokeStyle = "rgba(" + ocol + "," + (0.42 - tr2 * 0.1).toFixed(2) + ")"; ctx.lineWidth = (7 - tr2 * 1.5) * orKd; ctx.beginPath(); ctx.arc(cx0, cy0, orRd * TILE, an - 0.16 * (tr2 + 1), an - 0.16 * tr2); ctx.stroke(); }
-        ctx.drawImage(GX.soft(ocol, 0.7), bx - 13, by - 13, 26, 26); ctx.restore();
+        ctx.lineCap = "butt";
+        for (var tr2 = 0; tr2 < 5; tr2++) { ctx.strokeStyle = "rgba(" + ocol + ",0.13)"; ctx.lineWidth = (1.6 + tr2 * 1.5) * orKd; ctx.beginPath(); ctx.arc(cx0, cy0, orRd * TILE, an - 0.95 + tr2 * 0.17, an - 0.04); ctx.stroke(); }
+        ctx.strokeStyle = "rgba(255,255,255,0.55)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx0, cy0, orRd * TILE, an - 0.5, an - 0.04); ctx.stroke();
+        ctx.restore();
         ctx.save(); ctx.translate(bx, by); ctx.rotate(an + 1.57);
         if (si) ctx.drawImage(si, -11 * orKd, -11 * orKd, 22 * orKd, 22 * orKd); else { ctx.fillStyle = "#dfe8ff"; ctx.fillRect(-2, -9, 4, 18); }
         ctx.restore();
