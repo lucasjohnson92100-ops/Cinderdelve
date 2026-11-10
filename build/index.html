@@ -13405,7 +13405,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     hpLin: 1.15, hpQuad: 0.28,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
     atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
     spawnCyc: 0.95,                      /* nombre de monstres par lot : + 95 % par vague passée */
-    capBase: 100, capCyc: 22,           /* nombre maximal de monstres à l'écran */
+    capBase: 60, capCyc: 30,            /* nombre maximal de monstres à l'écran en fin de vague : 60, 90, 120, 150, 180 */
+    capStart: 0.62,                     /* au début d'une vague (à partir de la 2e), le plafond n'est qu'à 62 % : il monte régulièrement jusqu'à la fin */
     firstWaveN: 1,                      /* vague 1 : proportion du lot normal (le gros du soulagement est dans earlyN) */
     earlyN: [0.62, 0.62, 0.78, 0.9],    /* vagues 1 à 4 : proportion des monstres (lots ET événements : mur, déferlante, assaut) */
     earlyXp: [1.4, 1.4, 1.25, 1.1],     /* vagues 1 à 4 : expérience en plus, pour compenser les monstres en moins */
@@ -13433,7 +13434,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     var k = B.hp >= 8 ? 2.1 + 0.2 * c + frac * 0.5 : 1.0 + 0.05 * c + frac * 0.1;
     return Math.max(1, Math.floor(dm * k * 1.04)); /* vie d'origine, +4 % */
   }
-  function survCap() { var c = Math.min(185, BAL.capBase + (state.survCycle || 0) * BAL.capCyc + survMapIdx() * 3); if ((state.survCycle || 0) < 3) c = Math.min(c, [60, 85, 105][state.survCycle || 0]); /* peu de monstres à l'écran dans les premières vagues */ return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
+  /* montée en puissance : chaque vague démarre plus calme que la fin de la précédente (on souffle après le boss), puis grimpe sans palier jusqu'à un sommet plus haut */
+  function survRamp() { if (!state || state.survBossUp || !(state.survDur > 0)) return 1; var f = Math.max(0, Math.min(1, (state.survT || 0) / state.survDur)); return 0.5 * f + 0.5 * f * f * (3 - 2 * f); }
+  function survCap() { var cy = state.survCycle || 0, c = Math.min(185, BAL.capBase + cy * BAL.capCyc + survMapIdx() * 3); if (cy >= 1) c *= BAL.capStart + (1 - BAL.capStart) * survRamp(); return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
   /* Brotato : quand il y a trop de monstres, les plus éloignés disparaissent (sans butin) au lieu de bloquer les arrivées */
   function survCull(keep) {
     var cand = enemies.filter(function (e) { return e.hp > 0 && !e.elite && !e.survivalBoss && !e.boss && !e.mini; });
@@ -14914,8 +14917,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         state.survDirT = (state.survDirT || 0) - dt;
         if (state.survDirT <= 0) {
           state.survDirT = 0.8; var cyD = state.survCycle || 0, fD = state.survT / state.survDur, capD = survCap();
-          var tier = fD < 0.18 ? 0.72 : fD < 0.42 ? 0.88 : fD < 0.68 ? 1 : fD < 0.9 ? 1.1 : 1.22; /* paliers de pression au fil de la vague */
-          var tgt = (cyD === 0 ? (14 + fD * 30 + survMapIdx() * 4) * (0.65 + 0.35 * Math.min(1, fD / 0.4)) : capD * 0.9 * tier) * (1 + 0.08 * (state.survDanger || 0)) * (1 + 0.04 * survMapIdx()); tgt *= state.phPeak ? 1.15 : 0.93; tgt = Math.min(tgt, capD - 4);
+          /* nombre de monstres visé : il suit le plafond, qui monte tout au long de la vague (plus de paliers) */
+          var tgt = (cyD === 0 ? (14 + fD * 30 + survMapIdx() * 4) * (0.65 + 0.35 * Math.min(1, fD / 0.4)) : capD * 0.9) * (1 + 0.08 * (state.survDanger || 0)) * (1 + 0.04 * survMapIdx()); tgt *= state.phPeak ? 1.15 : 0.93; tgt = Math.min(tgt, capD - 4);
           if (enemies.length > capD + 18) survCull(capD + 6);
           if (enemies.length < tgt * 0.92) spawnWaveBatch(fD, Math.min(14, Math.max(4, Math.round((tgt - enemies.length) * 0.55))));
         }
