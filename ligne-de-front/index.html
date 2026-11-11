@@ -3022,6 +3022,11 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 @media (min-height: 341px) { .btl.land:has(.bt-hint.spec) { grid-template-rows: auto minmax(0, .75fr) auto auto minmax(0, 1.25fr) auto !important; } .btl.land:has(.bt-hint.spec) .enhq { min-height: 0; } }
 .bt-hint.spec .pill.sm { position: absolute !important; right: 4px; bottom: 3px; top: auto !important; margin: 0; font-size: .56rem; padding: 1px 7px; }
 .bt-hint.spec .ht { flex: 1 1 100% !important; }
+.pill.spd { white-space: nowrap; } .pill.spd.on { background: linear-gradient(180deg, #ffe27a, #e8a91e) !important; color: #3b2a00 !important; border-color: #6b4a00 !important; }
+.bt-tools { gap: 4px; } .bt-tools .pill.sm { padding-inline: 8px; }
+.btl.land .bt-tools { display: flex; flex-wrap: nowrap !important; gap: 3px; justify-content: flex-end; }
+.btl.land .bt-tools .pill.sm { font-size: .62rem !important; padding: 2px 7px !important; min-width: 0; flex: 0 1 auto; }
+.bt-hint.advice.tone-bad { animation: none !important; box-shadow: 0 0 0 2px rgba(213, 40, 26, .55); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4598,7 +4603,11 @@ const SFX = (() => {
 // ====== Interface ======
 const $ = s => document.querySelector(s);
 const app = $('#app');
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Vitesse des animations : ×1 ou ×2 (réglage mémorisé) ; toutes les attentes et les animations CSS suivent
+let SPEED = 1; try { SPEED = +localStorage.getItem('front-speed') === 2 ? 2 : 1; } catch (e) { /* stockage indisponible */ }
+function setSpeed(v) { SPEED = v === 2 ? 2 : 1; try { localStorage.setItem('front-speed', String(SPEED)); } catch (e) { /* stockage indisponible */ } }
+setInterval(() => { if (SPEED === 1 || typeof document.getAnimations !== 'function') return; const inFight = typeof busy !== 'undefined' && busy; if (!inFight) return; for (const a of document.getAnimations()) { if (a.playbackRate !== SPEED) { try { a.playbackRate = SPEED; } catch (e) { /* animation non réglable */ } } } }, 80);
+const sleep = ms => new Promise(r => setTimeout(r, ms / SPEED));
 const KW_DESC = { spot: 'Tir guidé avec artillerie ou navire', heal: 'à son arrivée, les autres unités du secteur reprennent des forces', mines: 'déminé son secteur ; ignore le Bunker ; Attaque ×2 contre un Bunker', guard: 'Nid défensif avec une autre infanterie', arty: 'Tir guidé avec des observateurs', carrier: 'véhicule de transport', elan: '+1 dégât par véhicule à élan déjà posé ce tour', antitank: 'Attaque ×2 contre une Division blindée', recon: 'Tir guidé avec artillerie ou navire', cover: "Couverture aérienne ; intercepte l'obus de son secteur", bomb: 'frappe aérienne immédiate sur le QG', raid: 'Commando : son secteur ignore Bunker et Blindage' };
 const SHORT_TAG = { observateur: 'Tir guidé ×1,5', infirmiers: 'Soigne les voisins', genie: 'Anti-mines, anti-bunker', mitrailleuse: 'Nid défensif', artillerie: 'Tir guidé ×1,5', halftrack: 'Armes combinées', antichar: 'Att. ×2 vs blindés', reco: 'Appui · tir guidé', tireurs: 'Économique', jeep: 'Élan', blinde: 'Robuste', destroyer: 'Appui naval', croiseur: 'Appui · tout le front', sousmarin: 'Appui côtier', chasseur: 'Couverture aérienne', bombardier: '60 dégâts sur le QG', paras: 'Ignore bunker/blindage' };
 // Fiche explicite de chaque carte : quand la jouer, son atout propre, et les effets ennemis contre lesquels elle est précieuse (fx)
@@ -5398,7 +5407,7 @@ function renderBattle() {
   const endLabel = 'Fin du tour';
   const pop = false && picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
   app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px;--hh:${window.__handHide ? 18 : ch + (short ? 14 : 22)}px">${pop}
-    <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
+    <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm spd ${SPEED === 2 ? 'on' : ''}" data-act="speed" aria-label="Vitesse des animations" title="Vitesse des animations">${SPEED === 2 ? '▶▶ ×2' : '▶ ×1'}</button><button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
     <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px"><button class="hand-tog" data-act="handtog" aria-label="Afficher ou masquer la main">${window.__handHide ? '▴' : '▾'} Main <b>${n}</b></button>${hand}</div>
@@ -6458,7 +6467,7 @@ function turnBanner(text, side) {
   const host = document.querySelector('.btl'); if (!host) return Promise.resolve();
   const b = document.createElement('div'); b.className = 'tban ' + side; b.innerHTML = `<span>${text}</span>`; host.appendChild(b);
   SFX.play(side === 'en' ? 'enemyturn' : 'go');
-  return new Promise(res => setTimeout(() => { b.remove(); res(); }, fast ? 200 : 1100));
+  return new Promise(res => setTimeout(() => { b.remove(); res(); }, (fast ? 200 : 1100) / SPEED));
 }
 function finishBattle() {
   clearCoach();
@@ -6952,6 +6961,7 @@ document.addEventListener('click', e => {
   else if (a === 'coachoff') { const r = load(); r.tuto = { ...(r.tuto || {}), off: 1 }; save(r); showCoach(); toast('Tutoriel désactivé. Le bouton « ? » reste disponible.'); }
   else if (a === 'help') helpModal(false);
   else if (a === 'guide') guideModal();
+  else if (a === 'speed') { setSpeed(SPEED === 2 ? 1 : 2); SFX.play('tap'); toast(SPEED === 2 ? 'Vitesse ×2 : animations deux fois plus rapides.' : 'Vitesse normale.'); if (S && !busy && document.getElementById('hand')) renderBattle(); }
   else if (a === 'combos') comboPop();
   else if (a === 'install') installGame();
   else if (a === 'menu') menuModal();

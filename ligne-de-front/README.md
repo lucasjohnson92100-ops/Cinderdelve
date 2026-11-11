@@ -442,3 +442,6 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 - **Trois secteurs terrestres** pleine largeur au milieu, jamais recouverts.
 - **La main a sa propre bande en bas** (`--hh`) : elle ne masque plus le dernier secteur ni la mer ; elle ne descend plus quand une carte est choisie. Le bouton « Main » la replie, et le plateau reprend alors la place.
 - Pastilles de capacité ★ plus petites et contenues dans l'unité ; explication de la carte sélectionnée lisible en entier (le panneau ennemi se réduit pendant la sélection).
+
+## Vitesse ×2
+Bouton « ▶ ×1 / ▶▶ ×2 » en haut à droite du plateau (mémorisé, `front-speed`). En ×2, toutes les attentes (`sleep`, bannières) sont divisées par deux et les animations CSS tournent deux fois plus vite pendant la résolution. Mesure : fin de tour à 2 secteurs 12,8 s → 6,6 s. Le double toucher sur l'écran pour passer l'animation reste disponible.
