@@ -436,3 +436,9 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 
 ## Fin de campagne plus exigeante
 `lateK` : à partir de la 9e blinde, QG ennemi +4 % par blinde (jusqu'à ×1,44 à la 19e, davantage ensuite) et Attaque ×√ de ce facteur (`LATEH`). PV du QG de la 20e blinde : 4924 → 7090. Les bots de simulation ne maîtrisent ni les paris, ni les retraites, ni les affinités, ni le ciblage de la défense : un joueur humain fait nettement mieux qu'eux, d'où une marge volontaire.
+
+## Plateau clarifié
+- **Ciel et mer côte à côte** sur une seule bande compacte en haut (score seul), au lieu de deux bandes en haut et en bas.
+- **Trois secteurs terrestres** pleine largeur au milieu, jamais recouverts.
+- **La main a sa propre bande en bas** (`--hh`) : elle ne masque plus le dernier secteur ni la mer ; elle ne descend plus quand une carte est choisie. Le bouton « Main » la replie, et le plateau reprend alors la place.
+- Pastilles de capacité ★ plus petites et contenues dans l'unité ; explication de la carte sélectionnée lisible en entier (le panneau ennemi se réduit pendant la sélection).

@@ -2991,6 +2991,37 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 @media (max-width: 700px) { .crateopen.packopen.rwd { grid-template-columns: repeat(min(var(--n, 3), 3), minmax(0, 1fr)); } }
 @media (max-height: 420px) { .packopen.rwd .card.unitc:not(.hc), .packopen.rwd .card.ordc:not(.hc) { min-height: 170px !important; } .crateopen.packopen.rwd { gap: 8px; } }
 .gu, .awu { touch-action: manipulation; }
+
+/* ===== Plateau clarifié : ciel et mer côte à côte en haut, 3 secteurs terrestres, main dans sa propre bande en bas ===== */
+.btl.land .bgrid.front { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, .55fr) repeat(3, minmax(0, 1fr)); gap: 3px; padding-bottom: calc(var(--hh, 100px) + 2px) !important; transition: padding-bottom .25s; }
+.btl.land .ln { grid-column: 1 / -1; flex: none !important; min-height: 0 !important; }
+.btl.land .ln.zone { grid-row: 1; flex: none !important; min-height: 0 !important; }
+.btl.land .ln.z-air { grid-column: 1; } .btl.land .ln.z-mer { grid-column: 2; }
+.btl.land .hand.fan.low { transform: none; }
+.btl.land .hand.fan.hidden { transform: translateY(calc(100% - 18px)); }
+.btl.land .hand.fan { background: linear-gradient(180deg, rgba(8, 12, 22, 0), rgba(8, 12, 22, .82) 30%); border-radius: 10px 10px 0 0; }
+.hand-tog { top: auto !important; bottom: 4px; left: 2px; }
+.btl.land .hand.fan.hidden .hand-tog { bottom: auto !important; top: -2px !important; }
+/* pastille de capacité à l'intérieur de l'unité, plus de débordement sur le secteur voisin */
+.gult { top: 1px !important; left: 1px !important; transform-origin: 0 0; }
+.ultglow { inset: 1px !important; }
+
+/* zones (ciel, mer) : bande compacte, score seul ; pastille ★ plus petite */
+.btl.land .bgrid.front { grid-template-rows: minmax(0, .62fr) repeat(3, minmax(0, 1fr)); }
+.btl.land .ln.zone .lc.foot .sc-eq { display: none !important; }
+.btl.land .ln.zone .lc.foot { display: grid !important; place-items: center; padding: 0 4px; }
+.btl.land .ln.zone .lc.foot .sc-tot { font-size: clamp(.9rem, 5.5vh, 1.6rem) !important; line-height: 1; position: static !important; transform: none !important; }
+.btl.land .ln.zone.occ, .btl.land .ln.zone:not(.occ) { grid-template-columns: 66px minmax(0, 1fr) 64px !important; }
+.btl.land .ln.zone:not(.occ) .lc.foot { display: none !important; }
+.btl.land .ln.zone .cbs { display: none !important; }
+.gult { font-size: .62rem !important; padding: 0 2px !important; } .gult small { font-size: .42rem !important; }
+@media (max-height: 340px) { .gult { font-size: .52rem !important; } .gult small { display: none; } }
+.bt-hint.spec { overflow: hidden !important; min-height: 0; }
+.bt-hint.spec .ht { overflow: hidden !important; max-height: 100% !important; font-size: clamp(.56rem, 2.9vh, .74rem) !important; line-height: 1.18 !important; }
+.bt-hint { min-height: 0; overflow: hidden; }
+@media (min-height: 341px) { .btl.land:has(.bt-hint.spec) { grid-template-rows: auto minmax(0, .75fr) auto auto minmax(0, 1.25fr) auto !important; } .btl.land:has(.bt-hint.spec) .enhq { min-height: 0; } }
+.bt-hint.spec .pill.sm { position: absolute !important; right: 4px; bottom: 3px; top: auto !important; margin: 0; font-size: .56rem; padding: 1px 7px; }
+.bt-hint.spec .ht { flex: 1 1 100% !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5366,7 +5397,7 @@ function renderBattle() {
   const extra = picked.length > 1 ? '<button class="pill sm" data-act="unpick">Annuler</button>' : one ? '<button class="pill sm" data-act="detail">Détails</button>' : '';
   const endLabel = 'Fin du tour';
   const pop = false && picked.length > 1 && !discardSel && !window.__handHide ? cardPopHTML(picked[picked.length - 1], picked.length - 1, picked.length) : '';
-  app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px">${pop}
+  app.innerHTML = `<div class="btl land" data-amb="${sceneMood(S.lvl)}" style="--rw:${rw}px;--hh:${window.__handHide ? 18 : ch + (short ? 14 : 22)}px">${pop}
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
