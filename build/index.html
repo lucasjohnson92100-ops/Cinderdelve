@@ -7119,6 +7119,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
         return (t % 3400) < 140 ? A.blink : A.idle[Math.floor(t / 300) % 4];
       }
     }
+    if (!isPlayer && sp.vf && !sp.pf && sp.vf.length >= 3) { try { ANX.build(name, sp); } catch (e) { sp.pf = null; } }
     if (!isPlayer && sp.pf) {
       if (o.wind > 0) img = sp.pa[0];
       else if (o.lunge && t - o.lunge.t0 < 260) img = sp.pa[t - o.lunge.t0 < 130 ? 1 : 2];
@@ -19127,59 +19128,67 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     return { feather: feather, get: function (k) { return img[k] || null; }, onReady: function (f) { cbs.push(f); }, all: function () { return Object.keys(HERO_ART).every(function (k) { return SKIP(k) || !!img[k]; }); } };
   })();
-  /* ===== Personnages peints : une illustration devient un personnage animé.
-     L'image est découpée en fines bandes horizontales que l'on décale et étire : le corps se penche, respire, rebondit,
-     les pieds restent au sol (au lieu de faire tourner toute l'image d'un bloc). Les images sont calculées une fois au chargement. ===== */
-  var PAINT = (function () {
-    var MONS = { ogre: ["img/s_ogre.webp", "heavy", 192], slime: ["img/s_slime.webp", "jelly", 128] }, HEROES = { cocotte: "img/s_h_cocotte.webp" }, hero = {}, T2 = 6.2832;
-    /* fn(v) -> [décalage horizontal, largeur] pour la hauteur v (0 = pieds, 1 = tête) ; sy = étirement vertical ; dy = saut */
-    function warp(im, S, fn, sy, dy) {
-      var c = mkCanvas(S, S), x = c.getContext("2d"), N = 28, k = 0.8, W0 = S * k, H0 = S * k * (sy || 1), base = S * 0.98 + (dy || 0) * S, sh = im.height / N;
+  /* ===== Animations enrichies des monstres (même dessin qu'avant) : à partir des 3 images d'origine de chaque monstre, on calcule
+     un repos (6 images), une marche (8) et une attaque (3). L'image est découpée en fines bandes horizontales décalées et étirées :
+     le corps se penche, respire et rebondit pendant que les pieds restent au sol. Calculé une seule fois, à la première apparition. ===== */
+  var ANX = (function () {
+    var T2 = 6.2832, KIND = { slime: "jelly", mushroom: "jelly", toadking: "jelly", mimic: "jelly", bat: "flyer", harpy: "flyer", ghost: "floaty", lich: "floaty", pharaoh: "floaty", cultist: "floaty", medusa: "floaty",
+      golem: "heavy", ogre: "heavy", minotaur: "heavy", cyclops: "heavy", grandboucher: "heavy", dragon: "heavy", centaur: "heavy", spider: "crawler", spiderqueen: "crawler", crabking: "crawler", wolf: "runner", lycan: "runner", werewolf: "runner" };
+    function bump(v, c0, w) { var d = (v - c0) / w; return Math.exp(-d * d); }
+    /* fn(v) -> [décalage horizontal, largeur] à la hauteur v (0 = pieds, 1 = tête) ; sy = étirement vertical ; dy = saut */
+    function warp(im, fn, sy, dy) {
+      var S = im.width, H = im.height, c = mkCanvas(S, H), x = c.getContext("2d"), N = 32, k = 0.94, H0 = H * k * (sy || 1), base = H + (dy || 0) * H, sh = H / N;
       x.imageSmoothingEnabled = true; if ("imageSmoothingQuality" in x) x.imageSmoothingQuality = "high";
-      for (var i = 0; i < N; i++) {
-        var v = 1 - (i + 0.5) / N, q = fn(v), w = W0 * (q[1] || 1), y0 = base - H0 + H0 * i / N;
-        x.drawImage(im, 0, i * sh, im.width, sh, S / 2 - w / 2 + q[0] * S, y0, w, H0 / N + 0.7);
-      }
+      for (var i = 0; i < N; i++) { var v = 1 - (i + 0.5) / N, q = fn(v), w = S * k * (q[1] || 1); x.drawImage(im, 0, i * sh, S, sh, S / 2 - w / 2 + q[0] * S, base - H0 + H0 * i / N, w, H0 / N + 0.8); }
       return c;
     }
-    function bump(v, c0, w) { var d = (v - c0) / w; return Math.exp(-d * d); }
     var STY = {
-      /* marcheur : le buste se balance, les jambes partent à l'opposé, petit rebond à chaque pas */
       walker: {
-        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.012 * b * v, 1 + 0.04 * b * bump(v, 0.55, 0.22)]; }, 1 + 0.025 * b, 0]; },
-        walk: function (a) { var s1 = Math.sin(a), c1 = Math.cos(a); return [function (v) { return [0.035 * v + 0.06 * s1 * Math.pow(v, 1.3) - 0.07 * s1 * Math.max(0, 1 - v / 0.3), 1 + 0.03 * Math.abs(c1) * bump(v, 0.2, 0.25)]; }, 1 - 0.05 * Math.abs(c1), -0.055 * Math.abs(s1)]; },
-        atk: [function () { return [function (v) { return [-0.1 * Math.pow(v, 1.5), 1 + 0.04 * bump(v, 0.5, 0.3)]; }, 1.04, 0]; }, function () { return [function (v) { return [0.17 * Math.pow(v, 1.4), 1.05]; }, 0.93, 0]; }, function () { return [function (v) { return [0.07 * Math.pow(v, 1.4), 1]; }, 0.98, 0]; }]
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.01 * b * v, 1 + 0.035 * b * bump(v, 0.5, 0.22)]; }, 1 + 0.022 * b, 0]; },
+        walk: function (a) { var s1 = Math.sin(a), c1 = Math.abs(Math.cos(a)); return [function (v) { return [0.03 * v + 0.045 * s1 * Math.pow(v, 1.3) - 0.03 * s1 * Math.max(0, 1 - v / 0.3), 1 + 0.03 * c1 * bump(v, 0.2, 0.25)]; }, 1 - 0.045 * c1, -0.05 * Math.abs(s1)]; },
+        atk: [[function (v) { return [-0.07 * Math.pow(v, 1.5), 1 + 0.04 * bump(v, 0.5, 0.3)]; }, 1.05, 0], [function (v) { return [0.085 * Math.pow(v, 1.4), 1.05]; }, 0.92, 0], [function (v) { return [0.04 * Math.pow(v, 1.4), 1]; }, 0.98, 0]]
       },
-      /* gelée : s'écrase puis s'étire en sautillant, une onde parcourt le corps */
+      runner: {
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.008 * b * v, 1 + 0.045 * b * bump(v, 0.45, 0.25)]; }, 1 + 0.02 * b, 0]; },
+        walk: function (a) { var s1 = Math.sin(a), c1 = Math.cos(a); return [function (v) { return [0.055 * v + 0.035 * c1 * v, 1 + 0.05 * s1]; }, 1 - 0.07 * s1, -0.07 * Math.max(0, s1)]; },
+        atk: [[function (v) { return [-0.08 * v, 1.08]; }, 0.9, 0], [function (v) { return [0.09 * v, 1.08]; }, 0.95, -0.05], [function (v) { return [0.04 * v, 1]; }, 0.98, 0]]
+      },
+      crawler: {
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0, 1 + 0.03 * b * bump(v, 0.5, 0.3)]; }, 1 + 0.035 * b, 0]; },
+        walk: function (a) { var s1 = Math.sin(a * 2), s0 = Math.sin(a); return [function (v) { return [0.02 * s0 * v + 0.012 * s1 * (1 - v), 1 + 0.025 * s1 * (1 - v)]; }, 1 - 0.035 * Math.abs(s1), -0.02 * Math.abs(s0)]; },
+        atk: [[function (v) { return [-0.04 * v, 1.06]; }, 0.9, 0], [function (v) { return [0.07 * v, 1.04]; }, 1.08, -0.03], [function (v) { return [0.03 * v, 1]; }, 1, 0]]
+      },
       jelly: {
-        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.02 * Math.sin(a + v * 4.5) * v, 1 - 0.035 * b + 0.05 * b * bump(v, 0.15, 0.25)]; }, 1 + 0.045 * b, 0]; },
-        walk: function (a) { var h = Math.sin(a), up = Math.max(0, h); return [function (v) { return [0.03 * Math.sin(a * 2 + v * 5) * v + 0.03 * v, 1 - 0.13 * h + 0.1 * Math.max(0, -h) * bump(v, 0.1, 0.3)]; }, 1 + 0.17 * h, -0.09 * up]; },
-        atk: [function () { return [function (v) { return [-0.05 * v, 1.14]; }, 0.84, 0]; }, function () { return [function (v) { return [0.13 * v, 0.9]; }, 1.2, -0.05]; }, function () { return [function (v) { return [0.04 * v, 1.04]; }, 0.96, 0]; }]
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.018 * Math.sin(a + v * 4.5) * v, 1 - 0.03 * b + 0.05 * b * bump(v, 0.15, 0.25)]; }, 1 + 0.05 * b, 0]; },
+        walk: function (a) { var h = Math.sin(a), up = Math.max(0, h); return [function (v) { return [0.025 * Math.sin(a * 2 + v * 5) * v + 0.02 * v, 1 - 0.1 * h + 0.06 * Math.max(0, -h) * bump(v, 0.1, 0.3)]; }, 1 + 0.16 * h, -0.09 * up]; },
+        atk: [[function (v) { return [-0.03 * v, 1.06]; }, 0.84, 0], [function (v) { return [0.07 * v, 0.9]; }, 1.18, -0.05], [function (v) { return [0.03 * v, 1.03]; }, 0.96, 0]]
       },
-      /* colosse : pas lourds, le poids passe d'un pied sur l'autre, grosse respiration */
       heavy: {
-        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.012 * Math.sin(a * 0.5) * v * v, 1 + 0.045 * b * bump(v, 0.6, 0.25)]; }, 1 + 0.022 * b, 0]; },
-        walk: function (a) { var s1 = Math.sin(a), st = Math.pow(Math.abs(Math.cos(a)), 3); return [function (v) { return [0.08 * s1 * Math.pow(v, 1.2) - 0.07 * s1 * Math.max(0, 1 - v / 0.32) + 0.025 * v, 1 + 0.05 * st * bump(v, 0.2, 0.3)]; }, 1 - 0.07 * st, -0.045 * Math.pow(Math.abs(s1), 0.6)]; },
-        atk: [function () { return [function (v) { return [-0.13 * Math.pow(v, 1.6), 1.05]; }, 1.06, 0]; }, function () { return [function (v) { return [0.2 * Math.pow(v, 1.3), 1.07]; }, 0.9, 0]; }, function () { return [function (v) { return [0.08 * Math.pow(v, 1.3), 1.02]; }, 0.97, 0]; }]
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.01 * Math.sin(a * 0.5) * v * v, 1 + 0.045 * b * bump(v, 0.58, 0.25)]; }, 1 + 0.024 * b, 0]; },
+        walk: function (a) { var s1 = Math.sin(a), st = Math.pow(Math.abs(Math.cos(a)), 3); return [function (v) { return [0.055 * s1 * Math.pow(v, 1.2) - 0.035 * s1 * Math.max(0, 1 - v / 0.32) + 0.02 * v, 1 + 0.04 * st * bump(v, 0.2, 0.3)]; }, 1 - 0.065 * st, -0.04 * Math.pow(Math.abs(s1), 0.6)]; },
+        atk: [[function (v) { return [-0.075 * Math.pow(v, 1.6), 1.05]; }, 1.06, 0], [function (v) { return [0.09 * Math.pow(v, 1.3), 1.06]; }, 0.9, 0], [function (v) { return [0.045 * Math.pow(v, 1.3), 1.02]; }, 0.97, 0]]
+      },
+      flyer: {
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.012 * Math.cos(a) * (v - 0.5), 1 + 0.03 * b]; }, 1 - 0.03 * b, -0.03 - 0.035 * b]; },
+        walk: function (a) { var b = Math.sin(a); return [function (v) { return [0.035 * (v - 0.4) + 0.015 * Math.cos(a) * (v - 0.5), 1 + 0.045 * b]; }, 1 - 0.05 * b, -0.03 - 0.045 * b]; },
+        atk: [[function (v) { return [-0.05 * (v - 0.3), 0.95]; }, 1.06, -0.07], [function (v) { return [0.08 * (v - 0.3), 1.06]; }, 0.92, 0], [function (v) { return [0.03 * (v - 0.3), 1]; }, 1, -0.03]]
+      },
+      floaty: {
+        idle: function (a) { var b = Math.sin(a); return [function (v) { return [0.03 * Math.sin(a + (1 - v) * 3.5) * (1 - v), 1 + 0.03 * b * bump(v, 0.25, 0.3)]; }, 1 + 0.02 * b, -0.02 - 0.02 * b]; },
+        walk: function (a) { var b = Math.sin(a); return [function (v) { return [0.035 * v + 0.045 * Math.sin(a + (1 - v) * 3.5) * (1 - v), 1 + 0.04 * b * bump(v, 0.25, 0.3)]; }, 1 + 0.03 * b, -0.02 - 0.03 * b]; },
+        atk: [[function (v) { return [-0.06 * v, 1.04]; }, 1.05, -0.03], [function (v) { return [0.08 * v, 1.05]; }, 0.95, 0], [function (v) { return [0.035 * v, 1]; }, 1, -0.02]]
       }
     };
-    function cyc(im, S, f, n) { var L = []; for (var i = 0; i < n; i++) { var q = f(i / n * T2); L.push(warp(im, S, q[0], q[1], q[2])); } return L; }
-    function atk(im, S, st) { return st.atk.map(function (f) { var q = f(); return warp(im, S, q[0], q[1], q[2]); }); }
-    function load(src, fn) { var im = new Image(); im.onload = function () { try { fn(im); } catch (e) {} }; im.src = src; }
-    Object.keys(MONS).forEach(function (t) {
-      if (!SP[t]) return;
-      load(MONS[t][0], function (im) {
-        var st = STY[MONS[t][1]], S = MONS[t][2], sp = SP[t];
-        sp.pi = cyc(im, S, st.idle, 6); sp.pf = cyc(im, S, st.walk, 8); sp.pa = atk(im, S, st);
-        sp.piPer = MONS[t][1] === "heavy" ? 260 : 170; sp.pPer = MONS[t][1] === "heavy" ? 130 : MONS[t][1] === "jelly" ? 85 : 80;
-        sp.h = sp.pi[0]; sp.vf = null; sp.frames = null; sp.noVariant = true;
-      });
-    });
-    Object.keys(HEROES).forEach(function (id) {
-      load(HEROES[id], function (im) { var st = STY.walker, S = 160, idle = cyc(im, S, st.idle, 4); hero[id] = { idle: idle, blink: idle[0], walk: cyc(im, S, st.walk, 6), atk: atk(im, S, st) }; });
-    });
-    var fa = FARM.anim; FARM.anim = function (id) { return hero[id] || fa(id); };
-    return { hero: hero };
+    function build(name, sp) {
+      var st = STY[KIND[name] || "walker"], vf = sp.vf, i, a, q, L, always = sp.vAlways || sp.animAlways;
+      sp.pf = []; for (i = 0; i < 8; i++) { a = i / 8 * T2; q = st.walk(a); L = Math.sin(a); sp.pf.push(warp(vf[L > 0.38 ? 1 : L < -0.38 ? 2 : 0], q[0], q[1], q[2])); }
+      sp.pi = []; for (i = 0; i < 6; i++) { a = i / 6 * T2; q = st.idle(a); L = Math.sin(a); sp.pi.push(warp(vf[always ? (L > 0.5 ? 1 : L < -0.5 ? 2 : 0) : 0], q[0], q[1], q[2])); }
+      sp.pa = st.atk.map(function (z) { return warp(vf[0], z[0], z[1], z[2]); });
+      var per = sp.vPer || 140, kd = KIND[name] || "walker";
+      sp.pPer = Math.round(per / 2 * (kd === "heavy" ? 1.25 : kd === "crawler" ? 0.8 : 1)); sp.piPer = kd === "heavy" ? 230 : kd === "flyer" ? 110 : 170;
+      return sp;
+    }
+    return { build: build, KIND: KIND };
   })();
   var _vecPortrait = FARM.portrait;
   FARM.portrait = function (id) { return ARTX.get("p_" + id) || _vecPortrait(id); };
