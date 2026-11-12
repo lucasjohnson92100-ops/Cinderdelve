@@ -453,3 +453,6 @@ Bouton « ▶ ×1 / ▶▶ ×2 » en haut à droite du plateau (mémorisé, `fro
 - Une troupe détruite revient **2 tours plus tard**, avec 15 % de PV en plus (`FOE_BACK`, `FOE_GROW`).
 - Affichage : carte de la troupe à droite de chaque secteur (PV, part prévue de votre frappe en hachuré, Attaque, ⚠ si secteur vide, ☠ si détruite) ; animation d'assaut en deux temps (troupe puis QG) ; conseil du tour sur les secteurs vides.
 - Rééquilibrage par simulation : `ENEMY_ATK` 1,2 → 0,85, `HQ_MULT` 28 → 18. Tests : 606.
+
+## Main et explications côte à côte
+Le bouton « Main » (replier la main) est retiré. La main part du bord gauche et occupe les deux tiers de la bande du bas ; le tiers droit affiche le conseil du tour ou l'explication des cartes choisies. La colonne de droite garde le QG ennemi (plus grand), les totaux, votre QG et les commandes.

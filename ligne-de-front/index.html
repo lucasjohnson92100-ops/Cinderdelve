@@ -3048,6 +3048,13 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .awb-foe .foe-bar i { transition: width .45s cubic-bezier(.3, 1.2, .5, 1); }
 .awb-foe.dead { opacity: .45; filter: grayscale(1); }
 @media (max-height: 420px) { .awb-foe { width: 84px; } .awb-foe .foe-pic, .awb-foe .foe-pic svg { height: 22px; } }
+
+/* Explications à côté de la main (tiers droit de la bande du bas) ; la colonne de droite garde le QG ennemi, les totaux et les commandes */
+.btl.land .bt-hint, .btl.land .bt-hint.spec, .btl.land .bt-hint.advice { grid-column: 1 !important; grid-row: 1 / -1 !important; align-self: end !important; justify-self: end !important; width: calc(34% - 8px) !important; height: calc(var(--hh, 110px) - 8px) !important; max-height: none !important; margin: 0 4px 4px 0 !important; z-index: 36; position: relative; overflow: hidden !important; }
+.btl.land .bt-hint.empty { display: none !important; }
+.btl.land, .btl.land:has(.bt-hint.spec), .btl.land:has(.bt-hint.advice) { grid-template-rows: auto minmax(0, 1fr) auto auto 0 auto !important; }
+.btl.land .bt-hint .ht { font-size: clamp(.56rem, 2.7vh, .76rem) !important; line-height: 1.2 !important; -webkit-line-clamp: unset !important; display: block !important; }
+.btl.land .bt-hint.advice .ht { font-size: clamp(.62rem, 3.2vh, .9rem) !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5460,9 +5467,9 @@ function renderBattle() {
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
   // main en éventail : toutes les cartes sont visibles sans défiler
   // paysage : la main occupe le bas gauche, sous votre plateau ; la colonne de droite garde la blinde et les commandes
-  const H = window.innerHeight, rw = sideW(), W = Math.min(window.innerWidth, 1400) - rw - 34, n = S.hand.length;
+  const H = window.innerHeight, rw = sideW(), W = Math.round((Math.min(window.innerWidth, 1400) - rw - 34) * 0.64), n = S.hand.length;   // la main occupe les 2/3 gauches, les explications le tiers droit
   const short = H < 500, cw = Math.round(Math.max(60, Math.min(104, H * 0.195, W * 0.2))), ch = Math.round(cw * 1.28);
-  const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4 + (W - (step * (n - 1) + cw)) / 2;
+  const step = n > 1 ? Math.min(cw * 0.92, (W - cw) / (n - 1)) : 0, x0 = 4;   // la main part du bord gauche
   const hand = S.hand.map((k, i) => {
     const on = picked.includes(k), off = !on && (cardCost(S, k) > S.supply - reserved || (picked.length > 0 && (isUnitTargetOrder(k) || picked.some(isUnitTargetOrder))) || !canDeployNow(S, k, picked).ok);
     const mid = (n - 1) / 2, rot = 0, dy = on ? -18 : Math.abs(i - mid) * (n > 5 ? 1.2 : 1.8);
@@ -5479,7 +5486,7 @@ function renderBattle() {
     <div class="bt-tools">${C.officers.length ? jokerBar() : ''}<button class="pill sm spd ${SPEED === 2 ? 'on' : ''}" data-act="speed" aria-label="Vitesse des animations" title="Vitesse des animations">${SPEED === 2 ? '▶▶ ×2' : '▶ ×1'}</button><button class="pill sm" data-act="combos" aria-label="Combos">Combos</button><button class="pill sm" data-act="menu" aria-label="Menu">⋯</button></div>
     <div class="board" id="board">${boardHTML({ units: S.units, hq: S.hq }, true)}</div>
     <div class="bt-bottom">
-    <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px"><button class="hand-tog" data-act="handtog" aria-label="Afficher ou masquer la main">${window.__handHide ? '▴' : '▾'} Main <b>${n}</b></button>${hand}</div>
+    <div class="hand fan ${dealNow ? 'deal' : ''} ${window.__handHide ? 'hidden' : picked.length && !discardSel ? 'low' : ''}" id="hand" style="height:${ch + (H >= 600 ? 34 : 22)}px">${hand}</div>
     <div class="bt-side"><div class="bt-hint ${hint ? '' : 'empty'} ${hint.includes('class="hl') ? 'spec' : ''} ${adv ? 'advice tone-' + adv.tone : ''}" id="hint"><span class="ht">${hint}</span>${extra}</div>
     <div class="dock"><div class="supply" title="Ravitaillement"><span>Ravit. ${total}${reserved ? ` (−${reserved})` : ''}${S.carried ? ` <b class="carry" title="Ravitaillement reporté du tour précédent">+${S.carried}</b>` : ''}</span><span class="pips">${pips}</span></div>
       ${discardSel ? `<button class="pill" data-act="discardno">Retour</button><button class="btn go" data-act="discardgo" ${discardSel.length ? '' : 'disabled'}>Défausser ${discardSel.length}</button>` : `${picked.length ? '' : `<button class="pill dsc" data-act="discard" ${S.discards > 0 ? '' : 'disabled'} title="Défausses restantes : touchez des cartes puis Défausser">⟲ ${S.discards}</button>`}<button class="pill undo" data-act="undo" ${undo.length ? '' : 'disabled'} title="Annuler la dernière action" aria-label="Annuler">↶</button>${picked.length ? `<button class="btn dscgo" data-act="discard" id="bend" ${S.discards > 0 && picked.length <= MAX_DISCARD ? '' : 'disabled'}>⟲ Défausser ${picked.length} <small class="dleft">${S.discards}</small></button>` : `<button class="btn" data-act="deploy" id="bend">${endLabel}</button>`}`}</div>
