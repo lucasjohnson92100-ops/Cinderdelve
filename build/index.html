@@ -7795,7 +7795,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
   function pulseEl(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
 
   /* ================= RÈGLES ================= */
-  function need() { if (state.survival) return 15 + 6 * state.lvl + Math.floor(state.lvl * state.lvl * BAL.xpQuad) + Math.floor(state.lvl * state.lvl * state.lvl * BAL.xpCube); /* les premiers niveaux restent rapides, puis le coût grimpe de plus en plus */ return 5 + 2 * state.lvl + Math.floor(state.lvl * state.lvl / 4); }
+  function need() { if (state.survival) return Math.round((15 + 6 * state.lvl + Math.floor(state.lvl * state.lvl * BAL.xpQuad) + Math.floor(state.lvl * state.lvl * state.lvl * BAL.xpCube)) * BAL.xpMul); /* les premiers niveaux restent rapides, puis le coût grimpe de plus en plus */ return 5 + 2 * state.lvl + Math.floor(state.lvl * state.lvl / 4); }
   function score() { return state.floor * 100 + state.earned * 10 + state.kills * 5; }
   function bump() {
     var s = score();
@@ -13410,24 +13410,25 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   /* ---- équilibrage du Mode Survie : tous les réglages de difficulté au même endroit ---- */
   var BAL = {
     hpLin: 1.15, hpQuad: 0.28,           /* vie des monstres : 1 + c * hpLin + c² * hpQuad (c = vague + 0,6 par lieu) */
-    atkLin: 0.75, atkQuad: 0.1,          /* attaque des monstres */
+    atkLin: 0.6, atkQuad: 0.06,          /* attaque des monstres */
     spawnCyc: 0.95,                      /* nombre de monstres par lot : + 95 % par vague passée */
     capBase: 60, capCyc: 30,            /* nombre maximal de monstres à l'écran en fin de vague : 60, 90, 120, 150, 180 */
     capStart: 0.62,                     /* au début d'une vague (à partir de la 2e), le plafond n'est qu'à 62 % : il monte régulièrement jusqu'à la fin */
     firstWaveN: 1,                      /* vague 1 : proportion du lot normal (le gros du soulagement est dans earlyN) */
-    earlyN: [0.62, 0.62, 0.78, 0.9],    /* vagues 1 à 4 : proportion des monstres (lots ET événements : mur, déferlante, assaut) */
-    earlyXp: [1.4, 1.4, 1.25, 1.1],     /* vagues 1 à 4 : expérience en plus, pour compenser les monstres en moins */
+    earlyN: [0.45, 0.55, 0.72, 0.88],    /* vagues 1 à 4 : proportion des monstres (lots ET événements : mur, déferlante, assaut) */
+    earlyXp: [1, 1, 1, 1],              /* vagues 1 à 4 : expérience normale (le joueur montait trop vite) */
+    xpMul: 1.45,                        /* coût de chaque niveau : plus haut = le héros monte moins vite et profite plus longtemps de ses sorts */
     ivStart: 2.5, ivSlope: 1.2, ivMin: 0.65, ivCyc: 0.22,   /* cadence des lots : intervalle en secondes */
     eliteBase: 0.03, eliteFrac: 0.07, eliteCyc: 0.03,     /* chance d'élite */
-    boss1: 1.1, bossCyc: 0.6, superBoss: 3.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
-    xpQuad: 1.1, xpCube: 0.09           /* coût du niveau suivant : plus haut = on monte moins vite (le terme cubique ralentit surtout la suite) */
+    boss1: 0.62, boss2: 0.82, bossCyc: 0.6, superBoss: 3.2, miniCyc: 0.35,   /* vie des boss (boss1 : premier boss de la partie) */
+    xpQuad: 1.7, xpCube: 0.1           /* coût du niveau suivant : plus haut = on monte moins vite (le terme cubique ralentit surtout la suite) */
   };
 
   /* difficulté d'une vague : numéro de vague + bonus du lieu (0,6 par lieu). Le bonus du lieu n'est appliqué qu'à moitié en vague 1 et aux trois quarts en vague 2 : les premières vagues d'un lieu avancé restent abordables. */
   function survCyc() { if (!(state && state.survival)) return 0; var cy = state.survCycle || 0, mk = cy === 0 ? 0.5 : cy === 1 ? 0.75 : 1; return cy * 1.0 + survMapIdx() * 0.6 * mk + 0.35 * (state.survDanger || 0); }
   function survHpMul() { var c = survCyc(); return 1 + c * BAL.hpLin + c * c * BAL.hpQuad; }
   /* début de partie plus doux : les monstres de la 1re vague frappent à 65 % puis montent progressivement jusqu'à 100 % à la fin de la vague */
-  function survAtkMul() { var c = survCyc(), early = (state && (state.survCycle || 0) === 0 && state.survDur > 0) ? 0.65 + 0.35 * Math.min(1, (state.survT || 0) / state.survDur) : 1; return (1 + c * BAL.atkLin + c * c * BAL.atkQuad) * early; }
+  function survAtkMul() { var c = survCyc(), early = (state && (state.survCycle || 0) === 0 && state.survDur > 0) ? 0.4 + 0.6 * Math.min(1, (state.survT || 0) / state.survDur) : (state && (state.survCycle || 0) === 1) ? 0.85 : 1; return (1 + c * BAL.atkLin + c * c * BAL.atkQuad) * early; }
   function survSpdMul() { return Math.min(1.0, 0.78 + survCyc() * 0.03); }
   function survShootMul() { return Math.max(2.6, 4.6 - survCyc() * 0.2); }
   function survMapDef() { return SURV_MAP[state.survMapTheme != null ? state.survMapTheme : 0] || SURV_MAP[0]; }
@@ -13532,7 +13533,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     edgeFlash("255,60,40", 0.7, 1400);
     var e = mk(type, ex, ey); e.aggro = true; e.survivalBoss = true; e.scale = (e.scale || 1) * 1.85; e.r += 0.35; /* un boss doit en imposer : bien plus gros qu'un monstre */
     var cyc = survCyc();
-    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : 1)); e.atk = Math.round(e.atk * (1.1 + cyc * 0.35)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
+    e.hp = e.maxHp = Math.round(e.hp * (5.5 + cyc * 3.6) * (1 + cyc * BAL.bossCyc) * ((state.survCycle || 0) === 0 ? BAL.boss1 : (state.survCycle || 0) === 1 ? BAL.boss2 : 1)); e.atk = Math.round(e.atk * (1.1 + cyc * 0.35) * ((state.survCycle || 0) === 0 ? 0.75 : (state.survCycle || 0) === 1 ? 0.88 : 1)); e.spd *= survSpdMul() * Math.min(1.1, 0.88 + cyc * 0.08);
     e.spd = Math.min(e.spd, SPEED * 0.66);
     if (state.survEndless ? ((state.survCycle || 0) + 1) % SURV_WAVES === 0 : (state.survCycle || 0) >= SURV_WAVES - 1) {
       e.superBoss = true; e.tier = survSkillTier(); e.hp = e.maxHp = Math.round(e.hp * BAL.superBoss * [0.88, 1, 1.15][e.tier]); e.atk = Math.round(e.atk * 1.1 * [0.85, 1, 1.12][e.tier]); e.scale = (e.scale || 1) * 1.5; e.r += 0.25;
@@ -14925,7 +14926,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         if (state.survDirT <= 0) {
           state.survDirT = 0.8; var cyD = state.survCycle || 0, fD = state.survT / state.survDur, capD = survCap();
           /* nombre de monstres visé : il suit le plafond, qui monte tout au long de la vague (plus de paliers) */
-          var tgt = (cyD === 0 ? (14 + fD * 30 + survMapIdx() * 4) * (0.65 + 0.35 * Math.min(1, fD / 0.4)) : capD * 0.9) * (1 + 0.08 * (state.survDanger || 0)) * (1 + 0.04 * survMapIdx()); tgt *= state.phPeak ? 1.15 : 0.93; tgt = Math.min(tgt, capD - 4);
+          var tgt = (cyD === 0 ? (10 + fD * 26 + survMapIdx() * 3) * (0.6 + 0.4 * Math.min(1, fD / 0.4)) : capD * 0.9) * (1 + 0.08 * (state.survDanger || 0)) * (1 + 0.04 * survMapIdx()); tgt *= state.phPeak ? 1.15 : 0.93; tgt = Math.min(tgt, capD - 4);
           if (enemies.length > capD + 18) survCull(capD + 6);
           if (enemies.length < tgt * 0.92) spawnWaveBatch(fD, Math.min(14, Math.max(4, Math.round((tgt - enemies.length) * 0.55))));
         }
