@@ -3,14 +3,14 @@ const fs=require('fs');
 const coreReal=fs.readFileSync(process.argv[2]||__dirname+'/index.html','utf8').split('// ==CORE==')[1].split('// ==/CORE==')[0];
 // les tests de mécanique tournent avec des valeurs ennemies simples ; les vraies constantes sont vérifiées à part
 const core=coreReal.replace(/ENEMY_GROWTH = [\d.]+, HQ_MULT = [\d.]+, HQ_GROW = [\d.]+, ENEMY_ATK = [\d.]+, ATK_RAMP = [\d.]+,/,'ENEMY_GROWTH = 0, HQ_MULT = 1, HQ_GROW = 1, ENEMY_ATK = 1, ATK_RAMP = 0,');
-const NAMES='affinityOf,COLOR_BEATS,AFF_CAP,activateUlt,ULTS,canUlt,ENEMY_ACTS,COMMANDERS,ACT_SHARE,retreatUnit,BASE_RETREATS,TARGET_SHARE,retreatCost,AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
+const NAMES='initFoes,foeAtk,FOE_BACK,FOE_GROW,FOCUS_K,affinityOf,COLOR_BEATS,AFF_CAP,activateUlt,ULTS,canUlt,ENEMY_ACTS,COMMANDERS,ACT_SHARE,retreatUnit,BASE_RETREATS,TARGET_SHARE,retreatCost,AIRC,genTerrain,menNow,newBattle,endTurn,TYPES,START_DECK,playGroup,groupSectors,canPlayGroup,previewGroup,groupCost,supportsAt,upgPrice,applyUpgrade,sectorCap,PACKS,packOptions,applyPackPick,genPacks,cardStatsFor,snapshotState,restoreState,placeCard,deployTargets,canDeployNow,terrainMult,COLOR_TERRAIN,units,findUnit,mkUnit,placeUnit,genPlan,airStrike,AIRC,genMap,ensureMap,anteOf,battleCfg,mkCard,LEVELS,rewardCards,cardCost,HQ_START,GW,TERRAIN,addSupplyBonus,BASE_SUPPLY,playOrder,discardHand,isOrder,BASE_DISCARDS,DISCARD_SUPPLY,MAX_CARRY,queue,supportAt,sectorForecast,sectorCombos,frontForecast,enemyAtk,unitAtk,unitDef,hqTake,MIN_THROUGH,MAX_LAND,landCols,genShop,JOKERS,DOCTRINES,pickDoctrines,BOSSES,HQFX,pickFx,hasFx,mammothWall,EVENTS,applyEvent,BARRAGE_ATK,statsFor';
 const E=new Function(core+';return {'+NAMES+'};')();
 let bad=0,n=0;const check=(m,g,e)=>{n++;if(g!==e){bad++;console.log('ÉCHEC',m,'obtenu',g,'attendu',e);}};
 const GW=E.GW;
 // plateau : 5 secteurs, une mer au bord
 for(let k=0;k<200;k++){const t=E.genTerrain(Math.random),L=t.lanes;check('5 secteurs',L.length,GW);check('une mer au bord',L.filter(x=>x==='mer').length===1&&(L[0]==='mer'||L[GW-1]==='mer'),true);}
 const mk=(o={},cfg)=>E.newBattle({level:0,deck:E.START_DECK.map(c=>({...c})),hq:60,hqMax:60,officers:[],...o},()=>0.5,cfg);
-const blank=(lanes,o)=>{const S=mk(o);S.units=[];S.lanes=lanes;S.lanes=[...lanes,'air'];S.grid=[lanes.slice()];S.seaCol=lanes.indexOf('mer');S.supply=40;S.hand=[];S.fx=[];S.plan={};delete S.mineCol;return S;};
+const blank=(lanes,o)=>{const S=mk(o);S.units=[];S.lanes=lanes;S.lanes=[...lanes,'air'];S.grid=[lanes.slice()];S.seaCol=lanes.indexOf('mer');S.supply=40;S.hand=[];S.fx=[];S.plan={};S.foe={};delete S.mineCol;return S;};
 let S=mk();
 check('ravitaillement de base',S.supply,E.BASE_SUPPLY);check('main de 7',S.hand.length,7);check('pas d\'unités ennemies',S.units.length,0);
 check('QG ennemi = blinde du niveau',S.hq.en,E.LEVELS[0].hq);
@@ -45,13 +45,13 @@ E.placeUnit(S,E.mkUnit(S,'me','mitrailleuse','R'),1);cb=E.sectorCombos(S,1);chec
 S=blank(['mer','champ','champ','champ','champ']);S.hq.en=500;
 E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),1);E.placeUnit(S,E.mkUnit(S,'me','tireurs','J'),3);
 let F=E.frontForecast(S);check('frappe = somme des secteurs',F.strike,40);check('Défense totale',F.def,6);
-check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('au moins un quart passe',F.toMe,Math.max(Math.ceil(F.enAtk*E.MIN_THROUGH),F.enAtk-6));
+check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('sans troupe ennemie, aucune riposte',F.toMe,0);
 // intentions ennemies, capacités spéciales, commandants, phase 2
 {const Si=blank(['mer','champ','champ','champ','champ']);Si.hq.en=900;E.placeUnit(Si,E.mkUnit(Si,'me','mitrailleuse','V'),1);
- Si.plan={act:'assault',target:1};let Fi=E.frontForecast(Si);check('assaut en force : Attaque ×1,25',Fi.lines[0].atk,Math.round(Fi.enAtk*1.25));
+ E.initFoes(Si);Si.plan={act:'assault',target:1};let Fi=E.frontForecast(Si);check('assaut en force : troupe ×1,25',E.foeAtk(Si,1,Fi.enAtk),Math.round(Fi.enAtk/3*1.25));
  Si.plan={act:'raid'};Fi=E.frontForecast(Si);check('raid : 30 % par les airs',Fi.lines[0].atk,Math.round(Fi.enAtk*0.3));check('raid non intercepté : sans Défense',Fi.lines[0].dmg,Fi.lines[0].atk);
  const Sj=blank(['mer','champ','champ','champ','champ']);Sj.hq.en=900;E.placeUnit(Sj,E.mkUnit(Sj,'me','chasseur','J'),E.AIRC);Sj.plan={act:'raid'};check('raid intercepté par un chasseur',E.frontForecast(Sj).lines[0].dmg,0);
- Si.plan={act:'dig'};const Fd=E.frontForecast(Si);check('retranchement : riposte ×0,75',Fd.lines[0].atk,Math.round(Fd.enAtk*0.75));
+ Si.plan={act:'dig'};const Fd=E.frontForecast(Si);check('retranchement : troupe ×0,75',E.foeAtk(Si,1,Fd.enAtk),Math.round(Fd.enAtk/3*0.75));
  const Sk=blank(['mer','champ','champ','champ','champ']);Sk.hq.en=900;const tk=E.mkUnit(Sk,'me','tireurs','J');E.placeUnit(Sk,tk,1);Sk.plan={act:'dig'};const sk0=E.sectorForecast(Sk,1).strike;Sk.plan={act:'focus',target:1};const sk1=E.sectorForecast(Sk,1).strike;check('retranchement : frappe −30 %',sk0,Math.round(sk1*0.7));
  // capacité spéciale
  Sk.plan={act:'focus',target:1};const a0=E.unitAtk(Sk,tk);check('capacité : disponible',E.canUlt(Sk,tk),true);const r=E.activateUlt(Sk,tk.uid);check('capacité : activée',!!r,true);check('capacité : Attaque ×1,75',Math.round(E.unitAtk(Sk,tk)*100),Math.round(a0*175));check('une seule fois',E.activateUlt(Sk,tk.uid),null);
@@ -67,11 +67,21 @@ check('riposte ennemie annoncée',F.enAtk,E.LEVELS[0].atk);check('au moins un qu
  Sa.lvl.col='N';check('désavantage : −25 % d’Attaque',E.unitAtk(Sa,ua)<a0,true);Sa.lvl.col='V';check('neutre : inchangé',E.unitAtk(Sa,ua),a0);}
 // riposte ciblée : une part de l'Attaque sur le secteur annoncé, défenses non mélangées
 {const Sg=blank(['mer','champ','champ','champ','champ']);Sg.hq.en=500;Sg.plan={target:1};E.placeUnit(Sg,E.mkUnit(Sg,'me','mitrailleuse','V'),3);
- const Fg=E.frontForecast(Sg);check('cible annoncée',Fg.tgt,1);check('part concentrée',Fg.share,Math.round(Fg.enAtk*E.ACT_SHARE));check('défense hors cible inutile sur la cible',Fg.defT,0);
+ E.initFoes(Sg);const Fg=E.frontForecast(Sg);check('cible annoncée',Fg.tgt,1);check('troupe visée renforcée',Fg.share,Math.round(Fg.enAtk/3*E.FOCUS_K));check('défense hors cible inutile sur la cible',Fg.defT,0);
  check('la défense du mauvais secteur ne protège pas la cible',Fg.toMe>=Fg.share,true);
  Sg.plan={target:3};const Fh=E.frontForecast(Sg);check('défense sur la cible',Fh.defT>0,true);check('renforcer la cible réduit les dégâts sur la cible',Fh.toT<Fg.toT,true);
  check('retraites au départ',Sg.retreats,E.BASE_RETREATS);const uu=Sg.units.find(u=>u.side==='me');check('retraite : unité retirée',!!E.retreatUnit(Sg,uu.uid)&&Sg.units.length===0,true);check('… et compteur décrémenté',Sg.retreats,E.BASE_RETREATS-1);
  Sg.retreats=0;check('plus de retraite',E.retreatUnit(Sg,999),null);check('prix retraite croissant',E.retreatCost({retreatUp:2}),7);}
+// front disputé : troupes ennemies par secteur
+{const Sf=blank(['mer','champ','champ','champ','champ']);Sf.hq.en=500;E.initFoes(Sf);Sf.plan={act:'assault'};
+ check('3 troupes ennemies',Object.keys(Sf.foe).length,3);const hp0=Sf.foe[1].hp;
+ const ut=E.mkUnit(Sf,'me','tireurs','J');E.placeUnit(Sf,ut,1);let Ff=E.frontForecast(Sf);const f1=Ff.sectors.find(x=>x.c===1);
+ check('la frappe touche d’abord la troupe',f1.absorb,Math.min(hp0,f1.strike));check('l’excédent passe au QG',f1.over,Math.max(0,f1.strike-hp0));
+ const f2=Ff.sectors.find(x=>x.c===2);check('secteur vide : la troupe passe sans défense',f2.breach&&f2.toMe===f2.foeAtk,true);
+ check('secteur occupé : la défense compte',f1.toMe<=Math.max(Math.ceil(f1.foeAtk*E.MIN_THROUGH),f1.foeAtk-f1.defR)+0.01,true);
+ Sf.units.forEach(u=>u.dmg=999);Ff=E.frontForecast(Sf);const k1=Ff.sectors.find(x=>x.c===1);check('troupe détruite : elle ne riposte pas',k1.kill&&k1.toMe===0,true);
+ Sf.hq.en=1e6;Sf.lvl=Object.assign({},Sf.lvl,{hq:1e6});const before=Sf.hq.en;E.endTurn(Sf);check('troupe à 0 PV',Sf.foe[1].hp,0);check('excédent sur le QG ennemi',before-Sf.hq.en>0,true);
+ Sf.hq.me=99999;Sf.hqMax=99999;for(let t=0;t<E.FOE_BACK+1&&!Sf.over&&Sf.foe[1].hp===0;t++){Sf.units=[];E.endTurn(Sf);} check('la troupe revient plus forte',Sf.foe[1].hpMax>hp0,true);}
 let st=E.endTurn(S);check('QG ennemi frappé',500-S.hq.en,40);check('votre QG prend la riposte',60-S.hq.me,F.toMe);
 check('étapes : secteurs, frappe, riposte, usure',['sec','strike','enemy','wear'].every(p=>st.some(x=>x.ph===p)),true);
 check('usure : −1 endurance',E.units(S,'me').every(u=>u.stam===2),true);check('effectif : 10 → 7 hommes',E.menNow(E.units(S,'me')[0]),7);

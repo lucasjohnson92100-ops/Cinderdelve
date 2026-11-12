@@ -445,3 +445,11 @@ Chaque QG ennemi a une couleur (celle de son commandant, fixe pour les boss : tr
 
 ## Vitesse ×2
 Bouton « ▶ ×1 / ▶▶ ×2 » en haut à droite du plateau (mémorisé, `front-speed`). En ×2, toutes les attentes (`sleep`, bannières) sont divisées par deux et les animations CSS tournent deux fois plus vite pendant la résolution. Mesure : fin de tour à 2 secteurs 12,8 s → 6,6 s. Le double toucher sur l'écran pour passer l'animation reste disponible.
+
+## Front disputé (nouveau système d'attaque et de défense)
+- Chaque secteur terrestre a une **troupe ennemie** (PV = 12 % du QG ennemi, `FOE_HP` ; Attaque = un tiers de l'Attaque ennemie, modifiée par l'intention : 🎯 ×1,75 sur la cible, 💥 ×1,25, ⛏ ×0,75, ✈ 30 % partent en raid).
+- **Votre frappe** de secteur (Puissance × Mult) touche d'abord la troupe ; seul l'**excédent** atteint le QG ennemi. Le ciel et la mer frappent directement le QG.
+- **Riposte** secteur par secteur : la troupe frappe contre la Défense de son secteur (plus la Défense du ciel et de la mer répartie sur les trois) ; un **secteur vide** la laisse frapper votre QG à pleine force ; une troupe **détruite ce tour ne riposte pas**.
+- Une troupe détruite revient **2 tours plus tard**, avec 15 % de PV en plus (`FOE_BACK`, `FOE_GROW`).
+- Affichage : carte de la troupe à droite de chaque secteur (PV, part prévue de votre frappe en hachuré, Attaque, ⚠ si secteur vide, ☠ si détruite) ; animation d'assaut en deux temps (troupe puis QG) ; conseil du tour sur les secteurs vides.
+- Rééquilibrage par simulation : `ENEMY_ATK` 1,2 → 0,85, `HQ_MULT` 28 → 18. Tests : 606.
