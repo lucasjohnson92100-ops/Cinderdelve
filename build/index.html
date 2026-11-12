@@ -11048,11 +11048,20 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       state.survAuraT = (state.survAuraT || 0) - dt;
       if (state.survAuraT <= 0) {
         state.survAuraT = 0.9; state.survAuraFx = now();
-        var aev = state.survWEvo && state.survWEvo.aura, ar = (1.4 + 0.2 * (SW.aura - 1) + (aev ? 0.6 : 0)) * survArea(), am = (1 + 0.05 * (SW.aura - 1)) * 0.6 * (aev ? 1.6 : 1);
+        var aev = state.survWEvo && state.survWEvo.aura, ar = (1.4 + 0.2 * (SW.aura - 1) + (aev ? 0.6 : 0)) * survArea(), am = (1 + 0.05 * (SW.aura - 1)) * 0.6 * (aev ? 1.6 : 1), tq = now();
         dmgSrc = survWName("aura");
-        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) <= ar + e.r * 0.5) dmgEnemy(e, survWDmg(am), "L'aura brûle"); });
+        enemies.slice().forEach(function (e) { if (e.hp > 0 && enemies.indexOf(e) >= 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) <= ar + e.r * 0.5) { e.auraT = tq; burst(e.vx, e.vy, aev ? "#9fe07a" : "#ff8a3c", 3, 30); dmgEnemy(e, survWDmg(am), "L'aura brûle"); } });
         if (mode !== "play") return;
       }
+      /* un monstre qui entre dans le cercle brûle tout de suite (avant : il pouvait attendre près d'une seconde la prochaine brûlure) */
+      var aev2 = state.survWEvo && state.survWEvo.aura, ar2 = (1.4 + 0.2 * (SW.aura - 1) + (aev2 ? 0.6 : 0)) * survArea(), tq2 = now(), am2 = (1 + 0.05 * (SW.aura - 1)) * 0.6 * (aev2 ? 1.6 : 1), hitIn = false;
+      enemies.slice().forEach(function (e) {
+        if (e.hp <= 0 || enemies.indexOf(e) < 0) return;
+        var inside = Math.hypot(e.vx - p.vx, e.vy - p.vy) <= ar2 + e.r * 0.5;
+        if (inside && !e.inAura && !(tq2 - (e.auraT || 0) < 700)) { e.auraT = tq2; hitIn = true; dmgSrc = survWName("aura"); burst(e.vx, e.vy, aev2 ? "#9fe07a" : "#ffb04a", 5, 40); AFX.add("pop", e.vx, e.vy, 260, { R: 0.6, pal: aev2 ? AFX.PAL.lama : AFX.PAL.lapin }); dmgEnemy(e, survWDmg(am2), "L'aura brûle"); }
+        e.inAura = inside;
+      });
+      if (hitIn && mode !== "play") return;
     }
     if (SW.orbit) {
       var oev = state.survWEvo && state.survWEvo.orbit, nb = Math.min(5, 1 + Math.floor(SW.orbit / 2) + (oev ? 1 : 0)), orK = survWAreaK("orbit"), orR = 2.1 * (1 + (orK - 1) * 0.35), om = (1 + 0.05 * (SW.orbit - 1)) * (oev ? 1.6 : 1);
