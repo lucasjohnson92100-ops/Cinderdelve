@@ -10286,12 +10286,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (p.mv) { if (state.xRootOn) { AFX.add("cracks", p.vx, p.vy, 380, { R: 1.4 }); } state.xRoot = 0; state.xRootOn = false; }
       else { state.xRoot = (state.xRoot || 0) + dt; if (!state.xRootOn && state.xRoot >= 0.6) { state.xRootOn = true; state.xRootT0 = tn; sfx("block"); AFX.add("stamp", p.vx, p.vy, 900, { R: 2.2, pal: AFX.PAL.lama }); } }
       if (state.xRootOn) {
-        state.xRootTk = (state.xRootTk || 0) - dt;
-        if (state.xRootTk <= 0) {
-          state.xRootTk = 1; var rr = (2.1 + 0.15 * RL) * ar, rdm = (1 + 0.08 * (RL - 1)) * 0.45; dmgSrc = survWName("root");
-          var rl = survNearEnemies(rr);
-          rl.slice(0, 10).forEach(function (o, ri) { AFX.add("vine", p.vx, p.vy, 520, { ex: o.vx, ey: o.vy, delay: ri * 25 }); });
-          for (var ri = 0; ri < rl.length; ri++) { var o = rl[ri]; o.slowT = Math.max(o.slowT || 0, 1.3); o.slowF = Math.min(o.slowF || 1, 0.55); if (dmgEnemy(o, survWDmg(rdm), "Les racines enserrent") && mode !== "play") return; }
+        { var rr = (2.1 + 0.15 * RL) * ar, rdm = (1 + 0.08 * (RL - 1)) * 0.45, tqR = now(), nV = 0; dmgSrc = survWName("root");
+          var rl = survNearEnemies(rr).filter(function (o) { return tqR - (o.rootT || 0) >= 1000; });
+          for (var ri = 0; ri < rl.length; ri++) { var o = rl[ri]; o.rootT = tqR; if (nV++ < 10) AFX.add("vine", p.vx, p.vy, 520, { ex: o.vx, ey: o.vy, delay: ri * 25 }); o.slowT = Math.max(o.slowT || 0, 1.3); o.slowF = Math.min(o.slowF || 1, 0.55); if (dmgEnemy(o, survWDmg(rdm), "Les racines enserrent") && mode !== "play") return; }
         }
       }
     }
@@ -11112,7 +11109,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var snear = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; }).sort(function (a, b) { return Math.hypot(a.vx - p.vx, a.vy - p.vy) - Math.hypot(b.vx - p.vx, b.vy - p.vy); }).slice(0, 2 + Math.floor(SW.spikes / 2) + (sev ? 2 : 0));
         if (snear.length) {
           state.survSpT = 1.25;
-          snear.forEach(function (e) { var sx = e.vx, sy = e.vy; AFX.spikes(sx, sy, sr); legDefer(0.42, function () { dmgSrc = survWName("spikes"); enemies.slice().forEach(function (o) { if (o.hp > 0 && Math.hypot(o.vx - sx, o.vy - sy) <= sr) dmgEnemy(o, survWDmg(sm), "Les pointes transpercent"); }); }); });
+          snear.forEach(function (e) { var sx = e.vx, sy = e.vy; AFX.spikes(sx, sy, sr); legDefer(0.28, function () { dmgSrc = survWName("spikes"); enemies.slice().forEach(function (o) { if (o.hp > 0 && (o === e || Math.hypot(o.vx - sx, o.vy - sy) <= sr)) dmgEnemy(o, survWDmg(sm), "Les pointes transpercent"); }); }); });
         } else state.survSpT = 0.3;
       }
     }
@@ -11199,9 +11196,12 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
       if (p.mv && state.xTrT <= 0) { state.xTrT = 0.32; survPatches.push({ x: p.vx, y: p.vy, t: 2.2 + 0.35 * SW.trail, tk: 0 }); if (survPatches.length > 28) survPatches.shift(); }
       var tdm = (1 + 0.06 * (SW.trail - 1)) * 0.55;
       for (var ti = survPatches.length - 1; ti >= 0; ti--) {
-        var pt = survPatches[ti]; pt.t -= dt; pt.tk -= dt;
+        var pt = survPatches[ti]; pt.t -= dt;
         if (pt.t <= 0) { survPatches.splice(ti, 1); continue; }
-        if (pt.tk <= 0) { pt.tk = 0.6; dmgSrc = survWName("trail"); survNearEnemies(0.85 * ar, pt.x, pt.y).forEach(function (o) { dmgEnemy(o, survWDmg(tdm), "Les braises brûlent"); }); if (mode !== "play") return; }
+        /* chaque monstre brûle dès qu'il marche dans une flamme, puis toutes les 0,6 s tant qu'il y reste */
+        var tqT = now(); dmgSrc = survWName("trail");
+        survNearEnemies(0.85 * ar, pt.x, pt.y).forEach(function (o) { if (tqT - (o.trailT || 0) < 600) return; o.trailT = tqT; dmgEnemy(o, survWDmg(tdm), "Les braises brûlent"); });
+        if (mode !== "play") return;
       }
     }
     if (SW.bell) { ar = arB * survWAreaK("bell");
@@ -11276,8 +11276,8 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         } else state.xPiT = 0.4;
       }
       for (var pj = survPillars.length - 1; pj >= 0; pj--) {
-        var pl = survPillars[pj]; pl.t -= dt; pl.c -= dt;
-        if (pl.c <= 0) { pl.c = 0.7; dmgSrc = survWName("pillar"); survNearEnemies(1.15 * ar, pl.x, pl.y).forEach(function (o) { dmgEnemy(o, survWDmg((1 + 0.05 * (SW.pillar - 1)) * 0.32), "La colonne brûle"); }); if (mode !== "play") return; }
+        var pl = survPillars[pj]; pl.t -= dt;
+        { var tqP = now(); dmgSrc = survWName("pillar"); survNearEnemies(1.15 * ar, pl.x, pl.y).forEach(function (o) { if (tqP - (o.pilT || 0) < 700) return; o.pilT = tqP; dmgEnemy(o, survWDmg((1 + 0.05 * (SW.pillar - 1)) * 0.32), "La colonne brûle"); }); if (mode !== "play") return; }
         if (pl.t <= 0) survPillars.splice(pj, 1);
       }
     }
