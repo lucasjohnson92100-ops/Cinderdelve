@@ -3056,6 +3056,11 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .btl.land .bt-hint .ht { font-size: clamp(.56rem, 2.7vh, .76rem) !important; line-height: 1.2 !important; -webkit-line-clamp: unset !important; display: block !important; }
 .btl.land .bt-hint.advice .ht { font-size: clamp(.62rem, 3.2vh, .9rem) !important; }
 .totals .t-foe { color: #b3351f; font-weight: 700; white-space: nowrap; } .totals .t-foe small { font-size: .85em; font-weight: 600; } .totals .t-foe b { color: #b3351f; }
+
+/* Riposte des troupes ennemies dans la scène d'assaut */
+.awb-foe.shoot { animation: foeshoot .45s ease-out; } @keyframes foeshoot { 30% { transform: translateX(-10px) scale(1.06); filter: brightness(1.6); } }
+.awb-foe.charge { transition: transform .38s cubic-bezier(.5, 0, .7, 1); transform: translateX(-38vw) scale(1.1); }
+.awb.breach::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(90deg, rgba(213, 40, 26, .55), rgba(213, 40, 26, 0) 60%); animation: volleyflash .9s ease-out; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6356,26 +6361,44 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     for (let k = 0; k < 9; k++) setTimeout(() => { boomOn(hqBox, true, (Math.random() - .5) * 140, (Math.random() - .5) * 180); SFX.play('boom'); sc.classList.remove('quake'); void sc.offsetWidth; sc.classList.add('quake'); }, k * 140);
     await banner('<b>QG détruit !</b><small>L’ennemi se rend</small>', 'gold', 1500); await T(2000);
   } else if (en) {
-    // riposte : le QG tire sur chaque secteur ; les boucliers arrêtent une partie
-    await banner(`<small>Riposte ennemie</small><b>${SWORD} ${fmtN(en.atk)}</b>${en.smoke ? '<small>Fumigènes : ÷2</small>' : ''}`, 'red', 750);
-    hqBox.classList.add('firing');
-    sc.querySelectorAll('.awb').forEach((band, i) => setTimeout(() => {
-      const lab = band.querySelector('.awb-lab'), mk = sc.querySelector(`.aws-mk[data-i="${i}"]`);
-      SFX.play('shell'); const bl = document.createElement('i'); bl.className = 'vblast en'; mk.appendChild(bl); setTimeout(() => bl.remove(), 420);
-      // le bouclier du secteur se dresse devant les unités et encaisse l'obus ; plus la Défense est forte, plus il est grand et solide
-      const dv = rows[i].f.def, sh = document.createElement('i'), share = en.atk ? Math.min(1, dv / Math.max(1, en.atk / Math.max(1, rows.length))) : 1;
-      sh.className = 'awshield' + (dv ? '' : ' none') + (en.dmg && share < 1 ? ' crack' : '');
-      sh.style.setProperty('--sk', (0.65 + 0.55 * share).toFixed(2));
-      sh.innerHTML = `${SHIELD}<b>${fmtN(dv)}</b>`; band.appendChild(sh); setTimeout(() => sh.remove(), 1500);
-      flyFx(mk, dv ? sh : lab, 'shell en', 480).then(() => {
-        const d = band.querySelector('.awb-def'); d.classList.add('on'); bump(d);
-        if (dv) { sh.classList.add('hit'); boomOn(sh, false, 0, 0); return; }
-        const z = zoneOfBand(band); if (z) harass(band, 3, 90); else boomOn(band.querySelector('.awb-units') || lab, true, 0, 0);
-      });
-    }, i * 150));
-    await T(500 + rows.length * 150);
-    hqBox.classList.remove('firing');
-    await banner(`<small>Riposte ${fmtN(en.atk)} − Défense ${fmtN(en.def)}</small><b>${en.dmg ? '−' + fmtN(en.dmg) + ' à votre QG' : 'Riposte bloquée !'}</b>`, en.dmg ? 'red' : 'green', 950);
+    // riposte du front disputé : la troupe de chaque secteur tire sur vos unités (le bouclier du secteur encaisse) ; un secteur vide est percé
+    const act = en.act && ENEMY_ACTS[en.act];
+    await banner(`<small>Riposte ennemie${act ? ' · ' + act.ic + ' ' + act.name : ''}</small><b>${SWORD} ${fmtN(en.atk)}</b>${en.smoke ? '<small>Fumigènes : ÷2</small>' : ''}`, 'red', 700);
+    const jobs = [];
+    sc.querySelectorAll('.awb').forEach((band, i) => {
+      const f = rows[i] && rows[i].f; if (!f || isZone(S, f.c)) return;
+      const foeEl = band.querySelector('.awb-foe'), lab = band.querySelector('.awb-lab');
+      jobs.push(new Promise(res => setTimeout(async () => {
+        if (!f.foe || !f.foe.hp) { res(); return; }
+        if (f.kill) { if (foeEl) popAt(foeEl, '☠ Détruite : pas de riposte', '#2f9e44'); SFX.play('deselect'); setTimeout(res, 420); return; }
+        if (foeEl) { foeEl.classList.add('shoot'); setTimeout(() => foeEl.classList.remove('shoot'), 500); }
+        SFX.play('mg', 6);
+        if (f.breach) {
+          // secteur vide : la troupe avance et frappe votre QG sans être freinée
+          if (foeEl) foeEl.classList.add('charge');
+          band.classList.add('breach');
+          await T(380);
+          boomOn(lab, true, 0, 0); SFX.play('hqhit'); popAt(lab, `Percée ! −${fmtN(f.toMe)}`, '#d5281a');
+          setTimeout(() => { band.classList.remove('breach'); if (foeEl) foeEl.classList.remove('charge'); }, 900);
+          res(); return;
+        }
+        // secteur tenu : le bouclier du secteur se dresse et encaisse, seul le reste passe
+        const dv = Math.round(f.defR || 0), a = f.foeAtk || 0, share = a ? Math.min(1, dv / a) : 1, sh = document.createElement('i');
+        sh.className = 'awshield' + (dv ? '' : ' none') + (f.toMe > Math.ceil(a * MIN_THROUGH) ? ' crack' : '');
+        sh.style.setProperty('--sk', (0.65 + 0.55 * share).toFixed(2)); sh.innerHTML = `${SHIELD}<b>${fmtN(dv)}</b>`; band.appendChild(sh); setTimeout(() => sh.remove(), 1500);
+        await flyFx(foeEl || lab, dv ? sh : lab, 'shell en', 420);
+        const d = band.querySelector('.awb-def'); if (d) { d.classList.add('on'); bump(d); }
+        sh.classList.add('hit'); boomOn(sh, false, 0, 0);
+        popAt(sh, f.toMe ? `🛡 ${fmtN(Math.max(0, a - f.toMe))} bloqués · −${fmtN(f.toMe)}` : '🛡 Tout bloqué', f.toMe > Math.ceil(a * MIN_THROUGH) ? '#d5281a' : '#2559b5');
+        res();
+      }, i * 220)));
+    });
+    await Promise.all(jobs); await T(450);
+    // raid aérien : une part de l'Attaque passe par les airs
+    const raid = (en.lines || []).find(l => l.ic === '✈');
+    if (raid) await banner(raid.def >= 99 ? '<small>Raid aérien</small><b>✈ Intercepté par votre chasseur</b>' : `<small>Raid aérien</small><b>✈ −${fmtN(raid.dmg)} à votre QG</b>`, raid.def >= 99 ? 'green' : 'red', 800);
+    const parts = (en.lines || []).filter(l => l.dmg > 0).map(l => `${l.ic && l.ic !== '🎯' ? l.ic + ' ' : ''}${l.lab.replace(' (sans défense)', ' (vide)')} −${fmtN(l.dmg)}`);
+    await banner(`<small>${parts.length ? parts.join(' · ') : 'Toutes les troupes sont tenues ou détruites'}</small><b>${en.dmg ? '−' + fmtN(en.dmg) + ' à votre QG' : 'Riposte bloquée !'}</b>`, en.dmg ? 'red' : 'green', 1100);
   }
   // les unités à leur dernier assaut se dissipent avant le retour au plateau
   const spent = [...sc.querySelectorAll('.awu.spent')];

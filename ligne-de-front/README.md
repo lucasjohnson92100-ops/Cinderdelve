@@ -458,3 +458,6 @@ Bouton « ▶ ×1 / ▶▶ ×2 » en haut à droite du plateau (mémorisé, `fro
 Le bouton « Main » (replier la main) est retiré. La main part du bord gauche et occupe les deux tiers de la bande du bas ; le tiers droit affiche le conseil du tour ou l'explication des cartes choisies. La colonne de droite garde le QG ennemi (plus grand), les totaux, votre QG et les commandes.
 
 Totals : nouvelle ligne « ☠ Troupes −X (N détruites) » entre « Vos dégâts → QG ennemi » et « Danger », pour voir où part toute la frappe.
+
+### Riposte animée du front disputé
+Dans la scène d'assaut, la riposte se joue secteur par secteur : la troupe ennemie de chaque secteur tire sur vos unités, le bouclier du secteur encaisse (« 🛡 4 bloqués · −1 »), un secteur vide est percé (la troupe charge, « Percée ! −5 » en rouge), une troupe détruite ce tour ne riposte pas. Le raid aérien a sa propre bannière (intercepté ou non) et la bannière finale additionne les dégâts secteur par secteur (« Forêt −1 · Route (vide) −12 = −13 à votre QG »).
