@@ -3055,6 +3055,7 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .btl.land, .btl.land:has(.bt-hint.spec), .btl.land:has(.bt-hint.advice) { grid-template-rows: auto minmax(0, 1fr) auto auto 0 auto !important; }
 .btl.land .bt-hint .ht { font-size: clamp(.56rem, 2.7vh, .76rem) !important; line-height: 1.2 !important; -webkit-line-clamp: unset !important; display: block !important; }
 .btl.land .bt-hint.advice .ht { font-size: clamp(.62rem, 3.2vh, .9rem) !important; }
+.totals .t-foe { color: #b3351f; font-weight: 700; white-space: nowrap; } .totals .t-foe small { font-size: .85em; font-weight: 600; } .totals .t-foe b { color: #b3351f; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5343,7 +5344,7 @@ function boardHTML(view, live) {
       <div class="lc units" data-c="${c}" data-row="2">${zone || !live ? '' : foeHTML(c, cf)}${zone ? '' : decoSVG(S.grid, 2, c, '', 1)}<div class="toks" style="--n:${q.length}">${toks}</div>${ph}${cbs ? `<span class="cbs">${cbs}</span>` : ''}</div>
       <div class="lc foot ${pv ? 'pv' : ''}" data-c="${c}" data-row="5">${f ? laneScoreHTML(f, pv && pv.baseAtk !== undefined ? pv : null, best) : ''}</div></div>`;
   }
-  const tot = F ? `<button class="totals tone-${dangerTone(F)} ${F.toMe > 0 ? 'hurt' : ''}" id="totals" data-totals title="Touchez pour le détail de la riposte"><span class="t-strike">⚔ Vos dégâts <b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span><span class="t-def"><i class="lamp"></i>${ENEMY_ACTS[F.act].ic} Danger : QG <b class="dn">−${fmtN(F.toMe)}</b></span></button>`
+  const tot = F ? `<button class="totals tone-${dangerTone(F)} ${F.toMe > 0 ? 'hurt' : ''}" id="totals" data-totals title="Touchez pour le détail de la riposte"><span class="t-strike">⚔ Vos dégâts <b id="tot-strike">${fmtN(F.toEn)}</b> → QG ennemi</span>${F.foeDmg ? `<span class="t-foe" title="Part de votre frappe encaissée par les troupes ennemies des secteurs">☠ Troupes <b>−${fmtN(F.foeDmg)}</b>${F.sectors.some(f => f.kill) ? ` <small>(${F.sectors.filter(f => f.kill).length} détruite${F.sectors.filter(f => f.kill).length > 1 ? 's' : ''})</small>` : ''}</span>` : ''}<span class="t-def"><i class="lamp"></i>${ENEMY_ACTS[F.act].ic} Danger : QG <b class="dn">−${fmtN(F.toMe)}</b></span></button>`
     : `<div class="totals" id="totals"><span class="t-strike">Frappe ${SWORD}<b id="tot-strike">0</b></span><span class="t-def" id="tot-def"></span></div>`;
   return `${enemyHQHTML(view, live, F)}<div class="bgrid front" id="bgrid">${lanes}</div>${tot}${hqBar('me', 'Votre QG', view.hq.me, C.hqMax, '', false, F && F.toMe > 0)}`;
 }

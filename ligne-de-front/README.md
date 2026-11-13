@@ -456,3 +456,5 @@ Bouton « ▶ ×1 / ▶▶ ×2 » en haut à droite du plateau (mémorisé, `fro
 
 ## Main et explications côte à côte
 Le bouton « Main » (replier la main) est retiré. La main part du bord gauche et occupe les deux tiers de la bande du bas ; le tiers droit affiche le conseil du tour ou l'explication des cartes choisies. La colonne de droite garde le QG ennemi (plus grand), les totaux, votre QG et les commandes.
+
+Totals : nouvelle ligne « ☠ Troupes −X (N détruites) » entre « Vos dégâts → QG ennemi » et « Danger », pour voir où part toute la frappe.
