@@ -3059,8 +3059,50 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 
 /* Riposte des troupes ennemies dans la scène d'assaut */
 .awb-foe.shoot { animation: foeshoot .45s ease-out; } @keyframes foeshoot { 30% { transform: translateX(-10px) scale(1.06); filter: brightness(1.6); } }
-.awb-foe.charge { transition: transform .38s cubic-bezier(.5, 0, .7, 1); transform: translateX(-38vw) scale(1.1); }
+.awb-foe.charge { transition: transform .38s cubic-bezier(.5, 0, .7, 1); transform: translateX(-30vw) scale(1.05); }
 .awb.breach::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(90deg, rgba(213, 40, 26, .55), rgba(213, 40, 26, 0) 60%); animation: volleyflash .9s ease-out; }
+
+/* Face-à-face : l'escouade ennemie est dessinée comme vos unités, une plaque VS entre les deux camps */
+.awb.has-foe .awb-units, .aws.focus .awb.has-foe .awb-units { right: 46%; justify-content: safe flex-end; }
+.awb.has-foe .awb-cbs { right: 47%; }
+.awb.has-foe .awshield { right: 45%; }
+.awb-foe.awb-en { left: 58%; right: 11%; width: auto; top: 30%; bottom: 4%; padding: 0; background: none; border: 0; box-shadow: none; border-radius: 0; display: block; }
+.aws.focus .awb-foe.awb-en { top: var(--gt, 30%); bottom: 3%; }
+.awb-en .awe-units { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-start; }
+.awb-en .awe { position: relative; height: 100%; flex: 0 1 auto; min-width: 0; display: flex; align-items: flex-end; transition: opacity .3s, transform .3s, filter .3s; }
+.awb-en .awe svg { height: 100%; width: auto; max-width: 100%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, .45)); }
+.aws.focus .awb-en .awe.k-foot { height: calc(var(--uh, 60px) * 1.7); flex-shrink: 0; margin: 0 calc(var(--uh, 60px) * -.12); }
+.aws.focus .awb-en .awe[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); flex-shrink: 0; margin-left: calc(var(--uh, 60px) * -.25); }
+.awb-en .foe-bar { position: absolute; z-index: 5; left: 4%; width: 72%; max-width: 150px; bottom: calc(100% + 6px); height: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, .6); }
+.awb-en .foe-bar b { line-height: 16px; font-size: .66rem; }
+.awb-foe.awb-en.dead { opacity: 1; filter: none; }
+.awb-foe.awb-en.dead .awe { filter: grayscale(1) brightness(.55); opacity: .6; transform: translateY(5%) rotate(-5deg); }
+.awe.fire { animation: recoilL .14s 3; }
+.awe.fire::after { content: ""; position: absolute; left: -10px; top: 40%; width: 24px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #fff 0, #ffe28a 35%, #ff9a2a 55%, rgba(255, 120, 0, 0) 72%); animation: muzzle .1s steps(2) 5; z-index: 4; }
+@keyframes recoilL { 50% { transform: translateX(4px); } }
+.awu.hurt, .awe-units.hurt { animation: hurtshake .42s ease-out; }
+@keyframes hurtshake { 20% { transform: translateX(-5px); filter: brightness(1.8) sepia(1) saturate(5) hue-rotate(-25deg); } 45% { transform: translateX(4px); } 70% { transform: translateX(-2px); } }
+.awb-vs { position: absolute; z-index: 7; left: 53.5%; top: 30px; display: flex; align-items: center; gap: 4px; pointer-events: none; white-space: nowrap; opacity: 0; transform: translateX(-50%) scale(.3); transition: transform .35s cubic-bezier(.2, 1.6, .4, 1), opacity .2s; }
+.awb-vs.on { opacity: 1; transform: translateX(-50%) scale(1); }
+.awb-vs > i { font-style: normal; font-family: var(--font-stencil, var(--font-display)); font-size: 1.35rem; line-height: 1; color: #ffe066; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4a3a1a, #120d06 70%); border: 3px solid #ffd43b; box-shadow: 0 0 0 2px #000, 0 0 16px rgba(255, 196, 0, .65); text-shadow: 0 2px 0 #000; }
+.awb-vs > b { font-family: var(--font-display); font-size: .78rem; color: #fff; padding: 3px 9px; border: 2px solid #000; text-shadow: 0 1px 1px #000; box-shadow: 0 2px 6px rgba(0, 0, 0, .55); }
+.awb-vs .vs-l { background: linear-gradient(180deg, #3b7be0, #1d4fa8); border-radius: 99px 4px 4px 99px; margin-right: -10px; padding-right: 14px; }
+.awb-vs .vs-r { background: linear-gradient(180deg, #e0503b, #a8241d); border-radius: 4px 99px 99px 4px; margin-left: -10px; padding-left: 14px; }
+.awb-vs .vs-l:empty { display: none; }
+.awb-vs.clash > i { animation: vsclash .5s cubic-bezier(.2, 1.6, .4, 1); }
+.awb-vs.clash .vs-l { animation: vsl .5s ease-out; } .awb-vs.clash .vs-r { animation: vsr .5s ease-out; }
+@keyframes vsclash { 0% { transform: scale(1.7) rotate(-12deg); filter: brightness(2); } 100% { transform: none; } }
+@keyframes vsl { 0% { transform: translateX(-30px); } 60% { transform: translateX(4px); } }
+@keyframes vsr { 0% { transform: translateX(30px); } 60% { transform: translateX(-4px); } }
+.awb-vs.rip > i { border-color: #ff6b5a; color: #ffb3a8; box-shadow: 0 0 0 2px #000, 0 0 16px rgba(255, 70, 50, .7); }
+.aws.focus .awb-vs { top: auto; bottom: 34%; }
+.aws.focus .awb-foe.awb-en { display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; }
+.aws.focus .awb-en .awe-units { position: relative; inset: auto; }
+.aws.focus .awb-en .foe-bar { position: relative; bottom: auto; flex: none; margin: 0 0 8px 4%; }
+.aws:not(.focus) .awb-en .foe-bar { display: none; }
+.aws:not(.focus) .awb-vs { top: 19%; }
+.aws:not(.focus) .awb.has-foe .awb-cbs { opacity: 0; transition: opacity .2s; }
+.aws:not(.focus) .awb.has-foe .awshield { top: 68%; } .aws:not(.focus) .awb-vs > i { width: 34px; height: 34px; font-size: 1.05rem; } .aws:not(.focus) .awb-vs > b { font-size: .64rem; padding: 2px 7px; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6045,11 +6087,16 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${menNow(u)}</i></span>`;
   };
   const hasAir = () => false;
-  const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
+  // l'escouade ennemie de chaque secteur, dessinée comme vos unités : plus elle perd de PV, moins il reste de soldats et d'engins
+  const lvI = (S.lvl && S.lvl.levelIdx) || 0, bossL = !!(S.lvl && S.lvl.boss);
+  const foeKit = [['inf', 5]].concat(lvI >= 2 || bossL ? [['mgnest', 2]] : [], lvI >= 4 || bossL ? [['panzer', 1]] : []);
+  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}"${VEH_K[k] || k === 'panzer' ? ` style="--vk:${VEH_K[k] || 1.7}"` : ''}>${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
+  const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${st.f.foe && st.f.foe.hp > 0 ? 'has-foe' : ''} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
       <div class="awb-bg"></div><div class="awb-sky"></div>
       <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
       <div class="awb-units">${[...st.f.me, ...(st.f.sups || [])].map(id => unitHTML(id, S.lanes[st.c])).join('')}</div>
-      <div class="awb-cbs"></div>${st.f.foe && st.f.foe.hp > 0 ? `<div class="awb-foe" data-i="${i}"><span class="foe-pic">${spriteSVG('inf', 'en', 34)}${spriteSVG('inf', 'en', 34)}</span><span class="foe-bar"><i style="width:${(st.f.foe.hp / st.f.foe.hpMax * 100).toFixed(1)}%"></i><b>${fmtN(st.f.foe.hp)}</b></span></div>` : ''}
+      <div class="awb-cbs"></div>${st.f.foe && st.f.foe.hp > 0 ? `<div class="awb-foe awb-en" data-i="${i}"><span class="foe-bar"><i style="width:${(st.f.foe.hp / st.f.foe.hpMax * 100).toFixed(1)}%"></i><b>❤ ${fmtN(st.f.foe.hp)}</b></span><div class="awe-units">${enUnits(st.f.foe.hp, st.f.foe.hpMax)}</div></div>
+      <div class="awb-vs"><b class="vs-l">${st.f.me.length ? 'Vos troupes' : 'Secteur vide'}</b><i>VS</i><b class="vs-r">Ennemi</b></div>` : ''}
       <b class="awb-tot">0</b></div>`).join('');
   window.__wade = false;
   const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
@@ -6080,7 +6127,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // chaque secteur a la place de toute la scène : ses unités sont dimensionnées selon leur nombre, pas selon le secteur le plus chargé
   bs.forEach(b => {
     // au-delà de 4 unités, la ligne se replie sur deux rangées : chaque unité reste grande au lieu de rétrécir
-    const cnt = b.querySelectorAll('.awu').length, foot = b.querySelectorAll('.awu.k-foot').length, rowsN = cnt > 4 ? 2 : 1, per = Math.ceil(cnt / rowsN) * (1 + 0.2 * foot / Math.max(1, cnt)), usable = (bwF - 74 - 16) * (foot ? 0.7 : 0.8);
+    const cnt = b.querySelectorAll('.awu').length, foot = b.querySelectorAll('.awu.k-foot').length, rowsN = cnt > 4 ? 2 : 1, per = Math.ceil(cnt / rowsN) * (1 + 0.2 * foot / Math.max(1, cnt)), usable = (bwF - 74 - 16) * (foot ? 0.7 : 0.8) * (b.classList.contains('has-foe') ? 0.56 : 1);
     // les unités n'occupent que la bande de sol du décor (route, pavés, herbe), pas le ciel
     const ter = (b.className.match(/t-(\w+)/) || [])[1], gt = { route: 0.38, champ: 0.34, foret: 0.42, village: 0.4, riviere: 0.46 }[ter], air = ter === 'mer' || ter === 'air';
     const room = air ? 0.9 : 0.96 - (gt || 0.4), footK = foot ? 1.4 : 1;
@@ -6275,7 +6322,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       await banner(`<small>Secteur ${i + 1} / ${n}</small><b>${TERRAIN[S.lanes[st.c]].name}</b>`, '', 620);
       prev.classList.remove('gone');
     }
-    sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band && !sc.classList.contains('focus'))); band.classList.add('act');
+    sc.querySelectorAll('.awb').forEach(b => b.classList.toggle('dim', b !== band && !sc.classList.contains('focus'))); band.classList.add('act'); { const vs = band.querySelector('.awb-vs'); if (vs && !vs.classList.contains('on')) { vs.classList.add('on'); SFX.play('stamp'); } }
     if (f.blocked) { toEl.textContent = 'Coupé'; toEl.classList.add('cut', 'on'); SFX.play('deny'); band.insertAdjacentHTML('beforeend', '<span class="awb-train">🚂 Le train blindé coupe ce secteur</span>'); await T(800); band.classList.remove('act'); continue; }
     // les unités avancent puis tirent, une à une
     band.classList.add('adv'); SFX.play('land'); await T(200);
@@ -6323,10 +6370,14 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     if (f.strike !== f.atk) { toEl.classList.add('cut'); band.insertAdjacentHTML('beforeend', `<span class="awb-note">${f.notes.includes('bunker') ? 'Bunker ×0,7' : `Blindage −${mammothWall(S)}`}</span>`); countUp(toEl, f.atk, f.strike, fast ? 40 : 260); SFX.play('intercept'); await T(320); }
     // la salve frappe d'abord la troupe ennemie du secteur ; seul l'excédent atteint le QG
     const foeEl = band.querySelector('.awb-foe');
+    const vsEl = band.querySelector('.awb-vs');
+    if (vsEl) { vsEl.querySelector('.vs-l').textContent = f.me.length ? `⚔ ${fmtN(f.strike)}` : 'Secteur vide'; vsEl.querySelector('.vs-r').textContent = `❤ ${fmtN(f.foe ? f.foe.hp : 0)}`; vsEl.classList.remove('clash'); void vsEl.offsetWidth; vsEl.classList.add('clash'); SFX.play('intercept'); await T(420); }
     if (foeEl && f.absorb > 0) {
       SFX.play('bigcannon'); band.classList.add('salvo'); boomAt(foeEl);
+      const eu = foeEl.querySelector('.awe-units'); if (eu) { eu.classList.remove('hurt'); void eu.offsetWidth; eu.classList.add('hurt'); bulletHits(eu, 4); setTimeout(() => { if (!f.kill) eu.innerHTML = enUnits(f.foe.hp - f.absorb, f.foe.hpMax); }, 260); }
       const fb = foeEl.querySelector('.foe-bar i'), fbt = foeEl.querySelector('.foe-bar b'), left = Math.max(0, f.foe.hp - f.absorb);
-      if (fb) fb.style.width = (left / f.foe.hpMax * 100) + '%'; if (fbt) fbt.textContent = fmtN(left);
+      if (fb) fb.style.width = (left / f.foe.hpMax * 100) + '%'; if (fbt) fbt.textContent = f.kill ? '☠ 0' : '❤ ' + fmtN(left);
+      if (vsEl) vsEl.querySelector('.vs-r').textContent = f.kill ? '☠ Détruite' : `❤ ${fmtN(left)}`;
       popAt(foeEl, f.kill ? `☠ Troupe détruite −${fmtN(f.absorb)}` : `Troupe −${fmtN(f.absorb)}`, f.kill ? '#2f9e44' : '#d5281a');
       if (f.kill) foeEl.classList.add('dead');
       await T(f.kill ? 520 : 380);
@@ -6370,6 +6421,9 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       const foeEl = band.querySelector('.awb-foe'), lab = band.querySelector('.awb-lab');
       jobs.push(new Promise(res => setTimeout(async () => {
         if (!f.foe || !f.foe.hp) { res(); return; }
+        const vs = band.querySelector('.awb-vs'), eus = band.querySelectorAll('.awe'), mine = band.querySelectorAll('.awu');
+        if (vs) { vs.classList.add('on', 'rip'); vs.querySelector('.vs-l').textContent = f.kill ? '' : f.breach ? '🛡 0 · vide' : `🛡 ${fmtN(Math.round(f.defR || 0))}`; vs.querySelector('.vs-r').textContent = f.kill ? '☠ Détruite' : `⚔ ${fmtN(f.foeAtk || 0)}`; vs.classList.remove('clash'); void vs.offsetWidth; vs.classList.add('clash'); }
+        if (!f.kill) { eus.forEach((e, k) => setTimeout(() => { e.classList.add('fire'); setTimeout(() => e.classList.remove('fire'), 520); }, k * 90)); setTimeout(() => mine.forEach(e => { e.classList.remove('hurt'); void e.offsetWidth; e.classList.add('hurt'); }), 380); }
         if (f.kill) { if (foeEl) popAt(foeEl, '☠ Détruite : pas de riposte', '#2f9e44'); SFX.play('deselect'); setTimeout(res, 420); return; }
         if (foeEl) { foeEl.classList.add('shoot'); setTimeout(() => foeEl.classList.remove('shoot'), 500); }
         SFX.play('mg', 6);

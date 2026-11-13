@@ -461,3 +461,6 @@ Totals : nouvelle ligne « ☠ Troupes −X (N détruites) » entre « Vos dég�
 
 ### Riposte animée du front disputé
 Dans la scène d'assaut, la riposte se joue secteur par secteur : la troupe ennemie de chaque secteur tire sur vos unités, le bouclier du secteur encaisse (« 🛡 4 bloqués · −1 »), un secteur vide est percé (la troupe charge, « Percée ! −5 » en rouge), une troupe détruite ce tour ne riposte pas. Le raid aérien a sa propre bannière (intercepté ou non) et la bannière finale additionne les dégâts secteur par secteur (« Forêt −1 · Route (vide) −12 = −13 à votre QG »).
+
+### Face-à-face dans la scène d'assaut
+Chaque troupe ennemie est dessinée comme vos unités (escouade d'infanterie, puis nid de mitrailleuse dès le niveau 3 et Panzer dès le niveau 5 ou face à un boss), tournée vers vos troupes, avec sa barre de vie. Une plaque **VS** apparaît entre les deux camps : « ⚔ votre frappe VS ❤ PV ennemis » pendant l'assaut (l'escouade perd des soldats et des engins à mesure qu'elle perd des PV, puis s'effondre si elle est détruite), puis « 🛡 votre défense VS ⚔ attaque ennemie » pendant la riposte (les ennemis font feu, vos unités encaissent).
