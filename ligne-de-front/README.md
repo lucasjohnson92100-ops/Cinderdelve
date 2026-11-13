@@ -464,3 +464,6 @@ Dans la scène d'assaut, la riposte se joue secteur par secteur : la troupe enne
 
 ### Face-à-face dans la scène d'assaut
 Chaque troupe ennemie est dessinée comme vos unités (escouade d'infanterie, puis nid de mitrailleuse dès le niveau 3 et Panzer dès le niveau 5 ou face à un boss), tournée vers vos troupes, avec sa barre de vie. Une plaque **VS** apparaît entre les deux camps : « ⚔ votre frappe VS ❤ PV ennemis » pendant l'assaut (l'escouade perd des soldats et des engins à mesure qu'elle perd des PV, puis s'effondre si elle est détruite), puis « 🛡 votre défense VS ⚔ attaque ennemie » pendant la riposte (les ennemis font feu, vos unités encaissent).
+
+### Écran de combat : séparation diagonale et impacts
+Chaque secteur disputé est coupé en deux panneaux, le vôtre (teinte bleue) et celui de l'ennemi (teinte rouge), séparés par un trait noir diagonal liseré de jaune ; le médaillon **VS** est posé sur le trait. Les impacts sont spectaculaires : flash blanc, recul du groupe touché, chapelet d'explosions, onde de choc au sol, mottes de terre et étincelles, et les soldats ennemis tués sont projetés en l'air. Vos unités subissent le même traitement (sans pertes) quand la riposte passe le bouclier.
