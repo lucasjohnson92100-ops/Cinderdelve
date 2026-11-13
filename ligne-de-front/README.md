@@ -467,3 +467,6 @@ Chaque troupe ennemie est dessinée comme vos unités (escouade d'infanterie, pu
 
 ### Écran de combat : séparation diagonale et impacts
 Chaque secteur disputé est coupé en deux panneaux, le vôtre (teinte bleue) et celui de l'ennemi (teinte rouge), séparés par un trait noir diagonal liseré de jaune ; le médaillon **VS** est posé sur le trait. Les impacts sont spectaculaires : flash blanc, recul du groupe touché, chapelet d'explosions, onde de choc au sol, mottes de terre et étincelles, et les soldats ennemis tués sont projetés en l'air. Vos unités subissent le même traitement (sans pertes) quand la riposte passe le bouclier.
+
+### Soldats battus et plaque sans « VS »
+Chaque soldat ennemi perdu joue une vraie chute : flash à l'impact, recul, bascule à la renverse, rebond au sol dans un nuage de poussière, puis il reste étendu et grisé jusqu'à la fin de la scène. Le mot « VS » est retiré : les deux étiquettes (votre frappe / la vie ennemie, puis votre défense / l'attaque ennemie) se font face de part et d'autre du trait diagonal, qui s'illumine à chaque choc.
