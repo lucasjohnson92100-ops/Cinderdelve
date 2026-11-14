@@ -3204,6 +3204,60 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu svg, .aws.focus .awb:not(.t-mer):not(.t-air) .awu-fire svg { max-width: none; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot[style*="--vk"], .aws.focus .awb-en .awe.k-foot[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
+
+/* Vue d'ensemble : mêmes règles de taille que le plan rapproché (générées), avec la taille propre à la vue d'ensemble */
+.aws.overview .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units { flex-wrap: wrap; align-content: flex-end; justify-content: center; row-gap: 0; }
+.aws.overview .awb[data-rows="2"]:not(.t-mer):not(.t-air) .awb-units .awu.k-foot { margin-top: calc(var(--uh, 60px) * -.55); }
+/* la rangée du fond se rapproche : les deux rangées forment un même groupe */
+.aws.overview .awb[data-rows="2"] .awb-units .awu:nth-child(even) { margin-left: calc(var(--uh, 60px) * .18); }
+.aws.overview .awb-units { justify-content: safe center; right: 2%; gap: calc(var(--uh, 60px) * .05); }
+les groupes se chevauchent un peu pour des unités plus grandes dans la même largeur */
+.aws.overview .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awb-units { gap: 0; }
+.aws.overview .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu + .awu { margin-left: calc(var(--uh, 60px) * -.6); }
+.aws.overview .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awu .awn { z-index: 6; }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu.k-foot { height: calc(var(--uh, 60px) * 1.7); margin: 0 calc(var(--uh, 60px) * -.12); }
+sont agrandis pour rester lisibles */
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }
+/* un engin ne se laisse pas écraser par un gros groupe de fantassins : c'est l'ajustement commun qui réduit tout le monde ensemble */
+.aws.overview .awb:not(.t-mer):not(.t-air) .awb-units { top: var(--gt, 8%); bottom: 3%; }
+.aws.overview .awb.has-foe .awb-units { right: 48.5%; justify-content: safe flex-end; }
+.aws.overview .awb-foe.awb-en { top: var(--gt, 30%); bottom: 3%; }
+.aws.overview .awb-en .awe.k-foot { height: calc(var(--uh, 60px) * 1.7); flex-shrink: 0; margin: 0 calc(var(--uh, 60px) * -.12); }
+.aws.overview .awb-en .awe[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); flex-shrink: 0; margin-left: calc(var(--uh, 60px) * -.25); }
+.aws.overview .awb-foe.awb-en { display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; }
+.aws.overview .awb-en .awe-units { position: relative; inset: auto; }
+.aws.overview .awb-en .foe-bar { position: relative; bottom: auto; flex: none; margin: 0 0 8px 4%; }
+.aws.overview .awb.has-foe .awb-units { left: 80px; right: calc(100% - var(--sp, 52%) + 26px); justify-content: safe flex-end; }
+.aws.overview .awb-foe.awb-en { left: calc(var(--sp, 52%) + 26px); right: auto; width: max-content; max-width: calc(100% - var(--sp, 52%) - 40px); }
+.aws.overview .awb-en .awe { flex-shrink: 0; }
+.aws.overview .awb-en .awe svg { max-width: none; }
+.aws.overview .awb-en .awe.k-foot { margin: 0 calc(var(--uh, 60px) * -.12); }
+la mitrailleuse puis le Panzer en retrait derrière elle */
+.aws.overview .awb-en .awe:not([data-k="inf"]) { z-index: 0; margin: 0 0 0 calc(var(--uh, 60px) * -.6); filter: brightness(.88); }
+.aws.overview .awb-en .awe[data-k="panzer"] { margin-left: calc(var(--uh, 60px) * -.8); }
+.aws.overview .awb-en .awe[data-k="inf"] { z-index: 2; }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awb-units, .aws.overview .awb.has-foe .awb-units { left: var(--labx, 16px); }
+.aws.overview .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.12); width: min(150px, 90%); }
+comme le nid ennemi) */
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu svg, .aws.overview .awb:not(.t-mer):not(.t-air) .awu-fire svg { max-width: none; }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awu.k-foot[style*="--vk"], .aws.overview .awb-en .awe.k-foot[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
+
+/* Vue d'ensemble : bloc de score plus compact, étiquettes en haut */
+.aws.overview .awb:not(.t-mer):not(.t-air) .awb-lab { transform: scale(.74); transform-origin: 0 50%; background: none; border-right: 0; }
+.aws.overview .awb-vs { top: 6px !important; }
+.aws.overview .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.12); width: min(120px, 90%); }
+
+/* Écran bas : le bloc de score se réduit pour rester dans le ciel, au-dessus du sol */
+@media (max-height: 360px) {
+  .aws.focus .awb:not(.t-mer):not(.t-air) .awb-lab { transform: scale(.7); transform-origin: 0 0; }
+  .aws.focus .awb:not(.t-mer):not(.t-air) .awb-cbs { transform: scale(.8); transform-origin: 0 0; }
+}
+
+/* Étiquettes du face-à-face juste au-dessus des têtes (et de la barre de vie ennemie) */
+.aws.focus .awb-vs { top: auto; bottom: calc(3% + var(--uh, 60px) * 1.45); }
+.aws.overview .awb:not(.t-mer):not(.t-air) .awb-cbs { display: none !important; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6277,10 +6331,10 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const landB = bs.filter(isLand); sc.style.setProperty('--labx', Math.round(LAB) + 'px');
   let uAll = Math.max(40, Math.min(130, ...landB.map(b => +b.dataset.u)));
   // place la diagonale : contenu des deux camps centré dans la bande, ton camp à gauche, l'ennemi à droite
-  const layout = () => landB.forEach(b => {
-    const rows = +b.dataset.rows || 1, m = measure(b, uAll, 1, true), me = { w: m.me.w * (rows === 2 ? .55 : 1) }, en = m.en;
+  const layout = (U = uAll, L0 = LAB, one = false) => landB.forEach(b => {
+    const rows = one ? 1 : +b.dataset.rows || 1, m = measure(b, U, 1, true), me = { w: m.me.w * (rows === 2 ? .55 : 1) }, en = m.en;
     if (!b.classList.contains('has-foe')) return;
-    const slack = Math.max(0, bwF - LAB - TOT - MID - me.w - en.w), x = LAB + slack / 2 + me.w + MID / 2, sp = Math.max(30, Math.min(78, x / bwF * 100));
+    const slack = Math.max(0, bwF - L0 - TOT - MID - me.w - en.w), x = L0 + slack / 2 + me.w + MID / 2, sp = Math.max(30, Math.min(78, x / bwF * 100));
     b.style.setProperty('--sp', sp.toFixed(2) + '%');
     const svg = b.querySelector('.awb-split'); if (svg) { const t = (sp + 3).toFixed(2), d = (sp - 3).toFixed(2);
       svg.querySelector('.en').setAttribute('points', `${t},0 100,0 100,100 ${d},100`); svg.querySelector('.me').setAttribute('points', `0,0 ${t},0 ${d},100 0,100`);
@@ -6294,6 +6348,19 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       const o = els.some(e => { const q = e.getBoundingClientRect(); return q.width && (q.left < B.left + LAB - 14 || q.right > B.right - TOT + 20); }); b.classList.remove('cur'); return o; });
     if (!over) break;
     uAll *= 0.93; layout();
+  }
+  // vue d'ensemble (bilan et riposte) : bandes empilées, plus basses ; même règle, taille recalculée, une seule rangée
+  function overviewLayout() {
+    if (!landB.length) return;
+    landB.forEach(b => b.style.setProperty('--gt', '16%'));   // en vue d'ensemble, les unités peuvent monter dans le haut de la bande
+    const b0 = landB[0], B = b0.getBoundingClientRect(), labR = Math.max(...landB.map(b => Math.max(...[...b.querySelectorAll('.awb-lab, .awb-lab *')].map(e => e.getBoundingClientRect().right)) - b.getBoundingClientRect().left));
+    const L0 = Math.max(80, Math.min(bwF * .3, labR + 8)); sc.style.setProperty('--labx', Math.round(L0) + 'px');
+    let U = 130;
+    landB.forEach(b => { const H = b.getBoundingClientRect().height, gt = parseFloat(b.style.getPropertyValue('--gt')) / 100 || .4, m = measure(b, 100, 1, true);
+      const A = bwF - L0 - TOT - (b.classList.contains('has-foe') ? MID : 0);
+      U = Math.min(U, (H * (0.97 - gt) - 14) / (Math.max(m.me.h, m.en.h, 1) / 100), A / Math.max(.01, (m.me.w + m.en.w) / 100)); });
+    U = Math.max(18, U); landB.forEach(b => { b.dataset.rows = 1; }); layout(U, L0, true);
+    landB.forEach(b => b.style.setProperty('--uh', U.toFixed(1) + 'px'));
   }
   sc.style.setProperty('--uh', '60px');
   sc.querySelectorAll('.awe[data-k="inf"]').forEach(a => idleOn(a));
@@ -6640,6 +6707,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   if (n > 1) {   // le plan se resserre : tous les secteurs reviennent pour le bilan de la frappe
     sc.classList.add('overview'); sc.classList.remove('focus'); sc.classList.remove('flash'); void sc.offsetWidth; sc.classList.add('flash');
     sc.querySelectorAll('.awb').forEach(b => b.classList.remove('cur', 'gone', 'act'));
+    overviewLayout();
     await T(480 + n * 90);
   }
   // frappe totale
