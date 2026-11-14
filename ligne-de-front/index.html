@@ -3172,6 +3172,28 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 @keyframes vidle { from { background-position: 0 0; } to { background-position: calc(100% * 28 / 27) 0; } }
 .awe.has-idle > svg { visibility: hidden; }
 .awe.acting .vidles { visibility: hidden; }
+
+/* Proportions du combat : la diagonale (--sp) sépare les camps ; tailles communes (--uh) ; l'ennemi n'est plus comprimé */
+.awb.has-foe .awb-units, .aws.focus .awb.has-foe .awb-units { left: 80px; right: calc(100% - var(--sp, 52%) + 26px); justify-content: safe flex-end; }
+.awb-foe.awb-en, .aws.focus .awb-foe.awb-en { left: calc(var(--sp, 52%) + 26px); right: auto; width: max-content; max-width: calc(100% - var(--sp, 52%) - 40px); }
+.aws.focus .awb-en .awe { flex-shrink: 0; } .aws.focus .awb-en .awe svg { max-width: none; }
+.aws.focus .awb-en .awe.k-foot { margin: 0 calc(var(--uh, 60px) * -.12); }
+.awb-vs, .aws.focus .awb-vs { left: var(--sp, 52%); }
+.awb.has-foe .awb-cbs { right: calc(100% - var(--sp, 52%) + 14px); }
+.awb.has-foe .awshield { right: calc(100% - var(--sp, 52%) + 4px); }
+.aws.focus .awb-vs { bottom: auto; top: calc(var(--gt, 38%) - 52px); }
+
+/* Escouade ennemie en profondeur : l'infanterie devant (côté ligne), la mitrailleuse puis le Panzer en retrait derrière elle */
+.aws.focus .awb-en .awe:not([data-k="inf"]) { z-index: 0; margin: 0 0 calc(var(--uh, 60px) * .22) calc(var(--uh, 60px) * -.6); filter: brightness(.88); }
+.aws.focus .awb-en .awe[data-k="panzer"] { margin-left: calc(var(--uh, 60px) * -.8); }
+.aws.focus .awb-en .awe[data-k="inf"] { z-index: 2; }
+
+/* Plan rapproché : le bloc Puissance × Mult monte dans le ciel, en haut à gauche ; le sol est entièrement aux unités */
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-lab { top: 6px; bottom: auto; justify-content: flex-start; padding-top: 2px; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-lab { border-right: 0; border-radius: 0 0 12px 0; padding: 4px 10px 6px 8px; width: auto; min-width: 74px; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-cbs { top: 8px; left: var(--labw, 200px); right: 70px; max-width: none; justify-content: flex-start; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awb-units, .aws.focus .awb.has-foe .awb-units { left: var(--labx, 16px); }
+.aws.focus .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.62); width: min(150px, 90%); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6212,32 +6234,49 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // taille commune des unités : la même pour tous les secteurs, calée sur la bande la plus contrainte (hauteur et largeur)
   sc.querySelectorAll('.awb').forEach(b => { const t = (b.className.match(/t-(\w+)/) || [])[1]; b.dataset.ambok = ambHas(t, sc.dataset.amb) ? '1' : '0'; });
   const bs = [...sc.querySelectorAll('.awb')], bands0 = sc.querySelector('.aws-bands'), bhF = bands0.clientHeight - 6, bwF = bands0.clientWidth - 3;
-  // chaque secteur a la place de toute la scène : ses unités sont dimensionnées selon leur nombre, pas selon le secteur le plus chargé
+  // proportions de la scène : une même taille d'unité (--uh) pour tous les secteurs terrestres, la plus grande qui tienne
+  // (mesurée sur le vrai dessin de chaque camp) ; ton camp passe sur deux rangées s'il y gagne ; la diagonale se place selon ce que chaque camp aligne
+  const GT = { route: 0.38, champ: 0.34, foret: 0.42, village: 0.4, riviere: 0.46 }, terB = b => (b.className.match(/t-(\w+)/) || [])[1];
+  const isLand = b => !/t-(mer|air)\b/.test(b.className), TOT = 60, MID = 50;
+  // largeur réelle du bloc de gauche (terrain, Puissance × Mult) en plan rapproché
+  // le bloc de gauche (terrain, Puissance × Mult) est dans le ciel : s'il finit au-dessus du sol, le sol garde toute sa largeur
+  const LAB = (() => { const b = bs.find(isLand); if (!b) return 84; b.classList.add('cur'); const B = b.getBoundingClientRect(), els = [...b.querySelectorAll('.awb-lab, .awb-lab *')].map(e => e.getBoundingClientRect());
+    const r = Math.max(...els.map(q => q.right)), bot = Math.max(...els.map(q => q.bottom)), gt = parseFloat(getComputedStyle(b).getPropertyValue('--gt')) / 100 || .38; b.classList.remove('cur');
+    return bot < B.top + B.height * gt - 4 ? 18 : Math.max(84, Math.min(bwF * .3, r - B.left + 10)); })();
+  const span = el => { const r = el ? [...el.children].filter(e => e.offsetWidth && getComputedStyle(e).position !== 'absolute').map(e => e.getBoundingClientRect()) : []; return r.length ? { w: Math.max(...r.map(q => q.right)) - Math.min(...r.map(q => q.left)), h: Math.max(...r.map(q => q.height)) } : { w: 0, h: 0 }; };
+  const measure = (b, U, rows, wide) => { b.style.setProperty('--uh', U + 'px'); b.dataset.rows = rows; if (wide) b.style.setProperty('--sp', '97%'); b.classList.add('cur'); const me = span(b.querySelector('.awb-units')), en = span(b.querySelector('.awe-units')); b.classList.remove('cur'); return { me, en }; };
   bs.forEach(b => {
-    // au-delà de 4 unités, la ligne se replie sur deux rangées : chaque unité reste grande au lieu de rétrécir
-    const cnt = b.querySelectorAll('.awu').length, foot = b.querySelectorAll('.awu.k-foot').length, rowsN = cnt > 4 ? 2 : 1, per = Math.ceil(cnt / rowsN) * (1 + 0.2 * foot / Math.max(1, cnt)), usable = (bwF - 74 - 16) * (foot ? 0.7 : 0.8) * (b.classList.contains('has-foe') ? 0.52 : 1);
-    // les unités n'occupent que la bande de sol du décor (route, pavés, herbe), pas le ciel
-    const ter = (b.className.match(/t-(\w+)/) || [])[1], gt = { route: 0.38, champ: 0.34, foret: 0.42, village: 0.4, riviere: 0.46 }[ter], air = ter === 'mer' || ter === 'air';
-    const room = air ? 0.9 : 0.96 - (gt || 0.4), footK = foot ? 1.4 : 1;
-    if (!air) b.style.setProperty('--gt', ((gt || 0.4) * 100).toFixed(0) + '%');
-    const u = Math.max(44, Math.min(rowsN === 2 ? 118 : 138, (bhF * room) / (rowsN * (foot >= cnt ? 1.7 : 1.1)), usable / Math.max(1, per * 1.55)));
-    b.style.setProperty('--uh', u.toFixed(0) + 'px'); b.dataset.rows = rowsN; b.dataset.u = u;
+    const ter = terB(b), air = !isLand(b), gt = GT[ter] || 0.4;
+    if (!air) b.style.setProperty('--gt', (gt * 100).toFixed(0) + '%');
+    if (air) {   // mer et ciel : inchangé, la bande entière
+      const cnt = b.querySelectorAll('.awu').length, rowsN = cnt > 4 ? 2 : 1, u = Math.max(44, Math.min(118, (bhF * 0.9) / (rowsN * 1.1), (bwF - 90) * 0.8 / Math.max(1, Math.ceil(cnt / rowsN) * 1.55)));
+      b.style.setProperty('--uh', u.toFixed(0) + 'px'); b.dataset.rows = rowsN; return;
+    }
+    const G = bhF * (0.97 - gt), A = bwF - LAB - TOT - (b.classList.contains('has-foe') ? MID : 0), cnt = b.querySelectorAll('.awu').length;
+    // une rangée ; au-delà de 4 unités, deux rangées (largeur ≈ 55 %, hauteur + 45 %)
+    const rows = cnt > 4 ? 2 : 1, m1 = measure(b, 100, 1, true), meW = m1.me.w * (rows === 2 ? .55 : 1), meH = m1.me.h * (rows === 2 ? 1.45 : 1);
+    b.dataset.u = Math.min(G / (Math.max(meH, m1.en.h, 1) / 100), A / Math.max(0.01, (meW + m1.en.w) / 100)); b.dataset.rows = rows; b.style.removeProperty('--sp');
   });
-  // même taille de soldat d'un secteur terrestre à l'autre : on garde la plus petite des tailles calculées
-  const landB = bs.filter(b => !/t-(mer|air)\b/.test(b.className)), uMin = Math.min(...landB.map(b => +b.dataset.u));
-  landB.forEach(b => b.style.setProperty('--uh', uMin.toFixed(0) + 'px'));
-  // ajustement final : si un secteur déborde (engins agrandis, deux rangées), on réduit tout le monde ensemble
-  let uFit = uMin;
-  for (let it = 0; it < 14 && landB.length; it++) {
-    const over = landB.some(b => {
-      const box = b.querySelector('.awb-units'); b.classList.add('cur');
-      const R = box.getBoundingClientRect(), us = [...box.querySelectorAll('.awu')], lines = new Set(us.map(e => Math.round(e.getBoundingClientRect().bottom / 6)));
-      const wide = us.some(e => { const q = e.getBoundingClientRect(); return q.right > R.right + 12 || q.left < R.left - 12; }), high = us.some(e => e.getBoundingClientRect().top < R.top - 2);
-      b.classList.remove('cur');
-      return lines.size > (+b.dataset.rows || 1) || wide || high;
-    });
+  const landB = bs.filter(isLand); sc.style.setProperty('--labx', Math.round(LAB) + 'px');
+  let uAll = Math.max(40, Math.min(130, ...landB.map(b => +b.dataset.u)));
+  // place la diagonale : contenu des deux camps centré dans la bande, ton camp à gauche, l'ennemi à droite
+  const layout = () => landB.forEach(b => {
+    const rows = +b.dataset.rows || 1, m = measure(b, uAll, 1, true), me = { w: m.me.w * (rows === 2 ? .55 : 1) }, en = m.en;
+    if (!b.classList.contains('has-foe')) return;
+    const slack = Math.max(0, bwF - LAB - TOT - MID - me.w - en.w), x = LAB + slack / 2 + me.w + MID / 2, sp = Math.max(30, Math.min(78, x / bwF * 100));
+    b.style.setProperty('--sp', sp.toFixed(2) + '%');
+    const svg = b.querySelector('.awb-split'); if (svg) { const t = (sp + 3).toFixed(2), d = (sp - 3).toFixed(2);
+      svg.querySelector('.en').setAttribute('points', `${t},0 100,0 100,100 ${d},100`); svg.querySelector('.me').setAttribute('points', `0,0 ${t},0 ${d},100 0,100`);
+      svg.querySelectorAll('line').forEach(l => { l.setAttribute('x1', t); l.setAttribute('x2', d); }); }
+  });
+  layout();
+  { const b = landB[0]; if (b) { b.classList.add('cur'); const B = b.getBoundingClientRect(), r = Math.max(...[...b.querySelectorAll('.awb-lab, .awb-lab *')].map(e => e.getBoundingClientRect().right)); b.classList.remove('cur'); sc.style.setProperty('--labw', Math.round(r - B.left + 10) + 'px'); } }
+  // ajustement final : si quelque chose déborde encore (arrondis, engins larges), on réduit tout le monde ensemble
+  for (let it = 0; it < 10 && landB.length; it++) {
+    const over = landB.some(b => { b.classList.add('cur'); const B = b.getBoundingClientRect(), els = [...b.querySelectorAll('.awu, .awe')];
+      const o = els.some(e => { const q = e.getBoundingClientRect(); return q.width && (q.left < B.left + LAB - 14 || q.right > B.right - TOT + 20); }); b.classList.remove('cur'); return o; });
     if (!over) break;
-    uFit *= 0.93; landB.forEach(b => b.style.setProperty('--uh', uFit.toFixed(0) + 'px'));
+    uAll *= 0.93; layout();
   }
   sc.style.setProperty('--uh', '60px');
   sc.querySelectorAll('.awe[data-k="inf"]').forEach(a => idleOn(a));
