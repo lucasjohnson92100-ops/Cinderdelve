@@ -470,3 +470,6 @@ Chaque secteur disputé est coupé en deux panneaux, le vôtre (teinte bleue) et
 
 ### Soldats battus et plaque sans « VS »
 Chaque soldat ennemi perdu joue une vraie chute : flash à l'impact, recul, bascule à la renverse, rebond au sol dans un nuage de poussière, puis il reste étendu et grisé jusqu'à la fin de la scène. Le mot « VS » est retiré : les deux étiquettes (votre frappe / la vie ennemie, puis votre défense / l'attaque ennemie) se font face de part et d'autre du trait diagonal, qui s'illumine à chaque choc.
+
+### Mort des fantassins ennemis (vidéo Dreamina)
+Clip Dreamina du sprite ennemi sur fond vert : le soldat est touché, lâche son fusil, titube et tombe à la renverse. Le tir du début et le passage où il reste debout sont coupés (images 7–25 puis 68–98 à 24 i/s), le fond sauge est détouré par chromaticité et remplissage depuis les bords, le filigrane masqué, l'uniforme olive recoloré en bleu (teinte 52–125°, étincelles exclues). Planche `art/die_en.webp` (50 images 214×150), intégrée en `DIE_EN` avec les repères du soldat debout (haut, pieds, centre des pieds) pour qu'il ait exactement la taille et la position d'un soldat de l'escouade. Chaque homme perdu joue la planche une fois (1,7 s, décalée d'un soldat à l'autre), puis reste étendu et assombri ; la scène attend la fin de la chute avant le secteur suivant.
