@@ -3193,11 +3193,17 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-lab { border-right: 0; border-radius: 0 0 12px 0; padding: 4px 10px 6px 8px; width: auto; min-width: 74px; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-cbs { top: 8px; left: var(--labw, 200px); right: 70px; max-width: none; justify-content: flex-start; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-units, .aws.focus .awb.has-foe .awb-units { left: var(--labx, 16px); }
-.aws.focus .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.62); width: min(150px, 90%); }
+.aws.focus .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.12); width: min(150px, 90%); }
 
 /* Tout le monde au sol : chaque dessin descend de sa marge vide sous les pieds (GROUND_PAD) ; « translate » ne gêne pas les animations de recul */
 .aws .awu, .aws .awe { translate: 0 calc(var(--gp, 0) * 100%); }
 .aws .awb.wading .awu { translate: none; }   /* rivière : les fantassins ont volontairement les pieds dans l'eau */
+
+/* Même échelle pour tout le monde : un dessin ne se comprime jamais pour tenir dans sa case (c'est --uh qui s'ajuste),
+   et un engin a la même taille dans les deux camps (la mitrailleuse prend sa taille d'engin, --vk, comme le nid ennemi) */
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu { flex-shrink: 0; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu svg, .aws.focus .awb:not(.t-mer):not(.t-air) .awu-fire svg { max-width: none; }
+.aws.focus .awb:not(.t-mer):not(.t-air) .awu.k-foot[style*="--vk"], .aws.focus .awb-en .awe.k-foot[style*="--vk"] { height: calc(var(--uh, 60px) * var(--vk, 1)); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4661,7 +4667,10 @@ const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destr
 const desync = h => h.includes('__B__') ? h.replace(/begin="-__B__ms" data-d="([\d.]+)"/g, (_, d) => `begin="-${Math.round(Math.random() * +d)}ms" data-d="${d}"`) : h;
 const UNARMED = { obs: 1, medic: 1 };
 // échelle des engins dans la scène d'assaut, relative à la taille d'un soldat (char ≈ 1,45 soldat de haut, jeep ≈ 1,1…)
-const VEH_K = { tank: 1.7, td: 1.8, halftrack: 2.0, jeep: 1.7, arty: 1.85, mgnest: 2.4 };
+// hauteur de case de chaque dessin dans la scène d'assaut, en --uh : réglée pour qu'un soldat mesure partout la même hauteur (≈ 0,66 --uh)
+// et que les engins gardent un rapport crédible (char et chasseur de chars ≈ 1,3 soldat, half-track 1,2, artillerie 1,1, jeep 1,05, nid de mitrailleuse 0,85)
+const VEH_K = { tank: 1.78, td: 2.23, halftrack: 2.04, jeep: 1.47, arty: 1.64, mgnest: 2.3, obs: 1.28, sapper: 1.5, medic: 1.59 };
+const EN_K = { inf: 1.22, mgnest: 2.1, panzer: 1.55 };
 const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols, exact) {
   const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
@@ -6207,7 +6216,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // l'escouade ennemie de chaque secteur, dessinée comme vos unités : plus elle perd de PV, moins il reste de soldats et d'engins
   const lvI = (S.lvl && S.lvl.levelIdx) || 0, bossL = !!(S.lvl && S.lvl.boss);
   const foeKit = [['inf', 5]].concat(lvI >= 2 || bossL ? [['mgnest', 2]] : [], lvI >= 4 || bossL ? [['panzer', 1]] : []);
-  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${VEH_K[k] || k === 'panzer' ? `;--vk:${VEH_K[k] || 1.7}` : ''}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}">${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
+  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${EN_K[k] ? `;--vk:${EN_K[k]}` : ''}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}">${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${st.f.foe && st.f.foe.hp > 0 ? 'has-foe' : ''} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
       <div class="awb-bg"></div><div class="awb-sky"></div>
       <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
