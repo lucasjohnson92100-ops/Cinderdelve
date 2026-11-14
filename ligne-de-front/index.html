@@ -3184,7 +3184,7 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .aws.focus .awb-vs { bottom: auto; top: calc(var(--gt, 38%) - 52px); }
 
 /* Escouade ennemie en profondeur : l'infanterie devant (côté ligne), la mitrailleuse puis le Panzer en retrait derrière elle */
-.aws.focus .awb-en .awe:not([data-k="inf"]) { z-index: 0; margin: 0 0 calc(var(--uh, 60px) * .22) calc(var(--uh, 60px) * -.6); filter: brightness(.88); }
+.aws.focus .awb-en .awe:not([data-k="inf"]) { z-index: 0; margin: 0 0 0 calc(var(--uh, 60px) * -.6); filter: brightness(.88); }
 .aws.focus .awb-en .awe[data-k="panzer"] { margin-left: calc(var(--uh, 60px) * -.8); }
 .aws.focus .awb-en .awe[data-k="inf"] { z-index: 2; }
 
@@ -3194,6 +3194,10 @@ button.totals { font: inherit; text-align: left; cursor: pointer; color: inherit
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-cbs { top: 8px; left: var(--labw, 200px); right: 70px; max-width: none; justify-content: flex-start; }
 .aws.focus .awb:not(.t-mer):not(.t-air) .awb-units, .aws.focus .awb.has-foe .awb-units { left: var(--labx, 16px); }
 .aws.focus .awb-en .foe-bar { position: absolute; margin: 0; left: 0; bottom: calc(var(--uh, 60px) * 1.62); width: min(150px, 90%); }
+
+/* Tout le monde au sol : chaque dessin descend de sa marge vide sous les pieds (GROUND_PAD) ; « translate » ne gêne pas les animations de recul */
+.aws .awu, .aws .awe { translate: 0 calc(var(--gp, 0) * 100%); }
+.aws .awb.wading .awu { translate: none; }   /* rivière : les fantassins ont volontairement les pieds dans l'eau */
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4647,6 +4651,10 @@ function spriteSVG(key, side, size, cols) {
 
 // Groupe d'unités : plusieurs figurines selon l'effectif restant (n sur nMax)
 const FIGS = { inf_eau: 5, train: 1, battery: 1, howitzer: 2, bunker: 1, inf: 5, jeep: 2, para: 2, rifle: 5, gren: 3, sniper: 2, mgnest: 2, obs: 2, medic: 2, sapper: 3, arty: 2, halftrack: 2 };
+// marge vide sous les pieds / roues / chenilles de chaque dessin d'unité, en fraction de sa hauteur (mesurée sur le rendu) :
+// la scène d'assaut descend chaque dessin d'autant pour que tout le monde touche le sol
+const GROUND_PAD = { 'me:inf': .054, 'me:jeep': .064, 'me:tank': .046, 'me:para': .054, 'me:obs': .051, 'me:medic': .047, 'me:sapper': .057, 'me:mgnest': .041, 'me:arty': .048, 'me:halftrack': .057, 'me:td': .054, 'me:inf_eau': .054, 'en:inf': .0833, 'en:mgnest': .08, 'en:panzer': .1033 };
+const groundPad = (side, k) => GROUND_PAD[side + ':' + k] || 0;
 const SPR_OF = { tireurs: 'inf', jeep: 'jeep', blinde: 'tank', destroyer: 'destroyer', croiseur: 'croiseur', sousmarin: 'sousmarin', chasseur: 'chasseur', bombardier: 'bombardier', paras: 'para',
   observateur: 'obs', infirmiers: 'medic', genie: 'sapper', mitrailleuse: 'mgnest', artillerie: 'arty', halftrack: 'halftrack', antichar: 'td', reco: 'recon' };
 // décalage aléatoire du départ d'une animation d'attente peinte (pour que les figurines ne bougent pas toutes ensemble)
@@ -6193,13 +6201,13 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const u = live.find(x => x.uid === uid); if (!u) return '';
     window.__wade = WADE_ON && ter === 'riviere';   // les fantassins d'une rivière sont dessinés dans l'eau (désactivé en attendant une vraie vidéo)
     const k0 = SPR_OF[u.key], k = ter === 'riviere' && k0 === 'inf' && typeof IDLE !== 'undefined' && IDLE.inf_eau ? 'inf_eau' : k0, fk = fireKey(k);
-    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" style="--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${menNow(u)}</i></span>`;
+    return `<span class="awu ${u.land ? '' : 'sup'} k-${kindOf(k)} ${fk ? 'has-fire' : ''} wear${wearLv(u)}" data-uid="${uid}" data-s="${k}" style="--gp:${u.land ? groundPad('me', k) : 0};--d:${(uid * 37 % 10) / 10}${VEH_K[k0] ? `;--vk:${VEH_K[k0]}` : ''}"><i class="ifx"></i><span class="awu-idle">${squadSVG(k, 'me', menNow(u), u.menMax, 64, u.cols)}</span>${fk ? `<span class="awu-fire">${squadSVG(fk, 'me', menNow(u), u.menMax, 64, u.cols)}</span>` : ''}${avantHTML(u, ter)}<i class="awn">${menNow(u)}</i></span>`;
   };
   const hasAir = () => false;
   // l'escouade ennemie de chaque secteur, dessinée comme vos unités : plus elle perd de PV, moins il reste de soldats et d'engins
   const lvI = (S.lvl && S.lvl.levelIdx) || 0, bossL = !!(S.lvl && S.lvl.boss);
   const foeKit = [['inf', 5]].concat(lvI >= 2 || bossL ? [['mgnest', 2]] : [], lvI >= 4 || bossL ? [['panzer', 1]] : []);
-  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}"${VEH_K[k] || k === 'panzer' ? ` style="--vk:${VEH_K[k] || 1.7}"` : ''}>${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
+  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${VEH_K[k] || k === 'panzer' ? `;--vk:${VEH_K[k] || 1.7}` : ''}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}">${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${st.f.foe && st.f.foe.hp > 0 ? 'has-foe' : ''} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
       <div class="awb-bg"></div><div class="awb-sky"></div>
       <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
