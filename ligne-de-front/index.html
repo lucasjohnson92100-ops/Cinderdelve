@@ -3258,6 +3258,11 @@ comme le nid ennemi) */
 /* Étiquettes du face-à-face juste au-dessus des têtes (et de la barre de vie ennemie) */
 .aws.focus .awb-vs { top: auto; bottom: calc(3% + var(--uh, 60px) * 1.45); }
 .aws.overview .awb:not(.t-mer):not(.t-air) .awb-cbs { display: none !important; }
+
+/* Rangs serrés : les engins ennemis plus en retrait derrière l'infanterie, tes unités légèrement chevauchées */
+.aws.focus .awb-en .awe[data-k="mgnest"], .aws.overview .awb-en .awe[data-k="mgnest"] { margin-left: calc(var(--uh, 60px) * -.95); }
+.aws.focus .awb-en .awe[data-k="panzer"], .aws.overview .awb-en .awe[data-k="panzer"] { margin-left: calc(var(--uh, 60px) * -1.05); }
+.aws.focus .awb:not(.t-mer):not(.t-air)[data-rows="1"] .awb-units .awu + .awu, .aws.overview .awb:not(.t-mer):not(.t-air) .awb-units .awu + .awu { margin-left: calc(var(--uh, 60px) * -.28); }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4727,7 +4732,7 @@ const VEH_K = { tank: 1.78, td: 2.23, halftrack: 2.04, jeep: 1.47, arty: 1.64, m
 const EN_K = { inf: 1.22, mgnest: 2.1, panzer: 1.55 };
 const FOOT_FIG = 0.6;   // échelle commune d'un fantassin dans un groupe (plateau, scène d'assaut)
 function squadSVG(key, side, n, nMax, size, cols, exact) {
-  const t = teamFor(side, cols), max = FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;
+  const t = teamFor(side, cols), max = window.__vehOne && kindOf(key.replace(/_(fire|rkt)$/, '')) !== 'foot' ? 1 : FIGS[key] || FIGS[key.replace(/_(fire|rkt)$/, '')] || 1;   // scène d'assaut : un seul engin par carte (le badge donne l'effectif)
   const k = exact ? Math.max(1, Math.min(10, Math.round(n))) : max === 1 ? 1 : Math.max(1, Math.min(max, Math.ceil((n * max) / Math.max(1, nMax))));
   const one = mirror(side, key, (paintOf(key, side) && kindOf(key) !== 'air' ? shadow : '') + spriteInner(key, side, t));
   // rivière : seule la rangée de devant a les pieds dans l'eau, celle de derrière reste sur la berge
@@ -6271,6 +6276,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   const lvI = (S.lvl && S.lvl.levelIdx) || 0, bossL = !!(S.lvl && S.lvl.boss);
   const foeKit = [['inf', 5]].concat(lvI >= 2 || bossL ? [['mgnest', 2]] : [], lvI >= 4 || bossL ? [['panzer', 1]] : []);
   const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${EN_K[k] ? `;--vk:${EN_K[k]}` : ''}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}">${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
+  window.__vehOne = true;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${st.f.foe && st.f.foe.hp > 0 ? 'has-foe' : ''} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
       <div class="awb-bg"></div><div class="awb-sky"></div>
       <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
@@ -6279,7 +6285,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
       <svg class="awb-split" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon class="en" points="59,0 100,0 100,100 53,100"/><polygon class="me" points="0,0 59,0 53,100 0,100"/><line class="ln" x1="59" y1="-2" x2="53" y2="102"/><line class="hi" x1="59" y1="-2" x2="53" y2="102"/></svg>
       <div class="awb-vs"><b class="vs-l">${st.f.me.length ? 'Vos troupes' : 'Secteur vide'}</b><b class="vs-r">Ennemi</b></div>` : ''}
       <b class="awb-tot">0</b></div>`).join('');
-  window.__wade = false;
+  window.__wade = false; window.__vehOne = false;
   const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
   const sc = document.createElement('div'); sc.className = 'aws'; sc.style.setProperty('--rw', sideW() + 'px'); sc.dataset.amb = sceneMood(S.lvl);
   sc.innerHTML = `<div class="aws-bands">${bands}</div>
@@ -6329,7 +6335,9 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     b.dataset.u = Math.min(G / (Math.max(meH, m1.en.h, 1) / 100), A / Math.max(0.01, (meW + m1.en.w) / 100)); b.dataset.rows = rows; b.style.removeProperty('--sp');
   });
   const landB = bs.filter(isLand); sc.style.setProperty('--labx', Math.round(LAB) + 'px');
-  let uAll = Math.max(40, Math.min(130, ...landB.map(b => +b.dataset.u)));
+  // échelle du décor : un soldat ≈ 13 % de la hauteur du secteur (portes du village, arbres, poteaux) ; on ne descend en dessous que si ça ne tient pas
+  const TER_K = { route: .2, champ: .2, foret: .21, village: .2, riviere: .2 };
+  let uAll = Math.max(40, Math.min(130, ...landB.map(b => +b.dataset.u), ...landB.map(b => (TER_K[terB(b)] || .2) * bhF)));
   // place la diagonale : contenu des deux camps centré dans la bande, ton camp à gauche, l'ennemi à droite
   const layout = (U = uAll, L0 = LAB, one = false) => landB.forEach(b => {
     const rows = one ? 1 : +b.dataset.rows || 1, m = measure(b, U, 1, true), me = { w: m.me.w * (rows === 2 ? .55 : 1) }, en = m.en;
