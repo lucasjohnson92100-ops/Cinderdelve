@@ -3282,6 +3282,8 @@ comme le nid ennemi) */
 .awe-focus { position: absolute; left: 0; bottom: calc(var(--uh, 60px) * 1.12 + 22px); z-index: 6; font: 700 .7rem/1 var(--font-display); color: #fff; background: linear-gradient(180deg, #e0503b, #a8241d); border: 2px solid #000; border-radius: 6px; padding: 3px 7px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); animation: tgtpulse 1s ease-in-out infinite; }
 .aws:not(.focus):not(.overview) .awe-focus { display: none; }
 .foe.tgt .foe-pic svg { margin: 0 -7px; }
+.foe-boost { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); z-index: 3; white-space: nowrap; font: 700 .58rem/1 var(--font-display); color: #fff; background: #c92a1a; border: 1.5px solid #000; border-radius: 99px; padding: 2px 6px; }
+.foe { position: relative; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -3511,7 +3513,7 @@ const has = (S, id) => S.officers.includes(id);
 // en retour d'un seul front, contre la Défense totale de vos secteurs. Vos unités s'usent : chacune tient quelques tours.
 // Intentions ennemies : chaque tour, l'ennemi annonce ce qu'il va faire ; chacune a sa réponse (cartes, unités)
 const ENEMY_ACTS = {
-  focus: { name: 'Concentration', ic: '🎯', tip: "Une grande part de l'Attaque tombe sur un secteur annoncé : renforcez-y la Défense (Contre-attaque, Retranchement, mitrailleuse)." },
+  focus: { name: 'Concentration', ic: '🎯', tip: "L'ennemi masse ses troupes sur un secteur annoncé : Attaque ×1,75 et +50 % de PV pour ce tour. Renforcez-y la Défense (Contre-attaque, Retranchement, mitrailleuse) ou frappez fort pour percer la masse." },
   assault: { name: 'Assaut en force', ic: '💥', tip: "Attaque ×1,25 sur tout le front : Fumigènes (÷2) ou une Défense totale solide." },
   raid: { name: 'Raid aérien', ic: '✈', tip: "30 % de l'Attaque passe par les airs, sans que la Défense des secteurs la retienne : un chasseur dans le ciel l'intercepte." },
   dig: { name: 'Retranchement', ic: '⛏', tip: "L'ennemi creuse : sa riposte baisse (×0,75) mais vos frappes de secteur perdent 30 % ; génie et parachutistes ignorent le retranchement." },
@@ -3521,6 +3523,18 @@ const ENEMY_ACTS = {
 const FOE_HP = typeof process !== 'undefined' && process.env && process.env.FOEHP ? +process.env.FOEHP : 0.12, FOE_BACK = 2, FOE_GROW = 1.15, BREACH_K = 1, FOCUS_K = 1.75;
 const foeOf = (S, c) => (S.foe && S.foe[c]) || null;
 const foeAlive = (S, c) => { const f = foeOf(S, c); return !!f && f.hp > 0; };
+// concentration : la troupe visée reçoit des renforts pour le tour (+50 % de PV et de PV max) ; ils repartent au tour suivant
+// (les PV restants sont plafonnés à l'effectif normal : les renforts encaissent les premiers coups)
+const FOCUS_HP = 0.5;
+function clearFocusBoost(S) {
+  for (const c of Object.keys(S.foe || {})) { const fo = S.foe[c]; if (!fo || !fo.boost) continue; fo.hpMax -= fo.boost; if (fo.hp > 0) fo.hp = Math.min(fo.hp, fo.hpMax); fo.boost = 0; }
+}
+function applyFocusBoost(S) {
+  clearFocusBoost(S);
+  if (!S.plan || S.plan.act !== 'focus' || S.plan.target === undefined) return;
+  const fo = foeOf(S, S.plan.target); if (!fo || fo.hp <= 0) return;
+  const b = Math.round(fo.hpMax * FOCUS_HP); fo.hpMax += b; fo.hp += b; fo.boost = b;
+}
 function initFoes(S) {
   S.foe = {};
   for (const c of landCols(S)) { const hp = Math.max(8, Math.round((S.lvl.hq || 100) * FOE_HP * (S.lvl.tutorial ? 0.5 : 1))); S.foe[c] = { hp, hpMax: hp, back: 0 }; }
@@ -3711,7 +3725,7 @@ function newBattle(C, rng = Math.random, cfg = null) {
   if (mods.discard) S.discards += mods.discard;
   S.mods = mods;
   initFoes(S);
-  S.plan = genPlan(S);
+  S.plan = genPlan(S); applyFocusBoost(S);
   startTurn(S);
   if (S.mods && S.mods.supply) S.supply += S.mods.supply;
   return S;
@@ -4159,9 +4173,10 @@ function endTurn(S) {
   S.units = S.units.filter(u => !gone.includes(u));
   S.turn++;
   if (S.obj.type === 'hold' && S.turn > S.obj.n) { S.over = 'win'; return steps; }
-  // les troupes détruites reviennent plus fortes, après quelques tours
+  // les troupes détruites reviennent plus fortes, après quelques tours (sans les renforts d'une concentration)
+  clearFocusBoost(S);
   for (const c of landCols(S)) { const fo = foeOf(S, c); if (fo && fo.hp <= 0) { fo.back = (fo.back || FOE_BACK) - 1; if (fo.back <= 0) { fo.hpMax = Math.round(fo.hpMax * FOE_GROW); fo.hp = fo.hpMax; fo.back = 0; steps.push({ ph: 'respawn', c }); } } }
-  S.plan = genPlan(S);
+  S.plan = genPlan(S); applyFocusBoost(S);
   startTurn(S);
   steps.push({ ph: 'next', snap: snap(S) });
   return steps;
@@ -5614,7 +5629,7 @@ function foeHTML(c, f) {
   return `<div class="foe ${kill ? 'kill' : ''} ${tgt ? 'tgt' : ''} ${occ ? '' : 'open'}" data-foe="${c}" title="Troupe ennemie : ${fo.hp}/${fo.hpMax} PV, Attaque ${a}${occ ? '' : ' — secteur vide : elle frappe votre QG sans être freinée'}">
     <span class="foe-pic">${(() => { const fc = S.plan && S.plan.act === 'focus' && S.plan.target !== undefined; return tgt ? spriteSVG('panzer', 'en', 24) + spriteSVG('inf', 'en', 24).repeat(3) : fc ? spriteSVG('inf', 'en', 26) : spriteSVG('inf', 'en', 30).repeat(2); })()}</span>
     <span class="foe-bar"><i style="width:${pct.toFixed(1)}%"></i>${hit ? `<i class="dmg" style="left:${(pct - hitPct).toFixed(1)}%;width:${hitPct.toFixed(1)}%"></i>` : ''}<b>${kill ? '☠ ' : ''}${fmtN(Math.max(0, fo.hp - hit))}/${fmtN(fo.hpMax)}</b></span>
-    <span class="foe-atk ${occ ? '' : 'open'}">${tgt ? '🎯' : ''}${SWORD}${fmtN(kill ? 0 : a)}${occ ? '' : ' ⚠'}</span></div>`;
+    ${fo.boost ? `<span class="foe-boost" title="Concentration : renforts +50 % de PV pour ce tour">🎯 +${fmtN(fo.boost)} PV</span>` : ''}<span class="foe-atk ${occ ? '' : 'open'}">${tgt ? '🎯' : ''}${SWORD}${fmtN(kill ? 0 : a)}${occ ? '' : ' ⚠'}</span></div>`;
 }
 function enemyHQHTML(view, live, F) {
   const hold = S.obj.type === 'hold', max = S.lvl.hq || 1, cur = Math.max(0, view.hq.en), pct = hold ? 100 : Math.max(0, Math.min(100, (cur / max) * 100));
