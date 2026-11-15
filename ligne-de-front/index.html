@@ -3277,6 +3277,11 @@ comme le nid ennemi) */
 .vsmk2 { position: absolute; left: 30%; bottom: 40%; width: 46%; aspect-ratio: 1; border-radius: 50%; z-index: 5; pointer-events: none; background: radial-gradient(circle, rgba(45, 40, 36, .85), rgba(45, 40, 36, 0) 68%); filter: blur(4px); animation: vsmk2 1.6s ease-out forwards; }
 .vsmk2.big { width: 70%; left: 15%; animation: vsmk2 2.4s ease-out infinite; }
 @keyframes vsmk2 { from { transform: translateY(0) scale(.5); opacity: .95; } to { transform: translateY(-60%) scale(1.5); opacity: 0; } }
+
+/* Concentration ennemie : étiquette au-dessus de la masse de troupes */
+.awe-focus { position: absolute; left: 0; bottom: calc(var(--uh, 60px) * 1.12 + 22px); z-index: 6; font: 700 .7rem/1 var(--font-display); color: #fff; background: linear-gradient(180deg, #e0503b, #a8241d); border: 2px solid #000; border-radius: 6px; padding: 3px 7px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); animation: tgtpulse 1s ease-in-out infinite; }
+.aws:not(.focus):not(.overview) .awe-focus { display: none; }
+.foe.tgt .foe-pic svg { margin: 0 -7px; }
 </style>
 
 <div class="sky-fx" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4673,7 +4678,8 @@ const fireKey = key => (typeof PAINT !== 'undefined' && PAINT['me:' + key + '_fi
 const HEAVY_GUN = { tank: 1, arty: 1, td: 1, destroyer: 1, croiseur: 1 };
 // Recoloration des sprites peints : seules les teintes bleues (uniformes, casques, carrosseries) prennent la couleur de la carte ; la peau, le bois, le métal gardent les leurs
 const TINT = new Map(), TINT_HUE = { J: 46, R: 4, V: 112 };
-function tintPixels(d, ch) {
+function tintPixels(d, ch, from) {
+  if (from === 'r') return tintRed(d, ch);
   for (let i = 0; i < d.length; i += 4) {
     if (d[i + 3] < 8) continue;
     const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
@@ -4687,6 +4693,46 @@ function tintPixels(d, ch) {
     d[i] = f(5) * 255; d[i + 1] = f(3) * 255; d[i + 2] = f(1) * 255;
   }
 }
+// variante pour les dessins ennemis rouges (nid de mitrailleuse, Panzer) : seules les teintes rouge franc, pas trop claires
+// (uniformes, carrosserie) changent ; peau, bois, flammes et explosions gardent leurs couleurs
+function tintRed(d, ch) {
+  if (ch === 'R') return;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 8) continue;
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
+    if (mx !== r || c < 0.12 || c / mx < 0.38 || mx > 0.93) continue;
+    let h = 60 * ((g - b) / c); if (h < 0) h += 360;
+    if (!(h <= 14 || h >= 340)) continue;
+    let v = mx, sat = c / mx;
+    if (ch === 'N') { sat *= 0.12; v *= 0.62; h = 220; }
+    else { h = TINT_HUE[ch]; if (ch === 'J') { v = Math.min(1, v * 1.25 + 0.08); } }
+    const k = n => (n + h / 60) % 6, f = n => v - v * sat * Math.max(0, Math.min(k(n), 4 - k(n), 1));
+    d[i] = f(5) * 255; d[i + 1] = f(3) * 255; d[i + 2] = f(1) * 255;
+  }
+}
+// couleur des troupes ennemies = couleur du QG ennemi (celle des affinités ▲/▼) : dessins et planches recolorés une fois, à la demande
+const EN_TINT = new Map(), EN_RED = new Set();
+const enCol = () => (typeof S !== 'undefined' && S && S.lvl && S.lvl.col) || '';
+function enTint(src, from) {
+  const ch = enCol(); if (!src || !ch || (from === 'b' && ch === '_')) return src;
+  const key = ch + from + src.length + src.slice(-24), got = EN_TINT.get(key);
+  if (got) return got; if (got === null) return src;
+  EN_TINT.set(key, null);
+  const img = new Image();
+  img.onload = () => { try { const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight; const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0);
+    const dd = cx.getImageData(0, 0, cv.width, cv.height); tintPixels(dd.data, ch, from); cx.putImageData(dd, 0, 0); EN_TINT.set(key, cv.toDataURL('image/webp', 0.85)); } catch (e) { EN_TINT.delete(key); }
+    clearTimeout(enTint.t); enTint.t = setTimeout(() => { if (typeof busy !== 'undefined' && !busy && document.getElementById('hand') && !document.querySelector('.aws')) renderBattle(); }, 60); };
+  img.src = src; return src;
+}
+// prépare toutes les teintes ennemies de la bataille (appelé au rendu du plateau : elles sont prêtes avant la scène d'assaut)
+function prepEnTints() {
+  if (!enCol() || typeof PAINT === 'undefined') return;
+  [['inf', 'b'], ['mgnest', 'r'], ['panzer', 'r']].forEach(([k, fr]) => enTint(paintOf(k, 'en'), fr));
+  if (typeof EN_ANIM !== 'undefined') Object.values(EN_ANIM).forEach(D => enTint(D.u, 'b'));
+  if (typeof WRECK_FX !== 'undefined') Object.values(WRECK_FX).forEach(D => enTint(D.u, 'r'));
+  if (typeof PZ_FIRE !== 'undefined') enTint(PZ_FIRE.u, 'r');
+}
+const enSrcFrom = key => (key === 'mgnest' || key === 'panzer' ? 'r' : 'b');
 function buildTints() {
   if (typeof PAINT === 'undefined' || typeof document === 'undefined') return;
   const srcs = [...new Set(Object.entries(PAINT).filter(([k]) => !k.startsWith('en') && !k.endsWith('_en')).map(([, v]) => v))];
@@ -4711,7 +4757,7 @@ function buildTints() {
 const IDLE = {"inf_eau": {sc: 0.84, n: 24, fw: 170, fh: 96, ms: 5000}, "inf_eau_fire": {sc: 1, n: 10, fw: 233, fh: 97, once: true, base: "inf_eau", ref: [0.0,0.0,1.3699,1.0063], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "tank_fire": {sc: 1.0, n: 11, fw: 255, fh: 100, once: true, base: "tank", ref: [-0.1411,-0.133,1.5,1.133], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "td_fire": {sc: 1.0, n: 10, fw: 175, fh: 67, once: true, base: "td", ref: [-0.0316,0.0,1.0316,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83]]}, "jeep_fire": {sc: 0.94, n: 11, fw: 220, fh: 98, once: true, base: "jeep", ref: [0.0,-0.0554,1.2938,1.0554], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "halftrack_fire": {sc: 1.0, n: 9, fw: 222, fh: 73, once: true, base: "halftrack", ref: [0.0,0.0,1.3041,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83]]}, "arty_fire": {sc: 1.0, n: 11, fw: 219, fh: 117, once: true, base: "arty", ref: [-0.0074,-0.4456,1.2899,1.4456], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "destroyer_fire": {sc: 1, n: 11, fw: 228, fh: 80, once: true, base: "destroyer", ref: [-0.1006,0.0,1.3417,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "croiseur_fire": {sc: 1, n: 11, fw: 258, fh: 89, once: true, base: "croiseur", ref: [-0.2266,0.0,1.5148,1.0191], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "chasseur_fire": {sc: 1, n: 11, fw: 219, fh: 74, once: true, base: "chasseur", ref: [0.0,0.0,1.2882,1.0], seq: [[0, 83],[1, 83],[2, 83],[3, 83],[4, 83],[5, 83],[6, 83],[7, 83],[8, 83],[9, 83],[10, 83]]}, "mgnest_fire": {sc: 1.3, n: 8, fw: 170, fh: 54, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "para_fire": {sc: 1, n: 8, fw: 170, fh: 111, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85],[7, 85]]}, "croiseur": {sc: 1, n: 13, fw: 170, fh: 88, ms: 1700}, "inf_fire": {sc: 0.92, n: 7, fw: 170, fh: 118, once: true, seq: [[0, 85],[1, 85],[2, 85],[3, 85],[4, 85],[5, 85],[6, 85]]}, "inf": {sc: 0.92, n: 24, fw: 170, fh: 118, ms: 2800}, "recon": {sc: 0.95, n: 24, fw: 170, fh: 95, ms: 2333}, "bombardier": {sc: 1.0, n: 14, fw: 170, fh: 83, ms: 1167}, "sousmarin": {sc: 0.9, n: 13, fw: 170, fh: 70, ms: 1700}, "arty": {sc: 1.0, n: 12, fw: 170, fh: 81, ms: 1000}, "destroyer": {sc: 1, n: 24, fw: 170, fh: 80, ms: 2333}, "chasseur": {sc: 1, n: 13, fw: 170, fh: 74, ms: 1083}, "td": {sc: 1.0, n: 12, fw: 170, fh: 67, ms: 1000}, "halftrack": {sc: 1.0, n: 18, fw: 170, fh: 73, ms: 1500}, "jeep": {sc: 0.94, n: 14, fw: 170, fh: 93, ms: 1167}, "medic": {sc: 0.79, n: 24, fw: 170, fh: 295, ms: 3167}, "mgnest": {sc: 1.3, n: 12, fw: 170, fh: 54, ms: 1000}, "para": {sc: 1, n: 22, fw: 170, fh: 111, ms: 1833}, "sapper": {sc: 0.84, n: 24, fw: 170, fh: 203, ms: 2167}, "tank": {sc: 1.0, n: 12, fw: 170, fh: 89, ms: 1000}, "obs": {sc: 0.98, n: 17, fw: 170, fh: 242, ms: 1417}};
 const tintedSrc = (src, side, t) => (side === 'me' && t && t.cols && TINT.get(src) ? TINT.get(src)[t.cols[0]] : null);
 function spriteInner(key, side, t) {
-  const src0 = paintOf(key, side), src = src0 && (tintedSrc(src0, side, t) || src0);
+  const src0 = paintOf(key, side), src = src0 && (side === 'en' && ['inf', 'mgnest', 'panzer'].includes(key) ? enTint(src0, enSrcFrom(key)) : tintedSrc(src0, side, t) || src0);
   if (!src) return SPRITES[key](t);
   const air = kindOf(key) === 'air';
   const ring = t.acc ? `<ellipse cx="32" cy="58.5" rx="18" ry="4" fill="none" stroke="${t.acc}" stroke-width="2.4" opacity=".95"/>` : '';
@@ -5566,7 +5612,7 @@ function foeHTML(c, f) {
   const enAtk = S.smoke ? Math.round(enemyAtk(S) / 2) : enemyAtk(S), a = foeAtk(S, c, enAtk), occ = queue(S, 'me', c).length > 0;
   const tgt = S.plan && S.plan.act === 'focus' && S.plan.target === c;
   return `<div class="foe ${kill ? 'kill' : ''} ${tgt ? 'tgt' : ''} ${occ ? '' : 'open'}" data-foe="${c}" title="Troupe ennemie : ${fo.hp}/${fo.hpMax} PV, Attaque ${a}${occ ? '' : ' — secteur vide : elle frappe votre QG sans être freinée'}">
-    <span class="foe-pic">${spriteSVG('inf', 'en', 30)}${spriteSVG('inf', 'en', 30)}</span>
+    <span class="foe-pic">${(() => { const fc = S.plan && S.plan.act === 'focus' && S.plan.target !== undefined; return tgt ? spriteSVG('panzer', 'en', 24) + spriteSVG('inf', 'en', 24).repeat(3) : fc ? spriteSVG('inf', 'en', 26) : spriteSVG('inf', 'en', 30).repeat(2); })()}</span>
     <span class="foe-bar"><i style="width:${pct.toFixed(1)}%"></i>${hit ? `<i class="dmg" style="left:${(pct - hitPct).toFixed(1)}%;width:${hitPct.toFixed(1)}%"></i>` : ''}<b>${kill ? '☠ ' : ''}${fmtN(Math.max(0, fo.hp - hit))}/${fmtN(fo.hpMax)}</b></span>
     <span class="foe-atk ${occ ? '' : 'open'}">${tgt ? '🎯' : ''}${SWORD}${fmtN(kill ? 0 : a)}${occ ? '' : ' ⚠'}</span></div>`;
 }
@@ -5722,6 +5768,7 @@ function hintText() {
 // Largeur de la colonne de droite (blinde, totaux, commandes) en paysage
 const sideW = () => Math.round(Math.max(150, Math.min(230, Math.min(window.innerWidth, 1400) * 0.185)));
 function renderBattle() {
+  prepEnTints();
   const reserved = picked.length ? groupCost(S, picked) : 0;
   const total = S.supply, pips = Array.from({ length: Math.min(total, 24) }, (_, i) => `<span class="pip ${i < Math.min(reserved, total) ? 'res' : ''}"></span>`).join('');
   // main en éventail : toutes les cartes sont visibles sans défiler
@@ -6302,15 +6349,21 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // l'escouade ennemie de chaque secteur, dessinée comme vos unités : plus elle perd de PV, moins il reste de soldats et d'engins
   const lvI = (S.lvl && S.lvl.levelIdx) || 0, bossL = !!(S.lvl && S.lvl.boss);
   const foeKit = [['inf', 5]].concat(lvI >= 2 || bossL ? [['mgnest', 2]] : [], lvI >= 4 || bossL ? [['panzer', 1]] : []);
-  const enUnits = (hp, hpMax) => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return foeKit.filter(([k], j) => j === 0 || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${EN_K[k] ? `;--vk:${EN_K[k]}` : ''}" data-n="${k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m}">${squadSVG(k, 'en', k === 'inf' ? Math.max(1, Math.ceil(m * Math.max(r, 0.01))) : m, m, 64)}</span>`).join(''); };
+  // concentration ennemie : le secteur visé reçoit une masse de troupes (8 fantassins, nid et Panzer), les autres ne gardent qu'un rideau
+  const focusC = en && en.act === 'focus' && en.tgt !== undefined ? en.tgt : undefined;
+  const massOf = c => focusC === undefined ? '' : c === focusC ? 'focus' : 'thin';
+  const infMax = mass => (mass === 'focus' ? 8 : mass === 'thin' ? 3 : 5);
+  const infN = (r, mass) => Math.max(1, Math.ceil(infMax(mass) * Math.max(r, 0.01)));
+  const kitOf = mass => mass === 'focus' ? [['inf', 8], ['mgnest', 2], ['panzer', 1]] : mass === 'thin' ? foeKit.filter(([k]) => k !== 'panzer') : foeKit;
+  const enUnits = (hp, hpMax, mass = '') => { const r = hpMax ? Math.max(0, hp) / hpMax : 0; return kitOf(mass).filter(([k], j) => j === 0 || mass === 'focus' || r > (k === 'panzer' ? 0.6 : 0.3)).map(([k, m]) => { const n = k === 'inf' ? infN(r, mass) : m; return `<span class="awe k-${kindOf(k)}" data-k="${k}" style="--gp:${groundPad('en', k)}${EN_K[k] ? `;--vk:${EN_K[k]}` : ''}" data-n="${n}">${squadSVG(k, 'en', n, m, 64, undefined, k === 'inf')}</span>`; }).join(''); };
   window.__vehOne = true;
   const bands = rows.map((st, i) => `<div class="awb t-${S.lanes[st.c]} ${st.f.foe && st.f.foe.hp > 0 ? 'has-foe' : ''} ${S.lanes[st.c] === 'riviere' ? 'wading' : ''} ${hasAir(st) ? 'has-air' : ''}" data-i="${i}" style="--d:${i * 90}ms">
       <div class="awb-bg"></div><div class="awb-sky"></div>
       <div class="awb-lab"><b>${TERRAIN[S.lanes[st.c]].name}</b><span class="awb-eq"><b class="ch">0</b><i>×</i><b class="mu">1</b></span><span class="awb-def">${SHIELD}${fmtN(st.f.def)}</span></div>
       <div class="awb-units">${[...st.f.me, ...(st.f.sups || [])].map(id => unitHTML(id, S.lanes[st.c])).join('')}</div>
-      <div class="awb-cbs"></div>${st.f.foe && st.f.foe.hp > 0 ? `<div class="awb-foe awb-en" data-i="${i}"><span class="foe-bar"><i style="width:${(st.f.foe.hp / st.f.foe.hpMax * 100).toFixed(1)}%"></i><b>❤ ${fmtN(st.f.foe.hp)}</b></span><div class="awe-units">${enUnits(st.f.foe.hp, st.f.foe.hpMax)}</div></div>
+      <div class="awb-cbs"></div>${st.f.foe && st.f.foe.hp > 0 ? `<div class="awb-foe awb-en ${massOf(st.f.c)}" data-i="${i}" data-mass="${massOf(st.f.c)}"><span class="foe-bar"><i style="width:${(st.f.foe.hp / st.f.foe.hpMax * 100).toFixed(1)}%"></i><b>❤ ${fmtN(st.f.foe.hp)}</b></span><div class="awe-units">${enUnits(st.f.foe.hp, st.f.foe.hpMax, massOf(st.f.c))}</div></div>
       <svg class="awb-split" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon class="en" points="59,0 100,0 100,100 53,100"/><polygon class="me" points="0,0 59,0 53,100 0,100"/><line class="ln" x1="59" y1="-2" x2="53" y2="102"/><line class="hi" x1="59" y1="-2" x2="53" y2="102"/></svg>
-      <div class="awb-vs"><b class="vs-l">${st.f.me.length ? 'Vos troupes' : 'Secteur vide'}</b><b class="vs-r">Ennemi</b></div>` : ''}
+      <div class="awb-vs"><b class="vs-l">${st.f.me.length ? 'Vos troupes' : 'Secteur vide'}</b><b class="vs-r">${massOf(st.f.c) === 'focus' ? '🎯 Concentration' : 'Ennemi'}</b></div>` : ''}
       <b class="awb-tot">0</b></div>`).join('');
   window.__wade = false; window.__vehOne = false;
   const marks = rows.map((_, i) => `<i class="aws-mk" data-i="${i}" style="top:${((i + 0.5) / n) * 100}%"></i>`).join('');
@@ -6477,7 +6530,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   };
   // attente en boucle : chaque figurine de l'escouade est remplacée par la planche d'attente, placée en % du dessin (suit les changements de plan)
   function idleOn(awe) {
-    const D = typeof EN_ANIM !== 'undefined' && EN_ANIM.idle, svg = awe && awe.querySelector('svg'); if (!D || !svg || awe.classList.contains('has-idle')) return;
+    const D0 = typeof EN_ANIM !== 'undefined' && EN_ANIM.idle, D = D0 && { ...D0, u: enTint(D0.u, 'b') }, svg = awe && awe.querySelector('svg'); if (!D || !svg || awe.classList.contains('has-idle')) return;
     const vb = svg.viewBox.baseVal, k = +awe.dataset.n || 1, fig = 64 * FOOT_FIG, gap = fig * 0.74, rws = k <= 2 ? [k] : [Math.floor(k / 2), Math.ceil(k / 2)], pc = (v, w) => (v / w * 100).toFixed(2) + '%';
     let html = '';
     rws.forEach((m, r) => { const y = rws.length === 1 || r === 1 ? 64 - fig : 64 - fig * 1.3, x0 = 2 + (rws.length === 2 && r === 0 ? gap / 2 : 0);
@@ -6488,7 +6541,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
 
   // l'escouade ennemie d'un secteur joue une action (tir, touché, course) : ses figurines sont remplacées le temps de la planche
   const foeAct = (band, kind, ms) => {
-    const D = typeof EN_ANIM !== 'undefined' && EN_ANIM[kind], host = band.querySelector('.awb-en'), awe = host && host.querySelector('.awe[data-k="inf"]');
+    const D0 = typeof EN_ANIM !== 'undefined' && EN_ANIM[kind], D = D0 && { ...D0, u: enTint(D0.u, 'b') }, host = band.querySelector('.awb-en'), awe = host && host.querySelector('.awe[data-k="inf"]');
     if (!D || !awe || awe.style.visibility === 'hidden') return 0;
     const svg = awe.querySelector('svg'), idle = awe.classList.contains('has-idle'), els = figBoxes(awe, host).map((b, k) => stripOn(host, b, D, k * .06 + Math.random() * .05));
     awe.classList.add('acting'); if (!idle) svg.style.visibility = 'hidden';
@@ -6524,7 +6577,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   // soldats battus : les derniers de l'escouade (rangée de devant) jouent leur mort et restent étendus ; poussière et bruit sourd à la chute
   const dieOn = (band, eu, n) => {
     const inf = eu.querySelector('.awe[data-k="inf"]'); if (!inf || !n) return;
-    const D = EN_ANIM.die, boxes = figBoxes(inf, band).slice(-n);
+    const D = { ...EN_ANIM.die, u: enTint(EN_ANIM.die.u, 'b') }, boxes = figBoxes(inf, band).slice(-n);
     boxes.forEach((b, k) => {
       const dl = k * .12 + Math.random() * .08, e = stripOn(band, b, D, dl); e.classList.add('dead');
       if (e.animate) e.animate([{ filter: 'grayscale(0) brightness(1)' }, { filter: 'grayscale(.55) brightness(.72)' }], { duration: 600, delay: (dl + D.dur) * 1000, fill: 'forwards' });
@@ -6538,7 +6591,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     const D = WRECK_FX.panzer, svg = el && el.querySelector('svg'); if (typeof PZ_FIRE === 'undefined' || !svg) return false;
     const B = band.querySelector('.awb-en').getBoundingClientRect(), R = svg.getBoundingClientRect(), fw = R.width * (D.gx1 - D.gx0) / (D.ox1 - D.ox0), top = R.top + D.gy1 * R.height - D.oy1 * fw;
     const w = document.createElement('i'); w.className = 'vstrip';
-    w.style.cssText = `left:${(R.left - B.left + D.gx0 * R.width - D.ox0 * fw).toFixed(0)}px;top:${(top - B.top).toFixed(0)}px;width:${fw.toFixed(0)}px;height:${fw.toFixed(0)}px;background-image:url(${PZ_FIRE.u});background-size:${PZ_FIRE.n * 100}% 100%`;
+    w.style.cssText = `left:${(R.left - B.left + D.gx0 * R.width - D.ox0 * fw).toFixed(0)}px;top:${(top - B.top).toFixed(0)}px;width:${fw.toFixed(0)}px;height:${fw.toFixed(0)}px;background-image:url(${enTint(PZ_FIRE.u, 'r')});background-size:${PZ_FIRE.n * 100}% 100%`;
     band.querySelector('.awb-en').appendChild(w); svg.style.visibility = 'hidden';
     if (w.animate) w.animate([{ backgroundPosition: '0% 0' }, { backgroundPosition: '100% 0' }, { backgroundPosition: '0% 0' }], { duration: 520, easing: `steps(${PZ_FIRE.n * 2 - 1}, jump-none)` });
     SFX.play('cannon'); setTimeout(() => { w.remove(); svg.style.visibility = ''; }, 540);
@@ -6546,7 +6599,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
   };
   // engin ennemi détruit : la planche vidéo prend la place du dessin, à la même échelle ; le Panzer brûle ensuite en boucle
   const wreckOn = (band, el, key) => {
-    const D = typeof WRECK_FX !== 'undefined' && WRECK_FX[key], svg = el && el.querySelector('svg'); if (!D || !svg) return false;
+    const D0 = typeof WRECK_FX !== 'undefined' && WRECK_FX[key], D = D0 && { ...D0, u: enTint(D0.u, 'r') }, svg = el && el.querySelector('svg'); if (!D || !svg) return false;
     const B = band.getBoundingClientRect(), R = svg.getBoundingClientRect(); if (!R.width) return false;
     const fw = R.width * (D.gx1 - D.gx0) / (D.ox1 - D.ox0), fh = fw * D.fh / D.fw, top = R.top + D.gy1 * R.height - D.oy1 * fh;
     const w = document.createElement('i'); w.className = 'vwreck';
@@ -6744,7 +6797,7 @@ async function awScene(secs, stk, en, live, hq0, slow) {
     let fallN = 0, wreckN = 0;
     if (onFoe) {
       band.classList.add('salvo'); boomAt(foeEl);
-      const eu = foeEl.querySelector('.awe-units'); if (eu) { const r0 = f.foe.hp / f.foe.hpMax, r1 = Math.max(0, f.foe.hp - f.absorb) / f.foe.hpMax, lost = f.kill ? Math.max(1, Math.ceil(5 * r0)) : Math.max(0, Math.ceil(5 * r0) - Math.max(1, Math.ceil(5 * r1))); fallN = lost; impactOn(eu, { dir: 1, pow: f.kill ? 1.6 : Math.min(1.3, .6 + f.absorb / f.foe.hpMax) }); const keep = new Set(f.kill ? [] : [...(new DOMParser().parseFromString(enUnits(f.foe.hp - f.absorb, f.foe.hpMax), 'text/html').querySelectorAll('.awe'))].map(e => e.dataset.k)); eu.querySelectorAll('.awe:not([data-k="inf"])').forEach(e => { if (!keep.has(e.dataset.k) && wreckOn(band, e, e.dataset.k)) wreckN++; }); setTimeout(() => { dieOn(band, eu, lost); if (f.kill) eu.querySelectorAll('.awe[data-k="inf"]').forEach(e => { e.style.visibility = 'hidden'; }); else { eu.innerHTML = enUnits(f.foe.hp - f.absorb, f.foe.hpMax); idleOn(eu.querySelector('.awe[data-k="inf"]')); foeAct(band, 'hit'); } }, 140); }
+      const eu = foeEl.querySelector('.awe-units'); if (eu) { const r0 = f.foe.hp / f.foe.hpMax, r1 = Math.max(0, f.foe.hp - f.absorb) / f.foe.hpMax, ms = foeEl.dataset.mass || '', lost = f.kill ? infN(r0, ms) : Math.max(0, infN(r0, ms) - infN(r1, ms)); fallN = lost; impactOn(eu, { dir: 1, pow: f.kill ? 1.6 : Math.min(1.3, .6 + f.absorb / f.foe.hpMax) }); const keep = new Set(f.kill ? [] : [...(new DOMParser().parseFromString(enUnits(f.foe.hp - f.absorb, f.foe.hpMax, ms), 'text/html').querySelectorAll('.awe'))].map(e => e.dataset.k)); eu.querySelectorAll('.awe:not([data-k="inf"])').forEach(e => { if (!keep.has(e.dataset.k) && wreckOn(band, e, e.dataset.k)) wreckN++; }); setTimeout(() => { dieOn(band, eu, lost); if (f.kill) eu.querySelectorAll('.awe[data-k="inf"]').forEach(e => { e.style.visibility = 'hidden'; }); else { eu.innerHTML = enUnits(f.foe.hp - f.absorb, f.foe.hpMax, ms); idleOn(eu.querySelector('.awe[data-k="inf"]')); foeAct(band, 'hit'); } }, 140); }
       const fb = foeEl.querySelector('.foe-bar i'), fbt = foeEl.querySelector('.foe-bar b'), left = Math.max(0, f.foe.hp - f.absorb);
       if (fb) fb.style.width = (left / f.foe.hpMax * 100) + '%'; if (fbt) fbt.textContent = f.kill ? '☠ 0' : '❤ ' + fmtN(left);
       if (vsEl) vsEl.querySelector('.vs-r').textContent = f.kill ? '☠ Détruite' : `❤ ${fmtN(left)}`;
