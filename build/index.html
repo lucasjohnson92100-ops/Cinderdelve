@@ -5365,7 +5365,19 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
 
     /* ---- pointes qui jaillissent du sol ---- */
     DR.spike = function (c, f, k) {
-      var R = f.R * TILE, x = f.x, y = f.y, up = k < 0.4 ? k / 0.4 : 1, a = k < 0.7 ? 1 : (1 - k) / 0.3;
+      var target = f.target, R = f.R * TILE;
+      var x = target ? px(target.vx) : f.x, y = target ? px(target.vy) : f.y;
+      if (target) {
+        c.fillStyle = rg("30,20,10", 0.4);
+        c.strokeStyle = rg("212,219,232", 0.8);
+        c.lineWidth = 1.5;
+        c.beginPath(); c.arc(x, y, R, 0, T2); c.fill(); c.stroke();
+        return;
+      }
+      var up = 1, a = k < 0.5 ? 1 : (1 - k) * 2;
+      c.strokeStyle = rg("212,219,232", 0.8 * a);
+      c.lineWidth = 1.5;
+      c.beginPath(); c.arc(x, y, R, 0, T2); c.stroke();
       c.fillStyle = rg("30,20,10", 0.4 * a); c.beginPath(); c.ellipse(x, y + 3, R, R * 0.45, 0, 0, T2); c.fill();
       c.globalAlpha = a; c.fillStyle = "#d4dbe8"; c.strokeStyle = "#150f26"; c.lineWidth = 1;
       for (var i = 0; i < 8; i++) {
@@ -5474,7 +5486,15 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
     function bossPhase(e) { add("shock", e.vx, e.vy, 1000, { R: 10, pal: PAL.taureau, rays: 24 }); add("sun", e.vx, e.vy, 1100, { R: 5, pal: PAL.dinde }); add("shock", e.vx, e.vy, 900, { R: 6, pal: PAL.coq, delay: 200 }); }
     function bossNova(e) { add("implode", e.vx, e.vy, 1500, { R: 4.3, pal: ["255,90,60", "255,220,160", "90,10,10"] }); }
     function plumes() { add("feather", p.vx, p.vy, 650, { n: 7, R: 4.2, pal: PAL.oie }); }
-    function spikes(x, y, r) { add("spike", x, y, 700, { R: r, pal: PAL.oie }); }
+    function spikes(target, r, impact) {
+      var f = add("spike", target.vx, target.vy, 420, { target: target, pal: PAL.oie });
+      f.R = r; /* le contour représente le rayon utilisé pour les dégâts */
+      legDefer(0.28, function () {
+        var x = target.vx, y = target.vy;
+        f.x = px(x); f.y = px(y); f.target = null; f.t0 = now();
+        impact(x, y);
+      });
+    }
     function chain(pts, id) { var P = PAL[id] || PAL.cavia; add("bolt", pts[0][0], pts[0][1], 520, { pts: pts.map(function (q) { return [px(q[0]), px(q[1])]; }), pal: P }); }
     function hole(x, y) { add("implode", x == null ? p.vx : x, y == null ? p.vy : y, 1100, { R: 6, pal: ["170,110,255", "235,220,255", "60,30,140"] }); }
     function nova(x, y) { x = x == null ? p.vx : x; y = y == null ? p.vy : y; add("sun", x, y, 1000, { R: 4.6, pal: PAL.dinde }); add("shock", x, y, 800, { R: 4.4, pal: PAL.coq }); }
@@ -5574,7 +5594,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
       eggs(); periodic(t); trailTick(t);
       c.save(); trailDraw(c, t);
       for (var i = L.length - 1; i >= 0; i--) {
-        var f = L[i], k = (t - f.t0) / f.dur;
+        var f = L[i], k = f.target ? 0 : (t - f.t0) / f.dur;
         if (k >= 1) { L.splice(i, 1); continue; }
         if (k < 0) continue;
         c.save(); DR[f.k](c, f, k, t); c.restore();
@@ -7119,7 +7139,7 @@ body.surv.land #kcombo { right: auto; left: 14px; top: 96px; text-align: left; t
         return (t % 3400) < 140 ? A.blink : A.idle[Math.floor(t / 300) % 4];
       }
     }
-    if (!isPlayer && sp.vf && !sp.pf && sp.vf.length >= 3) { try { ANX.build(name, sp); } catch (e) { sp.pf = null; } }
+    if (!isPlayer) prepareEnemyAnimation(name);
     if (!isPlayer && sp.pf) {
       if (o.wind > 0) img = sp.pa[0];
       else if (o.lunge && t - o.lunge.t0 < 260) img = sp.pa[t - o.lunge.t0 < 130 ? 1 : 2];
@@ -11109,7 +11129,15 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
         var snear = enemies.filter(function (e) { return e.hp > 0 && Math.hypot(e.vx - p.vx, e.vy - p.vy) < 6.5; }).sort(function (a, b) { return Math.hypot(a.vx - p.vx, a.vy - p.vy) - Math.hypot(b.vx - p.vx, b.vy - p.vy); }).slice(0, 2 + Math.floor(SW.spikes / 2) + (sev ? 2 : 0));
         if (snear.length) {
           state.survSpT = 1.25;
-          snear.forEach(function (e) { var sx = e.vx, sy = e.vy; AFX.spikes(sx, sy, sr); legDefer(0.28, function () { dmgSrc = survWName("spikes"); enemies.slice().forEach(function (o) { if (o.hp > 0 && (o === e || Math.hypot(o.vx - sx, o.vy - sy) <= sr)) dmgEnemy(o, survWDmg(sm), "Les pointes transpercent"); }); }); });
+          snear.forEach(function (e) {
+            AFX.spikes(e, sr, function (x, y) {
+              enemies.slice().forEach(function (o) {
+                if (o.hp <= 0 || Math.hypot(o.vx - x, o.vy - y) > sr) return;
+                dmgSrc = survWName("spikes");
+                dmgEnemy(o, survWDmg(sm), "Les pointes transpercent");
+              });
+            });
+          });
         } else state.survSpT = 0.3;
       }
     }
@@ -13453,7 +13481,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   /* montée en puissance : chaque vague démarre plus calme que la fin de la précédente (on souffle après le boss), puis grimpe sans palier jusqu'à un sommet plus haut */
   function survRamp() { if (!state || state.survBossUp || !(state.survDur > 0)) return 1; var f = Math.max(0, Math.min(1, (state.survT || 0) / state.survDur)); return 0.5 * f + 0.5 * f * f * (3 - 2 * f); }
-  function survCap() { var cy = state.survCycle || 0, c = Math.min(185, BAL.capBase + cy * BAL.capCyc + survMapIdx() * 3); if (cy >= 1) c *= BAL.capStart + (1 - BAL.capStart) * survRamp(); return Math.round(perf && perf.low ? c * 0.7 : perf && perf.lvl >= 4 ? c * 0.85 : c); }
+  function survCap() { var cy = state.survCycle || 0, c = Math.min(185, BAL.capBase + cy * BAL.capCyc + survMapIdx() * 3); if (cy >= 1) c *= BAL.capStart + (1 - BAL.capStart) * survRamp(); return Math.round(c); }
   /* Brotato : quand il y a trop de monstres, les plus éloignés disparaissent (sans butin) au lieu de bloquer les arrivées */
   function survCull(keep) {
     var cand = enemies.filter(function (e) { return e.hp > 0 && !e.elite && !e.survivalBoss && !e.boss && !e.mini; });
@@ -15862,6 +15890,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   function openShop() {
     mode = "shop";
     if (state.survival) {
+      queueSurvivalAnimations();
       Object.keys(SURV_SHOP).forEach(function (k) { SHOP[k] = SURV_SHOP[k]; });
       state.shopRerolls = 0; survBuildOffers(false);
       document.getElementById("shop").classList.add("surv");
@@ -16256,6 +16285,7 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
   }
   function reopenSurvShop() {
     mode = "shop";
+    queueSurvivalAnimations();
     Object.keys(SURV_SHOP).forEach(function (k) { SHOP[k] = SURV_SHOP[k]; });
     state.offers = (state.offers || []).filter(function (id) { return SHOP[id]; });
     document.getElementById("shop").classList.add("surv");
@@ -18473,6 +18503,9 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     if (!g) return;
     if (mode === "duel") return; /* le duel a sa propre boucle et son propre écran */
     if (mode !== "play") haltInput();
+    if (mode === "shop" && state.survival && survivalAnimationQueue.length) {
+      prepareEnemyAnimation(survivalAnimationQueue.shift());
+    }
     if (ptr && ptr.onEnemy && !ptr.hold && now() - ptr.t0 > 230) ptr.hold = true;
     holdActive = !!((ptr && ptr.hold) || stick);
     holdPtr = (ptr && ptr.hold) ? { x: ptr.cx, y: ptr.cy } : null;
@@ -19200,6 +19233,32 @@ TRACKS.t4 = { bpm: 76, leadVol: 0.06, arpVol: 0.05, bassVol: 0.18, pad: 0.05, le
     }
     return { build: build, KIND: KIND };
   })();
+
+  var survivalAnimationQueue = [];
+  function prepareEnemyAnimation(name) {
+    var sp = SP[name];
+    if (!sp || !sp.vf || sp.vf.length < 3 || sp.pf || sp.animationBuildFailed) return;
+    try {
+      ANX.build(name, sp);
+    } catch (err) {
+      sp.pf = null;
+      sp.animationBuildFailed = true;
+    }
+  }
+
+  function queueSurvivalAnimations() {
+    var map = survMapDef(), theme = WAVE_THEMES[state.survThemeW];
+    var regular = map.a.concat(map.b, map.c);
+    var featured = theme ? regular.filter(function (name) { return theme.pool.indexOf(name) >= 0; }) : [];
+    var types = featured.concat(regular, map.ring, map.swarm, map.mini, map.boss);
+    var lieutenant = LT.info(state.survMapTheme || 0);
+    if (lieutenant) types.push("lt_" + lieutenant.id);
+    /* Préparer au plus une espèce par image pendant la boutique. */
+    survivalAnimationQueue = Array.from(new Set(types)).filter(function (name) {
+      var sp = SP[name];
+      return sp && sp.vf && sp.vf.length >= 3 && !sp.pf && !sp.animationBuildFailed;
+    });
+  }
   var _vecPortrait = FARM.portrait;
   FARM.portrait = function (id) { return ARTX.get("p_" + id) || _vecPortrait(id); };
   /* ================= ÉCRAN TITRE : l'escouade en ombres chinoises devant la ferme en feu ================= */
